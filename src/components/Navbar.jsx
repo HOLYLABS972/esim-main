@@ -98,8 +98,9 @@ const Navbar = () => {
             style={{ zIndex: 999999 }}
           >
             {/* Header with logo and close button */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
-              <Link href="/" className="-m-1.5 p-1.5 flex items-center" onClick={() => setIsMenuOpen(false)}>
+            <div className="flex items-center justify-between p-6">
+              <Link href="/" className="
+               flex items-center" onClick={() => setIsMenuOpen(false)}>
                 <span className="sr-only">RoamJet Plans</span>
                 <img
                   src="/images/logo_icon/logo.png"
