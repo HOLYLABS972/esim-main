@@ -138,71 +138,12 @@ const getStandardCountries = () => {
   ];
 };
 
-// Enhanced regional data with better structure
-const getStandardRegions = () => {
-  return [
-    { 
-      id: 'europe', 
-      name: 'Europe', 
-      code: 'EUR',
-      minPrice: 14.99, 
-      icon: '🇪🇺',
-      description: 'Coverage across 30+ European countries',
-      countries: ['Germany', 'France', 'Italy', 'Spain', 'Netherlands', 'United Kingdom', 'Switzerland', 'Austria', 'Belgium', 'Denmark', 'Sweden', 'Norway', 'Finland', 'Ireland', 'Portugal', 'Greece', 'Poland', 'Czech Republic', 'Hungary', 'Romania', 'Bulgaria', 'Croatia', 'Slovakia', 'Slovenia', 'Estonia', 'Latvia', 'Lithuania', 'Luxembourg', 'Malta', 'Cyprus'],
-      planTypes: ['1GB/7days', '3GB/15days', '5GB/30days', '10GB/30days']
-    },
-    { 
-      id: 'asia-pacific', 
-      name: 'Asia Pacific', 
-      code: 'APAC',
-      minPrice: 19.99, 
-      icon: '🌏',
-      description: 'Coverage across Asia and Pacific regions',
-      countries: ['Japan', 'South Korea', 'Singapore', 'Thailand', 'Australia', 'New Zealand', 'Hong Kong', 'Taiwan', 'China', 'India', 'Indonesia', 'Philippines', 'Vietnam', 'Malaysia', 'Thailand', 'Singapore', 'Hong Kong', 'Taiwan'],
-      planTypes: ['1GB/7days', '3GB/15days', '5GB/30days', '8GB/30days']
-    },
-    { 
-      id: 'americas', 
-      name: 'Americas', 
-      code: 'AMR',
-      minPrice: 16.99, 
-      icon: '🌎',
-      description: 'Coverage across North and South America',
-      countries: ['United States', 'Canada', 'Mexico', 'Brazil', 'Argentina', 'Chile', 'Colombia', 'Peru', 'United States', 'Canada', 'Mexico', 'Brazil', 'Argentina', 'Chile', 'Colombia', 'Peru'],
-      planTypes: ['2GB/7days', '5GB/15days', '10GB/30days', '15GB/30days']
-    },
-    { 
-      id: 'mea', 
-      name: 'Middle East & Africa', 
-      code: 'MEA',
-      minPrice: 22.99, 
-      icon: '🌍',
-      description: 'Coverage across Middle East and Africa',
-      countries: ['UAE', 'Saudi Arabia', 'South Africa', 'Egypt', 'Turkey', 'Israel', 'Kenya', 'Nigeria', 'UAE', 'Saudi Arabia', 'South Africa', 'Egypt', 'Turkey', 'Israel', 'Kenya', 'Nigeria'],
-      planTypes: ['1GB/7days', '3GB/15days', '5GB/30days', '7GB/30days']
-    },
-    { 
-      id: 'global', 
-      name: 'Global', 
-      code: 'GLB',
-      minPrice: 29.99, 
-      icon: '🌐',
-      description: 'Worldwide coverage in 150+ countries',
-      countries: ['Worldwide Coverage'],
-      planTypes: ['1GB/7days', '3GB/15days', '5GB/30days', '10GB/30days', '20GB/30days']
-    }
-  ];
-};
 
 const EsimPlans = () => {
-  const [activeTab, setActiveTab] = useState('local');
   const [searchTerm, setSearchTerm] = useState('');
   const [countries, setCountries] = useState([]);
-  const [regions, setRegions] = useState([]);
   const [filteredCountries, setFilteredCountries] = useState([]);
-  const [filteredRegions, setFilteredRegions] = useState([]);
   const [showAllCountries, setShowAllCountries] = useState(false);
-  const [showAllRegions, setShowAllRegions] = useState(false);
   
   // Plan selection and checkout state
 
@@ -264,34 +205,12 @@ const EsimPlans = () => {
     gcTime: 10 * 60 * 1000, // 10 minutes (cacheTime renamed to gcTime in v5)
   });
 
-  // Fetch regions
-  const { data: regionsData, isLoading: regionsLoading } = useQuery({
-    queryKey: ['regions'],
-    queryFn: async () => {
-      try {
-        const querySnapshot = await getDocs(collection(db, 'regions'));
-        return querySnapshot.docs.map(doc => ({ 
-          id: doc.id, 
-          ...doc.data(),
-          minPrice: 19.99 // Default regional price
-        }));
-      } catch (error) {
-        console.error('Firebase regions error:', error);
-        // Return enhanced fallback regional data
-        return getStandardRegions();
-      }
-    },
-    retry: 1,
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000, // cacheTime renamed to gcTime in v5
-  });
 
   useEffect(() => {
     console.log('useEffect triggered:', { 
       countriesData: countriesData?.length, 
       countriesLoading, 
-      countriesError,
-      regionsData: regionsData?.length 
+      countriesError
     });
     
     if (countriesData) {
@@ -305,12 +224,7 @@ const EsimPlans = () => {
       setCountries(standardData);
       setFilteredCountries(standardData);
     }
-    
-    if (regionsData) {
-      setRegions(regionsData);
-      setFilteredRegions(regionsData);
-    }
-  }, [countriesData, regionsData, countriesError, countriesLoading]);
+  }, [countriesData, countriesError, countriesLoading]);
 
   // Enhanced search function that searches both Firebase and static data
   const searchCountries = async (term) => {
@@ -390,36 +304,20 @@ const EsimPlans = () => {
     return () => clearTimeout(timeoutId);
   }, [searchTerm]);
 
-  // Filter countries and regions based on search term
+  // Filter countries based on search term
   useEffect(() => {
     if (searchTerm) {
       // Show search results when searching
       setFilteredCountries(searchResults);
-      
-      // Filter regions based on search term
-      const filteredRegionalResults = regions.filter(region => 
-        region.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        region.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        region.countries?.some(country => 
-          country.toLowerCase().includes(searchTerm.toLowerCase())
-        )
-      );
-      setFilteredRegions(filteredRegionalResults);
     } else {
       // Show standard data when not searching
       setFilteredCountries(countries);
-      setFilteredRegions(regions);
     }
-  }, [searchTerm, countries, regions, searchResults]);
+  }, [searchTerm, countries, searchResults]);
 
   const handleCountrySelect = async (country) => {
     setShowCheckoutModal(true);
     await loadAvailablePlansForCountry(country.code);
-  };
-
-  const handleRegionSelect = async (region) => {
-    setShowCheckoutModal(true);
-    await loadAvailablePlansForCountry(region.id);
   };
 
   // Load available plans for a specific country
@@ -447,30 +345,6 @@ const EsimPlans = () => {
     }
   };
 
-  // Load available plans for a specific region
-  const loadAvailablePlansForRegion = async (regionId) => {
-    setLoadingPlans(true);
-    try {
-      // Query for regional plans
-      const plansQuery = query(
-        collection(db, 'plans'),
-        where('region_id', '==', regionId)
-      );
-      const querySnapshot = await getDocs(plansQuery);
-      
-      const plans = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      
-      setAvailablePlans(plans);
-    } catch (error) {
-      console.error('Error loading plans for region:', error);
-      setAvailablePlans([]);
-    } finally {
-      setLoadingPlans(false);
-    }
-  };
 
   // Show fallback data immediately if no countries are loaded after 3 seconds
   useEffect(() => {
@@ -492,35 +366,6 @@ const EsimPlans = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="destination-top mb-8">
-          {/* Tab Navigation */}
-          <div className="flex justify-center mb-8">
-            <div className="esim-plan-tab bg-white rounded-full p-1 shadow-lg shadow-tufts-blue" role="tablist">
-              <button
-                className={`esim-plan-tab__btn px-6 py-3 rounded-full font-medium transition-all duration-200 ${
-                  activeTab === 'local'
-                    ? 'bg-tufts-blue text-white shadow-md shadow-tufts-blue'
-                    : 'text-gray-600 hover:text-tufts-blue'
-                }`}
-                onClick={() => setActiveTab('local')}
-                type="button"
-                role="tab"
-              >
-                Local eSIMs
-              </button>
-              <button
-                className={`esim-plan-tab__btn px-6 py-3 rounded-full font-medium transition-all duration-200 ${
-                  activeTab === 'regional'  
-                    ? 'bg-tufts-blue text-white shadow-md shadow-tufts-blue'
-                    : 'text-gray-600 hover:text-tufts-blue'
-                }`}
-                onClick={() => setActiveTab('regional')}
-                type="button"
-                role="tab"
-              >
-                Regional eSIMs
-              </button>
-            </div>
-          </div>
 
           {/* Search Box */}
           <div className="search-box max-w-md mx-auto mb-8">
@@ -556,11 +401,9 @@ const EsimPlans = () => {
           </div>
         </div>
 
-        {/* Tab Content */}
+        {/* Local eSIMs Content */}
         <div className="tab-content">
-          {/* Local eSIMs Tab */}
-          {activeTab === 'local' && (
-            <div className="tab-pane fade show active">
+          <div className="tab-pane fade show active">
               {/* Loading state for countries */}
               {countriesLoading && countries.length === 0 ? (
                 <div className="flex justify-center items-center min-h-64">
@@ -660,151 +503,7 @@ const EsimPlans = () => {
                   )}
                 </>
               )}
-            </div>
-          )}
-
-          {/* Regional eSIMs Tab */}
-          {activeTab === 'regional' && (
-            <div className="tab-pane fade show active">
-              {/* Loading state for regions */}
-              {regionsLoading && regions.length === 0 ? (
-                <div className="flex justify-center items-center min-h-64">
-                  <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-tufts-blue"></div>
-                  <p className="ml-4 text-gray-600">Loading regional plans...</p>
-                </div>
-              ) : (
-                <>
-                  {/* Desktop Grid Layout */}
-                  <div className="hidden sm:grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-center">
-                    {filteredRegions.length > 0 ? (
-                      (showAllRegions || searchTerm ? filteredRegions : filteredRegions.slice(0, 8)).map((region, index) => (
-                        <div
-                          key={region.id}
-                          className="col-span-1"
-                        >
-                          <button
-                            className="esim-plan-card w-full bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 text-left border border-gray-100 hover:border-blue-200 group"
-                            onClick={() => handleRegionSelect(region)}
-                          >
-                            <div className="country-flag-display text-center mb-4">
-                              <span className="region-icon text-5xl group-hover:scale-110 transition-transform duration-200">
-                                {region.icon || '🌍'}
-                              </span>
-                            </div>
-
-                            <div className="esim-plan-card__content text-center">
-                              <h5 className="esim-plan-card__title text-lg font-semibold text-gray-900 mb-2">
-                                {region.name}
-                              </h5>
-                              {region.description && (
-                                <p className="text-sm text-gray-500 mb-3 line-clamp-2">
-                                  {region.description}
-                                </p>
-                              )}
-                              <div className="space-y-1">
-                                <span className="esim-plan-card__price text-blue-600 font-medium block">
-                                  From ${region.minPrice ? Math.round(region.minPrice) : '20'}
-                                </span>
-                                {region.countries && region.countries.length > 0 && (
-                                  <p className="text-xs text-gray-400 mb-3">
-                                    {region.countries.length === 1 && region.countries[0] === 'Worldwide Coverage' 
-                                      ? 'Worldwide Coverage'
-                                      : `${region.countries.length}+ countries`
-                                    }
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                          </button>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="col-span-full text-center py-12">
-                        <div className="max-w-md mx-auto">
-                          <span className="text-6xl mb-4 block">🌐</span>
-                          <h3 className="text-xl font-semibold text-gray-900 mb-2">Regional Plans Coming Soon</h3>
-                          <p className="text-gray-500">
-                            We're preparing amazing regional eSIM plans for you. Check back soon!
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  
-                  {/* Mobile List Layout */}
-                  <div className="sm:hidden space-y-3">
-                    {filteredRegions.length > 0 ? (
-                      (showAllRegions || searchTerm ? filteredRegions : filteredRegions.slice(0, 8)).map((region, index) => (
-                        <button
-                          key={region.id}
-                          className="esim-plan-card w-full bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 p-4 text-left border border-gray-100 hover:border-blue-200 flex items-center space-x-4"
-                          onClick={() => handleRegionSelect(region)}
-                        >
-                          <div className="region-flag-display flex-shrink-0">
-                            <span className="region-icon text-3xl">
-                              {region.icon || '🌍'}
-                            </span>
-                          </div>
-
-                          <div className="esim-plan-card__content flex-1 text-left">
-                            <h5 className="esim-plan-card__title text-base font-semibold text-gray-900 mb-1">
-                              {region.name}
-                            </h5>
-                            {region.description && (
-                              <p className="text-xs text-gray-500 mb-2 line-clamp-1">
-                                {region.description}
-                              </p>
-                            )}
-                            <div className="flex items-center space-x-2">
-                              <span className="esim-plan-card__price text-tufts-blue font-medium text-sm">
-                                From ${region.minPrice ? Math.round(region.minPrice) : '20'}
-                              </span>
-                              {region.countries && region.countries.length > 0 && (
-                                <span className="text-xs text-gray-400">
-                                  • {region.countries.length === 1 && region.countries[0] === 'Worldwide Coverage' 
-                                    ? 'Worldwide'
-                                    : `${region.countries.length}+ countries`
-                                  }
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          
-                          <div className="flex-shrink-0">
-                            <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                            </svg>
-                          </div>
-                        </button>
-                      ))
-                    ) : (
-                      <div className="text-center py-12">
-                        <div className="max-w-md mx-auto">
-                          <span className="text-4xl mb-4 block">🌐</span>
-                          <h3 className="text-lg font-semibold text-gray-900 mb-2">Regional Plans Coming Soon</h3>
-                          <p className="text-gray-500 text-sm">
-                            We're preparing amazing regional eSIM plans for you. Check back soon!
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  
-                  {/* Show All Button for Regions */}
-                  {!searchTerm && filteredRegions.length > 8 && (
-                    <div className="text-center mt-8">
-                      <button
-                        onClick={() => setShowAllRegions(!showAllRegions)}
-                        className="btn-primary px-8 py-3 text-white font-semibold rounded-full hover:bg-blue-700 transition-all duration-200 shadow-lg"
-                      >
-                        {showAllRegions ? 'Show Less' : 'Show All'}
-                      </button>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-          )}
+          </div>
         </div>
 
 

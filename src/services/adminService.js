@@ -26,6 +26,9 @@ export const ADMIN_PERMISSIONS = {
     'manage_countries',
     'manage_plans',
     'manage_config',
+    'manage_blog',
+    'manage_newsletter',
+    'manage_contact_requests',
     'view_analytics',
     'delete_data'
   ],
@@ -33,11 +36,15 @@ export const ADMIN_PERMISSIONS = {
     'manage_countries',
     'manage_plans', 
     'manage_config',
+    'manage_blog',
+    'manage_newsletter',
+    'manage_contact_requests',
     'view_analytics'
   ],
   [ADMIN_ROLES.MODERATOR]: [
     'manage_countries',
     'manage_plans',
+    'manage_blog',
     'view_analytics'
   ],
   [ADMIN_ROLES.USER]: []

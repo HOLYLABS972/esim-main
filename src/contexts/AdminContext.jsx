@@ -94,6 +94,21 @@ export const AdminProvider = ({ children }) => {
     return hasPermission('view_analytics');
   };
 
+  // Check if user can manage blog
+  const canManageBlog = () => {
+    return hasPermission('manage_blog');
+  };
+
+  // Check if user can manage newsletter
+  const canManageNewsletter = () => {
+    return hasPermission('manage_newsletter');
+  };
+
+  // Check if user can manage contact requests
+  const canManageContactRequests = () => {
+    return hasPermission('manage_contact_requests');
+  };
+
   // Refresh user role (useful after role changes)
   const refreshRole = async () => {
     if (!currentUser) return;
@@ -125,6 +140,9 @@ export const AdminProvider = ({ children }) => {
     canManageConfig,
     canDeleteData,
     canViewAnalytics,
+    canManageBlog,
+    canManageNewsletter,
+    canManageContactRequests,
     
     // Actions
     refreshRole,

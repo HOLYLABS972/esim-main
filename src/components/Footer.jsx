@@ -1,16 +1,19 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { MapPin, Mail, Phone, Facebook, Twitter, Instagram, Linkedin } from 'lucide-react';
+import { MapPin, Mail, Phone, Facebook, Twitter, Instagram, Linkedin, Youtube } from 'lucide-react';
+import { getSocialMediaLinks, getContactInfo } from '../services/settingsService';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
+  const [socialMedia, setSocialMedia] = useState({});
+  const [contactInfo, setContactInfo] = useState({});
+  const [loading, setLoading] = useState(true);
 
   const quickLinks = [
     { name: 'Home', path: '/' },
-    { name: 'Destination', path: '/' },
     { name: 'Blog', path: '/blog' },
     { name: 'Contact Us', path: '/contact' }
   ];
@@ -18,16 +21,37 @@ const Footer = () => {
   const usefulLinks = [
     { name: 'Privacy Policy', path: '/privacy-policy' },
     { name: 'Terms of Service', path: '/terms-of-service' },
-    { name: 'Cookie Policy', path: '/cookie-policy' },
-    { name: 'Support', path: '/contact' }
+    { name: 'Cookie Policy', path: '/cookie-policy' }
   ];
 
+  // Load settings data
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const [socialData, contactData] = await Promise.all([
+          getSocialMediaLinks(),
+          getContactInfo()
+        ]);
+        setSocialMedia(socialData);
+        setContactInfo(contactData);
+      } catch (error) {
+        console.error('Error loading settings:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadSettings();
+  }, []);
+
+  // Create social links array with only non-empty URLs
   const socialLinks = [
-    { icon: Facebook, url: '#', name: 'Facebook' },
-    { icon: Twitter, url: '#', name: 'Twitter' },
-    { icon: Instagram, url: '#', name: 'Instagram' },
-    { icon: Linkedin, url: '#', name: 'LinkedIn' }
-  ];
+    { icon: Facebook, url: socialMedia.facebook, name: 'Facebook' },
+    { icon: Twitter, url: socialMedia.twitter, name: 'Twitter' },
+    { icon: Instagram, url: socialMedia.instagram, name: 'Instagram' },
+    { icon: Linkedin, url: socialMedia.linkedin, name: 'LinkedIn' },
+    { icon: Youtube, url: socialMedia.youtube, name: 'YouTube' }
+  ].filter(link => link.url && link.url.trim() !== '');
 
   return (
     <footer className="footer-area relative bg-eerie-black text-eerie-black overflow-hidden">
@@ -66,24 +90,26 @@ const Footer = () => {
                 RoamJet - Your trusted partner for global eSIM solutions. Instant activation, 
                 worldwide coverage, and secure connectivity for travelers and businesses.
               </p>
-              <ul className="social-list flex space-x-4">
-                {socialLinks.map((social, index) => {
-                  const IconComponent = social.icon;
-                  return (
-                    <li key={index} className="social-list__item">
-                      <a 
-                        href={social.url} 
-                        className="social-list__link w-10 h-10 bg-cobalt-blue hover:bg-cobalt-blue-700 rounded-full flex items-center justify-center transition-colors duration-200"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        aria-label={social.name}
-                      >
-                        <IconComponent className="w-5 h-5" color="white" />
-                      </a>
-                    </li>
-                  );
-                })}
-              </ul>
+              {socialLinks.length > 0 && (
+                <ul className="social-list flex space-x-4">
+                  {socialLinks.map((social, index) => {
+                    const IconComponent = social.icon;
+                    return (
+                      <li key={index} className="social-list__item">
+                        <a 
+                          href={social.url} 
+                          className="social-list__link w-10 h-10 bg-cobalt-blue hover:bg-cobalt-blue-700 rounded-full flex items-center justify-center transition-colors duration-200"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label={social.name}
+                        >
+                          <IconComponent className="w-5 h-5" color="white" />
+                        </a>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
             </motion.div>
 
             {/* Quick Links */}
@@ -139,45 +165,62 @@ const Footer = () => {
             >
               <h5 className="footer-item__title text-xl font-semibold mb-6">Contact Us</h5>
               <ul className="footer-contact-menu space-y-4">
-                <li className="footer-contact-menu__item flex items-center space-x-3">
-                  <div className="footer-contact-menu__item-icon w-10 h-10 bg-cobalt-blue rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                    <MapPin className="w-5 h-5" color="white" />
-                  </div>
-                  <div className="footer-contact-menu__item-content">
-                    <p className="footer-contact__desc text-eerie-black">
-                      Holylabs Ltd<br/>
-                      275 New North Road Islington # 1432<br/>
-                      London, N1 7AA<br/>
-                      United Kingdom
+                {/* Address - only show if address is provided */}
+                {contactInfo.address && contactInfo.address.trim() !== '' && (
+                  <li className="footer-contact-menu__item flex items-center space-x-3">
+                    <div className="footer-contact-menu__item-icon w-10 h-10 bg-cobalt-blue rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                      <MapPin className="w-5 h-5" color="white" />
+                    </div>
+                    <div className="footer-contact-menu__item-content">
+                      <p className="footer-contact__desc text-eerie-black">
+                        {contactInfo.address}
+                      </p>
+                    </div>
+                  </li>
+                )}
+                
+                {/* Email - only show if email is provided */}
+                {contactInfo.email && contactInfo.email.trim() !== '' && (
+                  <li className="footer-contact-menu__item flex items-center space-x-3">
+                    <div className="footer-contact-menu__item-icon w-10 h-10 bg-cobalt-blue rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                      <Mail className="w-5 h-5" color="white" />
+                    </div>
+                    <div className="footer-contact-menu__item-content">
+                      <a 
+                        className="footer-contact__desc text-eerie-black hover:text-cobalt-blue transition-colors duration-200" 
+                        href={`mailto:${contactInfo.email}`}
+                      >
+                        {contactInfo.email}
+                      </a>
+                    </div>
+                  </li>
+                )}
+                
+                {/* Phone - only show if phone is provided */}
+                {contactInfo.phone && contactInfo.phone.trim() !== '' && (
+                  <li className="footer-contact-menu__item flex items-center space-x-3">
+                    <div className="footer-contact-menu__item-icon w-10 h-10 bg-cobalt-blue rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                      <Phone className="w-5 h-5" color="white" />
+                    </div>
+                    <div className="footer-contact-menu__item-content">
+                      <a 
+                        className="footer-contact__desc text-eerie-black hover:text-cobalt-blue transition-colors duration-200" 
+                        href={`tel:${contactInfo.phone}`}
+                      >
+                        {contactInfo.phone}
+                      </a>
+                    </div>
+                  </li>
+                )}
+                
+                {/* Show message if no contact info is available */}
+                {!contactInfo.address && !contactInfo.email && !contactInfo.phone && !loading && (
+                  <li className="footer-contact-menu__item">
+                    <p className="footer-contact__desc text-gray-500 italic">
+                      Contact information not available
                     </p>
-                  </div>
-                </li>
-                <li className="footer-contact-menu__item flex items-center space-x-3">
-                  <div className="footer-contact-menu__item-icon w-10 h-10 bg-cobalt-blue rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                    <Mail className="w-5 h-5" color="white" />
-                  </div>
-                  <div className="footer-contact-menu__item-content">
-                    <a 
-                      className="footer-contact__desc text-eerie-black hover:text-cobalt-blue transition-colors duration-200" 
-                      href="mailto:support@roamjet.net"
-                    >
-                      support@roamjet.net
-                    </a>
-                  </div>
-                </li>
-                <li className="footer-contact-menu__item flex items-center space-x-3">
-                  <div className="footer-contact-menu__item-icon w-10 h-10 bg-cobalt-blue rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                    <Phone className="w-5 h-5" color="white" />
-                  </div>
-                  <div className="footer-contact-menu__item-content">
-                    <a 
-                      className="footer-contact__desc text-eerie-black hover:text-cobalt-blue transition-colors duration-200" 
-                      href="tel:+972515473526"
-                    >
-                      +972 51 547 3526
-                    </a>
-                  </div>
-                </li>
+                  </li>
+                )}
               </ul>
             </motion.div>
           </div>

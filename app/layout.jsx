@@ -1,6 +1,6 @@
 import Providers from '../src/components/Providers'
 import ConditionalNavbar from '../src/components/ConditionalNavbar'
-import Footer from '../src/components/Footer'
+import ConditionalFooter from '../src/components/ConditionalFooter'
 import CookieConsent from '../src/components/CookieConsent'
 import './globals.css'
 
@@ -81,7 +81,7 @@ export default function RootLayout({ children }) {
             <main>
               {children}
             </main>
-            <Footer />
+            <ConditionalFooter />
             <CookieConsent />
           </div>
         </Providers>

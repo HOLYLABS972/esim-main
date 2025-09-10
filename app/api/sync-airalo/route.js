@@ -98,53 +98,7 @@ export async function POST(request) {
     
     let totalSynced = { countries: 0, packages: 0 };
     
-    // Fetch and sync countries
-    try {
-      console.log('🌍 Fetching countries from Airalo API...');
-      const countriesResponse = await fetch(`${baseUrl}/v2/countries`, {
-        headers
-      });
-      
-      if (!countriesResponse.ok) {
-        throw new Error(`Failed to fetch countries: ${countriesResponse.statusText}`);
-      }
-      
-      const countriesData = await countriesResponse.json();
-      const countries = countriesData.data || [];
-      
-      // Batch write countries to Firestore
-      const batch = [];
-      for (const country of countries) {
-        if (country.code && country.name) {
-          const countryRef = doc(db, 'countries', country.code);
-          batch.push(setDoc(countryRef, {
-            name: country.name,
-            code: country.code,
-            flag: country.flag || '',
-            region_slug: country.region_slug || '',
-            is_roaming: country.is_roaming || false,
-            status: 'active',
-            updated_at: serverTimestamp(),
-            updated_by: 'airalo_sync',
-            provider: 'airalo'
-          }, { merge: true }));
-          totalSynced.countries++;
-        }
-      }
-      
-      // Execute batch
-      await Promise.all(batch);
-      console.log(`✅ Synced ${totalSynced.countries} countries`);
-      
-    } catch (error) {
-      console.error('❌ Error syncing countries:', error);
-      return NextResponse.json({
-        success: false,
-        error: `Error syncing countries: ${error.message}`
-      }, { status: 500 });
-    }
-    
-    // Fetch and sync packages
+    // Fetch and sync packages (which include country data)
     try {
       console.log('📱 Fetching packages from Airalo API...');
       const packagesResponse = await fetch(`${baseUrl}/v2/packages`, {
@@ -156,41 +110,125 @@ export async function POST(request) {
       }
       
       const packagesData = await packagesResponse.json();
-      const packages = packagesData.data || [];
+      const plans = packagesData.data || [];
       
-      // Batch write packages to Firestore
-      const batch = [];
-      for (const pkg of packages) {
-        if (pkg.slug && pkg.name) {
-          const packageRef = doc(db, 'packages', pkg.slug);
-          batch.push(setDoc(packageRef, {
-            name: pkg.name,
-            slug: pkg.slug,
-            description: pkg.description || '',
-            data_amount: pkg.data_amount || 0,
-            data_unit: pkg.data_unit || 'GB',
-            validity: pkg.validity || 0,
-            validity_unit: pkg.validity_unit || 'days',
+      console.log(`📊 Received ${plans.length} plans from API`);
+      
+      // Debug: Check the structure of the first plan
+      if (plans.length > 0) {
+        console.log('🔍 First plan structure:', JSON.stringify(plans[0], null, 2));
+        console.log('🔍 Plan keys:', Object.keys(plans[0]));
+        if (plans[0].packages) {
+          console.log('📦 First plan has packages:', plans[0].packages.length);
+        }
+        if (plans[0].countries) {
+          console.log('🌍 First plan has countries:', plans[0].countries.length);
+        }
+      }
+      
+      // Extract all packages and countries from all plans
+      const allPackages = [];
+      const countriesMap = new Map();
+      
+      for (const plan of plans) {
+        // Extract packages from this plan
+        if (plan.packages && Array.isArray(plan.packages)) {
+          console.log(`📦 Plan "${plan.title}" has ${plan.packages.length} packages`);
+          for (const pkg of plan.packages) {
+            allPackages.push({
+              ...pkg,
+              plan_title: plan.title,
+              plan_id: plan.id
+            });
+          }
+        }
+        
+        // Extract countries from this plan
+        if (plan.countries && Array.isArray(plan.countries)) {
+          console.log(`🌍 Plan "${plan.title}" has ${plan.countries.length} countries`);
+          for (const country of plan.countries) {
+            countriesMap.set(country.country_code, {
+              code: country.country_code,
+              name: country.title,
+              flag: country.image?.url || '',
+              region_slug: '', // Not provided in this structure
+              is_roaming: plan.is_roaming || false
+            });
+          }
+        }
+      }
+      
+      console.log(`📦 Total packages extracted: ${allPackages.length}`);
+      console.log(`🌍 Total countries extracted: ${countriesMap.size}`);
+      
+      // Process countries
+      const countriesBatch = [];
+      for (const [code, country] of countriesMap) {
+        const countryRef = doc(db, 'countries', code);
+        countriesBatch.push(setDoc(countryRef, {
+          name: country.name,
+          code: country.code,
+          flag: country.flag,
+          region_slug: country.region_slug,
+          is_roaming: country.is_roaming,
+          status: 'active',
+          updated_at: serverTimestamp(),
+          updated_by: 'airalo_sync',
+          provider: 'airalo'
+        }, { merge: true }));
+        totalSynced.countries++;
+      }
+      
+      // Execute countries batch
+      await Promise.all(countriesBatch);
+      console.log(`✅ Synced ${totalSynced.countries} countries`);
+      
+      // Process packages
+      const packagesBatch = [];
+      for (const pkg of allPackages) {
+        if (pkg.id && pkg.title) {
+          const packageRef = doc(db, 'packages', pkg.id);
+          packagesBatch.push(setDoc(packageRef, {
+            name: pkg.title,
+            slug: pkg.id,
+            description: pkg.short_info || '',
+            data_amount: pkg.amount || 0,
+            data_unit: 'MB',
+            validity: pkg.day || 0,
+            validity_unit: 'days',
             price: pkg.price || 0,
-            currency: pkg.currency || 'USD',
-            country_code: pkg.country_code || '',
-            region_slug: pkg.region_slug || '',
+            currency: 'USD',
+            country_code: 'US', // From the data structure
+            region_slug: '',
             status: 'active',
             updated_at: serverTimestamp(),
             updated_by: 'airalo_sync',
-            provider: 'airalo'
+            provider: 'airalo',
+            // Additional fields from Airalo API
+            type: pkg.type || 'sim',
+            net_price: pkg.net_price || 0,
+            is_unlimited: pkg.is_unlimited || false,
+            voice: pkg.voice || null,
+            text: pkg.text || null,
+            data: pkg.data || '',
+            prices: pkg.prices || {},
+            plan_title: pkg.plan_title,
+            plan_id: pkg.plan_id
           }, { merge: true }));
           totalSynced.packages++;
         }
       }
       
-      // Execute batch
-      await Promise.all(batch);
+      // Execute packages batch
+      await Promise.all(packagesBatch);
       console.log(`✅ Synced ${totalSynced.packages} packages`);
       
     } catch (error) {
       console.error('❌ Error syncing packages:', error);
-      // Don't return error here, just log it and continue
+      return NextResponse.json({
+        success: false,
+        error: `Error syncing packages: ${error.message}`
+      }, { status: 500 });
     }
     
     // Create sync log

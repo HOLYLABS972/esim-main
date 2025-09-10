@@ -4,7 +4,11 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useAdmin } from '../contexts/AdminContext';
 import { collection, query, where, getDocs, doc, updateDoc, deleteDoc, writeBatch, addDoc, setDoc } from 'firebase/firestore';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 import { db } from '../firebase/config';
+import { getContactRequests, updateContactRequestStatus, deleteContactRequest } from '../services/contactService';
+import { getNewsletterSubscriptions, updateNewsletterSubscriptionStatus, deleteNewsletterSubscription, getNewsletterStats } from '../services/newsletterService';
+import { getSettings, updateSettings, updateSettingsSection, resetSettingsToDefaults, validateSettings } from '../services/settingsService';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Settings, 
@@ -25,9 +29,27 @@ import {
   TrendingUp,
   Database,
   Activity,
-  DollarSign
+  DollarSign,
+  FileText,
+  MessageSquare,
+  Mail,
+  Link,
+  Phone,
+  Building,
+  Clock,
+  Save,
+  RotateCcw,
+  ExternalLink,
+  Linkedin,
+  Facebook,
+  Twitter,
+  Instagram,
+  Youtube,
+  MessageCircle,
+  LogOut
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import BlogManagement from './BlogManagement';
 
 // Helper function to get flag emoji from country code
 const getFlagEmoji = (countryCode) => {
@@ -42,8 +64,9 @@ const getFlagEmoji = (countryCode) => {
 };
 
 const AdminDashboard = () => {
-  const { currentUser } = useAuth();
-  const { isAdmin, userRole, canManageCountries, canManagePlans, canManageConfig, canDeleteData, canManageAdmins, loading: adminLoading } = useAdmin();
+  const { currentUser, logout } = useAuth();
+  const { isAdmin, userRole, canManageCountries, canManagePlans, canManageConfig, canDeleteData, canManageAdmins, canManageBlog, canManageNewsletter, canManageContactRequests, loading: adminLoading } = useAdmin();
+  const functions = getFunctions();
 
   // State Management - ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
   const [activeTab, setActiveTab] = useState('countries');
@@ -62,25 +85,6 @@ const AdminDashboard = () => {
   const [showPlansModal, setShowPlansModal] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState(null);
   
-  // Regional Plans Management
-  const [regions, setRegions] = useState([]);
-  const [filteredRegions, setFilteredRegions] = useState([]);
-  const [showRegionalPlansModal, setShowRegionalPlansModal] = useState(false);
-  const [selectedRegion, setSelectedRegion] = useState(null);
-  const [regionalPlans, setRegionalPlans] = useState([]);
-  const [showCreateRegionModal, setShowCreateRegionModal] = useState(false);
-  const [showAttachPlanModal, setShowAttachPlanModal] = useState(false);
-  const [showAttachCountryPlanModal, setShowAttachCountryPlanModal] = useState(false);
-  const [availablePlans, setAvailablePlans] = useState([]);
-  const [selectedCountryForAttach, setSelectedCountryForAttach] = useState(null);
-  const [newRegion, setNewRegion] = useState({
-    name: '',
-    code: '',
-    description: '',
-    countries: [],
-    minPrice: 0,
-    icon: '🌍'
-  });
   
   // User Management
   const [users, setUsers] = useState([]);
@@ -89,10 +93,62 @@ const AdminDashboard = () => {
   const [showRemoveAdminModal, setShowRemoveAdminModal] = useState(false);
   const [selectedUserForAction, setSelectedUserForAction] = useState(null);
   
+  // Contact Requests Management
+  const [contactRequests, setContactRequests] = useState([]);
+  const [filteredContactRequests, setFilteredContactRequests] = useState([]);
+  const [contactRequestSearchTerm, setContactRequestSearchTerm] = useState('');
+  const [contactRequestStatusFilter, setContactRequestStatusFilter] = useState('all');
+  
+  // Newsletter Management
+  const [newsletterSubscriptions, setNewsletterSubscriptions] = useState([]);
+  const [filteredNewsletterSubscriptions, setFilteredNewsletterSubscriptions] = useState([]);
+  const [newsletterSearchTerm, setNewsletterSearchTerm] = useState('');
+  const [newsletterStatusFilter, setNewsletterStatusFilter] = useState('all');
+  const [newsletterStats, setNewsletterStats] = useState({ total: 0, active: 0, unsubscribed: 0, bounced: 0 });
+  
+  // Settings Management
+  const [settings, setSettings] = useState(null);
+  const [settingsLoading, setSettingsLoading] = useState(false);
+  const [activeSettingsTab, setActiveSettingsTab] = useState('social');
+  const [settingsFormData, setSettingsFormData] = useState({
+    socialMedia: {},
+    contact: {},
+    businessHours: {}
+  });
+  const [settingsErrors, setSettingsErrors] = useState({});
+  
+  // Business Hours Modal Management
+  const [showBusinessHoursModal, setShowBusinessHoursModal] = useState(false);
+  const [businessHoursData, setBusinessHoursData] = useState({
+    monday: { open: '', close: '', closed: false },
+    tuesday: { open: '', close: '', closed: false },
+    wednesday: { open: '', close: '', closed: false },
+    thursday: { open: '', close: '', closed: false },
+    friday: { open: '', close: '', closed: false },
+    saturday: { open: '', close: '', closed: false },
+    sunday: { open: '', close: '', closed: false }
+  });
+  
+  // User Dropdown Management
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
+  
   // Countries Modal Management
   const [showCountriesModal, setShowCountriesModal] = useState(false);
   const [selectedCountryPlans, setSelectedCountryPlans] = useState([]);
   const [selectedCountryName, setSelectedCountryName] = useState('');
+  const [showAttachPlanModal, setShowAttachPlanModal] = useState(false);
+  const [showAttachCountryPlanModal, setShowAttachCountryPlanModal] = useState(false);
+  const [selectedCountryForAttach, setSelectedCountryForAttach] = useState(null);
+  const [availablePlans, setAvailablePlans] = useState([]);
+  const [regions, setRegions] = useState([]);
+  const [showCreateRegionModal, setShowCreateRegionModal] = useState(false);
+  const [newRegion, setNewRegion] = useState({
+    name: '',
+    code: '',
+    description: '',
+    minPrice: 0,
+    icon: '🌍'
+  });
 
   // Initialize data - ALL HOOKS MUST BE BEFORE CONDITIONAL RETURNS
   useEffect(() => {
@@ -102,6 +158,9 @@ const AdminDashboard = () => {
       loadRegionsFromFirestore();
       loadAiraloApiKey();
       loadUsersFromFirestore();
+      loadContactRequests();
+      loadNewsletterSubscriptions();
+      loadSettings();
     }
   }, [currentUser]);
 
@@ -123,6 +182,35 @@ const AdminDashboard = () => {
     );
     setFilteredUsers(filtered);
   }, [users, userSearchTerm]);
+
+  // Filter contact requests based on search and status
+  useEffect(() => {
+    let filtered = contactRequests.filter(request => 
+      request.name?.toLowerCase().includes(contactRequestSearchTerm.toLowerCase()) ||
+      request.email?.toLowerCase().includes(contactRequestSearchTerm.toLowerCase()) ||
+      request.message?.toLowerCase().includes(contactRequestSearchTerm.toLowerCase())
+    );
+    
+    if (contactRequestStatusFilter !== 'all') {
+      filtered = filtered.filter(request => request.status === contactRequestStatusFilter);
+    }
+    
+    setFilteredContactRequests(filtered);
+  }, [contactRequests, contactRequestSearchTerm, contactRequestStatusFilter]);
+
+  // Filter newsletter subscriptions based on search and status
+  useEffect(() => {
+    let filtered = newsletterSubscriptions.filter(subscription => 
+      subscription.email?.toLowerCase().includes(newsletterSearchTerm.toLowerCase()) ||
+      subscription.source?.toLowerCase().includes(newsletterSearchTerm.toLowerCase())
+    );
+    
+    if (newsletterStatusFilter !== 'all') {
+      filtered = filtered.filter(subscription => subscription.status === newsletterStatusFilter);
+    }
+    
+    setFilteredNewsletterSubscriptions(filtered);
+  }, [newsletterSubscriptions, newsletterSearchTerm, newsletterStatusFilter]);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -588,134 +676,11 @@ const AdminDashboard = () => {
     }
   };
 
-  // Regional Plans Management Functions
-  const loadRegionsFromFirestore = async () => {
-    try {
-      setLoading(true);
-      const regionsSnapshot = await getDocs(collection(db, 'regions'));
-      const regionsData = regionsSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      setRegions(regionsData);
-      setFilteredRegions(regionsData);
-      console.log('✅ Loaded', regionsData.length, 'regions from Firestore');
-    } catch (error) {
-      console.error('❌ Error loading regions:', error);
-      toast.error(`Error loading regions: ${error.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  const createRegion = async () => {
-    if (!newRegion.name || !newRegion.code) {
-      toast.error('Please fill in all required fields');
-      return;
-    }
 
-    try {
-      setLoading(true);
-      await addDoc(collection(db, 'regions'), {
-        ...newRegion,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      });
-      
-      toast.success('Region created successfully!');
-      setShowCreateRegionModal(false);
-      setNewRegion({ name: '', code: '', description: '', countries: [], minPrice: 0, icon: '🌍' });
-      await loadRegionsFromFirestore();
-    } catch (error) {
-      console.error('❌ Error creating region:', error);
-      toast.error(`Error creating region: ${error.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  const deleteRegion = async (regionId, regionName) => {
-    if (!window.confirm(`Delete ${regionName} region? This action cannot be undone.`)) return;
 
-    try {
-      setLoading(true);
-      await deleteDoc(doc(db, 'regions', regionId));
-      toast.success(`${regionName} region deleted successfully!`);
-      await loadRegionsFromFirestore();
-    } catch (error) {
-      console.error('❌ Error deleting region:', error);
-      toast.error(`Error deleting region: ${error.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  const showRegionalPlans = async (regionId, regionName) => {
-    try {
-      setLoading(true);
-      const plansSnapshot = await getDocs(
-        query(collection(db, 'regionalPlans'), where('regionId', '==', regionId))
-      );
-      
-      const regionPlans = plansSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-
-      setRegionalPlans(regionPlans);
-      setSelectedRegion({ id: regionId, name: regionName });
-      setShowRegionalPlansModal(true);
-    } catch (error) {
-      console.error('❌ Error fetching regional plans:', error);
-      toast.error(`Error fetching plans for ${regionName}: ${error.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const updateRegionalPlanPrice = async (planId, newPrice) => {
-    try {
-      setLoading(true);
-      await updateDoc(doc(db, 'regionalPlans', planId), {
-        price: newPrice,
-        updatedAt: new Date(),
-        priceUpdatedVia: 'admin_panel'
-      });
-      toast.success('Regional plan price updated successfully!');
-      
-      // Refresh plans if modal is open
-      if (showRegionalPlansModal && selectedRegion) {
-        await showRegionalPlans(selectedRegion.id, selectedRegion.name);
-      }
-    } catch (error) {
-      console.error('❌ Error updating regional plan price:', error);
-      toast.error(`Error updating price: ${error.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const deleteRegionalPlan = async (planId, planName) => {
-    if (!window.confirm(`Are you sure you want to delete the ${planName} plan? This action cannot be undone.`)) {
-      return;
-    }
-
-    try {
-      setLoading(true);
-      await deleteDoc(doc(db, 'regionalPlans', planId));
-      toast.success(`${planName} plan deleted successfully!`);
-      
-      // Refresh plans if modal is open
-      if (showRegionalPlansModal && selectedRegion) {
-        await showRegionalPlans(selectedRegion.id, selectedRegion.name);
-      }
-    } catch (error) {
-      console.error('❌ Error deleting regional plan:', error);
-      toast.error(`Error deleting plan: ${error.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const deleteCountryPlan = async (planId, planName) => {
     console.log('🗑️ deleteCountryPlan called with:', { planId, planName });
@@ -810,9 +775,7 @@ const AdminDashboard = () => {
           country_codes: plan.country_codes || []
         }));
         
-        // Filter out plans already attached to this region
-        const alreadyAttached = regionalPlans.map(rp => rp.originalPlanId);
-        const available = transformedPlans.filter(plan => !alreadyAttached.includes(plan.id));
+        const available = transformedPlans;
         
         setAvailablePlans(available);
 
@@ -828,7 +791,6 @@ const AdminDashboard = () => {
       } else {
         // If no plans in Firebase, show message to sync first
         setAvailablePlans([]);
-        toast('No plans found in Firebase. Click "Sync All Data from Airalo" to load plans.', { icon: 'ℹ️' });
       }
       
     } catch (error) {
@@ -839,45 +801,6 @@ const AdminDashboard = () => {
     }
   };
 
-  const attachPlanToRegion = async (plan) => {
-    if (!selectedRegion) {
-      toast.error('No region selected');
-      return;
-    }
-
-    try {
-      setLoading(true);
-      
-      // Attach the plan to the region
-      await addDoc(collection(db, 'regionalPlans'), {
-        name: plan.name,
-        data: plan.data,
-        duration: plan.duration,
-        price: plan.price,
-        currency: plan.currency || 'USD',
-        description: plan.description || '',
-        regionId: selectedRegion.id,
-        regionName: selectedRegion.name,
-        originalPlanId: plan.id,
-        originalCountry: plan.country,
-        attachedAt: new Date(),
-        attachedVia: 'admin_panel'
-      });
-      
-      toast.success(`Plan "${plan.name}" attached to ${selectedRegion.name}!`);
-      setShowAttachPlanModal(false);
-      
-      // Refresh both modals
-      if (showRegionalPlansModal && selectedRegion) {
-        await showRegionalPlans(selectedRegion.id, selectedRegion.name);
-      }
-    } catch (error) {
-      console.error('❌ Error attaching plan:', error);
-      toast.error(`Error attaching plan: ${error.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // User Management Functions
   const loadUsersFromFirestore = async () => {
@@ -894,6 +817,323 @@ const AdminDashboard = () => {
     } catch (error) {
       console.error('❌ Error loading users:', error);
       toast.error(`Error loading users: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Contact Requests Management Functions
+  const loadContactRequests = async () => {
+    try {
+      setLoading(true);
+      const requests = await getContactRequests();
+      setContactRequests(requests);
+      setFilteredContactRequests(requests);
+      console.log('✅ Loaded', requests.length, 'contact requests from Firestore');
+    } catch (error) {
+      console.error('❌ Error loading contact requests:', error);
+      toast.error(`Error loading contact requests: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdateRequestStatus = async (requestId, newStatus) => {
+    try {
+      setLoading(true);
+      await updateContactRequestStatus(requestId, newStatus);
+      toast.success(`Request status updated to ${newStatus}`);
+      await loadContactRequests();
+    } catch (error) {
+      console.error('❌ Error updating request status:', error);
+      toast.error(`Error updating request status: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteContactRequest = async (requestId, requestName) => {
+    if (!window.confirm(`Delete contact request from ${requestName}? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await deleteContactRequest(requestId);
+      toast.success('Contact request deleted successfully');
+      await loadContactRequests();
+    } catch (error) {
+      console.error('❌ Error deleting contact request:', error);
+      toast.error(`Error deleting contact request: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Newsletter Management Functions
+  const loadNewsletterSubscriptions = async () => {
+    try {
+      setLoading(true);
+      const subscriptions = await getNewsletterSubscriptions();
+      const stats = await getNewsletterStats();
+      setNewsletterSubscriptions(subscriptions);
+      setFilteredNewsletterSubscriptions(subscriptions);
+      setNewsletterStats(stats);
+      console.log('✅ Loaded', subscriptions.length, 'newsletter subscriptions from Firestore');
+    } catch (error) {
+      console.error('❌ Error loading newsletter subscriptions:', error);
+      toast.error(`Error loading newsletter subscriptions: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdateNewsletterStatus = async (subscriptionId, newStatus) => {
+    try {
+      setLoading(true);
+      await updateNewsletterSubscriptionStatus(subscriptionId, newStatus);
+      toast.success(`Subscription status updated to ${newStatus}`);
+      await loadNewsletterSubscriptions();
+    } catch (error) {
+      console.error('❌ Error updating newsletter status:', error);
+      toast.error(`Error updating newsletter status: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteNewsletterSubscription = async (subscriptionId, subscriberEmail) => {
+    if (!window.confirm(`Delete newsletter subscription for ${subscriberEmail}? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await deleteNewsletterSubscription(subscriptionId);
+      toast.success('Newsletter subscription deleted successfully');
+      await loadNewsletterSubscriptions();
+    } catch (error) {
+      console.error('❌ Error deleting newsletter subscription:', error);
+      toast.error(`Error deleting newsletter subscription: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Settings Management Functions
+  const loadSettings = async () => {
+    try {
+      setSettingsLoading(true);
+      const settingsData = await getSettings();
+      setSettings(settingsData);
+      setSettingsFormData({
+        socialMedia: settingsData.socialMedia || {},
+        contact: settingsData.contact || {},
+        businessHours: settingsData.businessHours || {}
+      });
+      console.log('✅ Loaded settings from Firestore');
+    } catch (error) {
+      console.error('❌ Error loading settings:', error);
+      toast.error(`Error loading settings: ${error.message}`);
+    } finally {
+      setSettingsLoading(false);
+    }
+  };
+
+  const handleSettingsInputChange = (section, field, value) => {
+    setSettingsFormData(prev => ({
+      ...prev,
+      [section]: {
+        ...prev[section],
+        [field]: value
+      }
+    }));
+    
+    // Clear error for this field
+    if (settingsErrors[field]) {
+      setSettingsErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
+  };
+
+  const handleSaveSettings = async (section) => {
+    try {
+      setSettingsLoading(true);
+      
+      // Validate the data
+      const validation = validateSettings({ [section]: settingsFormData[section] });
+      if (!validation.isValid) {
+        setSettingsErrors(validation.errors);
+        toast.error('Please fix the validation errors');
+        return;
+      }
+      
+      await updateSettingsSection(section, settingsFormData[section], currentUser?.uid);
+      toast.success(`${section} settings updated successfully!`);
+      await loadSettings();
+    } catch (error) {
+      console.error('❌ Error saving settings:', error);
+      toast.error(`Error saving settings: ${error.message}`);
+    } finally {
+      setSettingsLoading(false);
+    }
+  };
+
+  // Business Hours Functions
+  const handleOpenBusinessHoursModal = () => {
+    // Load existing business hours data
+    const existingHours = settings?.businessHours || {};
+    setBusinessHoursData({
+      monday: existingHours.monday || { open: '', close: '', closed: false },
+      tuesday: existingHours.tuesday || { open: '', close: '', closed: false },
+      wednesday: existingHours.wednesday || { open: '', close: '', closed: false },
+      thursday: existingHours.thursday || { open: '', close: '', closed: false },
+      friday: existingHours.friday || { open: '', close: '', closed: false },
+      saturday: existingHours.saturday || { open: '', close: '', closed: false },
+      sunday: existingHours.sunday || { open: '', close: '', closed: false }
+    });
+    setShowBusinessHoursModal(true);
+  };
+
+  const handleBusinessHoursChange = (day, field, value) => {
+    setBusinessHoursData(prev => ({
+      ...prev,
+      [day]: {
+        ...prev[day],
+        [field]: value
+      }
+    }));
+  };
+
+  const handleSaveBusinessHours = async () => {
+    try {
+      setSettingsLoading(true);
+      await updateSettingsSection('businessHours', businessHoursData, currentUser?.uid);
+      toast.success('Business hours updated successfully!');
+      setShowBusinessHoursModal(false);
+      await loadSettings();
+    } catch (error) {
+      console.error('❌ Error saving business hours:', error);
+      toast.error(`Error saving business hours: ${error.message}`);
+    } finally {
+      setSettingsLoading(false);
+    }
+  };
+
+  // User Dropdown Functions
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast.success('Logged out successfully!');
+    } catch (error) {
+      console.error('❌ Error logging out:', error);
+      toast.error(`Error logging out: ${error.message}`);
+    }
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showUserDropdown && !event.target.closest('.user-dropdown-container')) {
+        setShowUserDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showUserDropdown]);
+
+  const handleResetSettings = async () => {
+    if (!window.confirm('Are you sure you want to reset all settings to defaults? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      setSettingsLoading(true);
+      await resetSettingsToDefaults(currentUser?.uid);
+      toast.success('Settings reset to defaults successfully!');
+      await loadSettings();
+    } catch (error) {
+      console.error('❌ Error resetting settings:', error);
+      toast.error(`Error resetting settings: ${error.message}`);
+    } finally {
+      setSettingsLoading(false);
+    }
+  };
+
+  const loadRegionsFromFirestore = async () => {
+    try {
+      setLoading(true);
+      const regionsSnapshot = await getDocs(collection(db, 'regions'));
+      const regionsData = regionsSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setRegions(regionsData);
+      console.log('✅ Loaded', regionsData.length, 'regions from Firestore');
+    } catch (error) {
+      console.error('❌ Error loading regions:', error);
+      toast.error(`Error loading regions: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
+  const createRegion = async () => {
+    if (!newRegion.name || !newRegion.code) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      
+      // Check if region with same code already exists
+      const existingRegionQuery = query(
+        collection(db, 'regions'),
+        where('code', '==', newRegion.code.toUpperCase())
+      );
+      const existingRegionSnapshot = await getDocs(existingRegionQuery);
+      
+      if (!existingRegionSnapshot.empty) {
+        toast.error(`Region with code "${newRegion.code}" already exists`);
+        return;
+      }
+      
+      const regionData = {
+        name: newRegion.name,
+        code: newRegion.code.toUpperCase(),
+        description: newRegion.description,
+        minPrice: newRegion.minPrice,
+        icon: newRegion.icon,
+        status: 'active',
+        createdAt: new Date(),
+        createdBy: currentUser?.uid || 'admin'
+      };
+      
+      await addDoc(collection(db, 'regions'), regionData);
+      
+      toast.success(`Region "${newRegion.name}" created successfully!`);
+      setShowCreateRegionModal(false);
+      setNewRegion({
+        name: '',
+        code: '',
+        description: '',
+        minPrice: 0,
+        icon: '🌍'
+      });
+      
+      // Refresh regions list
+      await loadRegionsFromFirestore();
+    } catch (error) {
+      console.error('❌ Error creating region:', error);
+      toast.error(`Error creating region: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -1012,7 +1252,6 @@ const AdminDashboard = () => {
       } else {
         // If no plans in Firebase, show message to sync first
         setAvailablePlans([]);
-        toast('No plans found in Firebase. Click "Sync All Data from Airalo" to load plans.', { icon: 'ℹ️' });
       }
       
     } catch (error) {
@@ -1143,78 +1382,120 @@ const AdminDashboard = () => {
   // Overview Stats
   const statsData = [
     { label: 'Total Countries', value: countries.length, icon: Globe, color: 'blue' },
-    { label: 'Regional Plans', value: regions.length, icon: MapPin, color: 'green' },
+    { label: 'Regions', value: regions.length, icon: MapPin, color: 'green' },
     { label: 'Environment', value: currentEnvironment, icon: Settings, color: 'gray' },
     { label: 'Status', value: 'Active', icon: Activity, color: 'emerald' }
   ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="bg-white sticky top-0 z-10 shadow-sm border-b border-gray-200">
-          <div className="py-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <div className="flex items-center justify-center w-12 h-12 bg-gray-100 rounded-xl">
-                  <Settings className="w-7 h-7 text-gray-600" />
-                </div>
-                <div>
-                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-                    Admin Panel
-                  </h1>
-                  <p className="text-gray-600 text-sm sm:text-base mt-1">
-                    Comprehensive eSIM service management and configuration
-                  </p>
-                </div>
+      <div className="flex h-screen">
+        {/* Sidebar */}
+        <div className="w-64 bg-white shadow-lg border-r border-gray-200 flex flex-col">
+          {/* Sidebar Header */}
+          <div className="p-6 border-b border-gray-200">
+            <div className="flex items-center space-x-3">
+              <div className="flex items-center justify-center w-10 h-10 bg-gray-100 rounded-xl">
+                <Settings className="w-6 h-6 text-gray-600" />
               </div>
-              
-              <div className="hidden sm:flex items-center space-x-4">
-                <div className="text-right">
-                  <p className="text-gray-500 text-sm">Welcome back</p>
-                  <p className="text-gray-900 font-medium">
-                    {currentUser?.displayName || currentUser?.email || 'Admin'}
-                  </p>
-                </div>
-                <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+              <div>
+                <h1 className="text-lg font-bold text-gray-900">
+                  Admin Panel
+                </h1>
+                <p className="text-gray-500 text-xs">
+                  eSIM Management
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Sidebar Navigation */}
+          <nav className="flex-1 p-4 space-y-2">
+            {[
+              { id: 'config', label: 'Configuration', icon: Settings, permission: canManageConfig },
+              { id: 'settings', label: 'Links', icon: Link, permission: canManageConfig },
+              { id: 'countries', label: 'Countries', icon: Globe, permission: canManageCountries },
+              { id: 'blog', label: 'Blog Management', icon: FileText, permission: canManageBlog },
+              { id: 'requests', label: 'Contact Requests', icon: MessageSquare, permission: canManageContactRequests },
+              { id: 'newsletter', label: 'Newsletter', icon: Mail, permission: canManageNewsletter },
+              { id: 'users', label: 'Manage Users', icon: Users, permission: canManageAdmins },
+            ].filter(tab => tab.permission).map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`w-full flex items-center px-4 py-3 rounded-lg font-medium transition-all duration-200 text-left ${
+                    activeTab === tab.id
+                      ? 'bg-black text-white shadow-lg'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                  }`}
+                >
+                  <Icon className="w-5 h-5 mr-3" />
+                  {tab.label}
+                </button>
+              );
+            })}
+          </nav>
+
+          {/* Sidebar Footer */}
+          <div className="p-4 border-t border-gray-200">
+            <div className="relative user-dropdown-container">
+              <button
+                onClick={() => setShowUserDropdown(!showUserDropdown)}
+                className="w-full flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
                   <span className="text-gray-600 font-semibold text-sm">
                     {(currentUser?.displayName || currentUser?.email || 'A').charAt(0).toUpperCase()}
                   </span>
                 </div>
-              </div>
+                <div className="flex-1 min-w-0 text-left">
+                  <p className="text-gray-900 font-medium text-sm truncate">
+                    {currentUser?.displayName || currentUser?.email || 'Admin'}
+                  </p>
+                  <p className="text-gray-500 text-xs">Administrator</p>
+                </div>
+              </button>
+              
+              {/* User Dropdown */}
+              {showUserDropdown && (
+                <div className="absolute bottom-full left-0 right-0 mb-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                  <div className="py-2">
+                    <button
+                      onClick={handleLogout}
+                      className="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-red-50 text-red-600 transition-colors"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      <span className="text-sm font-medium">Logout</span>
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="mb-8 mt-6">
-          <div className="bg-white rounded-xl shadow-lg p-1 border border-gray-200">
-            <nav className="flex space-x-1">
+        {/* Main Content Area */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Content Header */}
+          <div className="bg-white border-b border-gray-200 px-6 py-4">
+            <h2 className="text-xl font-semibold text-gray-900">
               {[
-                { id: 'config', label: 'Configuration', icon: Settings },
-                { id: 'countries', label: 'Countries', icon: Globe },
-                { id: 'regions', label: 'Regional Plans', icon: MapPin },
-                { id: 'users', label: 'Manage Users', icon: Users },
-              ].map((tab) => {
-                const Icon = tab.icon;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center px-6 py-3 rounded-lg font-medium transition-all duration-200 ${
-                      activeTab === tab.id
-                        ? 'bg-black text-white shadow-lg'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                    }`}
-                  >
-                    <Icon className="w-5 h-5 mr-2" />
-                    {tab.label}
-                  </button>
-                );
-              })}
-            </nav>
+                { id: 'config', label: 'Configuration' },
+                { id: 'settings', label: 'Links' },
+                { id: 'countries', label: 'Countries' },
+                { id: 'blog', label: 'Blog Management' },
+                { id: 'requests', label: 'Contact Requests' },
+                { id: 'newsletter', label: 'Newsletter' },
+                { id: 'users', label: 'Manage Users' },
+              ].find(tab => tab.id === activeTab)?.label || 'Dashboard'}
+            </h2>
           </div>
-        </div>
+
+          {/* Scrollable Content */}
+          <div className="flex-1 overflow-y-auto">
+            <div className="p-6">
 
         {/* Tab Content */}
         <AnimatePresence mode="wait">
@@ -1289,21 +1570,13 @@ const AdminDashboard = () => {
                       <p className="font-medium">Manage Countries</p>
                       <p className="text-sm text-gray-600">View and manage country plans</p>
                     </button>
-                    <button
-                      onClick={() => setActiveTab('regions')}
-                      className="p-4 border border-gray-200 rounded-lg hover:border-gray-300 hover:bg-gray-50 transition-all duration-200"
-                    >
-                      <MapPin className="w-8 h-8 text-gray-600 mb-2" />
-                      <p className="font-medium">Regional Plans</p>
-                      <p className="text-sm text-gray-600">Create and manage regional eSIMs</p>
-                    </button>
                   </div>
                 </div>
               </div>
             )}
 
             {/* Configuration Tab */}
-            {activeTab === 'config' && (
+            {activeTab === 'config' && canManageConfig && (
               <div className="space-y-6">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* Data Sync */}
@@ -1408,8 +1681,274 @@ const AdminDashboard = () => {
               </div>
             )}
 
+            {/* Settings Tab */}
+            {activeTab === 'settings' && canManageConfig && (
+              <div className="space-y-6">
+                {/* Header */}
+                <div className="bg-white rounded-xl shadow-lg p-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                      <h2 className="text-xl font-semibold">Website Links</h2>
+                      <p className="text-gray-600">Manage social media links, contact information, and company details</p>
+                    </div>
+                    <div className="flex space-x-3">
+                    </div>
+                  </div>
+                </div>
+
+                {/* Links Tabs */}
+                <div className="bg-white rounded-xl shadow-lg p-1">
+                  <nav className="flex space-x-1">
+                    {[
+                      { id: 'social', label: 'Social Media', icon: Link },
+                      { id: 'contact', label: 'Contact Info', icon: Phone },
+                      { id: 'hours', label: 'Business Hours', icon: Clock }
+                    ].map((tab) => {
+                      const Icon = tab.icon;
+                      return (
+                        <button
+                          key={tab.id}
+                          onClick={() => setActiveSettingsTab(tab.id)}
+                          className={`flex items-center px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                            activeSettingsTab === tab.id
+                              ? 'bg-black text-white shadow-lg'
+                              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                          }`}
+                        >
+                          <Icon className="w-4 h-4 mr-2" />
+                          {tab.label}
+                        </button>
+                      );
+                    })}
+                  </nav>
+                </div>
+
+                {/* Links Content */}
+                <div className="bg-white rounded-xl shadow-lg p-6">
+                  {settingsLoading ? (
+                    <div className="flex items-center justify-center py-12">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                      <span className="ml-3 text-gray-600">Loading links...</span>
+                    </div>
+                  ) : (
+                    <div className="space-y-6">
+                      {/* Social Media Tab */}
+                      {activeSettingsTab === 'social' && (
+                        <div className="space-y-6">
+                          <div className="flex items-center justify-between">
+                            <h3 className="text-lg font-semibold">Social Media Links</h3>
+                            <button
+                              onClick={() => handleSaveSettings('socialMedia')}
+                              disabled={settingsLoading}
+                              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center"
+                            >
+                              <Save className="w-4 h-4 mr-2" />
+                              Save Social Media
+                            </button>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <Linkedin className="w-4 h-4 inline mr-2" />
+                                LinkedIn URL
+                              </label>
+                              <input
+                                type="url"
+                                value={settingsFormData.socialMedia.linkedin || ''}
+                                onChange={(e) => handleSettingsInputChange('socialMedia', 'linkedin', e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                placeholder="https://linkedin.com/company/yourcompany"
+                              />
+                              {settingsErrors.linkedin && (
+                                <p className="text-red-500 text-sm mt-1">{settingsErrors.linkedin}</p>
+                              )}
+                            </div>
+
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <Facebook className="w-4 h-4 inline mr-2" />
+                                Facebook URL
+                              </label>
+                              <input
+                                type="url"
+                                value={settingsFormData.socialMedia.facebook || ''}
+                                onChange={(e) => handleSettingsInputChange('socialMedia', 'facebook', e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                placeholder="https://facebook.com/yourcompany"
+                              />
+                              {settingsErrors.facebook && (
+                                <p className="text-red-500 text-sm mt-1">{settingsErrors.facebook}</p>
+                              )}
+                            </div>
+
+
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <Instagram className="w-4 h-4 inline mr-2" />
+                                Instagram URL
+                              </label>
+                              <input
+                                type="url"
+                                value={settingsFormData.socialMedia.instagram || ''}
+                                onChange={(e) => handleSettingsInputChange('socialMedia', 'instagram', e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                placeholder="https://instagram.com/yourcompany"
+                              />
+                              {settingsErrors.instagram && (
+                                <p className="text-red-500 text-sm mt-1">{settingsErrors.instagram}</p>
+                              )}
+                            </div>
+
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <Youtube className="w-4 h-4 inline mr-2" />
+                                YouTube URL
+                              </label>
+                              <input
+                                type="url"
+                                value={settingsFormData.socialMedia.youtube || ''}
+                                onChange={(e) => handleSettingsInputChange('socialMedia', 'youtube', e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                placeholder="https://youtube.com/c/yourcompany"
+                              />
+                              {settingsErrors.youtube && (
+                                <p className="text-red-500 text-sm mt-1">{settingsErrors.youtube}</p>
+                              )}
+                            </div>
+
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Contact Information Tab */}
+                      {activeSettingsTab === 'contact' && (
+                        <div className="space-y-6">
+                          <div className="flex items-center justify-between">
+                            <h3 className="text-lg font-semibold">Contact Information</h3>
+                            <button
+                              onClick={() => handleSaveSettings('contact')}
+                              disabled={settingsLoading}
+                              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center"
+                            >
+                              <Save className="w-4 h-4 mr-2" />
+                              Save Contact Info
+                            </button>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <Mail className="w-4 h-4 inline mr-2" />
+                                Email Address
+                              </label>
+                              <input
+                                type="email"
+                                value={settingsFormData.contact.email || ''}
+                                onChange={(e) => handleSettingsInputChange('contact', 'email', e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                placeholder="contact@yourcompany.com"
+                              />
+                              {settingsErrors.email && (
+                                <p className="text-red-500 text-sm mt-1">{settingsErrors.email}</p>
+                              )}
+                            </div>
+
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <Phone className="w-4 h-4 inline mr-2" />
+                                Phone Number
+                              </label>
+                              <input
+                                type="tel"
+                                value={settingsFormData.contact.phone || ''}
+                                onChange={(e) => handleSettingsInputChange('contact', 'phone', e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                placeholder="+1 (555) 123-4567"
+                              />
+                              {settingsErrors.phone && (
+                                <p className="text-red-500 text-sm mt-1">{settingsErrors.phone}</p>
+                              )}
+                            </div>
+
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <Building className="w-4 h-4 inline mr-2" />
+                                Company Name
+                              </label>
+                              <input
+                                type="text"
+                                value={settingsFormData.contact.companyName || ''}
+                                onChange={(e) => handleSettingsInputChange('contact', 'companyName', e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                placeholder="Your Company Name"
+                              />
+                              {settingsErrors.companyName && (
+                                <p className="text-red-500 text-sm mt-1">{settingsErrors.companyName}</p>
+                              )}
+                            </div>
+
+                            <div className="md:col-span-2">
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <MapPin className="w-4 h-4 inline mr-2" />
+                                Address
+                              </label>
+                              <input
+                                type="text"
+                                value={settingsFormData.contact.address || ''}
+                                onChange={(e) => handleSettingsInputChange('contact', 'address', e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                placeholder="123 Main Street, City, State 12345"
+                              />
+                            </div>
+
+                          </div>
+                        </div>
+                      )}
+
+
+                      {/* Business Hours Tab */}
+                      {activeSettingsTab === 'hours' && (
+                        <div className="space-y-6">
+                          <div className="flex items-center justify-between">
+                            <h3 className="text-lg font-semibold">Business Hours</h3>
+                            <button
+                              onClick={handleOpenBusinessHoursModal}
+                              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center"
+                            >
+                              <Clock className="w-4 h-4 mr-2" />
+                              Manage Hours
+                            </button>
+                          </div>
+                          
+                          <div className="bg-gray-50 rounded-lg p-6">
+                            <h4 className="text-md font-medium text-gray-900 mb-4">Current Business Hours</h4>
+                            <div className="space-y-2">
+                              {settings?.businessHours ? (
+                                Object.entries(settings.businessHours).map(([day, hours]) => (
+                                  <div key={day} className="flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0">
+                                    <span className="font-medium capitalize">{day}</span>
+                                    <span className="text-gray-600">
+                                      {hours.closed ? 'Closed' : `${hours.open || '--'} - ${hours.close || '--'}`}
+                                    </span>
+                                  </div>
+                                ))
+                              ) : (
+                                <p className="text-gray-500">No business hours set. Click "Manage Hours" to add them.</p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Countries Tab */}
-            {activeTab === 'countries' && (
+            {activeTab === 'countries' && canManageCountries && (
               <div className="space-y-6">
                 {/* Search and Actions */}
                 <div className="bg-white rounded-xl shadow-lg p-6">
@@ -1457,20 +1996,9 @@ const AdminDashboard = () => {
                               {country.planCount} plan{country.planCount !== 1 ? 's' : ''} available
                             </p>
                           </div>
-                        ) : (
-                          <p className="text-sm text-gray-500">
-                            <i className="fas fa-info-circle w-4 h-4 inline mr-1" />
-                            No plans assigned
-                          </p>
-                        )}
+                        ) : null}
                       </div>
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => showCountryPlans(country.code, country.name)}
-                          className="flex-1 bg-black hover:bg-gray-800 text-white py-2 px-3 rounded-lg text-sm font-medium transition-colors"
-                        >
-                          View Plans
-                        </button>
+                      <div className="flex justify-end">
                         <button
                           onClick={() => deleteCountryFromFirestore(country.code)}
                           className="bg-red-600 hover:bg-red-700 text-white py-2 px-3 rounded-lg text-sm font-medium transition-colors"
@@ -1484,92 +2012,331 @@ const AdminDashboard = () => {
               </div>
             )}
 
-            {/* Regional Plans Tab */}
-            {activeTab === 'regions' && (
+
+            {/* Blog Management Tab */}
+            {activeTab === 'blog' && canManageBlog && (
+              <BlogManagement />
+            )}
+
+            {/* Contact Requests Tab */}
+            {activeTab === 'requests' && canManageContactRequests && (
               <div className="space-y-6">
-                {/* Header with Create Button */}
+                {/* Header */}
                 <div className="bg-white rounded-xl shadow-lg p-6">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
-                      <h2 className="text-xl font-semibold">Regional Plans Management</h2>
-                      <p className="text-gray-600">Create and manage multi-country eSIM plans</p>
+                      <h2 className="text-xl font-semibold">Contact Requests</h2>
+                      <p className="text-gray-600">Manage customer support requests and inquiries</p>
                     </div>
-                    <button
-                      onClick={() => setShowCreateRegionModal(true)}
-                      className="bg-black hover:bg-gray-800 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 flex items-center"
-                    >
-                      <Plus className="w-5 h-5 mr-2" />
-                      Create Region
-                    </button>
+                    <div className="text-sm text-gray-600">
+                      {filteredContactRequests.length} request{filteredContactRequests.length !== 1 ? 's' : ''} found
+                    </div>
                   </div>
                 </div>
 
-                {/* Regions Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {regions.map((region, index) => (
-                    <motion.div
-                      key={region.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.05 }}
-                      className="bg-white rounded-xl shadow-lg p-6 border border-gray-100 hover:shadow-xl transition-all duration-200"
-                    >
-                      <div className="flex justify-between items-start mb-4">
-                        <div>
-                          <h3 className="text-lg font-semibold text-gray-900">{region.name}</h3>
-                          <p className="text-sm text-gray-500">{region.code}</p>
-                        </div>
-                        <span className="text-2xl">{region.icon || '🌍'}</span>
-                      </div>
-                      <div className="space-y-2 mb-4">
-                        <p className="text-sm text-gray-600">{region.description}</p>
-                        {region.minPrice ? (
-                          <div className="space-y-1">
-                            <p className="text-sm text-gray-600">
-                              From ${region.minPrice}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              Plans available
-                            </p>
-                          </div>
+                {/* Search and Filter */}
+                <div className="bg-white rounded-xl shadow-lg p-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div className="relative flex-1 max-w-md">
+                      <Search className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+                      <input
+                        type="text"
+                        placeholder="Search requests by name, email, or message..."
+                        value={contactRequestSearchTerm}
+                        onChange={(e) => setContactRequestSearchTerm(e.target.value)}
+                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <select
+                        value={contactRequestStatusFilter}
+                        onChange={(e) => setContactRequestStatusFilter(e.target.value)}
+                        className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      >
+                        <option value="all">All Status</option>
+                        <option value="new">New</option>
+                        <option value="in_progress">In Progress</option>
+                        <option value="resolved">Resolved</option>
+                        <option value="closed">Closed</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Requests Table */}
+                <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Contact
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Message
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Status
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Date
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {filteredContactRequests.length > 0 ? (
+                          filteredContactRequests.map((request) => (
+                            <tr key={request.id} className="hover:bg-gray-50">
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="flex items-center">
+                                  <div className="flex-shrink-0 h-10 w-10">
+                                    <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                                      <span className="text-sm font-medium text-gray-700">
+                                        {request.name?.charAt(0).toUpperCase() || 'U'}
+                                      </span>
+                                    </div>
+                                  </div>
+                                  <div className="ml-4">
+                                    <div className="text-sm font-medium text-gray-900">
+                                      {request.name || 'Unknown'}
+                                    </div>
+                                    <div className="text-sm text-gray-500">
+                                      {request.email}
+                                    </div>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="px-6 py-4">
+                                <div className="text-sm text-gray-900 max-w-xs truncate">
+                                  {request.message}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                  request.status === 'new' 
+                                    ? 'bg-blue-100 text-blue-800'
+                                    : request.status === 'in_progress'
+                                    ? 'bg-yellow-100 text-yellow-800'
+                                    : request.status === 'resolved'
+                                    ? 'bg-green-100 text-green-800'
+                                    : 'bg-gray-100 text-gray-800'
+                                }`}>
+                                  {request.status?.replace('_', ' ') || 'unknown'}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {request.createdAt ? new Date(request.createdAt.toDate()).toLocaleDateString() : 'Unknown'}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <div className="flex space-x-2">
+                                  <select
+                                    value={request.status || 'new'}
+                                    onChange={(e) => handleUpdateRequestStatus(request.id, e.target.value)}
+                                    className="text-xs px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                  >
+                                    <option value="new">New</option>
+                                    <option value="in_progress">In Progress</option>
+                                    <option value="resolved">Resolved</option>
+                                    <option value="closed">Closed</option>
+                                  </select>
+                                  <button
+                                    onClick={() => handleDeleteContactRequest(request.id, request.name)}
+                                    className="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 px-2 py-1 rounded text-xs transition-colors"
+                                    title="Delete request"
+                                  >
+                                    Delete
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))
                         ) : (
-                          <p className="text-sm text-gray-500">
-                            <i className="fas fa-info-circle w-4 h-4 inline mr-1" />
-                            No plans assigned
-                          </p>
+                          <tr>
+                            <td colSpan="5" className="px-6 py-12 text-center text-gray-500">
+                              <MessageSquare className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                              <p className="text-sm">No contact requests found</p>
+                              {contactRequestSearchTerm && (
+                                <p className="text-xs mt-1">Try adjusting your search terms</p>
+                              )}
+                            </td>
+                          </tr>
                         )}
-                      </div>
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => showRegionalPlans(region.id, region.name)}
-                          className="flex-1 bg-black hover:bg-gray-800 text-white py-2 px-3 rounded-lg text-sm font-medium transition-colors"
-                        >
-                          View Plans
-                        </button>
-                        <button
-                          onClick={() => deleteRegion(region.id, region.name)}
-                          className="bg-red-600 hover:bg-red-700 text-white py-2 px-3 rounded-lg text-sm font-medium transition-colors"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </motion.div>
-                  ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Newsletter Tab */}
+            {activeTab === 'newsletter' && canManageNewsletter && (
+              <div className="space-y-6">
+                {/* Header with Stats */}
+                <div className="bg-white rounded-xl shadow-lg p-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                      <h2 className="text-xl font-semibold">Newsletter Subscriptions</h2>
+                      <p className="text-gray-600">Manage newsletter subscribers and their status</p>
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      {filteredNewsletterSubscriptions.length} subscription{filteredNewsletterSubscriptions.length !== 1 ? 's' : ''} found
+                    </div>
+                  </div>
+                  
+                  {/* Stats Cards */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+                    <div className="bg-blue-50 rounded-lg p-4">
+                      <div className="text-2xl font-bold text-blue-600">{newsletterStats.total}</div>
+                      <div className="text-sm text-blue-800">Total Subscribers</div>
+                    </div>
+                    <div className="bg-green-50 rounded-lg p-4">
+                      <div className="text-2xl font-bold text-green-600">{newsletterStats.active}</div>
+                      <div className="text-sm text-green-800">Active</div>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <div className="text-2xl font-bold text-gray-600">{newsletterStats.unsubscribed}</div>
+                      <div className="text-sm text-gray-800">Unsubscribed</div>
+                    </div>
+                    <div className="bg-red-50 rounded-lg p-4">
+                      <div className="text-2xl font-bold text-red-600">{newsletterStats.bounced}</div>
+                      <div className="text-sm text-red-800">Bounced</div>
+                    </div>
+                  </div>
                 </div>
 
-                {/* Empty State */}
-                {regions.length === 0 && (
-                  <div className="bg-white rounded-xl shadow-lg p-12 text-center">
-                    <MapPin className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-xl font-semibold text-gray-900 mb-2">No Regional Plans</h3>
-                    <p className="text-gray-600">No regional plans created yet</p>
+                {/* Search and Filter */}
+                <div className="bg-white rounded-xl shadow-lg p-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div className="relative flex-1 max-w-md">
+                      <Search className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+                      <input
+                        type="text"
+                        placeholder="Search subscribers by email or source..."
+                        value={newsletterSearchTerm}
+                        onChange={(e) => setNewsletterSearchTerm(e.target.value)}
+                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <select
+                        value={newsletterStatusFilter}
+                        onChange={(e) => setNewsletterStatusFilter(e.target.value)}
+                        className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      >
+                        <option value="all">All Status</option>
+                        <option value="active">Active</option>
+                        <option value="unsubscribed">Unsubscribed</option>
+                        <option value="bounced">Bounced</option>
+                      </select>
+                    </div>
                   </div>
-                )}
+                </div>
+
+                {/* Subscriptions Table */}
+                <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Email
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Status
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Source
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Subscribed
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {filteredNewsletterSubscriptions.length > 0 ? (
+                          filteredNewsletterSubscriptions.map((subscription) => (
+                            <tr key={subscription.id} className="hover:bg-gray-50">
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="flex items-center">
+                                  <div className="flex-shrink-0 h-10 w-10">
+                                    <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                                      <span className="text-sm font-medium text-gray-700">
+                                        {subscription.email?.charAt(0).toUpperCase() || 'U'}
+                                      </span>
+                                    </div>
+                                  </div>
+                                  <div className="ml-4">
+                                    <div className="text-sm font-medium text-gray-900">
+                                      {subscription.email}
+                                    </div>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                  subscription.status === 'active' 
+                                    ? 'bg-green-100 text-green-800'
+                                    : subscription.status === 'unsubscribed'
+                                    ? 'bg-gray-100 text-gray-800'
+                                    : 'bg-red-100 text-red-800'
+                                }`}>
+                                  {subscription.status || 'unknown'}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {subscription.source || 'website'}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {subscription.subscribedAt ? new Date(subscription.subscribedAt.toDate()).toLocaleDateString() : 'Unknown'}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <div className="flex space-x-2">
+                                  <select
+                                    value={subscription.status || 'active'}
+                                    onChange={(e) => handleUpdateNewsletterStatus(subscription.id, e.target.value)}
+                                    className="text-xs px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                  >
+                                    <option value="active">Active</option>
+                                    <option value="unsubscribed">Unsubscribed</option>
+                                    <option value="bounced">Bounced</option>
+                                  </select>
+                                  <button
+                                    onClick={() => handleDeleteNewsletterSubscription(subscription.id, subscription.email)}
+                                    className="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 px-2 py-1 rounded text-xs transition-colors"
+                                    title="Delete subscription"
+                                  >
+                                    Delete
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan="5" className="px-6 py-12 text-center text-gray-500">
+                              <Mail className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                              <p className="text-sm">No newsletter subscriptions found</p>
+                              {newsletterSearchTerm && (
+                                <p className="text-xs mt-1">Try adjusting your search terms</p>
+                              )}
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
               </div>
             )}
 
             {/* Manage Users Tab */}
-            {activeTab === 'users' && (
+            {activeTab === 'users' && canManageAdmins && (
               <div className="space-y-6">
                 {/* Header */}
                 <div className="bg-white rounded-xl shadow-lg p-6">
@@ -1869,12 +2636,7 @@ const AdminDashboard = () => {
                                 </div>
                               ))}
                             </div>
-                          ) : (
-                            <div className="p-4 text-center">
-                              <p className="text-gray-500">No plans available</p>
-                              <p className="text-xs text-gray-400">Sync plans from config section first</p>
-                            </div>
-                          )}
+                          ) : null}
                           </div>
                         </div>
                       )}
@@ -1974,177 +2736,6 @@ const AdminDashboard = () => {
           </div>
         )}
 
-        {/* Regional Plans Modal */}
-        {showRegionalPlansModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="bg-white rounded-xl shadow-2xl max-w-5xl w-full max-h-[80vh] overflow-hidden"
-            >
-              <div className="p-6 border-b border-gray-200">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h3 className="text-xl font-semibold">Plans for {selectedRegion?.name}</h3>
-                    <p className="text-sm text-gray-600 mt-1">Manage regional eSIM plans</p>
-                  </div>
-                  <div className="flex space-x-3">
-                    <div className="relative dropdown-container" style={{ position: 'relative', zIndex: 9999 }}>
-                      <button
-                        onClick={async () => {
-                          const newState = !showAttachPlanModal;
-                          setShowAttachPlanModal(newState);
-                          if (newState) {
-                            // Load available plans when opening the dropdown
-                            await loadAvailablePlans();
-                          }
-                        }}
-                        className="bg-black hover:bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center"
-                      >
-                        <Plus className="w-4 h-4 mr-1" />
-                        Attach Plan
-                      </button>
-                      
-                      {/* Dropdown Menu */}
-                      {showAttachPlanModal && (
-                        <div className="absolute top-full right-0 mt-2 w-96 bg-white border border-gray-200 rounded-lg shadow-xl z-[9999] overflow-hidden" style={{ 
-                          minWidth: '400px', 
-                          maxWidth: '90vw',
-                          maxHeight: '400px',
-                          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
-                        }}>
-                          <div className="p-3 border-b border-gray-200 bg-gray-50">
-                            <h4 className="font-semibold text-gray-900">Select Plan to Attach</h4>
-                            <p className="text-sm text-gray-600">Available plans from Airalo</p>
-                          </div>
-                          
-                          <div className="overflow-y-auto" style={{ maxHeight: '300px' }}>
-                          {availablePlans.length > 0 ? (
-                            <div className="p-2">
-                              {availablePlans.map((plan) => (
-                                <div
-                                  key={plan.id}
-                                  onClick={() => {
-                                    attachPlanToRegion(plan);
-                                    setShowAttachPlanModal(false);
-                                  }}
-                                  className="p-3 hover:bg-gray-50 rounded-lg cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors"
-                                >
-                                  <div className="flex justify-between items-start">
-                                    <div className="flex-1 min-w-0">
-                                      <h5 className="font-medium text-gray-900 text-sm truncate">{plan.name}</h5>
-                                      <p className="text-xs text-gray-600">{plan.data} • {plan.duration}</p>
-                                      <p className="text-xs text-gray-500">Country: {plan.country}</p>
-                                    </div>
-                                    <div className="text-right ml-2 flex-shrink-0">
-                                      <p className="text-sm font-bold text-green-600">{plan.currency === 'USD' ? '$' : plan.currency}{Math.round(plan.price)}</p>
-                                      <p className="text-xs text-gray-500">{plan.currency}</p>
-                                    </div>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          ) : (
-                            <div className="p-4 text-center">
-                              <p className="text-gray-500">No plans available</p>
-                              <p className="text-xs text-gray-400">Sync plans from config section first</p>
-                            </div>
-                          )}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    <button
-                      onClick={() => setShowRegionalPlansModal(false)}
-                      className="text-gray-400 hover:text-gray-600 text-2xl"
-                    >
-                      ×
-                    </button>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="p-6 overflow-y-auto max-h-96">
-                {regionalPlans.length > 0 ? (
-                  <div className="space-y-4">
-                    {regionalPlans.map((plan) => (
-                      <div key={plan.id} className="border border-gray-200 rounded-lg p-6 hover:border-gray-300 hover:shadow-md transition-all">
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <div className="flex items-center space-x-3 mb-3">
-                              <h4 className="text-lg font-semibold text-gray-900">{plan.name}</h4>
-                              {plan.originalPlanId && (
-                                <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
-                                  Attached
-                                </span>
-                              )}
-                            </div>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                              <div>
-                                <p className="text-gray-500">Data</p>
-                                <p className="font-medium">{plan.data}</p>
-                              </div>
-                              <div>
-                                <p className="text-gray-500">Duration</p>
-                                <p className="font-medium">{plan.duration}</p>
-                              </div>
-                              <div>
-                                <p className="text-gray-500">Price</p>
-                                <p className="text-lg font-bold text-black">{plan.currency === 'USD' ? '$' : plan.currency}{Math.round(plan.price)}</p>
-                              </div>
-                              <div>
-                                <p className="text-gray-500">Type</p>
-                                <p className="font-medium">{plan.originalPlanId ? 'Attached' : 'Custom'}</p>
-                              </div>
-                            </div>
-                            {plan.description && (
-                              <p className="text-sm text-gray-600 mt-3">{plan.description}</p>
-                            )}
-                          </div>
-                          <div className="flex flex-col space-y-2 ml-4">
-                            <button
-                              onClick={() => {
-                                const newPrice = prompt(`Edit price for "${plan.name}"\n\nCurrent price: ${plan.currency === 'USD' ? '$' : plan.currency}${Math.round(plan.price)}\n\nEnter new price:`, Math.round(plan.price));
-                                if (newPrice && !isNaN(parseFloat(newPrice)) && parseFloat(newPrice) > 0) {
-                                  updateCountryPlanPrice(plan.id, parseFloat(newPrice));
-                                } else if (newPrice !== null) {
-                                  toast.error('Please enter a valid price');
-                                }
-                              }}
-                              className="px-4 py-2 bg-black text-white rounded-lg text-sm hover:bg-gray-800 transition-colors flex items-center"
-                            >
-                              <Edit className="w-4 h-4 mr-1" />
-                              Edit Price
-                            </button>
-                            <button
-                              onClick={() => deleteCountryPlan(plan.id, plan.name)}
-                              className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700 transition-colors flex items-center"
-                            >
-                              <Trash2 className="w-4 h-4 mr-1" />
-                              {plan.originalPlanId ? 'Detach' : 'Delete'}
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-12">
-                    <MapPin className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                    <h4 className="text-lg font-semibold text-gray-900 mb-2">No Plans Yet</h4>
-                    <p className="text-gray-600">No plans attached to {selectedRegion?.name}</p>
-                  </div>
-                )}
-              </div>
-              
-              <div className="p-6 border-t border-gray-200 bg-gray-50">
-                <div className="text-sm text-gray-600 text-center">
-                  <span>Total Plans: {regionalPlans.length}</span>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        )}
 
 
 
@@ -2214,6 +2805,96 @@ const AdminDashboard = () => {
           </div>
         )}
 
+        {/* Business Hours Modal */}
+        {showBusinessHoursModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden"
+            >
+              <div className="flex justify-between items-center p-6 border-b border-gray-200">
+                <h3 className="text-xl font-semibold">Manage Business Hours</h3>
+                <button
+                  onClick={() => setShowBusinessHoursModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  ×
+                </button>
+              </div>
+              
+              <div className="p-6 overflow-y-auto max-h-[60vh]">
+                <div className="space-y-4">
+                  {Object.entries(businessHoursData).map(([day, hours]) => (
+                    <div key={day} className="flex items-center space-x-4 p-4 border border-gray-200 rounded-lg">
+                      <div className="w-24">
+                        <span className="font-medium capitalize">{day}</span>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          checked={hours.closed}
+                          onChange={(e) => handleBusinessHoursChange(day, 'closed', e.target.checked)}
+                          className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                        />
+                        <span className="text-sm text-gray-600">Closed</span>
+                      </div>
+                      
+                      {!hours.closed && (
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="time"
+                            value={hours.open}
+                            onChange={(e) => handleBusinessHoursChange(day, 'open', e.target.value)}
+                            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          />
+                          <span className="text-gray-500">to</span>
+                          <input
+                            type="time"
+                            value={hours.close}
+                            onChange={(e) => handleBusinessHoursChange(day, 'close', e.target.value)}
+                            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="flex justify-end space-x-3 p-6 border-t border-gray-200">
+                <button
+                  onClick={() => setShowBusinessHoursModal(false)}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveBusinessHours}
+                  disabled={settingsLoading}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition-colors flex items-center"
+                >
+                  {settingsLoading ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4 mr-2" />
+                      Save Hours
+                    </>
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
