@@ -70,11 +70,8 @@ class AiraloAPI:
         except Exception as e:
             print(f"⚠️ Could not load Airalo client_secret from environment: {e}")
         
-        # Determine base URL based on environment
-        if environment == 'production':
-            base_url = 'https://partners-api.airalo.com/v2'
-        else:
-            base_url = 'https://sandbox-partners-api.airalo.com/v2'
+        # Use production API URL for both sandbox and production (Airalo's new structure)
+        base_url = 'https://partners-api.airalo.com/v2'
         
         # Check if both credentials are available
         if client_id and client_secret:

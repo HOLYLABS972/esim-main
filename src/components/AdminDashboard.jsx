@@ -14,7 +14,6 @@ import {
   Edit, 
   Eye, 
   EyeOff, 
-  ToggleLeft, 
   ToggleRight,
   Search,
   Download,
@@ -48,7 +47,7 @@ const AdminDashboard = () => {
 
   // State Management - ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
   const [activeTab, setActiveTab] = useState('countries');
-  const [currentEnvironment, setCurrentEnvironment] = useState('sandbox');
+  const [currentEnvironment, setCurrentEnvironment] = useState('production');
   const [airaloClientId, setAiraloClientId] = useState('');
   const [loading, setLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -179,13 +178,11 @@ const AdminDashboard = () => {
             setAiraloClientId(configData.client_id);
             console.log('✅ Airalo client ID loaded from Firestore');
           }
-          if (configData.environment) {
-            setCurrentEnvironment(configData.environment);
-            console.log('✅ Airalo environment loaded from Firestore:', configData.environment);
-            // Also save to localStorage for consistency
-            localStorage.setItem('esim_environment', configData.environment);
-            localStorage.setItem('airalo_environment', configData.environment);
-          }
+          // Always use production mode
+          setCurrentEnvironment('production');
+          console.log('✅ Airalo environment set to production');
+          localStorage.setItem('esim_environment', 'production');
+          localStorage.setItem('airalo_environment', 'production');
           return;
         }
       } catch (error) {
@@ -194,15 +191,13 @@ const AdminDashboard = () => {
       
       // Fallback to localStorage
       const storedClientId = localStorage.getItem('airalo_client_id');
-      const storedEnv = localStorage.getItem('airalo_environment') || localStorage.getItem('esim_environment');
       if (storedClientId) {
         setAiraloClientId(storedClientId);
         console.log('✅ Airalo client ID loaded from localStorage');
       }
-      if (storedEnv) {
-        setCurrentEnvironment(storedEnv);
-        console.log('✅ Airalo environment loaded from localStorage:', storedEnv);
-      }
+      // Always use production mode
+      setCurrentEnvironment('production');
+      console.log('✅ Airalo environment set to production');
     } catch (error) {
       console.error('Error loading Airalo API key:', error);
     }
@@ -217,14 +212,14 @@ const AdminDashboard = () => {
       
       // Save to localStorage
       localStorage.setItem('airalo_client_id', airaloClientId);
-      localStorage.setItem('esim_environment', currentEnvironment);
-      localStorage.setItem('airalo_environment', currentEnvironment);
+      localStorage.setItem('esim_environment', 'production');
+      localStorage.setItem('airalo_environment', 'production');
       
       // Save to Firestore so Firebase Functions can access it
       const configRef = doc(db, 'config', 'airalo');
       await setDoc(configRef, {
         client_id: airaloClientId,
-        environment: currentEnvironment,
+        environment: 'production',
         updated_at: new Date(),
         updated_by: currentUser?.uid || 'admin'
       }, { merge: true });
@@ -237,50 +232,7 @@ const AdminDashboard = () => {
     }
   };
 
-  const toggleAiraloEnvironment = async () => {
-    const newEnv = currentEnvironment === 'sandbox' ? 'production' : 'sandbox';
-    setCurrentEnvironment(newEnv);
-    localStorage.setItem('airalo_environment', newEnv);
-    localStorage.setItem('esim_environment', newEnv);
-    
-    // Also save to Firestore so Firebase Functions can access it
-    try {
-      const airaloRef = doc(db, 'config', 'airalo');
-      await setDoc(airaloRef, {
-        environment: newEnv,
-        updated_at: new Date(),
-        updated_by: currentUser?.uid || 'admin'
-      }, { merge: true });
-      console.log('✅ Airalo environment saved to Firestore:', newEnv);
-    } catch (error) {
-      console.error('⚠️ Could not save Airalo environment to Firestore:', error);
-    }
-    
-    toast.success(`Airalo environment switched to ${newEnv}`);
-  };
 
-  const toggleEnvironment = async () => {
-    const newEnv = currentEnvironment === 'sandbox' ? 'production' : 'sandbox';
-    console.log(`🔄 Switching environment from ${currentEnvironment} to ${newEnv}`);
-    setCurrentEnvironment(newEnv);
-    localStorage.setItem('esim_environment', newEnv);
-    localStorage.setItem('airalo_environment', newEnv);
-    
-    // Also save to Airalo config in Firestore
-    try {
-      const airaloRef = doc(db, 'config', 'airalo');
-      await setDoc(airaloRef, {
-        environment: newEnv,
-        updated_at: new Date(),
-        updated_by: currentUser?.uid || 'admin'
-      }, { merge: true });
-      console.log('✅ Environment saved to Airalo config:', newEnv);
-    } catch (error) {
-      console.error('⚠️ Could not save environment to Firestore:', error);
-    }
-    
-    toast.success(`Environment switched to ${newEnv}`);
-  };
 
 
   // Countries Management Functions
@@ -1354,45 +1306,23 @@ const AdminDashboard = () => {
             {activeTab === 'config' && (
               <div className="space-y-6">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {/* Environment Toggle */}
-                  <div className="bg-white rounded-xl shadow-lg p-6">
-                    <h2 className="text-xl font-semibold mb-4 flex items-center">
-                      <ToggleLeft className="text-blue-600 mr-2" />
-                      Airalo Environment
-                    </h2>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <span className="text-gray-700 font-medium">Current Mode:</span>
-                        <span className={`ml-2 px-3 py-1 rounded-full text-sm font-medium ${
-                          currentEnvironment === 'sandbox' 
-                            ? 'bg-yellow-100 text-yellow-800' 
-                            : 'bg-green-100 text-green-800'
-                        }`}>
-                          {currentEnvironment === 'sandbox' ? 'Sandbox' : 'Production'}
-                        </span>
-                      </div>
-                      <button
-                        onClick={toggleEnvironment}
-                        className="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 bg-gray-200"
-                      >
-                        <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                          currentEnvironment === 'production' ? 'translate-x-5' : 'translate-x-0'
-                        }`} />
-                      </button>
-                    </div>
-                  </div>
-
                   {/* Data Sync */}
                   <div className="bg-white rounded-xl shadow-lg p-6">
                     <h2 className="text-xl font-semibold mb-4 flex items-center">
                       <Download className="text-green-600 mr-2" />
                       Data Synchronization
                     </h2>
+                    <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+                      <div className="text-sm text-gray-600 mb-1">API Endpoint:</div>
+                      <div className="text-sm font-mono text-blue-600 break-all">
+                        https://partners-api.airalo.com/v2
+                      </div>
+                    </div>
                     <div className="space-y-4">
                       <button
                         onClick={syncAllDataFromAiralo}
                         disabled={loading}
-                        className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 flex items-center justify-center"
+                        className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:from-gray-400 disabled:to-gray-500 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 flex items-center"
                       >
                         {loading ? <RefreshCw className="w-5 h-5 mr-2 animate-spin" /> : <Download className="w-5 h-5 mr-2" />}
                         Sync All Data from Airalo API
@@ -1400,16 +1330,13 @@ const AdminDashboard = () => {
                     </div>
                   </div>
 
-                </div>
-
-
-                {/* Airalo API Configuration */}
-                <div className="bg-white rounded-xl shadow-lg p-6">
+                  {/* Airalo API Configuration */}
+                  <div className="bg-white rounded-xl shadow-lg p-6">
                   <h2 className="text-xl font-semibold mb-4 flex items-center">
                     <Globe className="text-blue-600 mr-2" />
                     Airalo API Configuration
                   </h2>
-                  <div className="space-y-4">
+                  <div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Client ID (API Key)
@@ -1419,11 +1346,12 @@ const AdminDashboard = () => {
                         value={airaloClientId}
                         onChange={(e) => setAiraloClientId(e.target.value)}
                         placeholder="Enter your Airalo Client ID"
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                       />
                     </div>
                     
-                    <button
+                    <div className="mt-4">
+                      <button
                       onClick={saveAiraloCredentials}
                       disabled={loading || !airaloClientId.trim()}
                       className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:from-gray-400 disabled:to-gray-500 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 flex items-center"
@@ -1431,9 +1359,10 @@ const AdminDashboard = () => {
                       {loading ? <RefreshCw className="w-5 h-5 mr-2 animate-spin" /> : <Globe className="w-5 h-5 mr-2" />}
                       Save Airalo Client ID
                     </button>
+                    </div>
                   </div>
                 </div>
-
+                </div>
 
                 {/* Database Management */}
                 <div className="bg-white rounded-xl shadow-lg p-6">

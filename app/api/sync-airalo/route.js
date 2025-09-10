@@ -19,7 +19,6 @@ export async function POST(request) {
     
     const configData = airaloConfig.data();
     const clientId = configData.api_key; // Use api_key field
-    const environment = configData.environment || 'sandbox';
     
     if (!clientId) {
       return NextResponse.json({
@@ -28,26 +27,22 @@ export async function POST(request) {
       }, { status: 400 });
     }
     
-    console.log(`🔧 Using Airalo API in ${environment.toUpperCase()} mode`);
+    console.log(`🔧 Using Airalo API with client ID: ${clientId.substring(0, 10)}...`);
     
-    // Get client secret from environment variables based on environment
-    const clientSecret = environment === 'production' 
-      ? process.env.AIRALO_CLIENT_SECRET_PRODUCTION 
-      : process.env.AIRALO_CLIENT_SECRET_SANDBOX;
+    // Get client secret from environment variables
+    const clientSecret = process.env.AIRALO_CLIENT_SECRET_PRODUCTION;
       
     console.log(`🔑 Client Secret loaded: ${clientSecret ? 'YES' : 'NO'} (${clientSecret ? clientSecret.substring(0, 10) + '...' : 'undefined'})`);
     
     if (!clientSecret) {
       return NextResponse.json({
         success: false,
-        error: `Airalo ${environment.toUpperCase()} client secret not found in environment variables. Please add AIRALO_CLIENT_SECRET_SANDBOX and AIRALO_CLIENT_SECRET_PRODUCTION to your .env.local file.`
+        error: 'Airalo client secret not found in environment variables. Please add AIRALO_CLIENT_SECRET_PRODUCTION to your Vercel environment variables.'
       }, { status: 400 });
     }
     
-    // Use correct API URL based on environment
-    const baseUrl = environment === 'production' 
-      ? 'https://partners-api.airalo.com' 
-      : 'https://sandbox-partners-api.airalo.com';
+    // Use production API URL for both sandbox and production (Airalo's new structure)
+    const baseUrl = 'https://partners-api.airalo.com';
     
     console.log(`🌐 Using API URL: ${baseUrl}`);
     
@@ -206,7 +201,7 @@ export async function POST(request) {
       packages_synced: totalSynced.packages,
       status: 'completed',
       source: 'admin_manual_sync',
-      sync_type: `complete_sync_${environment}`,
+      sync_type: 'complete_sync',
       provider: 'airalo'
     });
     
@@ -215,7 +210,7 @@ export async function POST(request) {
     
     return NextResponse.json({
       success: true,
-      message: `Successfully synced all data from Airalo ${environment.toUpperCase()} API`,
+      message: 'Successfully synced all data from Airalo API',
       total_synced: totalItems,
       details: totalSynced
     });

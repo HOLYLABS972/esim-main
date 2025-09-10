@@ -93,7 +93,7 @@ class ConfigService {
           return {
             apiKey: configData.api_key,
             environment: configData.environment || 'sandbox',
-            baseUrl: configData.environment === 'production' ? 'https://partners-api.airalo.com/v2' : 'https://sandbox-partners-api.airalo.com/v2'
+            baseUrl: 'https://partners-api.airalo.com/v2'
           };
         }
       }
@@ -107,7 +107,7 @@ class ConfigService {
         return {
           apiKey: savedKey,
           environment: savedEnv,
-          baseUrl: savedEnv === 'production' ? 'https://partners-api.airalo.com/v2' : 'https://sandbox-partners-api.airalo.com/v2'
+          baseUrl: 'https://partners-api.airalo.com/v2'
         };
       }
       
