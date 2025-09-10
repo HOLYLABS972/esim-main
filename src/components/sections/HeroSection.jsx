@@ -40,8 +40,13 @@ export default function HeroSection() {
             <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-semibold text-balance text-gray-600 relative">
               {/* Mobile Layout */}
               <div className="block sm:hidden space-y-3">
-                <div>
+                <div className="flex items-center justify-center gap-2">
                   <span className="text-eerie-black font-semibold">Stay connected</span>
+                  <span className="inline-block transform -rotate-12 pointer-events-none">
+                    <div className="w-10 h-10 bg-white border-2 border-cobalt-blue rounded-lg shadow-lg flex items-center justify-center">
+                      <img src="/images/logo_icon/sx.png" alt="Globe" className="w-8 h-8"  />
+                    </div>
+                  </span> 
                 </div>
                 <div>no matter where you are</div>
                 <div className="flex items-center justify-center gap-2">
@@ -56,7 +61,16 @@ export default function HeroSection() {
               
               {/* Desktop Layout */}
               <div className="hidden sm:flex flex-wrap items-center justify-center gap-3 lg:gap-4">
-                <span className="text-eerie-black font-semibold">Stay connected no matter where you are with</span>
+                <span>
+                  <span className="text-eerie-black font-semibold">Stay connected </span> 
+                  <span className="inline-block transform -rotate-12 pointer-events-none mr-2">
+                    <div className="w-12 h-12 lg:w-16 lg:h-16 bg-white border-3 lg:border-4 border-cobalt-blue rounded-xl shadow-lg shadow-cool-black flex items-center justify-center">
+                      <img src="/images/logo_icon/sx.png" alt="Globe" className="w-10 h-10 lg:w-12 lg:h-12" />
+                    </div>
+                  </span> 
+                  no matter 
+                </span>
+                <span>where you are <span className="text-eerie-black font-semibold">with</span></span>
                 
                 <div className="w-12 h-12 lg:w-14 lg:h-14 bg-alice-blue border-3 lg:border-4 border-alice-blue rounded-2xl shadow-lg shadow-cobalt-blue flex items-center justify-center rotate-6">
                   <img src="/images/logo_icon/ioslogo.png" alt="iOS Logo" className="w-10 h-10 lg:w-12 lg:h-12 rounded-xl" />
