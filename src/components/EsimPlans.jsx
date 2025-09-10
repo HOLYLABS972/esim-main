@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../firebase/config';
-import { motion } from 'framer-motion';
 import { Search } from 'lucide-react';
 import PlanSelectionBottomSheet from './PlanSelectionBottomSheet';
 
@@ -30,7 +29,112 @@ const getStandardCountries = () => {
     { id: '5', name: 'Canada', code: 'CA', minPrice: 3.99, flagEmoji: getFlagEmoji('CA') },
     { id: '6', name: 'Australia', code: 'AU', minPrice: 4.49, flagEmoji: getFlagEmoji('AU') },
     { id: '7', name: 'China', code: 'CN', minPrice: 8.99, flagEmoji: getFlagEmoji('CN') },
-    { id: '8', name: 'South Korea', code: 'KR', minPrice: 6.99, flagEmoji: getFlagEmoji('KR') }
+    { id: '8', name: 'South Korea', code: 'KR', minPrice: 6.99, flagEmoji: getFlagEmoji('KR') },
+    { id: '9', name: 'Japan', code: 'JP', minPrice: 9.99, flagEmoji: getFlagEmoji('JP') },
+    { id: '10', name: 'Hong Kong', code: 'HK', minPrice: 7.99, flagEmoji: getFlagEmoji('HK') },
+    { id: '11', name: 'Taiwan', code: 'TW', minPrice: 8.99, flagEmoji: getFlagEmoji('TW') },
+    { id: '12', name: 'Thailand', code: 'TH', minPrice: 5.99, flagEmoji: getFlagEmoji('TH') },
+    { id: '13', name: 'Singapore', code: 'SG', minPrice: 6.99, flagEmoji: getFlagEmoji('SG') },
+    { id: '14', name: 'Malaysia', code: 'MY', minPrice: 5.99, flagEmoji: getFlagEmoji('MY') },
+    { id: '15', name: 'Indonesia', code: 'ID', minPrice: 4.99, flagEmoji: getFlagEmoji('ID') },
+    { id: '16', name: 'Philippines', code: 'PH', minPrice: 5.99, flagEmoji: getFlagEmoji('PH') },
+    { id: '17', name: 'Vietnam', code: 'VN', minPrice: 4.99, flagEmoji: getFlagEmoji('VN') },
+    { id: '18', name: 'Cambodia', code: 'KH', minPrice: 4.99, flagEmoji: getFlagEmoji('KH') },
+{ id: '19', name: 'France', code: 'FR', minPrice: 3.49, flagEmoji: getFlagEmoji('FR') },
+{ id: '20', name: 'Italy', code: 'IT', minPrice: 3.99, flagEmoji: getFlagEmoji('IT') },
+{ id: '21', name: 'Spain', code: 'ES', minPrice: 3.79, flagEmoji: getFlagEmoji('ES') },
+{ id: '22', name: 'Switzerland', code: 'CH', minPrice: 4.49, flagEmoji: getFlagEmoji('CH') },
+{ id: '23', name: 'Austria', code: 'AT', minPrice: 3.59, flagEmoji: getFlagEmoji('AT') },
+{ id: '24', name: 'Belgium', code: 'BE', minPrice: 3.69, flagEmoji: getFlagEmoji('BE') },
+{ id: '25', name: 'Denmark', code: 'DK', minPrice: 3.89, flagEmoji: getFlagEmoji('DK') },
+{ id: '26', name: 'Sweden', code: 'SE', minPrice: 3.99, flagEmoji: getFlagEmoji('SE') },
+{ id: '27', name: 'Norway', code: 'NO', minPrice: 4.19, flagEmoji: getFlagEmoji('NO') },
+{ id: '28', name: 'Finland', code: 'FI', minPrice: 3.79, flagEmoji: getFlagEmoji('FI') },
+{ id: '29', name: 'Ireland', code: 'IE', minPrice: 3.99, flagEmoji: getFlagEmoji('IE') },
+{ id: '30', name: 'Portugal', code: 'PT', minPrice: 3.69, flagEmoji: getFlagEmoji('PT') },
+{ id: '31', name: 'Greece', code: 'GR', minPrice: 3.89, flagEmoji: getFlagEmoji('GR') },
+{ id: '32', name: 'Poland', code: 'PL', minPrice: 3.49, flagEmoji: getFlagEmoji('PL') },
+{ id: '33', name: 'Czech Republic', code: 'CZ', minPrice: 3.59, flagEmoji: getFlagEmoji('CZ') },
+{ id: '34', name: 'Hungary', code: 'HU', minPrice: 3.69, flagEmoji: getFlagEmoji('HU') },
+{ id: '35', name: 'Romania', code: 'RO', minPrice: 3.79, flagEmoji: getFlagEmoji('RO') },
+{ id: '36', name: 'Bulgaria', code: 'BG', minPrice: 3.89, flagEmoji: getFlagEmoji('BG') },
+{ id: '37', name: 'Croatia', code: 'HR', minPrice: 3.99, flagEmoji: getFlagEmoji('HR') },
+{ id: '38', name: 'Slovakia', code: 'SK', minPrice: 3.49, flagEmoji: getFlagEmoji('SK') },
+{ id: '39', name: 'Slovenia', code: 'SI', minPrice: 3.59, flagEmoji: getFlagEmoji('SI') },
+{ id: '40', name: 'Estonia', code: 'EE', minPrice: 3.69, flagEmoji: getFlagEmoji('EE') },
+{ id: '41', name: 'Latvia', code: 'LV', minPrice: 3.79, flagEmoji: getFlagEmoji('LV') },
+{ id: '42', name: 'Lithuania', code: 'LT', minPrice: 3.89, flagEmoji: getFlagEmoji('LT') },
+{ id: '43', name: 'Luxembourg', code: 'LU', minPrice: 3.99, flagEmoji: getFlagEmoji('LU') },
+{ id: '44', name: 'Malta', code: 'MT', minPrice: 4.19, flagEmoji: getFlagEmoji('MT') },
+{ id: '45', name: 'Cyprus', code: 'CY', minPrice: 3.79, flagEmoji: getFlagEmoji('CY') },
+{ id: '46', name: 'United Arab Emirates', code: 'AE', minPrice: 5.99, flagEmoji: getFlagEmoji('AE') },
+{ id: '47', name: 'Saudi Arabia', code: 'SA', minPrice: 6.49, flagEmoji: getFlagEmoji('SA') },
+{ id: '48', name: 'Turkey', code: 'TR', minPrice: 4.99, flagEmoji: getFlagEmoji('TR') },
+{ id: '49', name: 'Israel', code: 'IL', minPrice: 5.49, flagEmoji: getFlagEmoji('IL') },
+{ id: '50', name: 'Egypt', code: 'EG', minPrice: 3.99, flagEmoji: getFlagEmoji('EG') },
+{ id: '51', name: 'Jordan', code: 'JO', minPrice: 4.49, flagEmoji: getFlagEmoji('JO') },
+{ id: '52', name: 'Lebanon', code: 'LB', minPrice: 4.99, flagEmoji: getFlagEmoji('LB') },
+{ id: '53', name: 'Qatar', code: 'QA', minPrice: 5.99, flagEmoji: getFlagEmoji('QA') },
+{ id: '54', name: 'Kuwait', code: 'KW', minPrice: 5.49, flagEmoji: getFlagEmoji('KW') },
+{ id: '55', name: 'Bahrain', code: 'BH', minPrice: 5.99, flagEmoji: getFlagEmoji('BH') },
+{ id: '56', name: 'Oman', code: 'OM', minPrice: 5.49, flagEmoji: getFlagEmoji('OM') },
+{ id: '57', name: 'India', code: 'IN', minPrice: 2.99, flagEmoji: getFlagEmoji('IN') },
+{ id: '58', name: 'Pakistan', code: 'PK', minPrice: 3.49, flagEmoji: getFlagEmoji('PK') },
+{ id: '59', name: 'Bangladesh', code: 'BD', minPrice: 3.99, flagEmoji: getFlagEmoji('BD') },
+{ id: '60', name: 'Sri Lanka', code: 'LK', minPrice: 4.49, flagEmoji: getFlagEmoji('LK') },
+{ id: '61', name: 'Nepal', code: 'NP', minPrice: 3.99, flagEmoji: getFlagEmoji('NP') },
+{ id: '62', name: 'Maldives', code: 'MV', minPrice: 5.49, flagEmoji: getFlagEmoji('MV') },
+
+// South America
+{ id: '63', name: 'Brazil', code: 'BR', minPrice: 4.99, flagEmoji: getFlagEmoji('BR') },
+{ id: '64', name: 'Argentina', code: 'AR', minPrice: 5.49, flagEmoji: getFlagEmoji('AR') },
+{ id: '65', name: 'Chile', code: 'CL', minPrice: 5.99, flagEmoji: getFlagEmoji('CL') },
+{ id: '66', name: 'Colombia', code: 'CO', minPrice: 4.49, flagEmoji: getFlagEmoji('CO') },
+{ id: '67', name: 'Peru', code: 'PE', minPrice: 4.99, flagEmoji: getFlagEmoji('PE') },
+{ id: '68', name: 'Ecuador', code: 'EC', minPrice: 4.99, flagEmoji: getFlagEmoji('EC') },
+{ id: '69', name: 'Uruguay', code: 'UY', minPrice: 5.49, flagEmoji: getFlagEmoji('UY') },
+{ id: '70', name: 'Paraguay', code: 'PY', minPrice: 4.99, flagEmoji: getFlagEmoji('PY') },
+{ id: '71', name: 'Bolivia', code: 'BO', minPrice: 4.49, flagEmoji: getFlagEmoji('BO') },
+{ id: '72', name: 'Venezuela', code: 'VE', minPrice: 5.99, flagEmoji: getFlagEmoji('VE') },
+
+// Central America & Caribbean
+{ id: '73', name: 'Mexico', code: 'MX', minPrice: 4.99, flagEmoji: getFlagEmoji('MX') },
+{ id: '74', name: 'Guatemala', code: 'GT', minPrice: 4.49, flagEmoji: getFlagEmoji('GT') },
+{ id: '75', name: 'Costa Rica', code: 'CR', minPrice: 5.49, flagEmoji: getFlagEmoji('CR') },
+{ id: '76', name: 'Panama', code: 'PA', minPrice: 5.99, flagEmoji: getFlagEmoji('PA') },
+{ id: '77', name: 'Nicaragua', code: 'NI', minPrice: 4.99, flagEmoji: getFlagEmoji('NI') },
+{ id: '78', name: 'Honduras', code: 'HN', minPrice: 4.49, flagEmoji: getFlagEmoji('HN') },
+{ id: '79', name: 'El Salvador', code: 'SV', minPrice: 4.99, flagEmoji: getFlagEmoji('SV') },
+{ id: '80', name: 'Belize', code: 'BZ', minPrice: 5.49, flagEmoji: getFlagEmoji('BZ') },
+{ id: '81', name: 'Jamaica', code: 'JM', minPrice: 5.99, flagEmoji: getFlagEmoji('JM') },
+{ id: '82', name: 'Dominican Republic', code: 'DO', minPrice: 5.49, flagEmoji: getFlagEmoji('DO') },
+{ id: '83', name: 'Cuba', code: 'CU', minPrice: 6.99, flagEmoji: getFlagEmoji('CU') },
+{ id: '84', name: 'Puerto Rico', code: 'PR', minPrice: 4.99, flagEmoji: getFlagEmoji('PR') },
+
+// Africa
+{ id: '85', name: 'South Africa', code: 'ZA', minPrice: 4.99, flagEmoji: getFlagEmoji('ZA') },
+{ id: '86', name: 'Nigeria', code: 'NG', minPrice: 3.99, flagEmoji: getFlagEmoji('NG') },
+{ id: '87', name: 'Kenya', code: 'KE', minPrice: 4.49, flagEmoji: getFlagEmoji('KE') },
+{ id: '88', name: 'Ghana', code: 'GH', minPrice: 4.99, flagEmoji: getFlagEmoji('GH') },
+{ id: '89', name: 'Morocco', code: 'MA', minPrice: 4.49, flagEmoji: getFlagEmoji('MA') },
+{ id: '90', name: 'Tanzania', code: 'TZ', minPrice: 4.99, flagEmoji: getFlagEmoji('TZ') },
+{ id: '91', name: 'Uganda', code: 'UG', minPrice: 4.49, flagEmoji: getFlagEmoji('UG') },
+{ id: '92', name: 'Rwanda', code: 'RW', minPrice: 4.99, flagEmoji: getFlagEmoji('RW') },
+{ id: '93', name: 'Ethiopia', code: 'ET', minPrice: 4.49, flagEmoji: getFlagEmoji('ET') },
+{ id: '94', name: 'Senegal', code: 'SN', minPrice: 4.99, flagEmoji: getFlagEmoji('SN') },
+{ id: '95', name: 'Tunisia', code: 'TN', minPrice: 4.49, flagEmoji: getFlagEmoji('TN') },
+{ id: '96', name: 'Algeria', code: 'DZ', minPrice: 4.99, flagEmoji: getFlagEmoji('DZ') },
+{ id: '97', name: 'Ivory Coast', code: 'CI', minPrice: 4.49, flagEmoji: getFlagEmoji('CI') },
+{ id: '98', name: 'Cameroon', code: 'CM', minPrice: 4.99, flagEmoji: getFlagEmoji('CM') },
+{ id: '99', name: 'Botswana', code: 'BW', minPrice: 5.49, flagEmoji: getFlagEmoji('BW') },
+{ id: '100', name: 'Namibia', code: 'NA', minPrice: 5.99, flagEmoji: getFlagEmoji('NA') },
+
+// Additional Asia-Pacific
+{ id: '101', name: 'New Zealand', code: 'NZ', minPrice: 5.99, flagEmoji: getFlagEmoji('NZ') },
+{ id: '102', name: 'Laos', code: 'LA', minPrice: 4.99, flagEmoji: getFlagEmoji('LA') },
+{ id: '103', name: 'Myanmar', code: 'MM', minPrice: 5.49, flagEmoji: getFlagEmoji('MM') },
+{ id: '104', name: 'Brunei', code: 'BN', minPrice: 6.99, flagEmoji: getFlagEmoji('BN') },
+
   ];
 };
 
@@ -44,7 +148,7 @@ const getStandardRegions = () => {
       minPrice: 14.99, 
       icon: '🇪🇺',
       description: 'Coverage across 30+ European countries',
-      countries: ['Germany', 'France', 'Italy', 'Spain', 'Netherlands', 'United Kingdom', 'Switzerland', 'Austria'],
+      countries: ['Germany', 'France', 'Italy', 'Spain', 'Netherlands', 'United Kingdom', 'Switzerland', 'Austria', 'Belgium', 'Denmark', 'Sweden', 'Norway', 'Finland', 'Ireland', 'Portugal', 'Greece', 'Poland', 'Czech Republic', 'Hungary', 'Romania', 'Bulgaria', 'Croatia', 'Slovakia', 'Slovenia', 'Estonia', 'Latvia', 'Lithuania', 'Luxembourg', 'Malta', 'Cyprus'],
       planTypes: ['1GB/7days', '3GB/15days', '5GB/30days', '10GB/30days']
     },
     { 
@@ -54,7 +158,7 @@ const getStandardRegions = () => {
       minPrice: 19.99, 
       icon: '🌏',
       description: 'Coverage across Asia and Pacific regions',
-      countries: ['Japan', 'South Korea', 'Singapore', 'Thailand', 'Australia', 'New Zealand', 'Hong Kong', 'Taiwan'],
+      countries: ['Japan', 'South Korea', 'Singapore', 'Thailand', 'Australia', 'New Zealand', 'Hong Kong', 'Taiwan', 'China', 'India', 'Indonesia', 'Philippines', 'Vietnam', 'Malaysia', 'Thailand', 'Singapore', 'Hong Kong', 'Taiwan'],
       planTypes: ['1GB/7days', '3GB/15days', '5GB/30days', '8GB/30days']
     },
     { 
@@ -64,7 +168,7 @@ const getStandardRegions = () => {
       minPrice: 16.99, 
       icon: '🌎',
       description: 'Coverage across North and South America',
-      countries: ['United States', 'Canada', 'Mexico', 'Brazil', 'Argentina', 'Chile', 'Colombia', 'Peru'],
+      countries: ['United States', 'Canada', 'Mexico', 'Brazil', 'Argentina', 'Chile', 'Colombia', 'Peru', 'United States', 'Canada', 'Mexico', 'Brazil', 'Argentina', 'Chile', 'Colombia', 'Peru'],
       planTypes: ['2GB/7days', '5GB/15days', '10GB/30days', '15GB/30days']
     },
     { 
@@ -74,7 +178,7 @@ const getStandardRegions = () => {
       minPrice: 22.99, 
       icon: '🌍',
       description: 'Coverage across Middle East and Africa',
-      countries: ['UAE', 'Saudi Arabia', 'South Africa', 'Egypt', 'Turkey', 'Israel', 'Kenya', 'Nigeria'],
+      countries: ['UAE', 'Saudi Arabia', 'South Africa', 'Egypt', 'Turkey', 'Israel', 'Kenya', 'Nigeria', 'UAE', 'Saudi Arabia', 'South Africa', 'Egypt', 'Turkey', 'Israel', 'Kenya', 'Nigeria'],
       planTypes: ['1GB/7days', '3GB/15days', '5GB/30days', '7GB/30days']
     },
     { 
@@ -97,6 +201,8 @@ const EsimPlans = () => {
   const [regions, setRegions] = useState([]);
   const [filteredCountries, setFilteredCountries] = useState([]);
   const [filteredRegions, setFilteredRegions] = useState([]);
+  const [showAllCountries, setShowAllCountries] = useState(false);
+  const [showAllRegions, setShowAllRegions] = useState(false);
   
   // Plan selection and checkout state
 
@@ -206,7 +312,7 @@ const EsimPlans = () => {
     }
   }, [countriesData, regionsData, countriesError, countriesLoading]);
 
-  // Search function to fetch countries from Firebase
+  // Enhanced search function that searches both Firebase and static data
   const searchCountries = async (term) => {
     if (!term || term.length < 2) {
       setSearchResults([]);
@@ -217,33 +323,52 @@ const EsimPlans = () => {
     setIsSearching(true);
     try {
       console.log('Searching for countries:', term);
-      const querySnapshot = await getDocs(collection(db, 'countries'));
-      const searchResults = [];
       
-      for (const doc of querySnapshot.docs) {
-        const countryData = { id: doc.id, ...doc.data() };
+      // First, search in static data for immediate results
+      const allStaticCountries = getStandardCountries();
+      const staticResults = allStaticCountries.filter(country => 
+        country.name.toLowerCase().includes(term.toLowerCase())
+      );
+      
+      // Set immediate results from static data
+      setSearchResults(staticResults);
+      
+      // Then try to fetch from Firebase for more comprehensive results
+      try {
+        const querySnapshot = await getDocs(collection(db, 'countries'));
+        const firebaseResults = [];
         
-        // Check if country name matches search term
-        if (countryData.name.toLowerCase().includes(term.toLowerCase())) {
-          // Get plans for this country to find minimum price
-          const plansQuery = query(collection(db, 'plans'), where('country', '==', countryData.name));
-          const plansSnapshot = await getDocs(plansQuery);
-          const plans = plansSnapshot.docs.map(planDoc => planDoc.data());
+        for (const doc of querySnapshot.docs) {
+          const countryData = { id: doc.id, ...doc.data() };
           
-          const minPrice = plans.length > 0 
-            ? Math.min(...plans.map(plan => parseFloat(plan.price) || 9.99))
-            : 9.99;
-          
-          searchResults.push({
-            ...countryData,
-            minPrice: minPrice,
-            flagEmoji: getFlagEmoji(countryData.code)
-          });
+          // Check if country name matches search term
+          if (countryData.name.toLowerCase().includes(term.toLowerCase())) {
+            // Get plans for this country to find minimum price
+            const plansQuery = query(collection(db, 'plans'), where('country', '==', countryData.name));
+            const plansSnapshot = await getDocs(plansQuery);
+            const plans = plansSnapshot.docs.map(planDoc => planDoc.data());
+            
+            const minPrice = plans.length > 0 
+              ? Math.min(...plans.map(plan => parseFloat(plan.price) || 9.99))
+              : 9.99;
+            
+            firebaseResults.push({
+              ...countryData,
+              minPrice: minPrice,
+              flagEmoji: getFlagEmoji(countryData.code)
+            });
+          }
         }
+        
+        // Merge results, preferring Firebase data but keeping static as backup
+        const combinedResults = firebaseResults.length > 0 ? firebaseResults : staticResults;
+        console.log('Search results:', combinedResults.length);
+        setSearchResults(combinedResults);
+      } catch (firebaseError) {
+        console.log('Firebase search failed, using static results:', firebaseError);
+        // Keep static results if Firebase fails
       }
       
-      console.log('Search results:', searchResults.length);
-      setSearchResults(searchResults);
     } catch (error) {
       console.error('Search error:', error);
       setSearchResults([]);
@@ -260,7 +385,7 @@ const EsimPlans = () => {
         setSearchResults([]);
         setIsSearching(false);
       }
-    }, 500); // 500ms debounce
+    }, 200); // 200ms debounce for faster response
 
     return () => clearTimeout(timeoutId);
   }, [searchTerm]);
@@ -363,70 +488,18 @@ const EsimPlans = () => {
 
   return (
     <>
-      {/* Hero/Banner Section - Show immediately */}
-      <section className="hero-banner relative text-white overflow-hidden min-h-[500px] flex items-center">
-        <div className="absolute inset-0">
-          <img 
-            src="/images/frontend/banner/67fe50cfd1fe51744720079.png" 
-            alt="eSIM Banner"
-            className="w-full h-full object-cover"
-          />
-          {/* Dark overlay for text readability */}
-          <div className="absolute inset-0 bg-black/40"></div>
-        </div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-          <div className="text-center">
-            <motion.h1 
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-              className="text-4xl md:text-6xl font-bold mb-6"
-            >
-              Global eSIM Plans
-            </motion.h1>
-            <motion.p 
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-              className="text-xl md:text-2xl mb-8 text-blue-100"
-            >
-              Stay connected worldwide with our flexible data plans
-            </motion.p>
-            <motion.div 
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.4 }}
-              className="flex flex-wrap justify-center gap-4 text-sm md:text-base"
-            >
-              <div className="flex items-center bg-white/10 rounded-full px-4 py-2">
-                <span className="mr-2">🌍</span>
-                <span>200+ Countries</span>
-              </div>
-              <div className="flex items-center bg-white/10 rounded-full px-4 py-2">
-                <span className="mr-2">⚡</span>
-                <span>Instant Activation</span>
-              </div>
-              <div className="flex items-center bg-white/10 rounded-full px-4 py-2">
-                <span className="mr-2">💳</span>
-                <span>Secure Payment</span>
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-      <section className="destination py-16">
+      <section className="destination py-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="destination-top mb-8">
           {/* Tab Navigation */}
           <div className="flex justify-center mb-8">
-            <div className="esim-plan-tab bg-white rounded-lg p-1 shadow-lg" role="tablist">
+            <div className="esim-plan-tab bg-white rounded-full p-1 shadow-lg shadow-tufts-blue" role="tablist">
               <button
-                className={`esim-plan-tab__btn px-6 py-3 rounded-md font-medium transition-all duration-200 ${
+                className={`esim-plan-tab__btn px-6 py-3 rounded-full font-medium transition-all duration-200 ${
                   activeTab === 'local'
-                    ? 'bg-blue-600 text-white shadow-md'
-                    : 'text-gray-600 hover:text-blue-600'
+                    ? 'bg-tufts-blue text-white shadow-md shadow-tufts-blue'
+                    : 'text-gray-600 hover:text-tufts-blue'
                 }`}
                 onClick={() => setActiveTab('local')}
                 type="button"
@@ -435,10 +508,10 @@ const EsimPlans = () => {
                 Local eSIMs
               </button>
               <button
-                className={`esim-plan-tab__btn px-6 py-3 rounded-md font-medium transition-all duration-200 ${
-                  activeTab === 'regional'
-                    ? 'bg-blue-600 text-white shadow-md'
-                    : 'text-gray-600 hover:text-blue-600'
+                className={`esim-plan-tab__btn px-6 py-3 rounded-full font-medium transition-all duration-200 ${
+                  activeTab === 'regional'  
+                    ? 'bg-tufts-blue text-white shadow-md shadow-tufts-blue'
+                    : 'text-gray-600 hover:text-tufts-blue'
                 }`}
                 onClick={() => setActiveTab('regional')}
                 type="button"
@@ -453,16 +526,33 @@ const EsimPlans = () => {
           <div className="search-box max-w-md mx-auto mb-8">
             <div className="search-box-field relative">
               <input
-                className="search-box-field__input w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="search-box-field__input w-full px-4 py-3 pr-12 border border-jordy-blue rounded-full focus:ring-2 focus:ring-tufts-blue focus:border-transparent"
                 type="text"
-                placeholder="Search your destination"
+                placeholder="Search your destination (e.g., France, Germany, United States)"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
               <span className="search-box-field__icon absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400">
-                <Search className="w-5 h-5" />
+                {isSearching ? (
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-tufts-blue"></div>
+                ) : (
+                  <Search className="w-5 h-5" />
+                )}
               </span>
             </div>
+            {searchTerm && (
+              <div className="text-center mt-2 text-sm text-gray-500">
+                {isSearching ? (
+                  "Searching..."
+                ) : searchResults.length > 0 ? (
+                  `Found ${searchResults.length} ${searchResults.length === 1 ? 'destination' : 'destinations'}`
+                ) : searchTerm.length >= 2 ? (
+                  `No destinations found for "${searchTerm}"`
+                ) : (
+                  "Type at least 2 characters to search"
+                )}
+              </div>
+            )}
           </div>
         </div>
 
@@ -474,49 +564,60 @@ const EsimPlans = () => {
               {/* Loading state for countries */}
               {countriesLoading && countries.length === 0 ? (
                 <div className="flex justify-center items-center min-h-64">
-                  <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+                  <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-tufts-blue"></div>
                   <p className="ml-4 text-gray-600">Loading countries...</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-center">
-                  {filteredCountries.map((country, index) => (
-                  <motion.div
-                    key={country.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    className="col-span-1"
-                  >
-                    <button
-                      className="esim-plan-card w-full bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 text-left border border-gray-100 hover:border-blue-200"
-                      onClick={() => handleCountrySelect(country)}
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-center">
+                    {(showAllCountries || searchTerm ? filteredCountries : filteredCountries.slice(0, 8)).map((country, index) => (
+                    <div
+                      key={country.id}
+                      className="col-span-1"
                     >
-                      <div className="country-flag-display text-center mb-4">
-                        {country.flagEmoji ? (
-                          <span className="country-flag-emoji text-5xl">
-                            {country.flagEmoji}
-                          </span>
-                        ) : (
-                          <div className="country-code-avatar w-16 h-16 mx-auto bg-blue-100 rounded-full flex items-center justify-center">
-                            <span className="text-blue-600 font-bold text-lg">
-                              {country.code || '??'}
+                      <button
+                        className="esim-plan-card w-full bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 text-left border border-gray-100 hover:border-blue-200"
+                        onClick={() => handleCountrySelect(country)}
+                      >
+                        <div className="country-flag-display text-center mb-4">
+                          {country.flagEmoji ? (
+                            <span className="country-flag-emoji text-5xl">
+                              {country.flagEmoji}
                             </span>
-                          </div>
-                        )}
-                      </div>
+                          ) : (
+                            <div className="country-code-avatar w-16 h-16 mx-auto bg-tufts-blue rounded-full flex items-center justify-center">
+                              <span className="text-blue-600 font-bold text-lg">
+                                {country.code || '??'}
+                              </span>
+                            </div>
+                          )}
+                        </div>
 
-                      <div className="esim-plan-card__content text-center">
-                        <h5 className="esim-plan-card__title text-lg font-semibold text-gray-900 mb-2">
-                          {country.name}
-                        </h5>
-                        <span className="esim-plan-card__price text-blue-600 font-medium">
-                          From ${country.minPrice ? Math.round(country.minPrice) : '10'}
-                        </span>
-                      </div>
-                    </button>
-                  </motion.div>
-                  ))}
-                </div>
+                        <div className="esim-plan-card__content text-center">
+                          <h5 className="esim-plan-card__title text-lg font-semibold text-gray-900 mb-2">
+                            {country.name}
+                          </h5>
+                          <span className="esim-plan-card__price text-tufts-blue font-medium">
+                            From ${country.minPrice ? Math.round(country.minPrice) : '10'}
+                          </span>
+                        </div>
+                      </button>
+                    </div>
+                    ))}
+                  </div>
+                  
+                  {/* Show All Button for Countries */}
+                  {!searchTerm && filteredCountries.length > 8 && (
+                    <div className="text-center mt-8">
+                      <button
+                        onClick={() => setShowAllCountries(!showAllCountries)}
+                        className="btn-primary px-8 py-3 text-white font-semibold rounded-full hover:bg-tufts-blue transition-all duration-200 shadow-lg"
+                      >
+                        {showAllCountries ? 'Show Less' : 'Show All'}
+                      </button>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           )}
@@ -527,69 +628,80 @@ const EsimPlans = () => {
               {/* Loading state for regions */}
               {regionsLoading && regions.length === 0 ? (
                 <div className="flex justify-center items-center min-h-64">
-                  <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+                  <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-tufts-blue"></div>
                   <p className="ml-4 text-gray-600">Loading regional plans...</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-center">
-                  {filteredRegions.length > 0 ? (
-                    filteredRegions.map((region, index) => (
-                      <motion.div
-                        key={region.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                        className="col-span-1"
-                      >
-                        <button
-                          className="esim-plan-card w-full bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 text-left border border-gray-100 hover:border-blue-200 group"
-                          onClick={() => handleRegionSelect(region)}
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-center">
+                    {filteredRegions.length > 0 ? (
+                      (showAllRegions || searchTerm ? filteredRegions : filteredRegions.slice(0, 8)).map((region, index) => (
+                        <div
+                          key={region.id}
+                          className="col-span-1"
                         >
-                          <div className="country-flag-display text-center mb-4">
-                            <span className="region-icon text-5xl group-hover:scale-110 transition-transform duration-200">
-                              {region.icon || '🌍'}
-                            </span>
-                          </div>
-
-                          <div className="esim-plan-card__content text-center">
-                            <h5 className="esim-plan-card__title text-lg font-semibold text-gray-900 mb-2">
-                              {region.name}
-                            </h5>
-                            {region.description && (
-                              <p className="text-sm text-gray-500 mb-3 line-clamp-2">
-                                {region.description}
-                              </p>
-                            )}
-                                                          <div className="space-y-1">
-                                <span className="esim-plan-card__price text-blue-600 font-medium block">
-                                  From ${region.minPrice ? Math.round(region.minPrice) : '20'}
-                                </span>
-                                {region.countries && region.countries.length > 0 && (
-                                  <p className="text-xs text-gray-400 mb-3">
-                                    {region.countries.length === 1 && region.countries[0] === 'Worldwide Coverage' 
-                                      ? 'Worldwide Coverage'
-                                      : `${region.countries.length}+ countries`
-                                    }
-                                  </p>
-                                )}
-
-                              </div>
+                          <button
+                            className="esim-plan-card w-full bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 text-left border border-gray-100 hover:border-blue-200 group"
+                            onClick={() => handleRegionSelect(region)}
+                          >
+                            <div className="country-flag-display text-center mb-4">
+                              <span className="region-icon text-5xl group-hover:scale-110 transition-transform duration-200">
+                                {region.icon || '🌍'}
+                              </span>
                             </div>
-                          </button>
-                      </motion.div>
-                    ))
-                  ) : (
-                    <div className="col-span-full text-center py-12">
-                      <div className="max-w-md mx-auto">
-                        <span className="text-6xl mb-4 block">🌐</span>
-                        <h3 className="text-xl font-semibold text-gray-900 mb-2">Regional Plans Coming Soon</h3>
-                        <p className="text-gray-500">
-                          We're preparing amazing regional eSIM plans for you. Check back soon!
-                        </p>
+
+                            <div className="esim-plan-card__content text-center">
+                              <h5 className="esim-plan-card__title text-lg font-semibold text-gray-900 mb-2">
+                                {region.name}
+                              </h5>
+                              {region.description && (
+                                <p className="text-sm text-gray-500 mb-3 line-clamp-2">
+                                  {region.description}
+                                </p>
+                              )}
+                                                            <div className="space-y-1">
+                                  <span className="esim-plan-card__price text-blue-600 font-medium block">
+                                    From ${region.minPrice ? Math.round(region.minPrice) : '20'}
+                                  </span>
+                                  {region.countries && region.countries.length > 0 && (
+                                    <p className="text-xs text-gray-400 mb-3">
+                                      {region.countries.length === 1 && region.countries[0] === 'Worldwide Coverage' 
+                                        ? 'Worldwide Coverage'
+                                        : `${region.countries.length}+ countries`
+                                      }
+                                    </p>
+                                  )}
+
+                                </div>
+                              </div>
+                            </button>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="col-span-full text-center py-12">
+                        <div className="max-w-md mx-auto">
+                          <span className="text-6xl mb-4 block">🌐</span>
+                          <h3 className="text-xl font-semibold text-gray-900 mb-2">Regional Plans Coming Soon</h3>
+                          <p className="text-gray-500">
+                            We're preparing amazing regional eSIM plans for you. Check back soon!
+                          </p>
+                        </div>
                       </div>
+                    )}
+                  </div>
+                  
+                  {/* Show All Button for Regions */}
+                  {!searchTerm && filteredRegions.length > 8 && (
+                    <div className="text-center mt-8">
+                      <button
+                        onClick={() => setShowAllRegions(!showAllRegions)}
+                        className="btn-primary px-8 py-3 text-white font-semibold rounded-full hover:bg-blue-700 transition-all duration-200 shadow-lg"
+                      >
+                        {showAllRegions ? 'Show Less' : 'Show All'}
+                      </button>
                     </div>
                   )}
-                </div>
+                </>
               )}
             </div>
           )}
@@ -605,74 +717,6 @@ const EsimPlans = () => {
             </p>
           </div>
         )}
-      </div>
-    </section>
-
-    {/* Features Section */}
-    <section className="features py-16 bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Why Choose Our eSIM?
-          </h2>
-          <p className="text-xl text-gray-600">
-            Experience seamless connectivity with our premium eSIM solutions
-          </p>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          <motion.div 
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-center"
-          >
-            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-2xl">🌍</span>
-            </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Global Coverage</h3>
-            <p className="text-gray-600">Access to 200+ countries and regions worldwide</p>
-          </motion.div>
-
-          <motion.div 
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-center"
-          >
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-2xl">⚡</span>
-            </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Instant Activation</h3>
-            <p className="text-gray-600">Get connected immediately after purchase</p>
-          </motion.div>
-
-          <motion.div 
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            className="text-center"
-          >
-            <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-2xl">💳</span>
-            </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Secure Payment</h3>
-            <p className="text-gray-600">Safe and encrypted payment processing</p>
-          </motion.div>
-
-          <motion.div 
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            className="text-center"
-          >
-            <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-2xl">📱</span>
-            </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Easy Setup</h3>
-            <p className="text-gray-600">Simple QR code activation process</p>
-          </motion.div>
-        </div>
       </div>
     </section>
 

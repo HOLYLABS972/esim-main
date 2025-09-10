@@ -1,7 +1,6 @@
 "use client";
 
 import React from 'react';
-import { motion } from 'framer-motion';
 import { Calendar, User, ArrowRight, Clock } from 'lucide-react';
 import Link from 'next/link';
 
@@ -70,119 +69,123 @@ const Blog = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-20">
+    <div className="min-h-screen bg-white py-24">
       {/* Header Section */}
-      <section className="bg-gradient-to-r from-blue-600 to-purple-700 text-white py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-center"
-          >
-            <h1 className="text-4xl md:text-5xl font-bold mb-6">
-              eSIM Blog & Insights
-            </h1>
-            <p className="text-xl md:text-2xl text-blue-100 max-w-3xl mx-auto">
-              Stay updated with the latest trends, guides, and insights in eSIM technology and global connectivity
+      <section className="bg-white">
+        <div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8">
+          <div className="text-center">
+            <h2 className="text-center text-xl font-semibold text-tufts-blue">
+              <span>{'{ '}</span>
+              eSIM Insights
+              <span>{' }'}</span>
+            </h2>
+            <p className="mx-auto mt-12 max-w-4xl text-center text-4xl font-semibold tracking-tight text-eerie-black sm:text-5xl">
+              Stay updated with eSIM technology
             </p>
-          </motion.div>
+            <p className="mx-auto mt-6 max-w-2xl text-center text-lg text-cool-black">
+              Discover the latest trends, guides, and insights in eSIM technology 
+              and global connectivity solutions.
+            </p>
+          </div>
         </div>
       </section>
 
       {/* Blog Posts Grid */}
-      <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <section className="bg-white">
+        <div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8 mt-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {blogPosts.map((post, index) => (
-              <motion.article
+              <article
                 key={post.id}
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300"
+                className="relative"
               >
-                <div className="relative">
-                  <img
-                    src={post.image}
-                    alt={post.title}
-                    className="w-full h-48 object-cover"
-                  />
-                  <div className="absolute top-4 left-4">
-                    <span className="bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-medium">
-                      {post.category}
-                    </span>
-                  </div>
-                </div>
-                
-                <div className="p-6">
-                  <h2 className="text-xl font-bold text-gray-900 mb-3 line-clamp-2">
-                    {post.title}
-                  </h2>
-                  
-                  <p className="text-gray-600 mb-4 line-clamp-3">
-                    {post.excerpt}
-                  </p>
-                  
-                  <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
-                    <div className="flex items-center space-x-4">
-                      <div className="flex items-center space-x-1">
-                        <User className="w-4 h-4" />
-                        <span>{post.author}</span>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <Calendar className="w-4 h-4" />
-                        <span>{post.date}</span>
-                      </div>
+                <div className="absolute inset-px rounded-xl bg-white"></div>
+                <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
+                  <div className="relative">
+                    <img
+                      src={post.image}
+                      alt={post.title}
+                      className="w-full h-48 object-cover"
+                    />
+                    <div className="absolute top-4 left-4">
+                      <span className="bg-tufts-blue text-white px-3 py-1 rounded-full text-sm font-medium">
+                        {post.category}
+                      </span>
                     </div>
                   </div>
                   
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-1 text-sm text-gray-500">
-                      <Clock className="w-4 h-4" />
-                      <span>{post.readTime}</span>
+                  <div className="px-6 pt-6 pb-6 flex-1 flex flex-col">
+                    <h2 className="text-xl font-medium tracking-tight text-eerie-black mb-3 line-clamp-2">
+                      {post.title}
+                    </h2>
+                    
+                    <p className="text-cool-black mb-4 line-clamp-3 flex-1">
+                      {post.excerpt}
+                    </p>
+                    
+                    <div className="flex items-center justify-between text-sm text-cool-black mb-4">
+                      <div className="flex items-center space-x-4">
+                        <div className="flex items-center space-x-1">
+                          <User className="w-4 h-4" />
+                          <span>{post.author}</span>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <Calendar className="w-4 h-4" />
+                          <span>{post.date}</span>
+                        </div>
+                      </div>
                     </div>
                     
-                    <Link
-                      href={`/blog/${post.id}`}
-                      className="inline-flex items-center space-x-1 text-blue-600 hover:text-blue-700 font-medium transition-colors duration-200"
-                    >
-                      <span>Read More</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </Link>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-1 text-sm text-cool-black">
+                        <Clock className="w-4 h-4" />
+                        <span>{post.readTime}</span>
+                      </div>
+                      
+                      <Link
+                        href={`/blog/${post.id}`}
+                        className="inline-flex items-center space-x-1 text-tufts-blue hover:text-cobalt-blue font-medium transition-colors duration-200"
+                      >
+                        <span>Read More</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </Link>
+                    </div>
                   </div>
                 </div>
-              </motion.article>
+                <div className="pointer-events-none absolute inset-px rounded-xl shadow-sm ring-1 ring-black/5"></div>
+              </article>
             ))}
           </div>
         </div>
       </section>
 
       {/* Newsletter Section */}
-      <section className="bg-gray-900 text-white py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-          >
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">
-              Stay Updated with eSIM News
-            </h2>
-            <p className="text-xl text-gray-300 mb-8">
-              Get the latest eSIM insights, travel tips, and technology updates delivered to your inbox
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
-              <input
-                type="email"
-                placeholder="Enter your email"
-                className="flex-1 px-4 py-3 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <button className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg font-medium transition-colors duration-200">
-                Subscribe
-              </button>
+      <section className="bg-eerie-black text-white py-16">
+        <div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8">
+          <div className="relative">
+            <div className="absolute inset-px rounded-xl bg-eerie-black"></div>
+            <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
+              <div className="px-8 pt-8 pb-8 text-center">
+                <h2 className="text-3xl md:text-4xl font-medium tracking-tight text-white mb-6">
+                  Stay Updated with eSIM News
+                </h2>
+                <p className="text-xl text-alice-blue mb-8">
+                  Get the latest eSIM insights, travel tips, and technology updates delivered to your inbox
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
+                  <input
+                    type="email"
+                    placeholder="Enter your email"
+                    className="input-field flex-1"
+                  />
+                  <button className="btn-primary px-6 py-3">
+                    Subscribe
+                  </button>
+                </div>
+              </div>
             </div>
-          </motion.div>
+            <div className="pointer-events-none absolute inset-px rounded-xl shadow-sm ring-1 ring-white/10"></div>
+          </div>
         </div>
       </section>
     </div>

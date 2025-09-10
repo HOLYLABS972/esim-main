@@ -1,20 +1,17 @@
-import { Inter } from 'next/font/google'
 import Providers from '../src/components/Providers'
 import Navbar from '../src/components/Navbar'
 import Footer from '../src/components/Footer'
 import CookieConsent from '../src/components/CookieConsent'
 import './globals.css'
 
-const inter = Inter({ subsets: ['latin'] })
-
 export const metadata = {
   title: {
-    default: 'eSIM Plans - Global Data Connectivity',
-    template: '%s | eSIM Plans'
+    default: 'Roam Jet Plans - Global Data Connectivity',
+    template: '%s | Roam Jet Plans'
   },
   description: 'Get affordable eSIM data plans for 200+ countries. Instant activation, no physical SIM needed. Perfect for travelers and international connectivity.',
   keywords: ['eSIM', 'data plans', 'international roaming', 'travel internet', 'global connectivity', 'mobile data'],
-  authors: [{ name: 'eSIM Plans Team' }],
+  authors: [{ name: 'Roam Jet Plans Team' }],
   creator: 'eSIM Plans',
   publisher: 'eSIM Plans',
   formatDetection: {
@@ -30,7 +27,7 @@ export const metadata = {
     type: 'website',
     locale: 'en_US',
     url: '/',
-    title: 'eSIM Plans - Global Data Connectivity',
+    title: 'Roam Jet Plans - Global Data Connectivity',
     description: 'Get affordable eSIM data plans for 200+ countries. Instant activation, no physical SIM needed.',
     siteName: 'eSIM Plans',
     images: [
@@ -44,7 +41,7 @@ export const metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'eSIM Plans - Global Data Connectivity',
+    title: 'Roam Jet Plans - Global Data Connectivity',
     description: 'Get affordable eSIM data plans for 200+ countries. Instant activation, no physical SIM needed.',
     images: ['/images/twitter-image.jpg'],
   },
@@ -71,14 +68,17 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <head>
         <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#0ea5e9" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet" />
+        <meta name="theme-color" content="#468BE6" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </head>
-      <body className={inter.className}>
+      <body>
         <Providers>
-          <div className="min-h-screen bg-gray-50">
+          <div className="min-h-screen bg-alice-blue">
             <Navbar />
-            <main className="pt-16">
+            <main>
               {children}
             </main>
             <Footer />

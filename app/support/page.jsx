@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic';
 
-const Support = dynamic(() => import('../../src/components/Support'), {
+const Support = dynamic(() => import('../../src/components/Contact'), {
   ssr: false,
   loading: () => (
     <div className="flex justify-center items-center h-screen">

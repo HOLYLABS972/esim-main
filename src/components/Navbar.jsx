@@ -1,181 +1,140 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '../contexts/AuthContext';
-import { motion } from 'framer-motion';
-import { Menu, X, Globe } from 'lucide-react';
 
 const Navbar = () => {
-  const { currentUser, logout, userProfile } = useAuth();
-  const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
 
-  const handleLogout = async () => {
-    try {
-      await logout();
-      router.push('/');
-    } catch (error) {
-      console.error('Failed to log out:', error);
+  // Handle scroll behavior
+  useEffect(() => {
+    const controlNavbar = () => {
+      if (typeof window !== 'undefined') {
+        const currentScrollY = window.scrollY;
+        
+        // Show navbar when at top or scrolling up
+        if (currentScrollY < 10 || currentScrollY < lastScrollY) {
+          setIsVisible(true);
+        } else {
+          // Hide navbar when scrolling down
+          setIsVisible(false);
+        }
+        
+        setLastScrollY(currentScrollY);
+      }
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('scroll', controlNavbar);
+      return () => window.removeEventListener('scroll', controlNavbar);
     }
-  };
+  }, [lastScrollY]);
 
   return (
-    <nav className="bg-white shadow-lg fixed w-full top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          {/* Logo */}
-                    <Link href="/" className="relative flex items-center">
+    <header className={`bg-white/80 shadow-sm shadow-white/30 backdrop-blur-sm fixed w-full top-0 z-50 transition-transform duration-300 ${
+      isVisible ? 'translate-y-0' : '-translate-y-full'
+    }`}>
+      <nav aria-label="Global" className="mx-auto flex max-w-7xl items-center justify-between p-2 lg:px-8">
+        <div className="flex lg:flex-1">
+          <Link href="/" className="-m-1.5 p-1.5 flex items-center">
+            <span className="sr-only">RoamJet Plans</span>
             <img
               src="/images/logo_icon/logo.png"
-              alt="eSIM Store Logo"
+              alt="Roam Jet Plans Logo"
               className="h-8 w-auto"
             />
-            <span className="text-2xl font-bold text-gray-900 absolute left-8">eSIM</span>
+            <span className="ml-1 text-xl font-bold text-gray-900">RoamJet</span>
           </Link>
+        </div>
+        
+        <div className="flex lg:hidden">
+          <button
+            type="button"
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-gray-700"
+          >
+            <span className="sr-only">Open main menu</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true" className="size-6">
+              <path d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+        </div>
+        
+        <div className="hidden lg:flex lg:gap-x-12">
+          <Link href="/#how-it-works" className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
+            Download App
+          </Link>
+          <Link href="/contact" className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
+            Contact Us
+          </Link>
+          <Link href="/blog" className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
+            Blog
+          </Link>
+        </div>
+        
+        {/* Right side spacer */}
+        <div className="hidden lg:flex lg:flex-1 lg:justify-end"></div>
+      </nav>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
-            <Link
-              href="/"
-              className="text-gray-700 hover:text-blue-600 transition-colors duration-200"
-            >
-              Plans
+      {/* Mobile menu */}
+      {isMenuOpen && (
+        <div className="lg:hidden">
+          <div className="fixed inset-0 z-10 bg-black bg-opacity-25" onClick={() => setIsMenuOpen(false)}></div>
+          <div className="fixed inset-y-0 right-0 z-50 w-full overflow-y-auto bg-white p-6 sm:max-w-sm sm:ring-1 sm:ring-gray-900/10">
+            <div className="flex items-center justify-between">
+            <Link href="/" className="-m-1.5 p-1.5 flex items-center">
+              <span className="sr-only">RoamJet Plans</span>
+              <img
+                src="/images/logo_icon/logo.png"
+                alt="RoamJet Plans Logo"
+                className="h-8 w-auto"
+              />
+              <span className="ml-2 text-xl font-bold text-gray-900">RoamJet</span>
             </Link>
-            {currentUser && (
-              <Link
-                href="/dashboard"
-                className="text-gray-700 hover:text-blue-600 transition-colors duration-200"
+              <button
+                type="button"
+                onClick={() => setIsMenuOpen(false)}
+                className="-m-2.5 rounded-md p-2.5 text-gray-700"
               >
-                Dashboard
-              </Link>
-            )}
-            {(currentUser?.email === 'admin@example.com' || userProfile?.role === 'admin') && (
-              <Link
-                href="/admin"
-                className="text-red-600 hover:text-red-700 transition-colors duration-200 font-semibold"
-              >
-                Admin
-              </Link>
-            )}
-          </div>
-
-          {/* User Menu */}
-          <div className="hidden md:flex items-center space-x-4">
-            {currentUser ? (
-              <div className="flex items-center space-x-4">
-                <span className="text-gray-700">
-                  Welcome, {currentUser.displayName || currentUser.email}
-                </span>
-                <button
-                  onClick={handleLogout}
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200"
-                >
-                  Logout
-                </button>
+                <span className="sr-only">Close menu</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true" className="size-6">
+                  <path d="M6 18 18 6M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+            </div>
+            <div className="mt-6 flow-root">
+              <div className="-my-6 divide-y divide-gray-500/10">
+                <div className="space-y-2 py-6">
+                  <Link
+                    href="/#how-it-works"
+                    className="-mx-3 block rounded-lg px-3 py-2 text-base/7 font-semibold text-gray-900 hover:bg-gray-50"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Download App
+                  </Link>
+                  <Link
+                    href="/contact"
+                    className="-mx-3 block rounded-lg px-3 py-2 text-base/7 font-semibold text-gray-900 hover:bg-gray-50"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Contact Us
+                  </Link>
+                  <Link
+                    href="/blog"
+                    className="-mx-3 block rounded-lg px-3 py-2 text-base/7 font-semibold text-gray-900 hover:bg-gray-50"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Blog
+                  </Link>
+                </div>
               </div>
-            ) : (
-              <div className="flex items-center space-x-4">
-                <Link
-                  href="/login"
-                  className="text-gray-700 hover:text-blue-600 transition-colors duration-200"
-                >
-                  Login
-                </Link>
-                <Link
-                  href="/register"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
-                >
-                  Sign Up
-                </Link>
-              </div>
-            )}
-          </div>
-
-          {/* Mobile menu button */}
-          <div className="md:hidden">
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="text-gray-700 hover:text-blue-600 transition-colors duration-200"
-            >
-              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
+            </div>
           </div>
         </div>
-
-        {/* Mobile Navigation */}
-        {isMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="md:hidden border-t border-gray-200"
-          >
-            <div className="px-2 pt-2 pb-3 space-y-1">
-              <Link
-                href="/"
-                className="block px-3 py-2 text-gray-700 hover:text-blue-600 transition-colors duration-200"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Plans
-              </Link>
-              {currentUser && (
-                <Link
-                  href="/dashboard"
-                  className="block px-3 py-2 text-gray-700 hover:text-blue-600 transition-colors duration-200"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Dashboard
-                </Link>
-              )}
-              {(currentUser?.email === 'admin@example.com' || userProfile?.role === 'admin') && (
-                <Link
-                  href="/admin"
-                  className="block px-3 py-2 text-red-600 hover:text-red-700 transition-colors duration-200 font-semibold"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Admin
-                </Link>
-              )}
-              {currentUser ? (
-                <div className="px-3 py-2">
-                  <span className="text-gray-700 block mb-2">
-                    Welcome, {currentUser.displayName || currentUser.email}
-                  </span>
-                  <button
-                    onClick={() => {
-                      handleLogout();
-                      setIsMenuOpen(false);
-                    }}
-                    className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200"
-                  >
-                    Logout
-                  </button>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <Link
-                    href="/login"
-                    className="block px-3 py-2 text-gray-700 hover:text-blue-600 transition-colors duration-200"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Login
-                  </Link>
-                  <Link
-                    href="/register"
-                    className="block px-3 py-2 bg-blue-600 text-white rounded-lg hover:text-blue-700 transition-colors duration-200 mx-3"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Sign Up
-                  </Link>
-                </div>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </div>
-    </nav>
+      )}
+    </header>
   );
 };
 

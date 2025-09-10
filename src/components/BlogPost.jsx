@@ -2,7 +2,6 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
 import { Calendar, User, Clock, ArrowLeft, Share2 } from 'lucide-react';
 
 const BlogPost = ({ slug }) => {
@@ -432,13 +431,13 @@ const BlogPost = ({ slug }) => {
 
   if (!post) {
     return (
-      <div className="min-h-screen bg-gray-50 pt-20 flex items-center justify-center">
+      <div className="min-h-screen bg-white py-24 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Post Not Found</h1>
-          <p className="text-gray-600 mb-8">The blog post you're looking for doesn't exist.</p>
+          <h1 className="text-4xl font-medium tracking-tight text-eerie-black mb-4">Post Not Found</h1>
+          <p className="text-cool-black mb-8">The blog post you're looking for doesn't exist.</p>
           <Link 
             href="/blog" 
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200"
+            className="btn-primary px-6 py-3"
           >
             Back to Blog
           </Link>
@@ -448,85 +447,92 @@ const BlogPost = ({ slug }) => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-20">
+    <div className="min-h-screen bg-white py-24">
       {/* Header */}
-      <section className="bg-white border-b">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <Link 
-            href="/blog" 
-            className="inline-flex items-center text-blue-600 hover:text-blue-700 mb-6 font-medium"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Blog
-          </Link>
-          
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-          >
-            <div className="mb-4">
-              <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
-                {post.category}
-              </span>
-            </div>
-            
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 leading-tight">
-              {post.title}
-            </h1>
-            
-            <div className="flex items-center justify-between text-gray-600 mb-8">
-              <div className="flex items-center space-x-6">
-                <div className="flex items-center space-x-2">
-                  <User className="w-4 h-4" />
-                  <span>{post.author}</span>
+      <section className="bg-white">
+        <div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8">
+          <div className="relative">
+            <div className="absolute inset-px rounded-xl bg-white"></div>
+            <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
+              <div className="px-8 pt-8 pb-8">
+                <Link 
+                  href="/blog" 
+                  className="inline-flex items-center text-tufts-blue hover:text-cobalt-blue mb-6 font-medium transition-colors duration-200"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back to Blog
+                </Link>
+                
+                <div className="mb-4">
+                  <span className="bg-tufts-blue/10 text-tufts-blue px-3 py-1 rounded-full text-sm font-medium">
+                    {post.category}
+                  </span>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <Calendar className="w-4 h-4" />
-                  <span>{post.date}</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Clock className="w-4 h-4" />
-                  <span>{post.readTime}</span>
+                
+                <h1 className="text-4xl md:text-5xl font-medium tracking-tight text-eerie-black mb-6 leading-tight">
+                  {post.title}
+                </h1>
+                
+                <div className="flex items-center justify-between text-cool-black mb-8">
+                  <div className="flex items-center space-x-6">
+                    <div className="flex items-center space-x-2">
+                      <User className="w-4 h-4" />
+                      <span>{post.author}</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Calendar className="w-4 h-4" />
+                      <span>{post.date}</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Clock className="w-4 h-4" />
+                      <span>{post.readTime}</span>
+                    </div>
+                  </div>
+                  
+                  <button className="flex items-center space-x-2 text-cool-black hover:text-eerie-black transition-colors duration-200">
+                    <Share2 className="w-4 h-4" />
+                    <span>Share</span>
+                  </button>
                 </div>
               </div>
-              
-              <button className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors duration-200">
-                <Share2 className="w-4 h-4" />
-                <span>Share</span>
-              </button>
             </div>
-          </motion.div>
+            <div className="pointer-events-none absolute inset-px rounded-xl shadow-sm ring-1 ring-black/5"></div>
+          </div>
         </div>
       </section>
 
       {/* Featured Image */}
       <section className="bg-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-          >
-            <img
-              src={post.image}
-              alt={post.title}
-              className="w-full h-64 md:h-96 object-cover rounded-xl"
-            />
-          </motion.div>
+        <div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8 mt-6">
+          <div className="relative">
+            <div className="absolute inset-px rounded-xl bg-white"></div>
+            <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
+              <img
+                src={post.image}
+                alt={post.title}
+                className="w-full h-64 md:h-96 object-cover"
+              />
+            </div>
+            <div className="pointer-events-none absolute inset-px rounded-xl shadow-sm ring-1 ring-black/5"></div>
+          </div>
         </div>
       </section>
 
       {/* Content */}
       <section className="bg-white py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-            className="prose prose-lg max-w-none"
-            dangerouslySetInnerHTML={{ __html: post.content }}
-          />
+        <div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8">
+          <div className="relative">
+            <div className="absolute inset-px rounded-xl bg-white"></div>
+            <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
+              <div className="px-8 pt-8 pb-8">
+                <div
+                  className="prose prose-lg max-w-none text-cool-black"
+                  dangerouslySetInnerHTML={{ __html: post.content }}
+                />
+              </div>
+            </div>
+            <div className="pointer-events-none absolute inset-px rounded-xl shadow-sm ring-1 ring-black/5"></div>
+          </div>
         </div>
       </section>
 
