@@ -79,6 +79,55 @@ class ConfigService {
     }
   }
 
+  // Get Airalo API configuration
+  async getAiraloConfig() {
+    try {
+      // First try to get from Firestore
+      const configRef = doc(db, 'config', 'airalo');
+      const configDoc = await getDoc(configRef);
+      
+      if (configDoc.exists()) {
+        const configData = configDoc.data();
+        if (configData.api_key) {
+          console.log('✅ Airalo API key loaded from Firestore');
+          return {
+            apiKey: configData.api_key,
+            environment: configData.environment || 'test',
+            baseUrl: configData.environment === 'prod' ? 'https://api.airalo.com/v2' : 'https://api.airalo.com/v2'
+          };
+        }
+      }
+      
+      // Fallback to localStorage
+      const savedKey = localStorage.getItem('airalo_api_key');
+      const savedEnv = localStorage.getItem('airalo_environment') || 'test';
+      
+      if (savedKey) {
+        console.log('✅ Airalo API key loaded from localStorage');
+        return {
+          apiKey: savedKey,
+          environment: savedEnv,
+          baseUrl: savedEnv === 'prod' ? 'https://api.airalo.com/v2' : 'https://api.airalo.com/v2'
+        };
+      }
+      
+      // Default configuration
+      console.log('⚠️ No Airalo API key found, using default configuration');
+      return {
+        apiKey: null,
+        environment: 'test',
+        baseUrl: 'https://api.airalo.com/v2'
+      };
+    } catch (error) {
+      console.error('❌ Error loading Airalo configuration:', error);
+      return {
+        apiKey: null,
+        environment: 'test',
+        baseUrl: 'https://api.airalo.com/v2'
+      };
+    }
+  }
+
   // Get Stripe publishable key based on mode
   async getStripePublishableKey(mode = 'test') {
     console.log('🔍 Getting Stripe key for mode:', mode);

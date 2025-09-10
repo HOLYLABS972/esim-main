@@ -15,20 +15,14 @@ import config  # Load environment variables
 # Initialize Firebase app
 initialize_app()
 
-# Import eSIM functions
+# Import Airalo API
 try:
-    from esim_functions import (
-        get_plans,
-        create_order,
-        process_wallet_payment,
-        get_esim_qr_code,
-        check_esim_capacity
-    )
-    print("✅ eSIM functions imported successfully")
+    from airalo_api import AiraloAPI
+    print("✅ Airalo API imported successfully")
 except ImportError as e:
-    print(f"⚠️ eSIM functions not imported: {e}")
+    print(f"⚠️ Airalo API not imported: {e}")
 except Exception as e:
-    print(f"⚠️ Error importing eSIM functions: {e}")
+    print(f"⚠️ Error importing Airalo API: {e}")
 
 # Import registration functions
 try:
@@ -48,16 +42,16 @@ def get_db():
     """Lazy initialization of Firestore client"""
     return firestore.client()
 
-def init_stripe(mode='test'):
-    """Initialize Stripe with the appropriate key based on mode"""
+def init_stripe():
+    """Initialize Stripe with production key"""
     try:
         from config import get_stripe_key
-        stripe_key = get_stripe_key(mode)
+        stripe_key = get_stripe_key()
         stripe.api_key = stripe_key
-        print(f"✅ Stripe initialized in {mode} mode")
+        print(f"✅ Stripe initialized in production mode")
         return True
     except Exception as e:
-        print(f"❌ Error initializing Stripe in {mode} mode: {e}")
+        print(f"❌ Error initializing Stripe: {e}")
         return False
 
 def get_stripe_mode_from_firestore():
@@ -563,83 +557,130 @@ def set_default_payment_method(req: https_fn.CallableRequest) -> any:
             message=f'Error setting default payment method: {str(e)}'
         )
 
-def get_dataplans_api_key():
-    """Get DataPlans API key from Firestore"""
+def get_airalo_api_key():
+    """Get Airalo API key from Firestore"""
     try:
         db = firestore.client()
-        doc_ref = db.collection('config').document('dataplans')
+        doc_ref = db.collection('config').document('airalo')
         doc = doc_ref.get()
         
         if doc.exists:
             data = doc.to_dict()
             api_key = data.get('api_key')
             if api_key:
-                print("✅ DataPlans API key loaded from Firestore")
+                print("✅ Airalo API key loaded from Firestore")
                 return api_key
         
-        print("❌ DataPlans API key not found in Firestore")
+        print("❌ Airalo API key not found in Firestore")
         return None
     except Exception as e:
-        print(f"❌ Error loading DataPlans API key from Firestore: {e}")
+        print(f"❌ Error loading Airalo API key from Firestore: {e}")
         return None
 
-def get_dataplans_environment():
-    """Get DataPlans environment (test/prod) from Firestore"""
+def get_airalo_environment():
+    """Get Airalo environment (test/prod) from Firestore"""
     try:
         db = firestore.client()
-        doc_ref = db.collection('config').document('environment')
+        doc_ref = db.collection('config').document('airalo')
         doc = doc_ref.get()
         
         if doc.exists:
             data = doc.to_dict()
-            env_mode = data.get('mode', 'test')
-            print(f"✅ DataPlans environment loaded from Firestore: {env_mode}")
+            env_mode = data.get('environment', 'test')
+            print(f"✅ Airalo environment loaded from Firestore: {env_mode}")
             return env_mode
         
-        print("⚠️ DataPlans environment not found in Firestore, defaulting to test")
+        print("⚠️ Airalo environment not found in Firestore, defaulting to test")
         return 'test'
     except Exception as e:
-        print(f"❌ Error loading DataPlans environment: {e}")
+        print(f"❌ Error loading Airalo environment: {e}")
         return 'test'
 
-@https_fn.on_call()
-def sync_countries_from_api_OLD_DELETE_ME(req: https_fn.CallableRequest) -> any:
-    """Admin function: Manually sync countries from DataPlans API"""
+def save_airalo_client_secret(client_secret):
+    """Save Airalo client secret to Firestore"""
     try:
-        import requests
+        db = firestore.client()
+        doc_ref = db.collection('config').document('airalo')
+        
+        # Update the document with client secret
+        doc_ref.set({
+            'client_secret': client_secret,
+            'updated_at': firestore.SERVER_TIMESTAMP,
+            'updated_by': 'admin'
+        }, merge=True)
+        
+        print(f"✅ Airalo client secret saved to Firestore")
+        return True
+    except Exception as e:
+        print(f"❌ Error saving Airalo client secret: {e}")
+        return False
+
+@https_fn.on_call()
+def save_airalo_client_secret_fn(req: https_fn.CallableRequest) -> any:
+    """Save Airalo client secret from frontend"""
+    try:
+        client_secret = req.data.get('client_secret')
+        
+        if not client_secret:
+            return {
+                'success': False,
+                'error': 'Client secret is required'
+            }
+        
+        # Save to Firestore
+        success = save_airalo_client_secret(client_secret)
+        
+        if success:
+            return {
+                'success': True,
+                'message': 'Airalo client secret saved successfully'
+            }
+        else:
+            return {
+                'success': False,
+                'error': 'Failed to save client secret'
+            }
+            
+    except Exception as e:
+        print(f"❌ Error in save_airalo_client_secret_fn: {e}")
+        return {
+            'success': False,
+            'error': f'Error saving client secret: {str(e)}'
+        }
+
+@https_fn.on_call()
+def sync_countries_from_airalo(req: https_fn.CallableRequest) -> any:
+    """Admin function: Manually sync countries from Airalo API"""
+    try:
         from datetime import datetime
         
         # Get API key from Firestore
-        api_token = get_dataplans_api_key()
+        api_token = get_airalo_api_key()
         if not api_token:
             return {
                 'success': False,
-                'error': 'DataPlans API key not configured in Firestore. Please set it in the admin panel.'
+                'error': 'Airalo API key not configured in Firestore. Please set it in the admin panel.'
             }
         
         # Get environment from Firestore
-        env_mode = get_dataplans_environment()
-        base_url = 'https://sandbox.dataplans.io/api/v1' if env_mode == 'test' else 'https://api.dataplans.io/api/v1'
+        env_mode = get_airalo_environment()
         
-        print(f"🔧 Using DataPlans API: {base_url}")
+        print(f"🔧 Using Airalo API in {env_mode} mode")
         
-        if not api_token:
-            return {
-                'success': False,
-                'error': 'DATAPLANS_API_TOKEN not configured'
-            }
-        
-        headers = {
-            'Authorization': f'Bearer {api_token}',
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-        }
+        # Initialize Airalo API
+        api = AiraloAPI(env_mode)
         
         # Fetch countries from API
-        print("🌍 Fetching countries from DataPlans API...")
-        response = requests.get(f'{base_url}/countries', headers=headers, timeout=30)
-        response.raise_for_status()
-        countries_list = response.json()
+        print("🌍 Fetching countries from Airalo API...")
+        countries_result = api.get_countries()
+        
+        if not countries_result['success']:
+            return {
+                'success': False,
+                'error': f"Failed to fetch countries: {countries_result['error']}"
+            }
+        
+        countries_list = countries_result['countries']
         
         # Save to Firestore
         db = get_db()
@@ -647,8 +688,8 @@ def sync_countries_from_api_OLD_DELETE_ME(req: https_fn.CallableRequest) -> any:
         synced_count = 0
         
         for country in countries_list:
-            country_code = country.get('countryCode', '')
-            country_name = country.get('countryName', '')
+            country_code = country.get('code', '')
+            country_name = country.get('name', '')
             
             if not country_code or not country_name:
                 continue
@@ -657,9 +698,13 @@ def sync_countries_from_api_OLD_DELETE_ME(req: https_fn.CallableRequest) -> any:
             batch.set(country_ref, {
                 'name': country_name,
                 'code': country_code,
+                'flag': country.get('flag', ''),
+                'region_slug': country.get('region_slug', ''),
+                'is_roaming': country.get('is_roaming', False),
                 'status': 'active',
                 'updated_at': firestore.SERVER_TIMESTAMP,
-                'synced_at': datetime.now().isoformat()
+                'synced_at': datetime.now().isoformat(),
+                'provider': 'airalo'
             }, merge=True)
             synced_count += 1
         
@@ -674,27 +719,28 @@ def sync_countries_from_api_OLD_DELETE_ME(req: https_fn.CallableRequest) -> any:
             'plans_synced': 0,
             'status': 'completed',
             'source': 'admin_manual_sync',
-            'sync_type': 'countries_only'
+            'sync_type': 'countries_only',
+            'provider': 'airalo'
         })
         
-        print(f"✅ Successfully synced {synced_count} countries")
+        print(f"✅ Successfully synced {synced_count} countries from Airalo")
         
         return {
             'success': True,
-            'message': f'Successfully synced {synced_count} countries',
+            'message': f'Successfully synced {synced_count} countries from Airalo',
             'countries_synced': synced_count
         }
         
     except Exception as e:
-        print(f"❌ Error syncing countries: {e}")
+        print(f"❌ Error syncing countries from Airalo: {e}")
         return {
             'success': False,
             'error': str(e)
         }
 
 @https_fn.on_call()
-def sync_all_data_from_api_OLD_DELETE_ME(req: https_fn.CallableRequest) -> any:
-    """Admin function: Sync all data (countries, regions, plans) from DataPlans API"""
+def sync_all_data_from_airalo(req: https_fn.CallableRequest) -> any:
+    """Admin function: Sync all data (countries, regions, packages) from Airalo API"""
     try:
         import requests
         from datetime import datetime
@@ -939,34 +985,34 @@ def process_wallet_payment(req: https_fn.CallableRequest) -> any:
 @https_fn.on_call()
 def fetch_plans(req: https_fn.CallableRequest) -> any:
     """
-    Get countries + plans from DataPlans API with CORS support
+    Get countries + packages from Airalo API with CORS support
     """
     try:
         print("🌍 Fetch plans endpoint called")
         
-        # Direct implementation without importing
-        from esim_functions import EsimDataPlansAPI
-        import requests
+        # Import Airalo API
+        from airalo_api import AiraloAPI
         
         # Initialize API client
-        api = EsimDataPlansAPI('test')
+        env_mode = get_airalo_environment()
+        api = AiraloAPI(env_mode)
         
-        print("🌍 Getting countries from DataPlans API...")
-        countries_response = requests.get(f'{api.base_url}/countries', headers=api._get_headers(), timeout=30)
-        countries_response.raise_for_status()
-        raw_countries = countries_response.json()
+        print("🌍 Getting countries from Airalo API...")
+        countries_result = api.get_countries()
+        if not countries_result['success']:
+            raise Exception(f"Failed to get countries: {countries_result['error']}")
         
-        print("📱 Getting plans from DataPlans API...")
-        plans_response = requests.get(f'{api.base_url}/plans', headers=api._get_headers(), timeout=30)
-        plans_response.raise_for_status()
-        raw_plans = plans_response.json()
+        print("📱 Getting packages from Airalo API...")
+        packages_result = api.get_packages()
+        if not packages_result['success']:
+            raise Exception(f"Failed to get packages: {packages_result['error']}")
         
-        print(f"✅ Got {len(raw_countries)} countries and {len(raw_plans)} plans")
+        print(f"✅ Got {len(countries_result['countries'])} countries and {len(packages_result['packages'])} packages")
         
         return {
             'success': True,
-            'countries': raw_countries,
-            'plans': raw_plans
+            'countries': countries_result['countries'],
+            'plans': packages_result['packages']  # Keep 'plans' key for backward compatibility
         }
 
     except https_fn.HttpsError:
@@ -981,7 +1027,7 @@ def fetch_plans(req: https_fn.CallableRequest) -> any:
 @https_fn.on_call()
 def getEsimQrCode(req: https_fn.CallableRequest) -> any:
     """
-    Get eSIM QR code from DataPlans API
+    Get eSIM QR code from Airalo API
     """
     try:
         # Check authentication
@@ -1019,86 +1065,76 @@ def getEsimQrCode(req: https_fn.CallableRequest) -> any:
                 )
         
         order_data = order_doc.to_dict()
-        plan_id = order_data.get('planId') or order_data.get('plan_id')
+        esim_id = order_data.get('esimId') or order_data.get('esim_id')
         
-        if not plan_id:
+        if not esim_id:
             raise https_fn.HttpsError(
                 code=https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
-                message='Order has no plan ID'
+                message='Order has no eSIM ID'
             )
 
-        # Initialize DataPlans API
-        from esim_functions import EsimDataPlansAPI
-        api = EsimDataPlansAPI('test')  # You can make this dynamic based on environment
+        # Initialize Airalo API
+        from airalo_api import AiraloAPI
+        api = AiraloAPI('test')
         
-        print(f"🔍 Looking for plan with ID: {plan_id}")
+        print(f"🔍 Getting eSIM details for eSIM ID: {esim_id}")
         
-        # Get plan details from DataPlans API
-        plans_response = requests.get(f'{api.base_url}/plans', headers=api._get_headers(), timeout=30)
-        plans_response.raise_for_status()
-        plans = plans_response.json()
-        
-        print(f"📊 Retrieved {len(plans)} plans from DataPlans API")
-        
-        # Find the specific plan
-        plan = None
-        for p in plans:
-            plan_id_from_api = p.get('id')
-            plan_slug_from_api = p.get('slug')
-            print(f"🔍 Checking plan: id='{plan_id_from_api}', slug='{plan_slug_from_api}' vs order plan_id='{plan_id}'")
-            if p.get('id') == plan_id or p.get('slug') == plan_id:
-                plan = p
-                print(f"✅ Found matching plan: {p.get('name', 'Unknown')}")
-                break
-        
-        if not plan:
-            print(f"❌ Plan not found. Available plan IDs: {[p.get('id') for p in plans[:5]]}")
-            print(f"❌ Available plan slugs: {[p.get('slug') for p in plans[:5]]}")
-            print(f"❌ Plan ID '{plan_id}' not found in DataPlans API")
-            
-            # Don't create fake QR codes - this is a legitimate eSIM provider
-            # Instead, provide clear error information for debugging
+        # Get eSIM details from Airalo API
+        esim_result = api.get_esim(esim_id)
+        if not esim_result['success']:
             raise https_fn.HttpsError(
                 code=https_fn.FunctionsErrorCode.NOT_FOUND,
-                message=f'Plan not found in DataPlans API. Plan ID: {plan_id}. Available plans: {[p.get("id") for p in plans[:3]]}'
+                message=f'eSIM not found: {esim_result["error"]}'
             )
-
-        # Generate real eSIM data
-        esim_data = {
+        
+        esim_data = esim_result['esim']
+        print(f"✅ Found eSIM: {esim_data.get('name', 'Unknown')}")
+        
+        # Get installation instructions
+        instructions_result = api.get_installation_instructions(esim_id)
+        instructions = instructions_result.get('instructions', {}) if instructions_result['success'] else {}
+        
+        # Generate eSIM data for response
+        response_data = {
             'type': 'eSIM',
-            'provider': 'DataPlans',
-            'planId': plan_id,
-            'planName': plan.get('name', 'Unknown Plan'),
-            'dataLimit': plan.get('capacity', 'Unknown'),
-            'validity': plan.get('validity', 'Unknown'),
-            'countries': plan.get('countries', []),
+            'provider': 'Airalo',
+            'esimId': esim_id,
             'orderId': order_id,
+            'planName': esim_data.get('package_name', 'Unknown Plan'),
+            'dataLimit': f"{esim_data.get('data_amount', 0)} {esim_data.get('data_unit', 'GB')}",
+            'validity': f"{esim_data.get('validity', 0)} {esim_data.get('validity_unit', 'days')}",
+            'countries': esim_data.get('coverage', []),
             'customerEmail': order_data.get('customerEmail'),
             'amount': order_data.get('amount'),
             'currency': order_data.get('currency'),
-            'status': 'active',
+            'status': esim_data.get('status', 'active'),
             'timestamp': datetime.now().isoformat()
         }
 
-        # Create LPA (Local Profile Assistant) format for eSIM
-        # This is the standard format for eSIM activation
-        lpa_data = f"LPA:1$esim.datplans.com${order_id}${plan_id}"
+        # Get QR code from Airalo eSIM data
+        qr_code = esim_data.get('qr_code') or esim_data.get('qr_code_string')
+        
+        if not qr_code:
+            # If no QR code provided, create LPA format
+            qr_code = f"LPA:1$airalo.com${esim_id}"
         
         # Generate QR code data
         qr_data = {
-            'lpa': lpa_data,
+            'qr_code': qr_code,
             'esim_data': esim_data,
-            'activation_url': f"https://esim.datplans.com/activate/{order_id}",
-            'support_url': "https://esim.datplans.com/support"
+            'instructions': instructions,
+            'activation_url': esim_data.get('activation_url', 'https://airalo.com/activate'),
+            'support_url': "https://airalo.com/support"
         }
 
         return {
             'success': True,
-            'qrCode': lpa_data,
+            'qrCode': qr_code,
             'qrCodeData': qr_data,
             'orderId': order_id,
-            'planDetails': plan,
-            'esimData': esim_data
+            'esimId': esim_id,
+            'esimData': response_data,
+            'instructions': instructions
         }
 
     except https_fn.HttpsError:
@@ -1108,4 +1144,96 @@ def getEsimQrCode(req: https_fn.CallableRequest) -> any:
         raise https_fn.HttpsError(
             code=https_fn.FunctionsErrorCode.INTERNAL,
             message=f'Failed to get eSIM QR code: {str(e)}'
+        )
+
+@https_fn.on_call()
+def createAiraloOrder(req: https_fn.CallableRequest) -> any:
+    """
+    Create an eSIM order using Airalo API
+    """
+    try:
+        # Check authentication
+        if not req.auth or not req.auth.uid:
+            raise https_fn.HttpsError(
+                code=https_fn.FunctionsErrorCode.UNAUTHENTICATED,
+                message='User must be authenticated'
+            )
+
+        # Get order data from request
+        data = req.data
+        package_slug = data.get('packageSlug')
+        customer_email = data.get('customerEmail')
+        customer_name = data.get('customerName')
+        
+        if not package_slug or not customer_email:
+            raise https_fn.HttpsError(
+                code=https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
+                message='packageSlug and customerEmail are required'
+            )
+
+        print(f"📱 Creating Airalo order for package: {package_slug} (User: {req.auth.uid})")
+
+        # Initialize Airalo API
+        from airalo_api import AiraloAPI
+        api = AiraloAPI('test')
+        
+        # Submit order to Airalo
+        order_result = api.submit_order(package_slug, customer_email, customer_name)
+        if not order_result['success']:
+            raise https_fn.HttpsError(
+                code=https_fn.FunctionsErrorCode.INTERNAL,
+                message=f'Failed to create order: {order_result["error"]}'
+            )
+        
+        order_data = order_result['order']
+        order_id = order_data.get('id')
+        esim_id = order_data.get('esim_id')
+        
+        if not order_id:
+            raise https_fn.HttpsError(
+                code=https_fn.FunctionsErrorCode.INTERNAL,
+                message='Order created but no order ID returned'
+            )
+
+        # Save order to Firestore
+        db = get_db()
+        user_id = req.auth.uid
+        
+        # Save to users/{userId}/esims collection (mobile app structure)
+        esim_doc_data = {
+            'id': order_id,
+            'esimId': esim_id,
+            'packageSlug': package_slug,
+            'customerEmail': customer_email,
+            'customerName': customer_name,
+            'status': order_data.get('status', 'pending'),
+            'amount': order_data.get('price', 0),
+            'currency': order_data.get('currency', 'USD'),
+            'createdAt': firestore.SERVER_TIMESTAMP,
+            'updatedAt': firestore.SERVER_TIMESTAMP,
+            'provider': 'airalo'
+        }
+        
+        db.collection('users').document(user_id).collection('esims').document(order_id).set(esim_doc_data)
+        
+        # Also save to orders collection for backward compatibility
+        db.collection('orders').document(order_id).set(esim_doc_data)
+        
+        print(f"✅ Airalo order created successfully: {order_id}")
+        
+        return {
+            'success': True,
+            'orderId': order_id,
+            'esimId': esim_id,
+            'order': order_data,
+            'message': 'Order created successfully'
+        }
+
+    except https_fn.HttpsError:
+        raise
+    except Exception as e:
+        print(f"❌ Error in createAiraloOrder endpoint: {e}")
+        raise https_fn.HttpsError(
+            code=https_fn.FunctionsErrorCode.INTERNAL,
+            message=f'Failed to create order: {str(e)}'
         )

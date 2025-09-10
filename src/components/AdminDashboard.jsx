@@ -5,7 +5,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useAdmin } from '../contexts/AdminContext';
-import { collection, query, where, getDocs, doc, updateDoc, deleteDoc, writeBatch, addDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, updateDoc, deleteDoc, writeBatch, addDoc, setDoc } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
 import { db, functions } from '../firebase/config';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -50,14 +50,13 @@ const AdminDashboard = () => {
   const { isAdmin, userRole, canManageCountries, canManagePlans, canManageConfig, canDeleteData, canManageAdmins, loading: adminLoading } = useAdmin();
 
   // State Management - ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState('countries');
   const [currentEnvironment, setCurrentEnvironment] = useState('test');
-  const [currentStripeMode, setCurrentStripeMode] = useState('test');
-  const [dataplansApiKey, setDataplansApiKey] = useState('');
-  const [showApiKey, setShowApiKey] = useState(false);
+  const [airaloApiKey, setAiraloApiKey] = useState('');
+  const [showAiraloApiKey, setShowAiraloApiKey] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [syncStatus, setSyncStatus] = useState('Ready to sync data from DataPlans API');
+  const [syncStatus, setSyncStatus] = useState('Ready to sync data from Airalo API');
 
   
   // Countries Management
@@ -106,7 +105,7 @@ const AdminDashboard = () => {
       loadSavedConfig();
       loadCountriesFromFirestore();
       loadRegionsFromFirestore();
-      loadDataplansApiKey();
+      loadAiraloApiKey();
       loadUsersFromFirestore();
     }
   }, [currentUser]);
@@ -174,87 +173,101 @@ const AdminDashboard = () => {
       } catch (error) {
         console.log('⚠️ Could not load environment from Firestore, using localStorage');
       }
-
-      // Try to load Stripe config from Firestore first
-      try {
-        const stripeRef = doc(db, 'config', 'stripe');
-        const stripeDoc = await getDocs(query(collection(db, 'config'), where('__name__', '==', 'stripe')));
-        if (!stripeDoc.empty) {
-          const stripeData = stripeDoc.docs[0].data();
-          if (stripeData.mode) {
-            setCurrentStripeMode(stripeData.mode);
-            console.log('✅ Stripe mode loaded from Firestore:', stripeData.mode);
-            return; // Don't fall back to localStorage if we got it from Firestore
-          }
-        }
-      } catch (error) {
-        console.log('⚠️ Could not load Stripe config from Firestore, using localStorage');
-      }
       
       // Fallback to localStorage
       const savedEnv = localStorage.getItem('esim_environment');
-      const savedStripeMode = localStorage.getItem('esim_stripe_mode');
       
       if (savedEnv) setCurrentEnvironment(savedEnv);
-      if (savedStripeMode) setCurrentStripeMode(savedStripeMode);
     } catch (error) {
       console.error('Error loading saved config:', error);
     }
   };
 
-  const loadDataplansApiKey = async () => {
+
+  const loadAiraloApiKey = async () => {
     try {
       // Try to load from Firestore first
       try {
-        const configRef = doc(db, 'config', 'dataplans');
-        const configDoc = await getDocs(query(collection(db, 'config'), where('__name__', '==', 'dataplans')));
+        const configRef = doc(db, 'config', 'airalo');
+        const configDoc = await getDocs(query(collection(db, 'config'), where('__name__', '==', 'airalo')));
         if (!configDoc.empty) {
           const configData = configDoc.docs[0].data();
           if (configData.api_key) {
-            setDataplansApiKey(configData.api_key);
-            console.log('✅ DataPlans API key loaded from Firestore');
-            return;
+            setAiraloApiKey(configData.api_key);
+            console.log('✅ Airalo API key loaded from Firestore');
           }
+          if (configData.environment) {
+            setCurrentEnvironment(configData.environment);
+            console.log('✅ Airalo environment loaded from Firestore:', configData.environment);
+          }
+          return;
         }
       } catch (error) {
-        console.log('⚠️ Could not load API key from Firestore, trying localStorage');
+        console.log('⚠️ Could not load Airalo API key from Firestore, trying localStorage');
       }
       
       // Fallback to localStorage
-      const storedKey = localStorage.getItem('dataplans_api_key');
+      const storedKey = localStorage.getItem('airalo_api_key');
+      const storedEnv = localStorage.getItem('airalo_environment');
       if (storedKey) {
-        setDataplansApiKey(storedKey);
-        console.log('✅ DataPlans API key loaded from localStorage');
+        setAiraloApiKey(storedKey);
+        console.log('✅ Airalo API key loaded from localStorage');
+      }
+      if (storedEnv) {
+        setCurrentEnvironment(storedEnv);
+        console.log('✅ Airalo environment loaded from localStorage:', storedEnv);
       }
     } catch (error) {
-      console.error('Error loading API key:', error);
+      console.error('Error loading Airalo API key:', error);
     }
   };
 
-  const saveDataplansApiKey = async () => {
+  const saveAiraloApiKey = async () => {
     try {
-      if (!dataplansApiKey.trim()) {
-        toast.error('Please enter a valid API key');
+      if (!airaloApiKey.trim()) {
+        toast.error('Please enter a valid Airalo API key');
         return;
       }
       
       // Save to localStorage
-      localStorage.setItem('dataplans_api_key', dataplansApiKey);
+      localStorage.setItem('airalo_api_key', airaloApiKey);
       
       // Save to Firestore so Firebase Functions can access it
-      const configRef = doc(db, 'config', 'dataplans');
-      await updateDoc(configRef, {
-        api_key: dataplansApiKey,
+      const configRef = doc(db, 'config', 'airalo');
+      await setDoc(configRef, {
+        api_key: airaloApiKey,
+        environment: currentEnvironment,
         updated_at: new Date(),
         updated_by: currentUser?.uid || 'admin'
       }, { merge: true });
       
-      toast.success('DataPlans API key saved successfully!');
-      console.log('✅ DataPlans API key saved to localStorage and Firestore');
+      toast.success('Airalo API key saved successfully!');
+      console.log('✅ Airalo API key saved to localStorage and Firestore');
     } catch (error) {
-      console.error('Error saving API key:', error);
-      toast.error(`Error saving API key: ${error.message}`);
+      console.error('Error saving Airalo API key:', error);
+      toast.error(`Error saving Airalo API key: ${error.message}`);
     }
+  };
+
+  const toggleAiraloEnvironment = async () => {
+    const newEnv = currentEnvironment === 'test' ? 'production' : 'test';
+    setCurrentEnvironment(newEnv);
+    localStorage.setItem('airalo_environment', newEnv);
+    
+    // Also save to Firestore so Firebase Functions can access it
+    try {
+      const airaloRef = doc(db, 'config', 'airalo');
+      await updateDoc(airaloRef, {
+        environment: newEnv,
+        updated_at: new Date(),
+        updated_by: currentUser?.uid || 'admin'
+      }, { merge: true });
+      console.log('✅ Airalo environment saved to Firestore:', newEnv);
+    } catch (error) {
+      console.error('⚠️ Could not save Airalo environment to Firestore:', error);
+    }
+    
+    toast.success(`Airalo environment switched to ${newEnv}`);
   };
 
   const toggleEnvironment = async () => {
@@ -278,26 +291,6 @@ const AdminDashboard = () => {
     toast.success(`Environment switched to ${newEnv}`);
   };
 
-  const toggleStripeMode = async () => {
-    const newMode = currentStripeMode === 'test' ? 'production' : 'test';
-    setCurrentStripeMode(newMode);
-    localStorage.setItem('esim_stripe_mode', newMode);
-    
-    // Also save to Firestore so the app can access it
-    try {
-      const stripeRef = doc(db, 'config', 'stripe');
-      await updateDoc(stripeRef, {
-        mode: newMode,
-        updated_at: new Date(),
-        updated_by: currentUser?.uid || 'admin'
-      }, { merge: true });
-      console.log('✅ Stripe mode saved to Firestore:', newMode);
-    } catch (error) {
-      console.error('⚠️ Could not save Stripe mode to Firestore:', error);
-    }
-    
-    toast.success(`Stripe mode switched to ${newMode}`);
-  };
 
   // Countries Management Functions
   const loadCountriesFromFirestore = async () => {
@@ -376,8 +369,8 @@ const AdminDashboard = () => {
       if (result.data.success) {
         const count = result.data.countries_synced || 0;
         console.log(`✅ Successfully synced ${count} countries via Firebase Functions`);
-        setSyncStatus(`Successfully synced ${count} countries from DataPlans API`);
-        toast.success(`Successfully synced ${count} countries from DataPlans API`);
+        setSyncStatus(`Successfully synced ${count} countries from Airalo API`);
+        toast.success(`Successfully synced ${count} countries from Airalo API`);
       } else {
         throw new Error(result.data.error || 'Unknown error occurred');
       }
@@ -413,15 +406,15 @@ const AdminDashboard = () => {
     try {
       setLoading(true);
       
-      if (!dataplansApiKey.trim()) {
-        toast.error('Please configure DataPlans API key first');
+      if (!airaloApiKey.trim()) {
+        toast.error('Please configure Airalo API key first');
         return;
       }
 
-      setSyncStatus('Fetching raw data from DataPlans API...');
+      setSyncStatus('Fetching raw data from Airalo API...');
       
       // Get raw plans from Firebase Functions (no processing)
-      console.log('🔄 Getting raw plans from DataPlans API...');
+      console.log('🔄 Getting raw plans from Airalo API...');
       const getPlansFunction = httpsCallable(functions, 'fetch_plans');
       const result = await getPlansFunction();
       
@@ -493,7 +486,7 @@ const AdminDashboard = () => {
         console.log('✅ Successfully saved all data to Firebase');
         
         toast.success(`Successfully synced ${countries.length} countries and ${plans.length} plans`);
-        setSyncStatus(`Successfully synced ${countries.length + plans.length} items from DataPlans API`);
+        setSyncStatus(`Successfully synced ${countries.length + plans.length} items from Airalo API`);
         
         // Refresh local data
         await loadCountriesFromFirestore();
@@ -603,7 +596,7 @@ const AdminDashboard = () => {
   };
 
   const deleteAllCountries = async () => {
-    if (!window.confirm('Delete ALL countries? This will remove all countries and their plans from the database. DataPlans can then fetch fresh data.')) return;
+    if (!window.confirm('Delete ALL countries? This will remove all countries and their plans from the database. Airalo can then fetch fresh data.')) return;
 
     try {
       setIsDeleting(true);
@@ -887,7 +880,7 @@ const AdminDashboard = () => {
       } else {
         // If no plans in Firebase, show message to sync first
         setAvailablePlans([]);
-        toast('No plans found in Firebase. Click "Sync All Data from DataPlans" to load plans.', { icon: 'ℹ️' });
+        toast('No plans found in Firebase. Click "Sync All Data from Airalo" to load plans.', { icon: 'ℹ️' });
       }
       
     } catch (error) {
@@ -1071,7 +1064,7 @@ const AdminDashboard = () => {
       } else {
         // If no plans in Firebase, show message to sync first
         setAvailablePlans([]);
-        toast('No plans found in Firebase. Click "Sync All Data from DataPlans" to load plans.', { icon: 'ℹ️' });
+        toast('No plans found in Firebase. Click "Sync All Data from Airalo" to load plans.', { icon: 'ℹ️' });
       }
       
     } catch (error) {
@@ -1082,12 +1075,12 @@ const AdminDashboard = () => {
     }
   };
 
-  const syncAllDataFromDataPlans = async () => {
+  const syncAllDataFromAiralo = async () => {
     try {
       setLoading(true);
       
-      if (!dataplansApiKey.trim()) {
-        toast.error('Please configure DataPlans API key first');
+      if (!airaloApiKey.trim()) {
+        toast.error('Please configure Airalo API key first');
         return;
       }
 
@@ -1224,7 +1217,6 @@ const AdminDashboard = () => {
           <div className="bg-white rounded-xl shadow-lg p-1">
             <nav className="flex space-x-1">
               {[
-                { id: 'overview', label: 'Overview', icon: TrendingUp },
                 { id: 'config', label: 'Configuration', icon: Settings },
                 { id: 'countries', label: 'Countries', icon: Globe },
                 { id: 'regions', label: 'Regional Plans', icon: MapPin },
@@ -1344,7 +1336,7 @@ const AdminDashboard = () => {
                   <div className="bg-white rounded-xl shadow-lg p-6">
                     <h2 className="text-xl font-semibold mb-4 flex items-center">
                       <ToggleLeft className="text-blue-600 mr-2" />
-                      DataPlans Environment
+                      Airalo Environment
                     </h2>
                     <div className="flex items-center justify-between">
                       <div>
@@ -1368,40 +1360,32 @@ const AdminDashboard = () => {
                     </div>
                   </div>
 
-                  {/* Stripe Mode Toggle */}
+                  {/* Data Sync */}
                   <div className="bg-white rounded-xl shadow-lg p-6">
                     <h2 className="text-xl font-semibold mb-4 flex items-center">
-                      <DollarSign className="text-black mr-2" />
-                      Stripe Payment Mode
+                      <Download className="text-green-600 mr-2" />
+                      Data Synchronization
                     </h2>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <span className="text-gray-700 font-medium">Payment Mode:</span>
-                        <span className={`ml-2 px-3 py-1 rounded-full text-sm font-medium ${
-                          currentStripeMode === 'test' 
-                            ? 'bg-yellow-100 text-yellow-800' 
-                            : 'bg-green-100 text-green-800'
-                        }`}>
-                          {currentStripeMode === 'test' ? 'Test' : 'Production'}
-                        </span>
-                      </div>
+                    <div className="space-y-4">
                       <button
-                        onClick={toggleStripeMode}
-                        className="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 bg-gray-200"
+                        onClick={syncAllDataFromAiralo}
+                        disabled={loading}
+                        className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 flex items-center justify-center"
                       >
-                        <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                          currentStripeMode === 'production' ? 'translate-x-5' : 'translate-x-0'
-                        }`} />
+                        {loading ? <RefreshCw className="w-5 h-5 mr-2 animate-spin" /> : <Download className="w-5 h-5 mr-2" />}
+                        Sync All Data from Airalo API
                       </button>
                     </div>
                   </div>
+
                 </div>
 
-                {/* API Key Management */}
+
+                {/* Airalo API Configuration */}
                 <div className="bg-white rounded-xl shadow-lg p-6">
                   <h2 className="text-xl font-semibold mb-4 flex items-center">
-                    <Database className="text-green-600 mr-2" />
-                    DataPlans API Configuration
+                    <Globe className="text-blue-600 mr-2" />
+                    Airalo API Configuration
                   </h2>
                   <div className="space-y-4">
                     <div>
@@ -1410,88 +1394,50 @@ const AdminDashboard = () => {
                       </label>
                       <div className="relative">
                         <input
-                          type={showApiKey ? 'text' : 'password'}
-                          value={dataplansApiKey}
-                          onChange={(e) => setDataplansApiKey(e.target.value)}
-                          placeholder="Enter your DataPlans API key"
+                          type={showAiraloApiKey ? 'text' : 'password'}
+                          value={airaloApiKey}
+                          onChange={(e) => setAiraloApiKey(e.target.value)}
+                          placeholder="Enter your Airalo API key"
                           className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
                         <button
-                          onClick={() => setShowApiKey(!showApiKey)}
+                          onClick={() => setShowAiraloApiKey(!showAiraloApiKey)}
                           className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
                         >
-                          {showApiKey ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                          {showAiraloApiKey ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                         </button>
                       </div>
                     </div>
+                    
+                    
                     <button
-                      onClick={saveDataplansApiKey}
-                      disabled={loading || !dataplansApiKey.trim()}
-                      className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 disabled:from-gray-400 disabled:to-gray-500 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 flex items-center"
+                      onClick={saveAiraloApiKey}
+                      disabled={loading || !airaloApiKey.trim()}
+                      className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:from-gray-400 disabled:to-gray-500 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 flex items-center"
                     >
-                      {loading ? <RefreshCw className="w-5 h-5 mr-2 animate-spin" /> : <Database className="w-5 h-5 mr-2" />}
-                      Save API Key
+                      {loading ? <RefreshCw className="w-5 h-5 mr-2 animate-spin" /> : <Globe className="w-5 h-5 mr-2" />}
+                      Save Airalo API Key
                     </button>
                   </div>
                 </div>
 
-                {/* Data Synchronization */}
+
+                {/* Database Management */}
                 <div className="bg-white rounded-xl shadow-lg p-6">
                   <h2 className="text-xl font-semibold mb-4 flex items-center">
-                    <RefreshCw className="text-black mr-2" />
-                    Data Synchronization
+                    <Database className="text-gray-600 mr-2" />
+                    Database Management
                   </h2>
-                  
-                  {/* Current API Endpoint Info */}
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="font-medium text-blue-900 mb-1 text-sm">Currently Using:</h3>
-                        <span className="text-sm text-blue-700">
-                          {currentEnvironment === 'test' 
-                            ? 'https://sandbox.dataplans.io/api/v1' 
-                            : 'https://api.dataplans.io/api/v1'
-                          }
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    <button
-                      onClick={syncAllDataFromAPI}
-                      disabled={loading}
-                      className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 flex items-center justify-center"
-                    >
-                      {loading ? <RefreshCw className="w-5 h-5 mr-2 animate-spin" /> : <Download className="w-5 h-5 mr-2" />}
-                      Sync All Data from DataPlans API
-                    </button>
-
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <h3 className="font-semibold text-gray-700 mb-2 text-sm">Sync Status</h3>
-                      <div className="text-sm text-gray-600">
-                        {syncStatus}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Dangerous Operations */}
-                <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-red-500">
-                  <h2 className="text-xl font-semibold mb-4 flex items-center">
-                    <AlertTriangle className="text-red-600 mr-2" />
-                    Dangerous Operations
-                  </h2>
-                  <p className="text-sm text-gray-600 mb-4">
-                    These operations are irreversible and will permanently delete data from your database.
+                  <p className="text-sm text-gray-600 mb-6">
+                    Manage your database content and sync fresh data from Airalo.
                   </p>
                   
                   <div className="space-y-4">
-                    <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                      <h3 className="font-semibold text-red-800 mb-2">Delete All Countries & Plans</h3>
-                      <p className="text-sm text-red-700 mb-3">
-                        This will remove ALL countries and their associated plans from the database. 
-                        DataPlans can then fetch fresh data. This action cannot be undone.
+                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                      <h3 className="font-semibold text-gray-800 mb-2">Reset All Data</h3>
+                      <p className="text-sm text-gray-600 mb-3">
+                        This will remove all countries and their associated plans from the database. 
+                        Fresh data can then be synced from Airalo. This action cannot be undone.
                       </p>
                       <button
                         onClick={deleteAllCountries}
@@ -1509,11 +1455,14 @@ const AdminDashboard = () => {
                         ) : (
                           <Trash2 className="w-5 h-5 mr-2" />
                         )}
-                        {isDeleting ? 'Deleting...' : 'Delete All Countries & Plans'}
+                        {isDeleting ? 'Resetting...' : 'Reset All Data'}
                       </button>
                     </div>
                   </div>
                 </div>
+
+                {/* Add spacing after the section */}
+                <div className="h-8"></div>
               </div>
             )}
 
@@ -1949,7 +1898,7 @@ const AdminDashboard = () => {
                         }}>
                           <div className="p-3 border-b border-gray-200 bg-gray-50">
                             <h4 className="font-semibold text-gray-900">Select Plan to Attach</h4>
-                            <p className="text-sm text-gray-600">Available plans from DataPlans</p>
+                            <p className="text-sm text-gray-600">Available plans from Airalo</p>
                           </div>
                           
                           <div className="overflow-y-auto" style={{ maxHeight: '300px' }}>
@@ -2068,7 +2017,7 @@ const AdminDashboard = () => {
                   <div className="text-center py-12">
                     <Database className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                     <h4 className="text-lg font-semibold text-gray-900 mb-2">No Plans Attached</h4>
-                    <p className="text-gray-600">This country doesn't have any plans yet. Use "Attach Plan" to add plans from DataPlans.</p>
+                    <p className="text-gray-600">This country doesn't have any plans yet. Use "Attach Plan" to add plans from Airalo.</p>
                   </div>
                 )}
               </div>
@@ -2124,7 +2073,7 @@ const AdminDashboard = () => {
                         }}>
                           <div className="p-3 border-b border-gray-200 bg-gray-50">
                             <h4 className="font-semibold text-gray-900">Select Plan to Attach</h4>
-                            <p className="text-sm text-gray-600">Available plans from DataPlans</p>
+                            <p className="text-sm text-gray-600">Available plans from Airalo</p>
                           </div>
                           
                           <div className="overflow-y-auto" style={{ maxHeight: '300px' }}>

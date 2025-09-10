@@ -3,21 +3,45 @@ import { functions } from '../firebase/config';
 
 // Firebase Functions for eSIM operations
 const createOrderFn = httpsCallable(functions, 'createOrder');
+const createAiraloOrderFn = httpsCallable(functions, 'createAiraloOrder');
 const getEsimQrCodeFn = httpsCallable(functions, 'getEsimQrCode');
 const checkEsimCapacityFn = httpsCallable(functions, 'checkEsimCapacity');
+const fetchPlansFn = httpsCallable(functions, 'fetchPlans');
 const syncCountriesFromApiFn = httpsCallable(functions, 'syncCountriesFromApi');
 const syncRegionsFromApiFn = httpsCallable(functions, 'syncRegionsFromApi');
 const syncPlansFromApiFn = httpsCallable(functions, 'syncPlansFromApi');
 const syncAllDataFromApiFn = httpsCallable(functions, 'syncAllDataFromApi');
 
 export const esimService = {
-  // Create eSIM order
+  // Create eSIM order (legacy)
   async createOrder(orderData) {
     try {
       const result = await createOrderFn(orderData);
       return result.data;
     } catch (error) {
       console.error('Error creating eSIM order:', error);
+      throw error;
+    }
+  },
+
+  // Create Airalo eSIM order
+  async createAiraloOrder(orderData) {
+    try {
+      const result = await createAiraloOrderFn(orderData);
+      return result.data;
+    } catch (error) {
+      console.error('Error creating Airalo eSIM order:', error);
+      throw error;
+    }
+  },
+
+  // Fetch plans from Airalo API
+  async fetchPlans() {
+    try {
+      const result = await fetchPlansFn();
+      return result.data;
+    } catch (error) {
+      console.error('Error fetching plans:', error);
       throw error;
     }
   },
