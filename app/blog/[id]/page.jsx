@@ -23,7 +23,7 @@ export async function generateMetadata({ params }) {
 export default function BlogPostPage({ params }) {
   return (
     <Suspense fallback={<Loading />}>
-      <BlogPost id={params.id} />
+      <BlogPost slug={params.id} />
     </Suspense>
   )
 }

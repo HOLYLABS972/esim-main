@@ -263,7 +263,7 @@ const Blog = () => {
       </section>
 
       {/* Newsletter Section */}
-      <section className="bg-eerie-black text-white py-16">
+      <section className="bg-eerie-black text-white py-16 mt-[50px]">
         <div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8">
           <div className="relative">
             <div className="absolute inset-px rounded-xl bg-eerie-black"></div>
