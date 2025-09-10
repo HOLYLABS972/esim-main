@@ -569,7 +569,8 @@ const EsimPlans = () => {
                 </div>
               ) : (
                 <>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-center">
+                  {/* Desktop Grid Layout */}
+                  <div className="hidden sm:grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-center">
                     {(showAllCountries || searchTerm ? filteredCountries : filteredCountries.slice(0, 8)).map((country, index) => (
                     <div
                       key={country.id}
@@ -606,6 +607,46 @@ const EsimPlans = () => {
                     ))}
                   </div>
                   
+                  {/* Mobile List Layout */}
+                  <div className="sm:hidden space-y-3">
+                    {(showAllCountries || searchTerm ? filteredCountries : filteredCountries.slice(0, 8)).map((country, index) => (
+                      <button
+                        key={country.id}
+                        className="esim-plan-card w-full bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 p-4 text-left border border-gray-100 hover:border-blue-200 flex items-center space-x-4"
+                        onClick={() => handleCountrySelect(country)}
+                      >
+                        <div className="country-flag-display flex-shrink-0">
+                          {country.flagEmoji ? (
+                            <span className="country-flag-emoji text-3xl">
+                              {country.flagEmoji}
+                            </span>
+                          ) : (
+                            <div className="country-code-avatar w-10 h-10 bg-tufts-blue rounded-full flex items-center justify-center">
+                              <span className="text-white font-bold text-sm">
+                                {country.code || '??'}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="esim-plan-card__content flex-1 text-left">
+                          <h5 className="esim-plan-card__title text-base font-semibold text-gray-900 mb-1">
+                            {country.name}
+                          </h5>
+                          <span className="esim-plan-card__price text-tufts-blue font-medium text-sm">
+                            From ${country.minPrice ? Math.round(country.minPrice) : '10'}
+                          </span>
+                        </div>
+                        
+                        <div className="flex-shrink-0">
+                          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                  
                   {/* Show All Button for Countries */}
                   {!searchTerm && filteredCountries.length > 8 && (
                     <div className="text-center mt-8">
@@ -633,7 +674,8 @@ const EsimPlans = () => {
                 </div>
               ) : (
                 <>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-center">
+                  {/* Desktop Grid Layout */}
+                  <div className="hidden sm:grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-center">
                     {filteredRegions.length > 0 ? (
                       (showAllRegions || searchTerm ? filteredRegions : filteredRegions.slice(0, 8)).map((region, index) => (
                         <div
@@ -659,22 +701,21 @@ const EsimPlans = () => {
                                   {region.description}
                                 </p>
                               )}
-                                                            <div className="space-y-1">
-                                  <span className="esim-plan-card__price text-blue-600 font-medium block">
-                                    From ${region.minPrice ? Math.round(region.minPrice) : '20'}
-                                  </span>
-                                  {region.countries && region.countries.length > 0 && (
-                                    <p className="text-xs text-gray-400 mb-3">
-                                      {region.countries.length === 1 && region.countries[0] === 'Worldwide Coverage' 
-                                        ? 'Worldwide Coverage'
-                                        : `${region.countries.length}+ countries`
-                                      }
-                                    </p>
-                                  )}
-
-                                </div>
+                              <div className="space-y-1">
+                                <span className="esim-plan-card__price text-blue-600 font-medium block">
+                                  From ${region.minPrice ? Math.round(region.minPrice) : '20'}
+                                </span>
+                                {region.countries && region.countries.length > 0 && (
+                                  <p className="text-xs text-gray-400 mb-3">
+                                    {region.countries.length === 1 && region.countries[0] === 'Worldwide Coverage' 
+                                      ? 'Worldwide Coverage'
+                                      : `${region.countries.length}+ countries`
+                                    }
+                                  </p>
+                                )}
                               </div>
-                            </button>
+                            </div>
+                          </button>
                         </div>
                       ))
                     ) : (
@@ -683,6 +724,65 @@ const EsimPlans = () => {
                           <span className="text-6xl mb-4 block">🌐</span>
                           <h3 className="text-xl font-semibold text-gray-900 mb-2">Regional Plans Coming Soon</h3>
                           <p className="text-gray-500">
+                            We're preparing amazing regional eSIM plans for you. Check back soon!
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Mobile List Layout */}
+                  <div className="sm:hidden space-y-3">
+                    {filteredRegions.length > 0 ? (
+                      (showAllRegions || searchTerm ? filteredRegions : filteredRegions.slice(0, 8)).map((region, index) => (
+                        <button
+                          key={region.id}
+                          className="esim-plan-card w-full bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 p-4 text-left border border-gray-100 hover:border-blue-200 flex items-center space-x-4"
+                          onClick={() => handleRegionSelect(region)}
+                        >
+                          <div className="region-flag-display flex-shrink-0">
+                            <span className="region-icon text-3xl">
+                              {region.icon || '🌍'}
+                            </span>
+                          </div>
+
+                          <div className="esim-plan-card__content flex-1 text-left">
+                            <h5 className="esim-plan-card__title text-base font-semibold text-gray-900 mb-1">
+                              {region.name}
+                            </h5>
+                            {region.description && (
+                              <p className="text-xs text-gray-500 mb-2 line-clamp-1">
+                                {region.description}
+                              </p>
+                            )}
+                            <div className="flex items-center space-x-2">
+                              <span className="esim-plan-card__price text-tufts-blue font-medium text-sm">
+                                From ${region.minPrice ? Math.round(region.minPrice) : '20'}
+                              </span>
+                              {region.countries && region.countries.length > 0 && (
+                                <span className="text-xs text-gray-400">
+                                  • {region.countries.length === 1 && region.countries[0] === 'Worldwide Coverage' 
+                                    ? 'Worldwide'
+                                    : `${region.countries.length}+ countries`
+                                  }
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          
+                          <div className="flex-shrink-0">
+                            <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                          </div>
+                        </button>
+                      ))
+                    ) : (
+                      <div className="text-center py-12">
+                        <div className="max-w-md mx-auto">
+                          <span className="text-4xl mb-4 block">🌐</span>
+                          <h3 className="text-lg font-semibold text-gray-900 mb-2">Regional Plans Coming Soon</h3>
+                          <p className="text-gray-500 text-sm">
                             We're preparing amazing regional eSIM plans for you. Check back soon!
                           </p>
                         </div>

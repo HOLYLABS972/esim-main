@@ -345,6 +345,17 @@
       @apply px-8;
     }
   }
+
+  /* Navbar Specific Z-Index Classes */
+  .navbar-header {
+    z-index: 9999 !important;
+    position: fixed !important;
+  }
+
+  .navbar-mobile-menu {
+    z-index: 999999 !important;
+    position: fixed !important;
+  }
 }
 
 /* Keyframe Animations */

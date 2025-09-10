@@ -2,11 +2,13 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { createPortal } from 'react-dom';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
+  const [mounted, setMounted] = useState(false);
 
   // Handle scroll behavior
   useEffect(() => {
@@ -32,8 +34,13 @@ const Navbar = () => {
     }
   }, [lastScrollY]);
 
+  // Set mounted state
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   return (
-    <header className={`bg-white/80 shadow-sm shadow-white/30 backdrop-blur-sm fixed w-full top-0 z-50 transition-transform duration-300 ${
+    <header className={`navbar-header bg-white/80 shadow-sm shadow-white/30 backdrop-blur-sm w-full top-0 transition-transform duration-300 ${
       isVisible ? 'translate-y-0' : '-translate-y-full'
     }`}>
       <nav aria-label="Global" className="mx-auto flex max-w-7xl items-center justify-between p-2 lg:px-8">
@@ -78,61 +85,70 @@ const Navbar = () => {
         <div className="hidden lg:flex lg:flex-1 lg:justify-end"></div>
       </nav>
 
-      {/* Mobile menu */}
-      {isMenuOpen && (
-        <div className="lg:hidden">
-          <div className="fixed inset-0 z-10 bg-black bg-opacity-25" onClick={() => setIsMenuOpen(false)}></div>
-          <div className="fixed inset-y-0 right-0 z-50 w-full overflow-y-auto bg-white p-6 sm:max-w-sm sm:ring-1 sm:ring-gray-900/10">
-            <div className="flex items-center justify-between">
-            <Link href="/" className="-m-1.5 p-1.5 flex items-center">
-              <span className="sr-only">RoamJet Plans</span>
-              <img
-                src="/images/logo_icon/logo.png"
-                alt="RoamJet Plans Logo"
-                className="h-8 w-auto"
-              />
-              <span className="ml-2 text-xl font-bold text-gray-900">RoamJet</span>
-            </Link>
+      {/* Mobile menu using Portal */}
+      {isMenuOpen && mounted && createPortal(
+        <div className="lg:hidden" style={{ zIndex: 999999, position: 'fixed', inset: 0 }}>
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50" 
+            style={{ zIndex: 999998 }}
+            onClick={() => setIsMenuOpen(false)}
+          ></div>
+          <div 
+            className="fixed inset-0 w-full h-full overflow-y-auto bg-white" 
+            style={{ zIndex: 999999 }}
+          >
+            {/* Header with logo and close button */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <Link href="/" className="-m-1.5 p-1.5 flex items-center" onClick={() => setIsMenuOpen(false)}>
+                <span className="sr-only">RoamJet Plans</span>
+                <img
+                  src="/images/logo_icon/logo.png"
+                  alt="RoamJet Plans Logo"
+                  className="h-8 w-auto"
+                />
+                <span className="ml-2 text-xl font-bold text-gray-900">RoamJet</span>
+              </Link>
               <button
                 type="button"
                 onClick={() => setIsMenuOpen(false)}
-                className="-m-2.5 rounded-md p-2.5 text-gray-700"
+                className="-m-2.5 rounded-md p-2.5 text-gray-700 hover:bg-gray-100 transition-colors"
               >
                 <span className="sr-only">Close menu</span>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true" className="size-6">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true" className="size-6">
                   <path d="M6 18 18 6M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </button>
             </div>
-            <div className="mt-6 flow-root">
-              <div className="-my-6 divide-y divide-gray-500/10">
-                <div className="space-y-2 py-6">
-                  <Link
-                    href="/#how-it-works"
-                    className="-mx-3 block rounded-lg px-3 py-2 text-base/7 font-semibold text-gray-900 hover:bg-gray-50"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Download App
-                  </Link>
-                  <Link
-                    href="/contact"
-                    className="-mx-3 block rounded-lg px-3 py-2 text-base/7 font-semibold text-gray-900 hover:bg-gray-50"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Contact Us
-                  </Link>
-                  <Link
-                    href="/blog"
-                    className="-mx-3 block rounded-lg px-3 py-2 text-base/7 font-semibold text-gray-900 hover:bg-gray-50"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Blog
-                  </Link>
-                </div>
+            
+            {/* Centered menu items */}
+            <div className="flex flex-col items-center justify-center min-h-[calc(100vh-120px)] p-6">
+              <div className="space-y-8 text-center">
+                <Link
+                  href="/#how-it-works"
+                  className="block text-2xl font-semibold text-gray-900 hover:text-tufts-blue transition-colors py-4"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Download App
+                </Link>
+                <Link
+                  href="/contact"
+                  className="block text-2xl font-semibold text-gray-900 hover:text-tufts-blue transition-colors py-4"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Contact Us
+                </Link>
+                <Link
+                  href="/blog"
+                  className="block text-2xl font-semibold text-gray-900 hover:text-tufts-blue transition-colors py-4"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Blog
+                </Link>
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </header>
   );

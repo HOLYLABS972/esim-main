@@ -76,7 +76,7 @@ export default function RootLayout({ children }) {
       </head>
       <body>
         <Providers>
-          <div className="min-h-screen bg-alice-blue">
+          <div className=" bg-white">
             <Navbar />
             <main>
               {children}
