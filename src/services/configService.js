@@ -92,8 +92,8 @@ class ConfigService {
           console.log('✅ Airalo API key loaded from Firestore');
           return {
             apiKey: configData.api_key,
-            environment: configData.environment || 'test',
-            baseUrl: configData.environment === 'prod' ? 'https://api.airalo.com/v2' : 'https://api.airalo.com/v2'
+            environment: configData.environment || 'sandbox',
+            baseUrl: configData.environment === 'production' ? 'https://partners-api.airalo.com/v2' : 'https://sandbox-partners-api.airalo.com/v2'
           };
         }
       }
@@ -107,7 +107,7 @@ class ConfigService {
         return {
           apiKey: savedKey,
           environment: savedEnv,
-          baseUrl: savedEnv === 'prod' ? 'https://api.airalo.com/v2' : 'https://api.airalo.com/v2'
+          baseUrl: savedEnv === 'production' ? 'https://partners-api.airalo.com/v2' : 'https://sandbox-partners-api.airalo.com/v2'
         };
       }
       
@@ -115,15 +115,15 @@ class ConfigService {
       console.log('⚠️ No Airalo API key found, using default configuration');
       return {
         apiKey: null,
-        environment: 'test',
-        baseUrl: 'https://api.airalo.com/v2'
+        environment: 'sandbox',
+        baseUrl: 'https://sandbox-partners-api.airalo.com/v2'
       };
     } catch (error) {
       console.error('❌ Error loading Airalo configuration:', error);
       return {
         apiKey: null,
-        environment: 'test',
-        baseUrl: 'https://api.airalo.com/v2'
+        environment: 'sandbox',
+        baseUrl: 'https://sandbox-partners-api.airalo.com/v2'
       };
     }
   }

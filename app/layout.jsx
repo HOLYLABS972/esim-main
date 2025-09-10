@@ -1,5 +1,5 @@
 import Providers from '../src/components/Providers'
-import Navbar from '../src/components/Navbar'
+import ConditionalNavbar from '../src/components/ConditionalNavbar'
 import Footer from '../src/components/Footer'
 import CookieConsent from '../src/components/CookieConsent'
 import './globals.css'
@@ -77,7 +77,7 @@ export default function RootLayout({ children }) {
       <body>
         <Providers>
           <div className=" bg-white">
-            <Navbar />
+            <ConditionalNavbar />
             <main>
               {children}
             </main>

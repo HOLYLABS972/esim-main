@@ -5,16 +5,6 @@
   "outputDirectory": ".next",
   "installCommand": "npm install",
   "framework": "nextjs",
-  "env": {
-    "NEXT_PUBLIC_FIREBASE_API_KEY": "AIzaSyAl456JTQntXJItbXSv8hx1oQ9KW4BGci4",
-    "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN": "esim-f0e3e.firebaseapp.com",
-    "NEXT_PUBLIC_FIREBASE_PROJECT_ID": "esim-f0e3e",
-    "NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET": "esim-f0e3e.firebasestorage.app",
-    "NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID": "G-T0YBW024Z8",
-    "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY_TEST": "pk_test_51LXRaMDoWGog1gVB88ytV8ZVHdl4aZqKA6fImyAKhFPLrxFESftTeqLQIquHH18X2TDQUdbvMLDCRRfgPzeaa0cm00sUIflyfu",
-    "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY_LIVE": "pk_live_51LXRaMDoWGog1gVBfrXi6V1ckLsxLckVbXdcWjhh2uI50T7kXK4zqGjU0ONp6mCdOiseceeLjceZiAn4xKCGCvKz00kr7NS4tn",
-    "NEXT_PUBLIC_APP_ENV": "production"
-  },
   "headers": [
     {
       "source": "/manifest.json",

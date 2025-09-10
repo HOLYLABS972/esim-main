@@ -1,13 +1,10 @@
-"use client";
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useAdmin } from '../contexts/AdminContext';
 import { collection, query, where, getDocs, doc, updateDoc, deleteDoc, writeBatch, addDoc, setDoc } from 'firebase/firestore';
-import { httpsCallable } from 'firebase/functions';
-import { db, functions } from '../firebase/config';
+import { db } from '../firebase/config';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Settings, 
@@ -51,9 +48,8 @@ const AdminDashboard = () => {
 
   // State Management - ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
   const [activeTab, setActiveTab] = useState('countries');
-  const [currentEnvironment, setCurrentEnvironment] = useState('test');
-  const [airaloApiKey, setAiraloApiKey] = useState('');
-  const [showAiraloApiKey, setShowAiraloApiKey] = useState(false);
+  const [currentEnvironment, setCurrentEnvironment] = useState('sandbox');
+  const [airaloClientId, setAiraloClientId] = useState('');
   const [loading, setLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [syncStatus, setSyncStatus] = useState('Ready to sync data from Airalo API');
@@ -159,25 +155,12 @@ const AdminDashboard = () => {
   // Configuration Functions
   const loadSavedConfig = async () => {
     try {
-      // Try to load environment from Firestore first
-      try {
-        const envRef = doc(db, 'config', 'environment');
-        const envDoc = await getDocs(query(collection(db, 'config'), where('__name__', '==', 'environment')));
-        if (!envDoc.empty) {
-          const envData = envDoc.docs[0].data();
-          if (envData.mode) {
-            setCurrentEnvironment(envData.mode);
-            console.log('✅ Environment loaded from Firestore:', envData.mode);
-          }
-        }
-      } catch (error) {
-        console.log('⚠️ Could not load environment from Firestore, using localStorage');
-      }
-      
-      // Fallback to localStorage
+      // Load environment from localStorage as fallback
       const savedEnv = localStorage.getItem('esim_environment');
-      
-      if (savedEnv) setCurrentEnvironment(savedEnv);
+      if (savedEnv) {
+        setCurrentEnvironment(savedEnv);
+        console.log('✅ Environment loaded from localStorage:', savedEnv);
+      }
     } catch (error) {
       console.error('Error loading saved config:', error);
     }
@@ -192,13 +175,16 @@ const AdminDashboard = () => {
         const configDoc = await getDocs(query(collection(db, 'config'), where('__name__', '==', 'airalo')));
         if (!configDoc.empty) {
           const configData = configDoc.docs[0].data();
-          if (configData.api_key) {
-            setAiraloApiKey(configData.api_key);
-            console.log('✅ Airalo API key loaded from Firestore');
+          if (configData.client_id) {
+            setAiraloClientId(configData.client_id);
+            console.log('✅ Airalo client ID loaded from Firestore');
           }
           if (configData.environment) {
             setCurrentEnvironment(configData.environment);
             console.log('✅ Airalo environment loaded from Firestore:', configData.environment);
+            // Also save to localStorage for consistency
+            localStorage.setItem('esim_environment', configData.environment);
+            localStorage.setItem('airalo_environment', configData.environment);
           }
           return;
         }
@@ -207,11 +193,11 @@ const AdminDashboard = () => {
       }
       
       // Fallback to localStorage
-      const storedKey = localStorage.getItem('airalo_api_key');
-      const storedEnv = localStorage.getItem('airalo_environment');
-      if (storedKey) {
-        setAiraloApiKey(storedKey);
-        console.log('✅ Airalo API key loaded from localStorage');
+      const storedClientId = localStorage.getItem('airalo_client_id');
+      const storedEnv = localStorage.getItem('airalo_environment') || localStorage.getItem('esim_environment');
+      if (storedClientId) {
+        setAiraloClientId(storedClientId);
+        console.log('✅ Airalo client ID loaded from localStorage');
       }
       if (storedEnv) {
         setCurrentEnvironment(storedEnv);
@@ -222,42 +208,45 @@ const AdminDashboard = () => {
     }
   };
 
-  const saveAiraloApiKey = async () => {
+  const saveAiraloCredentials = async () => {
     try {
-      if (!airaloApiKey.trim()) {
-        toast.error('Please enter a valid Airalo API key');
+      if (!airaloClientId.trim()) {
+        toast.error('Please enter a valid Airalo Client ID');
         return;
       }
       
       // Save to localStorage
-      localStorage.setItem('airalo_api_key', airaloApiKey);
+      localStorage.setItem('airalo_client_id', airaloClientId);
+      localStorage.setItem('esim_environment', currentEnvironment);
+      localStorage.setItem('airalo_environment', currentEnvironment);
       
       // Save to Firestore so Firebase Functions can access it
       const configRef = doc(db, 'config', 'airalo');
       await setDoc(configRef, {
-        api_key: airaloApiKey,
+        client_id: airaloClientId,
         environment: currentEnvironment,
         updated_at: new Date(),
         updated_by: currentUser?.uid || 'admin'
       }, { merge: true });
       
-      toast.success('Airalo API key saved successfully!');
-      console.log('✅ Airalo API key saved to localStorage and Firestore');
+      toast.success('Airalo Client ID saved successfully!');
+      console.log('✅ Airalo Client ID saved to localStorage and Firestore');
     } catch (error) {
-      console.error('Error saving Airalo API key:', error);
-      toast.error(`Error saving Airalo API key: ${error.message}`);
+      console.error('Error saving Airalo Client ID:', error);
+      toast.error(`Error saving Airalo Client ID: ${error.message}`);
     }
   };
 
   const toggleAiraloEnvironment = async () => {
-    const newEnv = currentEnvironment === 'test' ? 'production' : 'test';
+    const newEnv = currentEnvironment === 'sandbox' ? 'production' : 'sandbox';
     setCurrentEnvironment(newEnv);
     localStorage.setItem('airalo_environment', newEnv);
+    localStorage.setItem('esim_environment', newEnv);
     
     // Also save to Firestore so Firebase Functions can access it
     try {
       const airaloRef = doc(db, 'config', 'airalo');
-      await updateDoc(airaloRef, {
+      await setDoc(airaloRef, {
         environment: newEnv,
         updated_at: new Date(),
         updated_by: currentUser?.uid || 'admin'
@@ -271,19 +260,21 @@ const AdminDashboard = () => {
   };
 
   const toggleEnvironment = async () => {
-    const newEnv = currentEnvironment === 'test' ? 'production' : 'test';
+    const newEnv = currentEnvironment === 'sandbox' ? 'production' : 'sandbox';
+    console.log(`🔄 Switching environment from ${currentEnvironment} to ${newEnv}`);
     setCurrentEnvironment(newEnv);
     localStorage.setItem('esim_environment', newEnv);
+    localStorage.setItem('airalo_environment', newEnv);
     
-    // Also save to Firestore so Firebase Functions can access it
+    // Also save to Airalo config in Firestore
     try {
-      const envRef = doc(db, 'config', 'environment');
-      await updateDoc(envRef, {
-        mode: newEnv,
+      const airaloRef = doc(db, 'config', 'airalo');
+      await setDoc(airaloRef, {
+        environment: newEnv,
         updated_at: new Date(),
         updated_by: currentUser?.uid || 'admin'
       }, { merge: true });
-      console.log('✅ Environment saved to Firestore:', newEnv);
+      console.log('✅ Environment saved to Airalo config:', newEnv);
     } catch (error) {
       console.error('⚠️ Could not save environment to Firestore:', error);
     }
@@ -363,7 +354,7 @@ const AdminDashboard = () => {
       console.log('🔄 Starting to sync countries via Firebase Functions...');
 
       // Call Firebase Cloud Function instead of direct API
-      const syncCountriesFunction = httpsCallable(functions, 'sync_countries_from_api');
+      const syncCountriesFunction = httpsCallable(functions, 'sync_countries_from_airalo');
       const result = await syncCountriesFunction();
       
       if (result.data.success) {
@@ -406,23 +397,28 @@ const AdminDashboard = () => {
     try {
       setLoading(true);
       
-      if (!airaloApiKey.trim()) {
-        toast.error('Please configure Airalo API key first');
+      if (!airaloClientId.trim()) {
+        toast.error('Please configure Airalo Client ID first');
         return;
       }
 
-      setSyncStatus('Fetching raw data from Airalo API...');
+      setSyncStatus('Fetching raw data from Airalo SANDBOX API...');
       
-      // Get raw plans from Firebase Functions (no processing)
-      console.log('🔄 Getting raw plans from Airalo API...');
-      const getPlansFunction = httpsCallable(functions, 'fetch_plans');
-      const result = await getPlansFunction();
+      // Get raw plans from Next.js API (no processing)
+      console.log('🔄 Getting raw plans from Airalo SANDBOX API...');
+      const response = await fetch('/api/sync-airalo', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      const result = await response.json();
       
-      if (result.data.success) {
-        console.log('🔍 API response:', result.data);
+      if (result.success) {
+        console.log('🔍 API response:', result);
         
-        const countries = result.data.countries || [];
-        const plans = result.data.plans || [];
+        const countries = result.countries || [];
+        const plans = result.plans || [];
         
         console.log(`✅ Got ${countries.length} countries and ${plans.length} plans`);
         console.log('🔍 First plan:', plans[0]);
@@ -1079,21 +1075,26 @@ const AdminDashboard = () => {
     try {
       setLoading(true);
       
-      if (!airaloApiKey.trim()) {
-        toast.error('Please configure Airalo API key first');
+      if (!airaloClientId.trim()) {
+        toast.error('Please configure Airalo Client ID first');
         return;
       }
 
       setSyncStatus('Syncing all data via Firebase Functions...');
       
-      // Use your existing working Firebase Functions to sync ALL data
-      console.log('🔄 Starting to sync all data via Firebase Functions...');
-      const syncAllFunction = httpsCallable(functions, 'sync_all_data_from_api');
-      const result = await syncAllFunction();
+      // Use Next.js API route to sync ALL data
+      console.log('🔄 Starting to sync all data via Next.js API...');
+      const response = await fetch('/api/sync-airalo', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      const result = await response.json();
       
-      if (result.data.success) {
-        console.log(`✅ Successfully synced all data via Firebase Functions`);
-        toast.success(`Successfully synced all data: ${result.data.total_synced} items`);
+      if (result.success) {
+        console.log(`✅ Successfully synced all data via Next.js API`);
+        toast.success(`Successfully synced all data: ${result.total_synced} items`);
         
         // Refresh local data
         await loadCountriesFromFirestore();
@@ -1103,11 +1104,11 @@ const AdminDashboard = () => {
         await loadAvailablePlans();
         
       } else {
-        throw new Error(result.data.error || 'Unknown error occurred');
+        throw new Error(result.error || 'Unknown error occurred');
       }
       
     } catch (error) {
-      console.error('❌ Error syncing data via Firebase Functions:', error);
+      console.error('❌ Error syncing data via Next.js API:', error);
       toast.error(`Error syncing data: ${error.message}`);
       setSyncStatus(`Error syncing data: ${error.message}`);
     } finally {
@@ -1198,23 +1199,44 @@ const AdminDashboard = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Professional Header */}
-        <div className="py-8 mb-8 border-b border-gray-200 bg-white/80 backdrop-blur-sm -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 sticky top-0 z-10">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-4xl font-bold text-gray-900 mb-2 flex items-center">
-                <Settings className="text-blue-600 mr-3" />
-                Admin Panel
-              </h1>
-              <p className="text-gray-600 text-lg">Comprehensive eSIM service management and configuration</p>
+        {/* Header */}
+        <div className="bg-white sticky top-0 z-10 shadow-sm border-b border-gray-200">
+          <div className="py-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center justify-center w-12 h-12 bg-gray-100 rounded-xl">
+                  <Settings className="w-7 h-7 text-gray-600" />
+                </div>
+                <div>
+                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                    Admin Panel
+                  </h1>
+                  <p className="text-gray-600 text-sm sm:text-base mt-1">
+                    Comprehensive eSIM service management and configuration
+                  </p>
+                </div>
+              </div>
+              
+              <div className="hidden sm:flex items-center space-x-4">
+                <div className="text-right">
+                  <p className="text-gray-500 text-sm">Welcome back</p>
+                  <p className="text-gray-900 font-medium">
+                    {currentUser?.displayName || currentUser?.email || 'Admin'}
+                  </p>
+                </div>
+                <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                  <span className="text-gray-600 font-semibold text-sm">
+                    {(currentUser?.displayName || currentUser?.email || 'A').charAt(0).toUpperCase()}
+                  </span>
+                </div>
+              </div>
             </div>
-
           </div>
         </div>
 
-        {/* Professional Tab Navigation */}
-        <div className="mb-8">
-          <div className="bg-white rounded-xl shadow-lg p-1">
+        {/* Tab Navigation */}
+        <div className="mb-8 mt-6">
+          <div className="bg-white rounded-xl shadow-lg p-1 border border-gray-200">
             <nav className="flex space-x-1">
               {[
                 { id: 'config', label: 'Configuration', icon: Settings },
@@ -1342,11 +1364,11 @@ const AdminDashboard = () => {
                       <div>
                         <span className="text-gray-700 font-medium">Current Mode:</span>
                         <span className={`ml-2 px-3 py-1 rounded-full text-sm font-medium ${
-                          currentEnvironment === 'test' 
+                          currentEnvironment === 'sandbox' 
                             ? 'bg-yellow-100 text-yellow-800' 
                             : 'bg-green-100 text-green-800'
                         }`}>
-                          {currentEnvironment === 'test' ? 'Test' : 'Production'}
+                          {currentEnvironment === 'sandbox' ? 'Sandbox' : 'Production'}
                         </span>
                       </div>
                       <button
@@ -1390,33 +1412,24 @@ const AdminDashboard = () => {
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        API Key
+                        Client ID (API Key)
                       </label>
-                      <div className="relative">
-                        <input
-                          type={showAiraloApiKey ? 'text' : 'password'}
-                          value={airaloApiKey}
-                          onChange={(e) => setAiraloApiKey(e.target.value)}
-                          placeholder="Enter your Airalo API key"
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
-                        <button
-                          onClick={() => setShowAiraloApiKey(!showAiraloApiKey)}
-                          className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
-                        >
-                          {showAiraloApiKey ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                        </button>
-                      </div>
+                      <input
+                        type="text"
+                        value={airaloClientId}
+                        onChange={(e) => setAiraloClientId(e.target.value)}
+                        placeholder="Enter your Airalo Client ID"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
                     </div>
                     
-                    
                     <button
-                      onClick={saveAiraloApiKey}
-                      disabled={loading || !airaloApiKey.trim()}
+                      onClick={saveAiraloCredentials}
+                      disabled={loading || !airaloClientId.trim()}
                       className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:from-gray-400 disabled:to-gray-500 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 flex items-center"
                     >
                       {loading ? <RefreshCw className="w-5 h-5 mr-2 animate-spin" /> : <Globe className="w-5 h-5 mr-2" />}
-                      Save Airalo API Key
+                      Save Airalo Client ID
                     </button>
                   </div>
                 </div>
