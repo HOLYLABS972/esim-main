@@ -823,13 +823,13 @@ const AdminDashboard = () => {
         const transformedPlans = enabledPlans.map(plan => ({
           id: plan.slug || plan.id,
           name: plan.name,
-          data: (plan.capacity === 'Unlimited' || plan.capacity === -1) ? 'Unlimited GB' : (plan.capacity ? `${plan.capacity} GB` : 'N/A'),
+          data: (plan.capacity === 'Unlimited' || plan.capacity === -1 || plan.capacity === 0) ? 'Unlimited GB' : (plan.capacity ? `${plan.capacity} GB` : 'N/A'),
           duration: plan.period ? `${plan.period} days` : 'N/A',
           price: plan.price || 0,
           currency: plan.currency || 'USD',
           country: plan.country_codes?.[0] || 'Multiple Countries',
           description: plan.description || '',
-          capacity: plan.capacity === -1 ? 'Unlimited' : plan.capacity,
+          capacity: (plan.capacity === -1 || plan.capacity === 0) ? 'Unlimited' : plan.capacity,
           period: plan.period,
           operator: plan.operator || '',
           country_codes: plan.country_codes || []
@@ -1282,13 +1282,13 @@ const AdminDashboard = () => {
           return {
             id: plan.slug || plan.id,
             name: plan.name,
-            data: (data === 'Unlimited' || data === -1) ? 'Unlimited GB' : (data ? `${data} GB` : 'N/A'),
+            data: (data === 'Unlimited' || data === -1 || data === 0) ? 'Unlimited GB' : (data ? `${data} GB` : 'N/A'),
             duration: duration ? `${duration} days` : 'N/A',
             price: plan.price || 0,
             currency: plan.currency || 'USD',
             country: plan.country_codes?.[0] || plan.country_ids?.[0] || 'Multiple Countries',
             description: plan.description || '',
-            capacity: plan.capacity === -1 ? 'Unlimited' : plan.capacity,
+            capacity: (plan.capacity === -1 || plan.capacity === 0) ? 'Unlimited' : plan.capacity,
             period: plan.period,
             operator: plan.operator || '',
             country_codes: plan.country_codes || plan.country_ids || []
@@ -2551,7 +2551,7 @@ const AdminDashboard = () => {
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="text-sm text-gray-900">
-                                  {plan.capacity === -1 || plan.capacity === 'Unlimited' ? 'Unlimited' : `${plan.capacity} GB`}
+                                  {(plan.capacity === -1 || plan.capacity === 0 || plan.capacity === 'Unlimited') ? 'Unlimited' : `${plan.capacity} GB`}
                                 </div>
                                 <div className="text-sm text-gray-500">
                                   {plan.period ? `${plan.period} days` : 'N/A'}

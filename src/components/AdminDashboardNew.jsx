@@ -600,7 +600,7 @@ const AdminDashboard = () => {
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                               <div>
                                 <span className="text-gray-500">Capacity:</span>
-                                <span className="font-medium ml-1">{plan.capacity || 'N/A'} GB</span>
+                                <span className="font-medium ml-1">{(plan.capacity === 0 || plan.capacity === -1 || plan.capacity === 'Unlimited') ? 'Unlimited' : `${plan.capacity || 'N/A'} GB`}</span>
                               </div>
                               <div>
                                 <span className="text-gray-500">Period:</span>

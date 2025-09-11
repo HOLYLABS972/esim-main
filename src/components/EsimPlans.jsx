@@ -128,14 +128,27 @@ const EsimPlans = () => {
         
         // Check if country name matches search term
         if (countryData.name.toLowerCase().includes(term.toLowerCase())) {
-          // Get plans for this country to find minimum price
-          const plansQuery = query(collection(db, 'plans'), where('country', '==', countryData.name));
+          // Get plans for this country using country_codes array
+          const plansQuery = query(collection(db, 'plans'), where('country_codes', 'array-contains', countryData.code));
           const plansSnapshot = await getDocs(plansQuery);
           const plans = plansSnapshot.docs.map(planDoc => planDoc.data());
           
-          const minPrice = plans.length > 0 
-            ? Math.min(...plans.map(plan => parseFloat(plan.price) || 999))
-            : 999;
+          // Filter out plans with invalid prices and calculate minimum
+          const validPrices = plans
+            .map(plan => parseFloat(plan.price))
+            .filter(price => !isNaN(price) && price > 0);
+          
+          const minPrice = validPrices.length > 0 
+            ? Math.min(...validPrices)
+            : null; // Use null instead of 999 fallback
+          
+          // Debug logging
+          console.log(`🔍 Search result for ${countryData.name}:`, {
+            plansFound: plans.length,
+            validPrices: validPrices.length,
+            minPrice: minPrice,
+            allPrices: plans.map(p => p.price)
+          });
           
           firebaseResults.push({
             ...countryData,
@@ -327,7 +340,7 @@ const EsimPlans = () => {
                               {country.name}
                             </h5>
                             <span className="esim-plan-card__price text-tufts-blue font-medium">
-                              From ${country.minPrice ? country.minPrice.toFixed(2) : '10.00'}
+                              {country.minPrice ? `From $${country.minPrice.toFixed(2)}` : 'No plans available'}
                             </span>
                           </div>
                         </button>
@@ -362,7 +375,7 @@ const EsimPlans = () => {
                             {country.name}
                           </h5>
                           <span className="esim-plan-card__price text-tufts-blue font-medium text-sm">
-                            From ${country.minPrice ? country.minPrice.toFixed(2) : '10.00'}
+                            {country.minPrice ? `From $${country.minPrice.toFixed(2)}` : 'No plans available'}
                           </span>
                         </div>
                         
