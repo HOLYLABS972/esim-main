@@ -88,6 +88,14 @@ const AdminDashboard = () => {
   const [showPlansModal, setShowPlansModal] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState(null);
   
+  // Plans Management
+  const [allPlans, setAllPlans] = useState([]);
+  const [filteredPlans, setFilteredPlans] = useState([]);
+  const [planSortBy, setPlanSortBy] = useState('price'); // 'price', 'name', 'country'
+  const [planSortOrder, setPlanSortOrder] = useState('asc'); // 'asc', 'desc'
+  const [planStatusFilter, setPlanStatusFilter] = useState('all'); // 'all', 'enabled', 'disabled'
+  const [planCountryFilter, setPlanCountryFilter] = useState('all'); // 'all' or specific country code
+  
   
   // User Management
   const [users, setUsers] = useState([]);
@@ -349,8 +357,11 @@ const AdminDashboard = () => {
         ...doc.data()
       }));
       
-      // Calculate minPrice for each country based on actual plans
-      console.log('🔍 All plans loaded:', allPlans.length);
+      // Filter out disabled plans for pricing calculations
+      const enabledPlans = allPlans.filter(plan => plan.enabled !== false);
+      
+      // Calculate minPrice for each country based on actual enabled plans
+      console.log('🔍 All enabled plans loaded:', enabledPlans.length);
       console.log('🔍 Sample plan data:', allPlans.slice(0, 3).map(p => ({ 
         id: p.id, 
         name: p.name, 
@@ -361,7 +372,7 @@ const AdminDashboard = () => {
       
       const countriesWithPlans = countriesData.map(country => {
         // Find plans for this country (check both mobile and web formats)
-        const countryPlans = allPlans.filter(plan => {
+        const countryPlans = enabledPlans.filter(plan => {
           const hasMobilePlans = plan.country_codes && plan.country_codes.includes(country.code);
           const hasWebPlans = plan.country_ids && plan.country_ids.includes(country.code);
           return hasMobilePlans || hasWebPlans;
@@ -792,11 +803,14 @@ const AdminDashboard = () => {
         ...doc.data()
       }));
       
-      if (allPlans.length > 0) {
+      // Filter out disabled plans
+      const enabledPlans = allPlans.filter(plan => plan.enabled !== false);
+      
+      if (enabledPlans.length > 0) {
 
         
         // Transform plans to match expected format
-        const transformedPlans = allPlans.map(plan => ({
+        const transformedPlans = enabledPlans.map(plan => ({
           id: plan.slug || plan.id,
           name: plan.name,
           data: (plan.capacity === 'Unlimited' || plan.capacity === -1) ? 'Unlimited GB' : (plan.capacity ? `${plan.capacity} GB` : 'N/A'),
@@ -1243,11 +1257,14 @@ const AdminDashboard = () => {
         ...doc.data()
       }));
       
-      if (allPlans.length > 0) {
+      // Filter out disabled plans
+      const enabledPlans = allPlans.filter(plan => plan.enabled !== false);
+      
+      if (enabledPlans.length > 0) {
 
         
         // Transform plans to match expected format (support both mobile and web formats)
-        const transformedPlans = allPlans.map(plan => {
+        const transformedPlans = enabledPlans.map(plan => {
           // Handle mobile app format (capacity/period) vs web format (data/duration)
           const data = plan.capacity || plan.data;
           const duration = plan.period || plan.duration;
@@ -1416,6 +1433,143 @@ const AdminDashboard = () => {
     }
   };
 
+  // Plans Management Functions
+  const loadAllPlans = async () => {
+    try {
+      setLoading(true);
+      const plansSnapshot = await getDocs(collection(db, 'plans'));
+      const plans = plansSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        enabled: doc.data().enabled !== false // Default to enabled if not set
+      }));
+      
+      setAllPlans(plans);
+      setFilteredPlans(plans);
+    } catch (error) {
+      console.error('Error loading plans:', error);
+      toast.error(`Error loading plans: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const togglePlanStatus = async (planId, currentStatus) => {
+    try {
+      setLoading(true);
+      const planRef = doc(db, 'plans', planId);
+      await updateDoc(planRef, {
+        enabled: !currentStatus
+      });
+      
+      // Update local state
+      setAllPlans(prev => prev.map(plan => 
+        plan.id === planId ? { ...plan, enabled: !currentStatus } : plan
+      ));
+      
+      toast.success(`Plan ${!currentStatus ? 'enabled' : 'disabled'} successfully!`);
+    } catch (error) {
+      console.error('Error toggling plan status:', error);
+      toast.error(`Error updating plan: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updatePlanPrice = async (planId, newPrice) => {
+    try {
+      setLoading(true);
+      const planRef = doc(db, 'plans', planId);
+      await updateDoc(planRef, {
+        price: parseFloat(newPrice)
+      });
+      
+      // Update local state
+      setAllPlans(prev => prev.map(plan => 
+        plan.id === planId ? { ...plan, price: parseFloat(newPrice) } : plan
+      ));
+      
+      toast.success('Plan price updated successfully!');
+    } catch (error) {
+      console.error('Error updating plan price:', error);
+      toast.error(`Error updating plan price: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Get unique countries from all plans
+  const getUniqueCountries = () => {
+    const countrySet = new Set();
+    allPlans.forEach(plan => {
+      if (plan.country_codes) {
+        plan.country_codes.forEach(code => countrySet.add(code));
+      }
+      if (plan.country_ids) {
+        plan.country_ids.forEach(id => countrySet.add(id));
+      }
+    });
+    return Array.from(countrySet).sort();
+  };
+
+  // Auto-load plans when Plans tab is selected
+  useEffect(() => {
+    if (activeTab === 'plans' && allPlans.length === 0) {
+      loadAllPlans();
+    }
+  }, [activeTab]);
+
+  // Filter and sort plans
+  useEffect(() => {
+    let filtered = [...allPlans];
+
+    // Filter by status
+    if (planStatusFilter !== 'all') {
+      filtered = filtered.filter(plan => 
+        planStatusFilter === 'enabled' ? plan.enabled : !plan.enabled
+      );
+    }
+
+    // Filter by country
+    if (planCountryFilter !== 'all') {
+      filtered = filtered.filter(plan => 
+        plan.country_codes?.includes(planCountryFilter) || 
+        plan.country_ids?.includes(planCountryFilter)
+      );
+    }
+
+    // Sort plans
+    filtered.sort((a, b) => {
+      let aValue, bValue;
+      
+      switch (planSortBy) {
+        case 'price':
+          aValue = parseFloat(a.price) || 0;
+          bValue = parseFloat(b.price) || 0;
+          break;
+        case 'name':
+          aValue = a.name || '';
+          bValue = b.name || '';
+          break;
+        case 'country':
+          aValue = a.country_codes?.[0] || a.country_ids?.[0] || '';
+          bValue = b.country_codes?.[0] || b.country_ids?.[0] || '';
+          break;
+        default:
+          aValue = parseFloat(a.price) || 0;
+          bValue = parseFloat(b.price) || 0;
+      }
+
+      if (planSortOrder === 'asc') {
+        return aValue > bValue ? 1 : -1;
+      } else {
+        return aValue < bValue ? 1 : -1;
+      }
+    });
+
+    setFilteredPlans(filtered);
+  }, [allPlans, planSortBy, planSortOrder, planStatusFilter, planCountryFilter]);
+
   // Overview Stats
   const statsData = [
     { label: 'Total Countries', value: countries.length, icon: Globe, color: 'blue' },
@@ -1452,6 +1606,7 @@ const AdminDashboard = () => {
               { id: 'config', label: 'Configuration', icon: Settings, permission: canManageConfig },
               { id: 'settings', label: 'Links', icon: Link, permission: canManageConfig },
               { id: 'countries', label: 'Countries', icon: Globe, permission: canManageCountries },
+              { id: 'plans', label: 'Plans Management', icon: Smartphone, permission: canManagePlans },
               { id: 'blog', label: 'Blog Management', icon: FileText, permission: canManageBlog },
               { id: 'requests', label: 'Contact Requests', icon: MessageSquare, permission: canManageContactRequests },
               { id: 'newsletter', label: 'Newsletter', icon: Mail, permission: canManageNewsletter },
@@ -2120,6 +2275,256 @@ const AdminDashboard = () => {
               </div>
             )}
 
+            {/* Plans Management Tab */}
+            {activeTab === 'plans' && canManagePlans && (
+              <div className="space-y-6">
+                {/* Header */}
+                <div className="bg-white rounded-xl shadow-lg p-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                      <h2 className="text-2xl font-bold text-gray-900">Plans Management</h2>
+                      <p className="text-gray-600 mt-1">Manage eSIM plans, pricing, and availability</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Filters */}
+                <div className="bg-white rounded-xl shadow-lg p-6">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+
+                    {/* Status Filter */}
+                    <select
+                      value={planStatusFilter}
+                      onChange={(e) => setPlanStatusFilter(e.target.value)}
+                      className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="all">All Plans</option>
+                      <option value="enabled">Enabled Only</option>
+                      <option value="disabled">Disabled Only</option>
+                    </select>
+
+                    {/* Country Filter */}
+                    <select
+                      value={planCountryFilter}
+                      onChange={(e) => setPlanCountryFilter(e.target.value)}
+                      className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="all">All Countries</option>
+                      {getUniqueCountries().map(countryCode => (
+                        <option key={countryCode} value={countryCode}>
+                          {getFlagEmoji(countryCode)} {countryCode}
+                        </option>
+                      ))}
+                    </select>
+
+                    {/* Sort By */}
+                    <select
+                      value={planSortBy}
+                      onChange={(e) => setPlanSortBy(e.target.value)}
+                      className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="price">Sort by Price</option>
+                      <option value="name">Sort by Name</option>
+                      <option value="country">Sort by Country</option>
+                    </select>
+
+                    {/* Sort Order */}
+                    <select
+                      value={planSortOrder}
+                      onChange={(e) => setPlanSortOrder(e.target.value)}
+                      className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="asc">Ascending</option>
+                      <option value="desc">Descending</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Plans Table */}
+                <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Plan
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Data & Duration
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Countries
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Price
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Status
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {filteredPlans.length > 0 ? (
+                          filteredPlans.map((plan) => (
+                            <tr key={plan.id} className="hover:bg-gray-50">
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="flex items-center">
+                                  <div className="flex-shrink-0 h-10 w-10">
+                                    <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                                      <Smartphone className="w-5 h-5 text-blue-600" />
+                                    </div>
+                                  </div>
+                                  <div className="ml-4">
+                                    <div className="text-sm font-medium text-gray-900">
+                                      {plan.name || 'Unnamed Plan'}
+                                    </div>
+                                    {plan.operator && (
+                                      <div className="text-sm text-gray-500">
+                                        {plan.operator}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="text-sm text-gray-900">
+                                  {plan.capacity === -1 || plan.capacity === 'Unlimited' ? 'Unlimited' : `${plan.capacity} GB`}
+                                </div>
+                                <div className="text-sm text-gray-500">
+                                  {plan.period ? `${plan.period} days` : 'N/A'}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="flex flex-wrap gap-1">
+                                  {(plan.country_codes || plan.country_ids || []).slice(0, 3).map((code, index) => (
+                                    <span key={index} className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                      {getFlagEmoji(code) || code}
+                                    </span>
+                                  ))}
+                                  {(plan.country_codes || plan.country_ids || []).length > 3 && (
+                                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                      +{(plan.country_codes || plan.country_ids || []).length - 3}
+                                    </span>
+                                  )}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="flex items-center space-x-2">
+                                  <input
+                                    type="number"
+                                    value={plan.price || 0}
+                                    onChange={(e) => {
+                                      const newPrice = parseFloat(e.target.value);
+                                      if (!isNaN(newPrice) && newPrice >= 0) {
+                                        updatePlanPrice(plan.id, newPrice);
+                                      }
+                                    }}
+                                    className="w-20 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    step="0.01"
+                                    min="0"
+                                  />
+                                  <span className="text-sm text-gray-500">
+                                    {plan.currency || 'USD'}
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <button
+                                  onClick={() => togglePlanStatus(plan.id, plan.enabled)}
+                                  disabled={loading}
+                                  className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                                    plan.enabled
+                                      ? 'bg-green-100 text-green-800 hover:bg-green-200'
+                                      : 'bg-red-100 text-red-800 hover:bg-red-200'
+                                  } disabled:opacity-50`}
+                                >
+                                  {plan.enabled ? (
+                                    <>
+                                      <Eye className="w-3 h-3 mr-1" />
+                                      Enabled
+                                    </>
+                                  ) : (
+                                    <>
+                                      <EyeOff className="w-3 h-3 mr-1" />
+                                      Disabled
+                                    </>
+                                  )}
+                                </button>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <div className="flex space-x-2">
+                                  <button
+                                    onClick={() => togglePlanStatus(plan.id, plan.enabled)}
+                                    disabled={loading}
+                                    className="text-blue-600 hover:text-blue-900 disabled:opacity-50"
+                                  >
+                                    {plan.enabled ? 'Disable' : 'Enable'}
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan="6" className="px-6 py-12 text-center">
+                              <div className="text-gray-500">
+                                <Smartphone className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                                <p className="text-lg font-medium">No plans found</p>
+                                <p className="text-sm">Try adjusting your search or filters</p>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Stats */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="bg-white rounded-xl shadow-lg p-6">
+                    <div className="flex items-center">
+                      <div className="flex-shrink-0">
+                        <Smartphone className="w-8 h-8 text-blue-600" />
+                      </div>
+                      <div className="ml-4">
+                        <p className="text-sm font-medium text-gray-500">Total Plans</p>
+                        <p className="text-2xl font-bold text-gray-900">{allPlans.length}</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="bg-white rounded-xl shadow-lg p-6">
+                    <div className="flex items-center">
+                      <div className="flex-shrink-0">
+                        <Eye className="w-8 h-8 text-green-600" />
+                      </div>
+                      <div className="ml-4">
+                        <p className="text-sm font-medium text-gray-500">Enabled Plans</p>
+                        <p className="text-2xl font-bold text-gray-900">
+                          {allPlans.filter(plan => plan.enabled).length}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="bg-white rounded-xl shadow-lg p-6">
+                    <div className="flex items-center">
+                      <div className="flex-shrink-0">
+                        <EyeOff className="w-8 h-8 text-red-600" />
+                      </div>
+                      <div className="ml-4">
+                        <p className="text-sm font-medium text-gray-500">Disabled Plans</p>
+                        <p className="text-2xl font-bold text-gray-900">
+                          {allPlans.filter(plan => !plan.enabled).length}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Blog Management Tab */}
             {activeTab === 'blog' && canManageBlog && (

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Wifi, Globe, Clock, Download, Star, Check } from 'lucide-react';
+import { Wifi, Globe, Clock, Download, Star, Check, DollarSign, SortAsc, Smartphone } from 'lucide-react';
 import BottomSheet from './BottomSheet';
 import { useAuth } from '../contexts/AuthContext';
 import { useRouter } from 'next/navigation';
@@ -80,10 +80,90 @@ const PlanSelectionBottomSheet = ({
   isOpen, 
   onClose, 
   availablePlans, 
-  loadingPlans
+  loadingPlans,
+  filteredCountries
 }) => {
   const { currentUser } = useAuth();
   const router = useRouter();
+
+
+  // Group countries by specific days (30, 7, 10, 15 days)
+  const groupCountriesByDays = (countriesList) => {
+    const targetDays = [30, 7, 10, 15];
+    const groups = {};
+    
+    // Initialize groups for target days
+    targetDays.forEach(day => {
+      groups[day] = [];
+    });
+    
+    // Add countries to appropriate day groups with recalculated min prices for specific days
+    countriesList.forEach(country => {
+      if (country.plans && country.plans.length > 0) {
+        country.plans.forEach(plan => {
+          const days = plan.period || plan.duration;
+          if (targetDays.includes(days)) {
+            // Calculate the actual minimum price for this specific day duration
+            const dayPlans = country.plans.filter(p => (p.period || p.duration) === days);
+            const dayMinPrice = dayPlans.length > 0 
+              ? Math.min(...dayPlans.map(p => parseFloat(p.price) || 999))
+              : 999;
+            
+            // Debug logging for price calculation
+            if (dayPlans.length > 0 && dayMinPrice < 50) {
+              console.log(`${country.name} - ${days} days plans:`, 
+                dayPlans.map(p => ({ name: p.name, price: p.price, period: p.period, duration: p.duration })),
+                'Min price:', dayMinPrice
+              );
+            }
+            
+            // Check if country already exists in this day group
+            const existingCountry = groups[days].find(c => c.id === country.id);
+            if (existingCountry) {
+              // Update with the better (lower) price if this plan is cheaper
+              if (dayMinPrice < existingCountry.dayMinPrice) {
+                existingCountry.dayMinPrice = dayMinPrice;
+              }
+            } else {
+              // Add country with the specific day's minimum price
+              groups[days].push({
+                ...country,
+                dayMinPrice: dayMinPrice
+              });
+            }
+          }
+        });
+      }
+    });
+    
+    // Sort each group by the specific day's minimum price (cheapest first)
+    Object.keys(groups).forEach(day => {
+      groups[day].sort((a, b) => (a.dayMinPrice || a.minPrice) - (b.dayMinPrice || b.minPrice));
+      
+      // Debug logging for the first few countries in each group
+      if (groups[day].length > 0) {
+        console.log(`${day} days group - First 3 countries:`, 
+          groups[day].slice(0, 3).map(c => ({ 
+            name: c.name, 
+            dayMinPrice: c.dayMinPrice, 
+            minPrice: c.minPrice 
+          }))
+        );
+      }
+    });
+    
+    return groups;
+  };
+
+
+  // Sort plans by price (cheapest first)
+  const sortPlansByPrice = (plans) => {
+    return [...plans].sort((a, b) => {
+      const priceA = parseFloat(a.price) || 999;
+      const priceB = parseFloat(b.price) || 999;
+      return priceA - priceB;
+    });
+  };
 
   const handlePlanSelect = async (plan) => {
     // Check if user is authenticated
@@ -126,9 +206,7 @@ const PlanSelectionBottomSheet = ({
     >
       <div className="p-6">
 
-
-
-        {/* Available Plans */}
+        {/* Available Plans or Countries */}
         {loadingPlans ? (
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
@@ -138,15 +216,19 @@ const PlanSelectionBottomSheet = ({
         ) : availablePlans.length > 0 ? (
           <div className="space-y-4">
             <div className="flex items-center justify-between mb-4">
-              <h4 className="font-semibold text-gray-900 text-lg">
-                Available Plans ({availablePlans.length})
-              </h4>
-              <div className="text-sm text-gray-500">
-                Best value plans
+              <div className="flex items-center space-x-2">
+                <Smartphone className="w-5 h-5 text-green-600" />
+                <h4 className="font-semibold text-gray-900 text-lg">
+                  Available Plans ({availablePlans.length})
+                </h4>
+              </div>
+              <div className="flex items-center space-x-1 text-sm text-gray-500">
+                <SortAsc className="w-4 h-4" />
+                <span>Sorted by cheapest first</span>
               </div>
             </div>
             
-            {availablePlans.map((plan, index) => (
+            {sortPlansByPrice(availablePlans).map((plan, index) => (
               <PlanCard
                 key={plan.id}
                 plan={plan}
@@ -154,6 +236,103 @@ const PlanSelectionBottomSheet = ({
                 onClick={() => handlePlanSelect(plan)}
               />
             ))}
+          </div>
+        ) : filteredCountries && filteredCountries.length > 0 ? (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-2">
+                <Smartphone className="w-5 h-5 text-green-600" />
+                <h4 className="font-semibold text-gray-900 text-lg">
+                  Available Plans
+                </h4>
+              </div>
+              <div className="flex items-center space-x-1 text-sm text-gray-500">
+                <SortAsc className="w-4 h-4" />
+                <span>Sorted by cheapest first</span>
+              </div>
+            </div>
+            
+            {/* Auto-grouped Display by Days */}
+            {(() => {
+              console.log('🔍 PlanSelectionBottomSheet - Data source check:');
+              console.log('Filtered countries count:', filteredCountries?.length);
+              console.log('Sample countries:', filteredCountries?.slice(0, 3).map(c => ({ 
+                name: c.name, 
+                minPrice: c.minPrice,
+                hasPlans: !!c.plans?.length,
+                plansCount: c.plans?.length || 0
+              })));
+              
+              const grouped = groupCountriesByDays(filteredCountries);
+              const orderedDays = [30, 7, 10, 15]; // Display order
+              
+              return orderedDays.map((days, groupIndex) => {
+                const countries = grouped[days] || [];
+                if (countries.length === 0) return null;
+                
+                return (
+                  <div key={days} className="space-y-4">
+                    {/* Divider and Header */}
+                    {groupIndex > 0 && (
+                      <div className="border-t border-gray-200 my-6"></div>
+                    )}
+                    
+                    <div className="text-center">
+                      <h5 className="text-xl font-bold text-gray-900">
+                        {days} Day{days !== 1 ? 's' : ''} Plans
+                      </h5>
+                      <p className="text-sm text-gray-600 mt-1">
+                        {countries.length} countr{countries.length === 1 ? 'y' : 'ies'} available
+                      </p>
+                    </div>
+                    
+                    {/* Countries Grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {countries.map((country, index) => (
+                        <div key={`${days}-${country.id}`} className="col-span-1">
+                          <button
+                            className="w-full bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-4 text-left border border-gray-200 hover:border-blue-300 hover:scale-105"
+                            onClick={() => {
+                              // This would trigger loading plans for the country
+                              console.log('Selected country:', country.name, 'for', days, 'days');
+                            }}
+                          >
+                            <div className="flex items-center space-x-3">
+                              <div className="country-flag-display flex-shrink-0">
+                                {country.flagEmoji ? (
+                                  <span className="country-flag-emoji text-3xl">
+                                    {country.flagEmoji}
+                                  </span>
+                                ) : (
+                                  <div className="country-code-avatar w-10 h-10 bg-tufts-blue rounded-full flex items-center justify-center">
+                                    <span className="text-white font-bold text-sm">
+                                      {country.code || '??'}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                              <div className="flex-1 text-left">
+                                <h6 className="font-semibold text-gray-900 text-sm mb-1">
+                                  {country.name}
+                                </h6>
+                                <div className="flex items-center justify-between">
+                                  <span className="text-tufts-blue font-bold text-lg">
+                                    ${country.dayMinPrice ? country.dayMinPrice.toFixed(2) : (country.minPrice ? country.minPrice.toFixed(2) : '10.00')}
+                                  </span>
+                                  <span className="text-xs text-gray-500">
+                                    {country.plansCount || 0} plans
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              });
+            })()}
           </div>
         ) : (
           <div className="text-center py-12">
@@ -165,7 +344,7 @@ const PlanSelectionBottomSheet = ({
               We couldn't find any plans for your current selection
             </p>
             <p className="text-sm text-gray-500">
-              Try selecting a different country or region
+              Try adjusting your filters or selecting a different country
             </p>
           </div>
         )}
