@@ -72,6 +72,12 @@ const defaultSettings = {
     supportedFormats: ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx']
   },
   
+  // App Store Links
+  appStore: {
+    iosUrl: '',
+    androidUrl: ''
+  },
+  
   // Metadata
   updatedAt: serverTimestamp(),
   updatedBy: ''
@@ -94,7 +100,8 @@ export const getSettings = async () => {
         company: { ...defaultSettings.company, ...data.company },
         businessHours: { ...defaultSettings.businessHours, ...data.businessHours },
         seo: { ...defaultSettings.seo, ...data.seo },
-        app: { ...defaultSettings.app, ...data.app }
+        app: { ...defaultSettings.app, ...data.app },
+        appStore: { ...defaultSettings.appStore, ...data.appStore }
       };
     } else {
       // Return defaults if no settings exist
@@ -166,6 +173,17 @@ export const getContactInfo = async () => {
   } catch (error) {
     console.error('Error getting contact info:', error);
     return defaultSettings.contact;
+  }
+};
+
+// Get app store links only
+export const getAppStoreLinks = async () => {
+  try {
+    const settings = await getSettings();
+    return settings.appStore || defaultSettings.appStore;
+  } catch (error) {
+    console.error('Error getting app store links:', error);
+    return defaultSettings.appStore;
   }
 };
 

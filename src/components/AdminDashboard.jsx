@@ -46,7 +46,10 @@ import {
   Instagram,
   Youtube,
   MessageCircle,
-  LogOut
+  LogOut,
+  Smartphone,
+  Apple,
+  Play
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import BlogManagement from './BlogManagement';
@@ -113,7 +116,8 @@ const AdminDashboard = () => {
   const [settingsFormData, setSettingsFormData] = useState({
     socialMedia: {},
     contact: {},
-    businessHours: {}
+    businessHours: {},
+    appStore: {}
   });
   const [settingsErrors, setSettingsErrors] = useState({});
   
@@ -346,6 +350,15 @@ const AdminDashboard = () => {
       }));
       
       // Calculate minPrice for each country based on actual plans
+      console.log('🔍 All plans loaded:', allPlans.length);
+      console.log('🔍 Sample plan data:', allPlans.slice(0, 3).map(p => ({ 
+        id: p.id, 
+        name: p.name, 
+        price: p.price, 
+        country_codes: p.country_codes,
+        country_ids: p.country_ids 
+      })));
+      
       const countriesWithPlans = countriesData.map(country => {
         // Find plans for this country (check both mobile and web formats)
         const countryPlans = allPlans.filter(plan => {
@@ -354,9 +367,31 @@ const AdminDashboard = () => {
           return hasMobilePlans || hasWebPlans;
         });
         
+        console.log(`🔍 ${country.name} (${country.code}): Found ${countryPlans.length} plans`);
+        if (countryPlans.length > 0) {
+          console.log(`🔍 ${country.name} plans:`, countryPlans.map(p => ({ 
+            id: p.id, 
+            name: p.name, 
+            price: p.price, 
+            country_codes: p.country_codes 
+          })));
+        }
+        
         if (countryPlans.length > 0) {
           // Calculate minPrice from actual plans
-          const minPrice = Math.min(...countryPlans.map(plan => plan.price || 0));
+          const prices = countryPlans.map(plan => plan.price || 0).filter(price => price > 0);
+          
+          if (prices.length === 0) {
+            console.log(`⚠️ ${country.name}: No valid prices found in ${countryPlans.length} plans`);
+            return {
+              ...country,
+              minPrice: null,
+              planCount: countryPlans.length,
+              hasPlans: false
+            };
+          }
+          
+          const minPrice = Math.min(...prices);
           const planCount = countryPlans.length;
           console.log(`📊 ${country.name}: ${planCount} plans, minPrice: $${minPrice}`);
           
@@ -367,6 +402,7 @@ const AdminDashboard = () => {
             hasPlans: true
           };
         } else {
+          console.log(`❌ ${country.name}: No plans found`);
           return {
             ...country,
             minPrice: null,
@@ -929,7 +965,8 @@ const AdminDashboard = () => {
       setSettingsFormData({
         socialMedia: settingsData.socialMedia || {},
         contact: settingsData.contact || {},
-        businessHours: settingsData.businessHours || {}
+        businessHours: settingsData.businessHours || {},
+        appStore: settingsData.appStore || {}
       });
       console.log('✅ Loaded settings from Firestore');
     } catch (error) {
@@ -1702,7 +1739,8 @@ const AdminDashboard = () => {
                     {[
                       { id: 'social', label: 'Social Media', icon: Link },
                       { id: 'contact', label: 'Contact Info', icon: Phone },
-                      { id: 'hours', label: 'Business Hours', icon: Clock }
+                      { id: 'hours', label: 'Business Hours', icon: Clock },
+                      { id: 'appstore', label: 'App Store Links', icon: Smartphone }
                     ].map((tab) => {
                       const Icon = tab.icon;
                       return (
@@ -1938,6 +1976,76 @@ const AdminDashboard = () => {
                               )}
                             </div>
                           </div>
+                        </div>
+                      )}
+
+                      {/* App Store Links Tab */}
+                      {activeSettingsTab === 'appstore' && (
+                        <div className="space-y-6">
+                          <div className="flex items-center justify-between">
+                            <h3 className="text-lg font-semibold">App Store Links</h3>
+                            <button
+                              onClick={() => handleSaveSettings('appStore')}
+                              disabled={settingsLoading}
+                              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center"
+                            >
+                              <Save className="w-4 h-4 mr-2" />
+                              Save App Store Links
+                            </button>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* iOS App Store */}
+                            <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-6 border border-gray-200">
+                              <div className="flex items-center mb-4">
+                                <div className="w-12 h-12 bg-black rounded-xl flex items-center justify-center mr-4">
+                                  <Apple className="w-6 h-6 text-white" />
+                                </div>
+                                <div>
+                                  <h4 className="text-lg font-semibold text-gray-900">iOS App Store</h4>
+                                  <p className="text-sm text-gray-600">Apple App Store link</p>
+                                </div>
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                  App Store URL
+                                </label>
+                                <input
+                                  type="url"
+                                  value={settingsFormData.appStore?.iosUrl || ''}
+                                  onChange={(e) => handleSettingsInputChange('appStore', 'iosUrl', e.target.value)}
+                                  placeholder="https://apps.apple.com/app/your-app"
+                                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                />
+                              </div>
+                            </div>
+
+                            {/* Google Play Store */}
+                            <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 border border-green-200">
+                              <div className="flex items-center mb-4">
+                                <div className="w-12 h-12 bg-green-600 rounded-xl flex items-center justify-center mr-4">
+                                  <Play className="w-6 h-6 text-white" />
+                                </div>
+                                <div>
+                                  <h4 className="text-lg font-semibold text-gray-900">Google Play Store</h4>
+                                  <p className="text-sm text-gray-600">Android app link</p>
+                                </div>
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                  Play Store URL
+                                </label>
+                                <input
+                                  type="url"
+                                  value={settingsFormData.appStore?.androidUrl || ''}
+                                  onChange={(e) => handleSettingsInputChange('appStore', 'androidUrl', e.target.value)}
+                                  placeholder="https://play.google.com/store/apps/details?id=your.app"
+                                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                />
+                              </div>
+                            </div>
+                          </div>
+
                         </div>
                       )}
 

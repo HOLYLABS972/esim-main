@@ -1,31 +1,53 @@
 'use client';
 
-const apps = [
-  {
-    id: 1,
-    name: "iOS App",
-    platform: "iPhone & iPad",
-    icon: "/images/logo_icon/apple.svg",
-    description: "Download our app for seamless eSIM management on your iOS devices.",
-    features: ["Easy QR scanning", "Plan management", "Usage tracking", "24/7 support"],
-    link: "#", // Replace with actual App Store link
-    buttonText: "Download on App Store",
-    badge: "/images/logo_icon/apple.svg" // Add badge image
-  },
-  {
-    id: 2,
-    name: "Android App",
-    platform: "Android Devices",
-    icon: "/images/logo_icon/android.png",
-    description: "Get our app for convenient eSIM control on your Android device.",
-    features: ["Quick activation", "Data monitoring", "Multiple profiles", "Offline access"],
-    link: "#", // Replace with actual Play Store link
-    buttonText: "Get it on Google Play",
-    badge: "/images/logo_icon/android.png" // Add badge image
-  }
-];
+import { useState, useEffect } from 'react';
+import { getAppStoreLinks } from '../../services/settingsService';
 
 export default function ActivationSection() {
+  const [appStoreLinks, setAppStoreLinks] = useState({ iosUrl: '', androidUrl: '' });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchAppStoreLinks = async () => {
+      try {
+        const links = await getAppStoreLinks();
+        setAppStoreLinks(links);
+      } catch (error) {
+        console.error('Error fetching app store links:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAppStoreLinks();
+  }, []);
+
+  const apps = [
+    {
+      id: 1,
+      name: "iOS App",
+      platform: "iPhone & iPad",
+      icon: "/images/logo_icon/apple.svg",
+      description: "Download our app for seamless eSIM management on your iOS devices.",
+      features: ["Easy QR scanning", "Plan management", "Usage tracking", "24/7 support"],
+      link: appStoreLinks.iosUrl || "#",
+      buttonText: "Download on App Store",
+      badge: "/images/logo_icon/apple.svg",
+      enabled: !!appStoreLinks.iosUrl
+    },
+    {
+      id: 2,
+      name: "Android App",
+      platform: "Android Devices",
+      icon: "/images/logo_icon/android.png",
+      description: "Get our app for convenient eSIM control on your Android device.",
+      features: ["Quick activation", "Data monitoring", "Multiple profiles", "Offline access"],
+      link: appStoreLinks.androidUrl || "#",
+      buttonText: "Get it on Google Play",
+      badge: "/images/logo_icon/android.png",
+      enabled: !!appStoreLinks.androidUrl
+    }
+  ];
   const scrollToPlans = () => {
     document.getElementById('esim-plans')?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -88,41 +110,53 @@ export default function ActivationSection() {
 
           {/* App Download Cards */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-20 mt-12 max-w-7xl mx-auto">
-            {apps.map((app, index) => (
-              <div
-                key={app.id}
-                className="bg-eerie-black rounded-2xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 text-start"
-              >
-                {/* App Icon */}
-                <div className="flex justify-start mb-6">
-                  <div className="w-16 h-16 flex items-center justify-center">
-                    <img 
-                      src={app.icon} 
-                      alt={`${app.name} icon`} 
-                      className="w-14 h-14 object-contain"
-                    />  
-                  </div>
-                </div>
-
-                {/* App Platform */}
-                <h3 className="text-2xl font-semibold text-white mb-4">
-                  {app.platform}
-                </h3>
-
-                {/* App Description */}
-                <p className="text-white mb-8 leading-relaxed">
-                  {app.description}
-                </p>
-
-                {/* Download Button */}
-                <a
-                  href={app.link}
-                  className="btn-secondary inline-block"
-                >
-                  {app.buttonText}
-                </a>
+            {loading ? (
+              <div className="col-span-1 lg:col-span-2 text-center">
+                <div className="text-white">Loading app links...</div>
               </div>
-            ))}
+            ) : apps.filter(app => app.enabled).length > 0 ? (
+              apps.filter(app => app.enabled).map((app, index) => (
+                <div
+                  key={app.id}
+                  className="bg-eerie-black rounded-2xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 text-start"
+                >
+                  {/* App Icon */}
+                  <div className="flex justify-start mb-6">
+                    <div className="w-16 h-16 flex items-center justify-center">
+                      <img 
+                        src={app.icon} 
+                        alt={`${app.name} icon`} 
+                        className="w-14 h-14 object-contain"
+                      />  
+                    </div>
+                  </div>
+
+                  {/* App Platform */}
+                  <h3 className="text-2xl font-semibold text-white mb-4">
+                    {app.platform}
+                  </h3>
+
+                  {/* App Description */}
+                  <p className="text-white mb-8 leading-relaxed">
+                    {app.description}
+                  </p>
+
+                  {/* Download Button */}
+                  <a
+                    href={app.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-secondary inline-block"
+                  >
+                    {app.buttonText}
+                  </a>
+                </div>
+              ))
+            ) : (
+              <div className="col-span-1 lg:col-span-2 text-center">
+                <div className="text-white">App store links will be available soon.</div>
+              </div>
+            )}
           </div>
         </div>
           

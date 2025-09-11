@@ -110,7 +110,24 @@ export async function POST(request) {
       }
       
       const packagesData = await packagesResponse.json();
-      const plans = packagesData.data || [];
+      console.log('📱 Raw API response structure:', Object.keys(packagesData));
+      console.log('📱 Data type:', typeof packagesData.data);
+      console.log('📱 Data length:', packagesData.data?.length);
+      
+      // The API might return different structures, let's handle both
+      let plans = [];
+      if (packagesData.data && Array.isArray(packagesData.data)) {
+        plans = packagesData.data;
+      } else if (packagesData.plans && Array.isArray(packagesData.plans)) {
+        plans = packagesData.plans;
+      } else if (Array.isArray(packagesData)) {
+        plans = packagesData;
+      }
+      
+      console.log('📱 Processed plans count:', plans.length);
+      
+      // Debug: Let's see what's actually in the response
+      console.log('📱 Full response structure:', JSON.stringify(packagesData, null, 2).substring(0, 1000) + '...');
       
       console.log(`📊 Received ${plans.length} plans from API`);
       
@@ -130,17 +147,47 @@ export async function POST(request) {
       const allPackages = [];
       const countriesMap = new Map();
       
-      for (const plan of plans) {
+      // First, let's check what we actually received
+      console.log(`🔍 Total plans received: ${plans.length}`);
+      console.log(`🔍 First few plan structures:`, plans.slice(0, 3).map(p => ({
+        title: p.title,
+        id: p.id,
+        hasPackages: !!p.packages,
+        hasCountries: !!p.countries,
+        keys: Object.keys(p)
+      })));
+      
+      // First, look for plans that have packages (these are the actual plans with pricing data)
+      const plansWithPackages = plans.filter(p => p.packages && Array.isArray(p.packages));
+      console.log(`🔍 Found ${plansWithPackages.length} plans with packages`);
+      
+      // Also look for plans that have operators with packages
+      const plansWithOperators = plans.filter(p => p.operators && Array.isArray(p.operators));
+      console.log(`🔍 Found ${plansWithOperators.length} plans with operators`);
+      
+      // Debug: Let's see what the actual structure looks like
+      if (plans.length > 0) {
+        console.log('🔍 Sample plan structure:', JSON.stringify(plans[0], null, 2).substring(0, 500) + '...');
+        console.log('🔍 Plan has packages?', !!plans[0].packages);
+        console.log('🔍 Plan has countries?', !!plans[0].countries);
+        console.log('🔍 Plan has operators?', !!plans[0].operators);
+        console.log('🔍 Plan keys:', Object.keys(plans[0]));
+      }
+      
+      // Process plans with direct packages
+      for (const plan of plansWithPackages) {
+        console.log(`📦 Processing plan with packages: "${plan.title}" has ${plan.packages.length} packages`);
+        
         // Extract packages from this plan
-        if (plan.packages && Array.isArray(plan.packages)) {
-          console.log(`📦 Plan "${plan.title}" has ${plan.packages.length} packages`);
-          for (const pkg of plan.packages) {
-            allPackages.push({
-              ...pkg,
-              plan_title: plan.title,
-              plan_id: plan.id
-            });
-          }
+        for (const pkg of plan.packages) {
+          console.log(`📦 Package: ${pkg.title}, price: $${pkg.price}`);
+          allPackages.push({
+            ...pkg,
+            plan_title: plan.title,
+            plan_id: plan.id,
+            // Add country codes from the plan's countries
+            country_codes: plan.countries ? plan.countries.map(c => c.country_code).filter(Boolean) : []
+          });
         }
         
         // Extract countries from this plan
@@ -153,6 +200,65 @@ export async function POST(request) {
               flag: country.image?.url || '',
               region_slug: '', // Not provided in this structure
               is_roaming: plan.is_roaming || false
+            });
+          }
+        }
+      }
+      
+      // Process plans with operators (the actual structure we're getting)
+      for (const plan of plansWithOperators) {
+        console.log(`📦 Processing plan with operators: "${plan.title}" has ${plan.operators.length} operators`);
+        
+        for (const operator of plan.operators) {
+          console.log(`📦 Operator: "${operator.title}" has packages: ${!!operator.packages}`);
+          
+          // Extract packages from this operator
+          if (operator.packages && Array.isArray(operator.packages)) {
+            console.log(`📦 Operator "${operator.title}" has ${operator.packages.length} packages`);
+            for (const pkg of operator.packages) {
+              console.log(`📦 Package: ${pkg.title}, price: $${pkg.price}`);
+              allPackages.push({
+                ...pkg,
+                plan_title: operator.title,
+                plan_id: operator.id,
+                // Add country codes from the plan's country_code
+                country_codes: [plan.country_code].filter(Boolean)
+              });
+            }
+          }
+          
+          // Extract countries from this operator
+          if (operator.countries && Array.isArray(operator.countries)) {
+            console.log(`🌍 Operator "${operator.title}" has ${operator.countries.length} countries`);
+            for (const country of operator.countries) {
+              countriesMap.set(country.country_code, {
+                code: country.country_code,
+                name: country.title,
+                flag: country.image?.url || '',
+                region_slug: '', // Not provided in this structure
+                is_roaming: operator.is_roaming || false
+              });
+            }
+          }
+        }
+      }
+      
+      // Also process individual country entries (these are just country listings)
+      for (const plan of plans) {
+        console.log(`🔍 Processing plan: ${plan.title || plan.id}, keys:`, Object.keys(plan));
+        
+        // Handle individual country entries (like "United States", "France", etc.)
+        if (plan.country_code && plan.title && !plan.packages && !plan.countries) {
+          console.log(`🌍 Individual country entry "${plan.title}" for country ${plan.country_code}`);
+          
+          // Add to countries map if not already present
+          if (!countriesMap.has(plan.country_code)) {
+            countriesMap.set(plan.country_code, {
+              code: plan.country_code,
+              name: plan.title,
+              flag: plan.image?.url || '',
+              region_slug: '',
+              is_roaming: false
             });
           }
         }
@@ -183,45 +289,92 @@ export async function POST(request) {
       await Promise.all(countriesBatch);
       console.log(`✅ Synced ${totalSynced.countries} countries`);
       
-      // Process packages
-      const packagesBatch = [];
-      for (const pkg of allPackages) {
-        if (pkg.id && pkg.title) {
-          const packageRef = doc(db, 'packages', pkg.id);
-          packagesBatch.push(setDoc(packageRef, {
-            name: pkg.title,
-            slug: pkg.id,
-            description: pkg.short_info || '',
-            data_amount: pkg.amount || 0,
-            data_unit: 'MB',
-            validity: pkg.day || 0,
-            validity_unit: 'days',
-            price: pkg.price || 0,
-            currency: 'USD',
-            country_code: 'US', // From the data structure
-            region_slug: '',
-            status: 'active',
-            updated_at: serverTimestamp(),
-            updated_by: 'airalo_sync',
-            provider: 'airalo',
-            // Additional fields from Airalo API
-            type: pkg.type || 'sim',
-            net_price: pkg.net_price || 0,
-            is_unlimited: pkg.is_unlimited || false,
-            voice: pkg.voice || null,
-            text: pkg.text || null,
-            data: pkg.data || '',
-            prices: pkg.prices || {},
-            plan_title: pkg.plan_title,
-            plan_id: pkg.plan_id
-          }, { merge: true }));
-          totalSynced.packages++;
+      // Process plans (save as plans, not packages)
+      const plansBatch = [];
+      
+      // If we have packages, process them as individual plans
+      if (allPackages.length > 0) {
+        for (const pkg of allPackages) {
+          if (pkg.id && pkg.title) {
+            const planRef = doc(db, 'plans', pkg.id);
+            
+            // Use country codes from the package (already extracted)
+            const countryCodes = pkg.country_codes || [];
+            
+            plansBatch.push(setDoc(planRef, {
+              slug: pkg.id,
+              name: pkg.title,
+              description: pkg.short_info || '',
+              price: parseFloat(pkg.price) || 0,
+              currency: 'USD',
+              country_codes: countryCodes,
+              country_ids: countryCodes, // For compatibility
+              capacity: pkg.amount || 0,
+              period: pkg.day || 0,
+              operator: pkg.operator || '',
+              status: 'active',
+              updated_at: serverTimestamp(),
+              synced_at: new Date().toISOString(),
+              updated_by: 'airalo_sync',
+              provider: 'airalo',
+              // Additional fields from Airalo API
+              is_roaming: pkg.is_roaming || false,
+              data: pkg.data || '',
+              voice: pkg.voice || null,
+              text: pkg.text || null,
+              net_price: pkg.net_price || 0,
+              prices: pkg.prices || {}
+            }, { merge: true }));
+            totalSynced.packages++;
+          }
+        }
+      } else {
+        // Fallback: process original plans structure
+        for (const plan of plans) {
+          if (plan.id && plan.title) {
+            const planRef = doc(db, 'plans', plan.id);
+            
+            // Extract country codes from plan countries
+            const countryCodes = plan.countries ? plan.countries.map(c => c.country_code).filter(Boolean) : [];
+            
+            // Calculate minimum price from packages
+            let minPrice = 0;
+            if (plan.packages && plan.packages.length > 0) {
+              const prices = plan.packages.map(pkg => parseFloat(pkg.price) || 0).filter(price => price > 0);
+              minPrice = prices.length > 0 ? Math.min(...prices) : 0;
+            }
+            
+            plansBatch.push(setDoc(planRef, {
+              slug: plan.id,
+              name: plan.title,
+              description: plan.short_info || '',
+              price: minPrice, // Use minimum price from packages
+              currency: 'USD',
+              country_codes: countryCodes,
+              country_ids: countryCodes, // For compatibility
+              capacity: plan.packages && plan.packages.length > 0 ? 
+                (plan.packages[0].amount || 0) : 0,
+              period: plan.packages && plan.packages.length > 0 ? 
+                (plan.packages[0].day || 0) : 0,
+              operator: plan.operator || '',
+              status: 'active',
+              updated_at: serverTimestamp(),
+              synced_at: new Date().toISOString(),
+              updated_by: 'airalo_sync',
+              provider: 'airalo',
+              // Additional fields from Airalo API
+              is_roaming: plan.is_roaming || false,
+              packages: plan.packages || [],
+              countries: plan.countries || []
+            }, { merge: true }));
+            totalSynced.packages++;
+          }
         }
       }
       
-      // Execute packages batch
-      await Promise.all(packagesBatch);
-      console.log(`✅ Synced ${totalSynced.packages} packages`);
+      // Execute plans batch
+      await Promise.all(plansBatch);
+      console.log(`✅ Synced ${totalSynced.packages} plans`);
       
     } catch (error) {
       console.error('❌ Error syncing packages:', error);
@@ -236,7 +389,7 @@ export async function POST(request) {
     await setDoc(logRef, {
       timestamp: serverTimestamp(),
       countries_synced: totalSynced.countries,
-      packages_synced: totalSynced.packages,
+      plans_synced: totalSynced.packages,
       status: 'completed',
       source: 'admin_manual_sync',
       sync_type: 'complete_sync',
