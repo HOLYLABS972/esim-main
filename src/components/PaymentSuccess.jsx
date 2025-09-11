@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '../contexts/AuthContext';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { esimService } from '../services/esimService';
 import toast from 'react-hot-toast';
@@ -29,30 +29,33 @@ const PaymentSuccess = () => {
   };
 
   // Handle QR code download
-  const handleDownloadQR = () => {
+  const handleDownloadQR = async () => {
     if (qrCode && qrCode.qrCode) {
       try {
-        // Generate QR code from LPA data
-        const canvas = document.createElement('canvas');
-        const qr = new QRCode(canvas, {
-          text: qrCode.qrCode,
+        // Generate QR code from LPA data using the correct QRCode library
+        const qrDataUrl = await QRCode.toDataURL(qrCode.qrCode, {
           width: 256,
-          height: 256,
-          colorDark: '#000000',
-          colorLight: '#FFFFFF',
+          margin: 2,
+          color: {
+            dark: '#000000',
+            light: '#FFFFFF'
+          }
         });
         
-        // Convert to blob and download
-        canvas.toBlob((blob) => {
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `esim-qr-code-${order?.id || 'order'}.png`;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          URL.revokeObjectURL(url);
-        });
+        // Convert data URL to blob and download
+        const response = await fetch(qrDataUrl);
+        const blob = await response.blob();
+        
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `esim-qr-code-${order?.id || 'order'}.png`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        toast.success('QR code downloaded successfully!');
       } catch (error) {
         console.error('Error downloading QR code:', error);
         toast.error('Failed to download QR code');
@@ -124,7 +127,6 @@ const PaymentSuccess = () => {
         errorMessage: null,
         expiryDate: calculateExpiryDate().toISOString(),
         iccid: "", // Will be filled when eSIM is activated
-        needsRetry: false,
         
         // Operator object
         operator: {
@@ -237,46 +239,132 @@ const PaymentSuccess = () => {
             backup: orderResult.backup
           });
           
-          // Generate real QR code from DataPlans API (now with updated Firebase function)
-          console.log('📱 Generating real QR code from DataPlans API...');
+          // First create an Airalo order, then get QR code
+          console.log('📱 Creating Airalo order...');
+          let airaloOrderResult = null;
+          
           try {
-            const qrCodeResult = await esimService.getEsimQrCode(orderResult.orderId);
-            console.log('✅ Real QR code generated from DataPlans:', qrCodeResult);
+            // Create Airalo order first
+            const airaloOrderData = {
+              package_id: orderData.planId,
+              quantity: "1",
+              type: "sim",
+              description: `eSIM order for ${orderData.customerEmail}`,
+              to_email: orderData.customerEmail,
+              sharing_option: ["link"]
+            };
+            
+            console.log('📱 Airalo order data:', airaloOrderData);
+            airaloOrderResult = await esimService.createAiraloOrderV2(airaloOrderData);
+            console.log('✅ Airalo order created:', airaloOrderResult);
+            
+          // Extract QR code data directly from the order response
+          console.log('📱 Extracting QR code from order response...');
+          const airaloResponseData = airaloOrderResult.orderData;
+          const sims = airaloResponseData?.sims;
+          
+          if (!sims || !Array.isArray(sims) || sims.length === 0) {
+            console.log('❌ No SIMs found in order response, deleting eSIM record...');
+            // Delete the eSIM record from Firestore
+            try {
+              const orderRef = doc(db, 'orders', airaloOrderResult.orderId);
+              await deleteDoc(orderRef);
+              console.log('✅ eSIM record deleted from Firestore');
+            } catch (deleteError) {
+              console.error('⚠️ Failed to delete eSIM record:', deleteError);
+            }
+            throw new Error('No SIMs found in order response');
+          }
+          
+          const simData = sims[0];
+          const qrCode = simData?.qrcode;
+          const qrCodeUrl = simData?.qrcode_url;
+          const directAppleInstallationUrl = simData?.direct_apple_installation_url;
+          const iccid = simData?.iccid;
+          const lpa = simData?.lpa;
+          const matchingId = simData?.matching_id;
+          
+          console.log('✅ QR code data extracted:', {
+            qrCode: qrCode,
+            qrCodeUrl: qrCodeUrl,
+            directAppleInstallationUrl: directAppleInstallationUrl,
+            iccid: iccid,
+            lpa: lpa
+          });
+          console.log('🔍 Full simData:', simData);
+          
+          if (!qrCode && !qrCodeUrl && !directAppleInstallationUrl) {
+            console.log('❌ No QR code data available, deleting eSIM record...');
+            // Delete the eSIM record from Firestore
+            try {
+              const orderRef = doc(db, 'orders', airaloOrderResult.orderId);
+              await deleteDoc(orderRef);
+              console.log('✅ eSIM record deleted from Firestore');
+            } catch (deleteError) {
+              console.error('⚠️ Failed to delete eSIM record:', deleteError);
+            }
+            throw new Error('No QR code data available in order response');
+          }
+          
+          // Create QR code result object to match expected format
+          const qrCodeResult = {
+            success: true,
+            qrCode: qrCode, // Use the actual LPA data (contains "Add Cellular Plan")
+            qrCodeUrl: qrCodeUrl,
+            directAppleInstallationUrl: directAppleInstallationUrl,
+            iccid: iccid,
+            lpa: lpa,
+            matchingId: matchingId,
+            orderDetails: airaloResponseData
+          };
             
             if (qrCodeResult.success && qrCodeResult.qrCode) {
               setQrCode({
                 qrCode: qrCodeResult.qrCode,
-                qrCodeData: qrCodeResult.qrCodeData,
-                planDetails: qrCodeResult.planDetails,
-                esimData: qrCodeResult.esimData,
+                qrCodeUrl: qrCodeResult.qrCodeUrl,
+                directAppleInstallationUrl: qrCodeResult.directAppleInstallationUrl,
+                iccid: qrCodeResult.iccid,
+                lpa: qrCodeResult.lpa,
+                matchingId: qrCodeResult.matchingId,
+                orderDetails: qrCodeResult.orderDetails,
                 isReal: true
               });
               
               // Update mobile app collection with QR code and plan details
               try {
                 const mobileEsimRef = doc(db, 'users', orderData.customerId, 'esims', orderResult.orderId);
+                console.log('💾 Storing QR code data:', {
+                  qrCode: qrCodeResult.qrCode,
+                  qrCodeUrl: qrCodeResult.qrCodeUrl,
+                  directAppleInstallationUrl: qrCodeResult.directAppleInstallationUrl
+                });
                 await setDoc(mobileEsimRef, {
                   // Update QR code fields
                   qrCode: qrCodeResult.qrCode,
+                  qrCodeUrl: qrCodeResult.qrCodeUrl,
+                  directAppleInstallationUrl: qrCodeResult.directAppleInstallationUrl,
                   
                   // Update order result with QR code
                   orderResult: {
                     qrCode: qrCodeResult.qrCode,
-                    smdpAddress: qrCodeResult.qrCodeData?.smdpAddress || "",
-                    activationCode: qrCodeResult.qrCodeData?.activationCode || "",
+                    qrCodeUrl: qrCodeResult.qrCodeUrl,
+                    directAppleInstallationUrl: qrCodeResult.directAppleInstallationUrl,
+                    iccid: qrCodeResult.iccid,
+                    lpa: qrCodeResult.lpa,
+                    matchingId: qrCodeResult.matchingId,
                     updatedAt: new Date().toISOString()
                   },
                   
-                  // Update plan details from DataPlans
-                  capacity: qrCodeResult.planDetails?.capacity || 13,
-                  countryCode: qrCodeResult.planDetails?.countryCode || "AE",
-                  countryName: qrCodeResult.planDetails?.countryName || "United Arab Emirates",
-                  period: qrCodeResult.planDetails?.period || 365,
+                  // Update plan details from Airalo order
+                  capacity: airaloResponseData?.data || "1 GB",
+                  countryCode: airaloResponseData?.package?.split('-')[0] || "AE",
+                  countryName: airaloResponseData?.package || "United Arab Emirates",
+                  period: airaloResponseData?.validity || 7,
                   
                   // Update operator details
                   operator: {
-                    name: qrCodeResult.planDetails?.operator || "eSIM Provider",
-                    slug: qrCodeResult.planDetails?.operator_slug || "esim_provider"
+                    name: airaloResponseData?.package || "eSIM Provider",
+                    slug: airaloResponseData?.package_id || "esim_provider"
                   },
                   
                   updatedAt: serverTimestamp()
@@ -289,10 +377,22 @@ const PaymentSuccess = () => {
             } else {
               throw new Error('No QR code data received');
             }
-          } catch (qrError) {
-            console.log('⚠️ Real QR code generation failed:', qrError.message);
+          } catch (airaloError) {
+            console.log('⚠️ Airalo order/QR code generation failed:', airaloError.message);
+            
+            // Delete the eSIM record from Firestore on error
+            try {
+              if (airaloOrderResult?.orderId) {
+                const orderRef = doc(db, 'orders', airaloOrderResult.orderId);
+                await deleteDoc(orderRef);
+                console.log('✅ eSIM record deleted from Firestore due to error');
+              }
+            } catch (deleteError) {
+              console.error('⚠️ Failed to delete eSIM record on error:', deleteError);
+            }
+            
             setQrCode({
-              error: qrError.message,
+              error: airaloError.message,
               isReal: false
             });
           }
@@ -411,7 +511,7 @@ const PaymentSuccess = () => {
             <span className="text-blue-600 font-medium">Setting up eSIM</span>
           </div>
           <div className="flex items-center justify-center space-x-2">
-            <span className="text-purple-600 font-medium">Generating QR code</span>
+            <span className="text-purple-600 font-medium">Finalizing setup</span>
             <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
           </div>
         </div>
@@ -427,11 +527,6 @@ const PaymentSuccess = () => {
           </div>
         )}
         
-        {order && !qrCode && (
-          <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-            <p className="text-blue-700 text-sm">Generating QR code...</p>
-          </div>
-        )}
         
         {order && qrCode && (
           <div className="mt-4 p-3 bg-green-50 rounded-lg">
@@ -489,17 +584,6 @@ const PaymentSuccess = () => {
           </div>
         )}
         
-        {/* Error Display */}
-        {order && qrCode && qrCode.error && (
-          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-red-600 text-sm">
-              ⚠️ QR code generation failed: {qrCode.error}
-            </p>
-            <p className="text-red-500 text-xs mt-2">
-              Don't worry! You can still access your eSIM from the dashboard.
-            </p>
-          </div>
-        )}
         
         {/* Always show a button to go to dashboard */}
         <div className="mt-6">

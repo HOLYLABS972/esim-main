@@ -107,12 +107,15 @@ const AiraloPlans = () => {
 
     try {
       const orderData = {
-        packageSlug: packageData.slug,
-        customerEmail: currentUser.email,
-        customerName: currentUser.displayName || currentUser.email
+        package_id: packageData.slug,
+        quantity: "1",
+        type: "sim",
+        description: `eSIM order for ${currentUser.email}`,
+        to_email: currentUser.email,
+        sharing_option: ["link"]
       };
 
-      const result = await esimService.createAiraloOrder(orderData);
+      const result = await esimService.createAiraloOrderV2(orderData);
       
       if (result.success) {
         toast.success('eSIM package ordered successfully!');
