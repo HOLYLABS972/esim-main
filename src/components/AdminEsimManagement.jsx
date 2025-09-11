@@ -14,7 +14,6 @@ import {
   Calendar, 
   User, 
   Globe, 
-  Activity,
   QrCode,
   Smartphone,
   CheckCircle,
@@ -35,10 +34,7 @@ const AdminEsimManagement = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
-  const [showUsageModal, setShowUsageModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [esimUsage, setEsimUsage] = useState(null);
-  const [loadingUsage, setLoadingUsage] = useState(false);
   const [deletingOrder, setDeletingOrder] = useState(false);
 
   // Load all eSIM orders from all users
@@ -160,32 +156,6 @@ const AdminEsimManagement = () => {
     setFilteredOrders(filtered);
   };
 
-  // Load eSIM usage data
-  const loadEsimUsage = async (order) => {
-    try {
-      setLoadingUsage(true);
-      const iccid = order.qrCode?.iccid || order.iccid;
-      
-      if (!iccid) {
-        toast.error('No ICCID found for this eSIM');
-        return;
-      }
-
-      const result = await esimService.getEsimUsageByIccid(iccid);
-      
-      if (result.success) {
-        setEsimUsage(result.data);
-        setShowUsageModal(true);
-      } else {
-        toast.error(result.error || 'Failed to load usage data');
-      }
-    } catch (error) {
-      console.error('Error loading eSIM usage:', error);
-      toast.error('Failed to load usage data');
-    } finally {
-      setLoadingUsage(false);
-    }
-  };
 
   // Delete eSIM order
   const handleDeleteOrder = async (order) => {
@@ -501,17 +471,6 @@ const AdminEsimManagement = () => {
                           <Eye className="w-4 h-4" />
                         </button>
                         
-                        {(order.qrCode?.iccid || order.iccid) && (
-                          <button
-                            onClick={() => loadEsimUsage(order)}
-                            disabled={loadingUsage}
-                            className="text-purple-600 hover:text-purple-900 disabled:opacity-50"
-                            title="View Usage"
-                          >
-                            <Activity className="w-4 h-4" />
-                          </button>
-                        )}
-                        
                         <button
                           onClick={() => {
                             setSelectedOrder(order);
@@ -660,93 +619,6 @@ const AdminEsimManagement = () => {
         </div>
       )}
 
-      {/* Usage Modal */}
-      {showUsageModal && esimUsage && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
-              <h3 className="text-xl font-bold text-gray-900">eSIM Usage & Status</h3>
-              <button
-                onClick={() => setShowUsageModal(false)}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <XCircle className="w-6 h-6" />
-              </button>
-            </div>
-            
-            <div className="p-6 space-y-6">
-              {/* Status Overview */}
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h4 className="font-semibold text-gray-900 mb-3">Status Overview</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="font-medium text-gray-600">Status:</span>
-                    <p className={`text-gray-900 font-semibold ${
-                      esimUsage.status === 'ACTIVE' ? 'text-green-600' :
-                      esimUsage.status === 'EXPIRED' ? 'text-red-600' :
-                      esimUsage.status === 'FINISHED' ? 'text-orange-600' :
-                      'text-gray-600'
-                    }`}>
-                      {esimUsage.status}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="font-medium text-gray-600">Unlimited:</span>
-                    <p className="text-gray-900">{esimUsage.is_unlimited ? 'Yes' : 'No'}</p>
-                  </div>
-                  <div>
-                    <span className="font-medium text-gray-600">Expires At:</span>
-                    <p className="text-gray-900">{esimUsage.expired_at}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Data Usage */}
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <h4 className="font-semibold text-gray-900 mb-3">Data Usage</h4>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-gray-600">Total Data:</span>
-                    <span className="text-sm font-semibold text-gray-900">
-                      {esimUsage.is_unlimited ? 'Unlimited' : `${esimUsage.total} MB`}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-gray-600">Remaining Data:</span>
-                    <span className="text-sm font-semibold text-gray-900">
-                      {esimUsage.is_unlimited ? 'Unlimited' : `${esimUsage.remaining} MB`}
-                    </span>
-                  </div>
-                  {!esimUsage.is_unlimited && (
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div 
-                        className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                        style={{ 
-                          width: `${((esimUsage.total - esimUsage.remaining) / esimUsage.total) * 100}%` 
-                        }}
-                      ></div>
-                    </div>
-                  )}
-                  {!esimUsage.is_unlimited && (
-                    <div className="text-xs text-gray-500 text-center">
-                      {Math.round(((esimUsage.total - esimUsage.remaining) / esimUsage.total) * 100)}% used
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-            
-            <div className="flex justify-end p-6 border-t border-gray-200">
-              <button
-                onClick={() => setShowUsageModal(false)}
-                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && selectedOrder && (
