@@ -76,9 +76,9 @@ export default function RootLayout({ children }) {
       </head>
       <body>
         <Providers>
-          <div className=" bg-white">
+          <div className="bg-white">
             <ConditionalNavbar />
-            <main>
+            <main className="pt-16">
               {children}
             </main>
             <ConditionalFooter />
