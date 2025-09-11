@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useAdmin } from '../contexts/AdminContext';
-import { collection, query, where, getDocs, doc, updateDoc, deleteDoc, writeBatch, addDoc, setDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, updateDoc, deleteDoc, writeBatch, addDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { db } from '../firebase/config';
 import { getContactRequests, updateContactRequestStatus, deleteContactRequest } from '../services/contactService';
@@ -96,6 +96,9 @@ const AdminDashboard = () => {
   const [planSortOrder, setPlanSortOrder] = useState('asc'); // 'asc', 'desc'
   const [planStatusFilter, setPlanStatusFilter] = useState('all'); // 'all', 'enabled', 'disabled'
   const [planCountryFilter, setPlanCountryFilter] = useState('all'); // 'all' or specific country code
+  const [pendingPriceChanges, setPendingPriceChanges] = useState({}); // Track pending price changes
+  const [editingPrices, setEditingPrices] = useState({}); // Track which prices are being edited
+  const [markupPercentage, setMarkupPercentage] = useState(17); // Configurable markup percentage
   
   
   // User Management
@@ -174,6 +177,7 @@ const AdminDashboard = () => {
       loadContactRequests();
       loadNewsletterSubscriptions();
       loadSettings();
+      loadMarkupPercentage();
     }
   }, [currentUser]);
 
@@ -713,6 +717,11 @@ const AdminDashboard = () => {
       // Clear local state
       setCountries([]);
       setFilteredCountries([]);
+      setAllPlans([]);
+      setFilteredPlans([]);
+      setPlans([]);
+      setPendingPriceChanges({});
+      setEditingPrices({});
       
       toast.success(`Successfully deleted ${countriesSnapshot.docs.length} countries and ${plansSnapshot.docs.length} plans!`);
       console.log('✅ All countries and plans deleted successfully');
@@ -1490,10 +1499,110 @@ const AdminDashboard = () => {
         plan.id === planId ? { ...plan, price: parseFloat(newPrice) } : plan
       ));
       
+      // Clear pending changes for this plan
+      setPendingPriceChanges(prev => {
+        const newPending = { ...prev };
+        delete newPending[planId];
+        return newPending;
+      });
+      
       toast.success('Plan price updated successfully!');
     } catch (error) {
       console.error('Error updating plan price:', error);
       toast.error(`Error updating plan price: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle price input change (store in pending changes)
+  const handlePriceChange = (planId, newPrice) => {
+    const price = parseFloat(newPrice);
+    if (!isNaN(price) && price >= 0) {
+      setPendingPriceChanges(prev => ({
+        ...prev,
+        [planId]: price
+      }));
+    }
+  };
+
+  // Save pending price changes
+  const savePriceChange = async (planId) => {
+    const pendingPrice = pendingPriceChanges[planId];
+    if (pendingPrice !== undefined) {
+      await updatePlanPrice(planId, pendingPrice);
+      stopEditingPrice(planId);
+    }
+  };
+
+  // Cancel pending price changes
+  const cancelPriceChange = (planId) => {
+    setPendingPriceChanges(prev => {
+      const newPending = { ...prev };
+      delete newPending[planId];
+      return newPending;
+    });
+    setEditingPrices(prev => {
+      const newEditing = { ...prev };
+      delete newEditing[planId];
+      return newEditing;
+    });
+  };
+
+  // Start editing price
+  const startEditingPrice = (planId) => {
+    setEditingPrices(prev => ({
+      ...prev,
+      [planId]: true
+    }));
+  };
+
+  // Stop editing price
+  const stopEditingPrice = (planId) => {
+    setEditingPrices(prev => {
+      const newEditing = { ...prev };
+      delete newEditing[planId];
+      return newEditing;
+    });
+  };
+
+  // Calculate retail price with configurable markup
+  const calculateRetailPrice = (originalPrice) => {
+    return Math.round(originalPrice * (1 + markupPercentage / 100));
+  };
+
+  // Load markup percentage from configuration
+  const loadMarkupPercentage = async () => {
+    try {
+      const pricingConfigRef = doc(db, 'config', 'pricing');
+      const pricingConfig = await getDoc(pricingConfigRef);
+      
+      if (pricingConfig.exists()) {
+        const data = pricingConfig.data();
+        setMarkupPercentage(data.markup_percentage || 17);
+        console.log(`💰 Loaded markup percentage: ${data.markup_percentage || 17}%`);
+      }
+    } catch (error) {
+      console.error('❌ Error loading markup percentage:', error);
+    }
+  };
+
+  // Save markup percentage configuration
+  const saveMarkupPercentage = async () => {
+    try {
+      setLoading(true);
+      const pricingConfigRef = doc(db, 'config', 'pricing');
+      await setDoc(pricingConfigRef, {
+        markup_percentage: markupPercentage,
+        updated_at: serverTimestamp(),
+        updated_by: currentUser?.uid || 'admin'
+      }, { merge: true });
+      
+      toast.success(`Markup percentage updated to ${markupPercentage}%`);
+      console.log(`✅ Markup percentage saved: ${markupPercentage}%`);
+    } catch (error) {
+      console.error('❌ Error saving markup percentage:', error);
+      toast.error(`Error saving markup percentage: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -1831,6 +1940,50 @@ const AdminDashboard = () => {
                     </div>
                   </div>
                 </div>
+                </div>
+
+                {/* Price Configuration */}
+                <div className="bg-white rounded-xl shadow-lg p-6">
+                  <h2 className="text-xl font-semibold mb-4 flex items-center">
+                    <Settings className="text-blue-600 mr-2" />
+                    Price Configuration
+                  </h2>
+                  <p className="text-sm text-gray-600 mb-6">
+                    Configure markup percentage for retail pricing.
+                  </p>
+                  
+                  <div className="space-y-4">
+                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                      <h3 className="font-semibold text-gray-800 mb-2">Retail Markup Percentage</h3>
+                      <p className="text-sm text-gray-600 mb-3">
+                        Set the markup percentage applied to original prices to calculate retail prices.
+                      </p>
+                      <div className="flex items-center space-x-4">
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="number"
+                            value={markupPercentage}
+                            onChange={(e) => setMarkupPercentage(parseFloat(e.target.value) || 0)}
+                            className="w-20 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                            min="0"
+                            max="100"
+                            step="0.1"
+                          />
+                          <span className="text-sm text-gray-600">%</span>
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          Example: $10 original → ${Math.round(10 * (1 + markupPercentage / 100))} retail
+                        </div>
+                        <button
+                          onClick={saveMarkupPercentage}
+                          disabled={loading}
+                          className="ml-4 px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                        >
+                          {loading ? 'Saving...' : 'Save Markup'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Database Management */}
@@ -2360,7 +2513,10 @@ const AdminDashboard = () => {
                             Countries
                           </th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Price
+                            Original Price
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Retail Price
                           </th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Status
@@ -2417,22 +2573,54 @@ const AdminDashboard = () => {
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="flex items-center space-x-2">
-                                  <input
-                                    type="number"
-                                    value={plan.price || 0}
-                                    onChange={(e) => {
-                                      const newPrice = parseFloat(e.target.value);
-                                      if (!isNaN(newPrice) && newPrice >= 0) {
-                                        updatePlanPrice(plan.id, newPrice);
-                                      }
-                                    }}
-                                    className="w-20 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    step="0.01"
-                                    min="0"
-                                  />
+                                  <span className="text-xs text-gray-500">Original:</span>
+                                  <span className="text-sm text-gray-700">
+                                    {plan.original_price || Math.round((plan.price || 0) / (1 + markupPercentage / 100))} {plan.currency || 'USD'}
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="flex items-center space-x-2">
+                                  <span className="text-xs text-gray-500">Retail:</span>
+                                  {editingPrices[plan.id] ? (
+                                    <input
+                                      type="number"
+                                      value={pendingPriceChanges[plan.id] !== undefined ? pendingPriceChanges[plan.id] : (plan.price || 0)}
+                                      onChange={(e) => handlePriceChange(plan.id, e.target.value)}
+                                      className="w-20 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                      step="0.01"
+                                      min="0"
+                                      autoFocus
+                                    />
+                                  ) : (
+                                    <div
+                                      onClick={() => startEditingPrice(plan.id)}
+                                      className="w-20 px-2 py-1 text-sm text-gray-900 cursor-pointer hover:text-blue-600 transition-colors"
+                                    >
+                                      {plan.price || 0}
+                                    </div>
+                                  )}
                                   <span className="text-sm text-gray-500">
                                     {plan.currency || 'USD'}
                                   </span>
+                                  {editingPrices[plan.id] && (
+                                    <div className="flex space-x-1">
+                                      <button
+                                        onClick={() => savePriceChange(plan.id)}
+                                        disabled={loading}
+                                        className="px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 disabled:opacity-50"
+                                      >
+                                        Save
+                                      </button>
+                                      <button
+                                        onClick={() => cancelPriceChange(plan.id)}
+                                        disabled={loading}
+                                        className="px-2 py-1 bg-gray-600 text-white text-xs rounded hover:bg-gray-700 disabled:opacity-50"
+                                      >
+                                        Cancel
+                                      </button>
+                                    </div>
+                                  )}
                                 </div>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">

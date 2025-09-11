@@ -20,6 +20,13 @@ export async function POST(request) {
     const configData = airaloConfig.data();
     const clientId = configData.api_key; // Use api_key field
     
+    // Get markup percentage from configuration (default to 17%)
+    const markupConfigRef = doc(db, 'config', 'pricing');
+    const markupConfig = await getDoc(markupConfigRef);
+    const markupPercentage = markupConfig.exists() ? (markupConfig.data().markup_percentage || 17) : 17;
+    
+    console.log(`💰 Using markup percentage: ${markupPercentage}%`);
+    
     if (!clientId) {
       return NextResponse.json({
         success: false,
@@ -301,11 +308,16 @@ export async function POST(request) {
             // Use country codes from the package (already extracted)
             const countryCodes = pkg.country_codes || [];
             
+            // Calculate retail price with markup
+            const originalPrice = parseFloat(pkg.price) || 0;
+            const retailPrice = Math.round(originalPrice * (1 + markupPercentage / 100));
+            
             plansBatch.push(setDoc(planRef, {
               slug: pkg.id,
               name: pkg.title,
               description: pkg.short_info || '',
-              price: parseFloat(pkg.price) || 0,
+              price: retailPrice, // Store retail price (with markup)
+              original_price: originalPrice, // Store original price for reference
               currency: 'USD',
               country_codes: countryCodes,
               country_ids: countryCodes, // For compatibility
