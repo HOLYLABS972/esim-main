@@ -53,6 +53,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import BlogManagement from './BlogManagement';
+import AdminEsimManagement from './AdminEsimManagement';
 
 // Helper function to get flag emoji from country code
 const getFlagEmoji = (countryCode) => {
@@ -1607,6 +1608,7 @@ const AdminDashboard = () => {
               { id: 'settings', label: 'Links', icon: Link, permission: canManageConfig },
               { id: 'countries', label: 'Countries', icon: Globe, permission: canManageCountries },
               { id: 'plans', label: 'Plans Management', icon: Smartphone, permission: canManagePlans },
+              { id: 'esim', label: 'eSIM Management', icon: Activity, permission: canManagePlans },
               { id: 'blog', label: 'Blog Management', icon: FileText, permission: canManageBlog },
               { id: 'requests', label: 'Contact Requests', icon: MessageSquare, permission: canManageContactRequests },
               { id: 'newsletter', label: 'Newsletter', icon: Mail, permission: canManageNewsletter },
@@ -1677,6 +1679,8 @@ const AdminDashboard = () => {
                 { id: 'config', label: 'Configuration' },
                 { id: 'settings', label: 'Links' },
                 { id: 'countries', label: 'Countries' },
+                { id: 'plans', label: 'Plans Management' },
+                { id: 'esim', label: 'eSIM Management' },
                 { id: 'blog', label: 'Blog Management' },
                 { id: 'requests', label: 'Contact Requests' },
                 { id: 'newsletter', label: 'Newsletter' },
@@ -2524,6 +2528,11 @@ const AdminDashboard = () => {
                   </div>
                 </div>
               </div>
+            )}
+
+            {/* eSIM Management Tab */}
+            {activeTab === 'esim' && canManagePlans && (
+              <AdminEsimManagement />
             )}
 
             {/* Blog Management Tab */}

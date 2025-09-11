@@ -154,10 +154,24 @@ const BlogPost = ({ slug }) => {
                   Back to Blog
                 </Link>
                 
-                <div className="mb-4">
+                <div className="mb-4 flex flex-wrap gap-2 items-center">
                   <span className="bg-tufts-blue/10 text-tufts-blue px-3 py-1 rounded-full text-sm font-medium">
                     {post.category}
                   </span>
+                  
+                  {/* Tags */}
+                  {post.tags && post.tags.length > 0 && (
+                    <>
+                      {post.tags.map((tag, index) => (
+                        <span
+                          key={index}
+                          className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm font-medium"
+                        >
+                          #{tag}
+                        </span>
+                      ))}
+                    </>
+                  )}
                 </div>
                 
                 <h1 className="text-4xl md:text-5xl font-medium tracking-tight text-eerie-black mb-6 leading-tight">
@@ -225,6 +239,23 @@ const BlogPost = ({ slug }) => {
                   className="prose prose-lg max-w-none text-cool-black"
                   dangerouslySetInnerHTML={{ __html: post.content }}
                 />
+                
+                {/* Tags at bottom of post */}
+                {post.tags && post.tags.length > 0 && (
+                  <div className="mt-8 pt-6 border-t border-gray-200">
+                    <h3 className="text-lg font-medium text-gray-900 mb-3">Tags</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {post.tags.map((tag, index) => (
+                        <span
+                          key={index}
+                          className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm font-medium hover:bg-gray-200 transition-colors cursor-pointer"
+                        >
+                          #{tag}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
             <div className="pointer-events-none absolute inset-px rounded-xl shadow-sm ring-1 ring-black/5"></div>
