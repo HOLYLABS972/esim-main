@@ -3,25 +3,12 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { createPortal } from 'react-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { useRouter } from 'next/navigation';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [mounted, setMounted] = useState(false);
-  const { currentUser, logout } = useAuth();
-  const router = useRouter();
-
-  const handleLogout = async () => {
-    try {
-      await logout();
-      router.push('/');
-    } catch (error) {
-      console.error('Failed to logout:', error);
-    }
-  };
 
   // Handle scroll behavior
   useEffect(() => {
@@ -53,9 +40,10 @@ const Navbar = () => {
   }, []);
 
   return (
-    <header className={`navbar-header fixed z-50 bg-white/80 shadow-sm shadow-white/30 backdrop-blur-sm w-full top-0 transition-transform duration-300 ${
+    <header className={`navbar-header fixed w-full top-0 transition-transform duration-300 ${
       isVisible ? 'translate-y-0' : '-translate-y-full'
-    }`}>
+    }`} style={{ zIndex: 9999 }}>
+      <div className="bg-white/80 shadow-sm shadow-white/30 backdrop-blur-sm w-full">
       <nav aria-label="Global" className="mx-auto flex max-w-7xl items-center justify-between p-2 lg:px-8">
         <div className="flex lg:flex-1">
           <Link href="/" className="-m-1.5 p-1.5 flex items-center">
@@ -83,54 +71,28 @@ const Navbar = () => {
         </div>
         
         <div className="hidden lg:flex lg:gap-x-12">
-          <div className="flex items-center bg-gray-50 rounded-lg p-1 space-x-1">
-            <Link href="/#how-it-works" className="px-3 py-2 text-sm font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200">
-              Download App
-            </Link>
-            <Link href="/contact" className="px-3 py-2 text-sm font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200">
-              Contact Us
-            </Link>
-            <Link href="/blog" className="px-3 py-2 text-sm font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200">
-              Blog
-            </Link>
-            {!currentUser ? (
-              <Link href="/login" className="px-3 py-2 text-sm font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200">
-                Login
-              </Link>
-            ) : (
-              <>
-                <Link 
-                  href="/dashboard" 
-                  className="px-3 py-2 text-sm font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200"
-                >
-                  Dashboard
-                </Link>
-                <button
-                  onClick={handleLogout}
-                  className="px-3 py-2 text-sm font-semibold text-gray-700 hover:text-red-600 hover:bg-white rounded-md transition-all duration-200"
-                >
-                  Logout
-                </button>
-              </>
-            )}
-          </div>
+          <Link href="/#how-it-works" className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
+            Download App
+          </Link>
+          <Link href="/contact" className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
+            Contact Us
+          </Link>
+          <Link href="/blog" className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
+            Blog
+          </Link>
         </div>
         
         {/* Right side spacer */}
         <div className="hidden lg:flex lg:flex-1 lg:justify-end"></div>
       </nav>
+      </div>
 
       {/* Mobile menu using Portal */}
       {isMenuOpen && mounted && createPortal(
-        <div className="lg:hidden" style={{ zIndex: 999999, position: 'fixed', inset: 0 }}>
+        <div className="lg:hidden" style={{ zIndex: 99999, position: 'fixed', inset: 0 }}>
           <div 
-            className="fixed inset-0 bg-black bg-opacity-50" 
-            style={{ zIndex: 999998 }}
-            onClick={() => setIsMenuOpen(false)}
-          ></div>
-          <div 
-            className="fixed inset-0 w-full h-full overflow-y-auto bg-white" 
-            style={{ zIndex: 999999 }}
+            className="fixed inset-0 w-full h-full overflow-y-auto bg-white/80 backdrop-blur-sm" 
+            style={{ zIndex: 99999 }}
           >
             {/* Header with logo and close button */}
             <div className="flex items-center justify-between p-6">
@@ -160,7 +122,7 @@ const Navbar = () => {
             <div className="flex flex-col items-center justify-center min-h-[calc(100vh-120px)] p-6">
               <div className="space-y-8 text-center">
                 {/* Main Navigation Group */}
-                <div className="bg-gray-50 rounded-lg p-4 w-full max-w-xs">
+                <div className="p-4 w-full max-w-xs">
                   <Link
                     href="/#how-it-works"
                     className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2"
@@ -182,34 +144,6 @@ const Navbar = () => {
                   >
                     Blog
                   </Link>
-                  {!currentUser ? (
-                    <Link
-                      href="/login"
-                      className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      Login
-                    </Link>
-                  ) : (
-                    <>
-                      <Link
-                        href="/dashboard"
-                        className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2"
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        Dashboard
-                      </Link>
-                      <button
-                        onClick={() => {
-                          handleLogout();
-                          setIsMenuOpen(false);
-                        }}
-                        className="block text-lg font-semibold text-gray-700 hover:text-red-600 hover:bg-white rounded-md transition-all duration-200 py-3 px-4 w-full text-center"
-                      >
-                        Logout
-                      </button>
-                    </>
-                  )}
                 </div>
               </div>
             </div>

@@ -146,18 +146,18 @@ const BlogPost = ({ slug }) => {
             <div className="absolute inset-px rounded-xl bg-white"></div>
             <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
               <div className="px-8 pt-8 pb-8">
-                <Link 
-                  href="/blog" 
+          <Link 
+            href="/blog" 
                   className="inline-flex items-center text-tufts-blue hover:text-cobalt-blue mb-6 font-medium transition-colors duration-200"
-                >
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Back to Blog
-                </Link>
-                
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Blog
+          </Link>
+          
                 <div className="mb-4 flex flex-wrap gap-2 items-center">
                   <span className="bg-tufts-blue/10 text-tufts-blue px-3 py-1 rounded-full text-sm font-medium">
-                    {post.category}
-                  </span>
+                {post.category}
+              </span>
                   
                   {/* Tags */}
                   {post.tags && post.tags.length > 0 && (
@@ -172,36 +172,36 @@ const BlogPost = ({ slug }) => {
                       ))}
                     </>
                   )}
-                </div>
-                
+            </div>
+            
                 <h1 className="text-4xl md:text-5xl font-medium tracking-tight text-eerie-black mb-6 leading-tight">
-                  {post.title}
-                </h1>
-                
+              {post.title}
+            </h1>
+            
                 <div className="flex items-center justify-between text-cool-black mb-8">
-                  <div className="flex items-center space-x-6">
-                    <div className="flex items-center space-x-2">
-                      <User className="w-4 h-4" />
-                      <span>{post.author}</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Calendar className="w-4 h-4" />
+              <div className="flex items-center space-x-6">
+                <div className="flex items-center space-x-2">
+                  <User className="w-4 h-4" />
+                  <span>{post.author}</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Calendar className="w-4 h-4" />
                       <span>{formatDate(post.publishedAt)}</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Clock className="w-4 h-4" />
-                      <span>{post.readTime}</span>
-                    </div>
-                  </div>
-                  
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Clock className="w-4 h-4" />
+                  <span>{post.readTime}</span>
+                </div>
+              </div>
+              
                   <button 
                     onClick={handleShare}
                     className="flex items-center space-x-2 text-cool-black hover:text-eerie-black transition-colors duration-200"
                   >
-                    <Share2 className="w-4 h-4" />
-                    <span>Share</span>
-                  </button>
-                </div>
+                <Share2 className="w-4 h-4" />
+                <span>Share</span>
+              </button>
+            </div>
               </div>
             </div>
             <div className="pointer-events-none absolute inset-px rounded-xl shadow-sm ring-1 ring-black/5"></div>
@@ -218,9 +218,9 @@ const BlogPost = ({ slug }) => {
               {post.featuredImage && (
                 <img
                   src={post.featuredImage}
-                  alt={post.title}
+              alt={post.title}
                   className="w-full h-64 md:h-96 object-cover"
-                />
+            />
               )}
             </div>
             <div className="pointer-events-none absolute inset-px rounded-xl shadow-sm ring-1 ring-black/5"></div>
@@ -237,8 +237,8 @@ const BlogPost = ({ slug }) => {
               <div className="px-8 pt-8 pb-8">
                 <div
                   className="prose prose-lg max-w-none text-cool-black"
-                  dangerouslySetInnerHTML={{ __html: post.content }}
-                />
+            dangerouslySetInnerHTML={{ __html: post.content }}
+          />
                 
                 {/* Tags at bottom of post */}
                 {post.tags && post.tags.length > 0 && (

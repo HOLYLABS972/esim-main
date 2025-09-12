@@ -120,7 +120,7 @@ const Blog = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white py-24">
+    <div className="min-h-screen bg-white pt-24">
       {/* Header Section */}
       <section className="bg-white">
         <div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8">
@@ -277,49 +277,41 @@ const Blog = () => {
       </section>
 
       {/* Newsletter Section */}
-      <section className="bg-eerie-black text-white py-16 mt-[50px]">
-        <div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8">
-          <div className="relative">
-            <div className="absolute inset-px rounded-xl bg-eerie-black"></div>
-            <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
-              <div className="px-8 pt-8 pb-8 text-center">
-                <h2 className="text-3xl md:text-4xl font-medium tracking-tight text-white mb-6">
-                  Stay Updated with eSIM News
-                </h2>
-                <p className="text-xl text-alice-blue mb-8">
-                  Get the latest eSIM insights, travel tips, and technology updates delivered to your inbox
-                </p>
-                <form onSubmit={handleNewsletterSubmit} className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
-                  <input
-                    type="email"
-                    placeholder="Enter your email"
-                    value={newsletterEmail}
-                    onChange={(e) => setNewsletterEmail(e.target.value)}
-                    required
-                    className="input-field flex-1"
-                  />
-                  <button 
-                    type="submit"
-                    disabled={isNewsletterSubmitting}
-                    className="btn-primary px-6 py-3 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isNewsletterSubmitting ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                        Subscribing...
-                      </>
-                    ) : (
-                      <>
-                        <Mail className="w-4 h-4 mr-2" />
-                        Subscribe
-                      </>
-                    )}
-                  </button>
-                </form>
-              </div>
-            </div>
-            <div className="pointer-events-none absolute inset-px rounded-xl shadow-sm ring-1 ring-white/10"></div>
-          </div>
+      <section className="bg-eerie-black text-white py-16">
+        <div className="mx-auto max-w-4xl px-6 text-center">
+          <h2 className="text-3xl md:text-4xl font-medium tracking-tight text-white mb-6">
+            Stay Updated with eSIM News
+          </h2>
+          <p className="text-xl text-alice-blue mb-8">
+            Get the latest eSIM insights, travel tips, and technology updates delivered to your inbox
+          </p>
+          <form onSubmit={handleNewsletterSubmit} className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
+            <input
+              type="email"
+              placeholder="Enter your email"
+              value={newsletterEmail}
+              onChange={(e) => setNewsletterEmail(e.target.value)}
+              required
+              className="input-field flex-1"
+            />
+            <button 
+              type="submit"
+              disabled={isNewsletterSubmitting}
+              className="btn-primary px-6 py-3 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isNewsletterSubmitting ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Subscribing...
+                </>
+              ) : (
+                <>
+                  <Mail className="w-4 h-4 mr-2" />
+                  Subscribe
+                </>
+              )}
+            </button>
+          </form>
         </div>
       </section>
     </div>

@@ -2,7 +2,7 @@
 
 export default function FeaturesSection() {
   return (
-    <div className="bg-white py-16 sm:py-24 lg:py-32">
+    <div className="hidden md:block bg-white py-16 sm:py-24 lg:py-32">
       <div className="mx-auto max-w-2xl px-4 sm:px-6 lg:max-w-7xl lg:px-8">
         <h2 className="text-center text-lg sm:text-xl font-semibold text-tufts-blue"> <span>{'{ '}</span>
           Connect globally 
@@ -69,7 +69,7 @@ export default function FeaturesSection() {
                        <img 
                          src="/images/frontend/home/1200px-QR_Code_Example.svg.png" 
                          alt="QR Code Example" 
-                         className="w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32"
+                         
                        />
                       </div>
                     <div className="text-cool-black text-xs sm:text-sm font-medium">✓ Ready in seconds</div>
@@ -153,7 +153,7 @@ export default function FeaturesSection() {
                        <div><span className="text-alice-blue">"eSIM Compatible"</span>: <span className="text-alice-blue">"True"</span>,</div>
                         <div><span className="text-alice-blue">"Operating System"</span>: <span className="text-alice-blue">"Android 12+, iOS 15+"</span>,</div>
                       </div>
-                      <div>&#125;;</div>
+                      <div>&#125;;<span className="animate-blink text-white ml-1">|</span></div>
                     </div>
                   </div>
                 </div>

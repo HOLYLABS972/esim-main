@@ -22,32 +22,6 @@ export default function ActivationSection() {
     fetchAppStoreLinks();
   }, []);
 
-  const apps = [
-    {
-      id: 1,
-      name: "iOS App",
-      platform: "iPhone & iPad",
-      icon: "/images/logo_icon/apple.svg",
-      description: "Download our app for seamless eSIM management on your iOS devices.",
-      features: ["Easy QR scanning", "Plan management", "Usage tracking", "24/7 support"],
-      link: appStoreLinks.iosUrl || "#",
-      buttonText: "Download on App Store",
-      badge: "/images/logo_icon/apple.svg",
-      enabled: !!appStoreLinks.iosUrl
-    },
-    {
-      id: 2,
-      name: "Android App",
-      platform: "Android Devices",
-      icon: "/images/logo_icon/android.png",
-      description: "Get our app for convenient eSIM control on your Android device.",
-      features: ["Quick activation", "Data monitoring", "Multiple profiles", "Offline access"],
-      link: appStoreLinks.androidUrl || "#",
-      buttonText: "Get it on Google Play",
-      badge: "/images/logo_icon/android.png",
-      enabled: !!appStoreLinks.androidUrl
-    }
-  ];
   const scrollToPlans = () => {
     document.getElementById('esim-plans')?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -99,69 +73,88 @@ export default function ActivationSection() {
         {/* Second Section - App Downloads */}
         <div className="container mx-auto px-4 relative z-10 pt-16 pb-16" id="AppLinksSection">
           {/* Section Header */}
-          <div className="text-center mb-12">
-            <h2 className="text-center text-xl font-semibold text-alice-blue"> <span>{'{ '}</span>
-            Downloads 
-          <span>{' }'}</span>
-         </h2>
-        <p className="mx-auto mt-12 max-w-4xl text-center text-4xl font-semibold tracking-tight text-white sm:text-5xl ">
-          Our App Available for both iOS and Android devices.
-        </p>
+          <div className="text-center mb-16">
+            <h2 className="text-center text-xl font-semibold text-alice-blue"> 
+              <span>{'{ '}</span>
+              Downloads 
+              <span>{' }'}</span>
+            </h2>
+            <p className="mx-auto mt-12 max-w-4xl text-center text-4xl font-semibold tracking-tight text-white sm:text-5xl">
+              Our App Available for both iOS and Android devices.
+            </p>
+          </div>
 
-          {/* App Download Cards */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-20 mt-12 max-w-7xl mx-auto">
-            {loading ? (
-              <div className="col-span-1 lg:col-span-2 text-center">
-                <div className="text-white">Loading app links...</div>
-              </div>
-            ) : apps.filter(app => app.enabled).length > 0 ? (
-              apps.filter(app => app.enabled).map((app, index) => (
-                <div
-                  key={app.id}
-                  className="bg-eerie-black rounded-2xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 text-start"
-                >
-                  {/* App Icon */}
-                  <div className="flex justify-start mb-6">
-                    <div className="w-16 h-16 flex items-center justify-center">
-                      <img 
-                        src={app.icon} 
-                        alt={`${app.name} icon`} 
-                        className="w-14 h-14 object-contain"
-                      />  
-                    </div>
+          {/* App Download Section with Phone Image */}
+          <div className="max-w-6xl mx-auto">
+            <div className="bg-white/10 backdrop-blur-sm rounded-3xl p-8 lg:p-12 shadow-2xl">
+              <div className="grid lg:grid-cols-2 gap-8 items-center">
+                {/* Phone Image - Left Side */}
+                <div className="flex justify-center lg:justify-start">
+                  <div className="relative max-w-sm">
+                    <img
+                      src="/images/logo_icon/phones.png"
+                      alt="Mobile App on iPhone and Android"
+                      className="w-full h-auto"
+                    />
                   </div>
-
-                  {/* App Platform */}
-                  <h3 className="text-2xl font-semibold text-white mb-4">
-                    {app.platform}
-                  </h3>
-
-                  {/* App Description */}
-                  <p className="text-white mb-8 leading-relaxed">
-                    {app.description}
-                  </p>
-
-                  {/* Download Button */}
-                  <a
-                    href={app.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn-secondary inline-block"
-                  >
-                    {app.buttonText}
-                  </a>
                 </div>
-              ))
-            ) : (
-              <div className="col-span-1 lg:col-span-2 text-center">
-                <div className="text-white">App store links will be available soon.</div>
+                
+                {/* App Store Links - Right Side */}
+                <div className="text-center lg:text-left space-y-6">
+                  <h3 className="text-3xl font-semibold text-white mb-4">
+                    Download Our App
+                  </h3>
+                  <p className="text-white/90 text-lg leading-relaxed mb-8">
+                    Get the most out of your eSIM with our mobile app. Manage your plans, track usage, and get instant support.
+                  </p>
+                  
+                  {/* App Store Buttons */}
+                  <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                    {loading ? (
+                      <div className="text-white">Loading app links...</div>
+                    ) : (
+                      <>
+                        {appStoreLinks.iosUrl && (
+                          <a
+                            href={appStoreLinks.iosUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="btn-primary inline-flex items-center justify-center px-6 py-3"
+                          >
+                            <img 
+                              src="/images/logo_icon/apple.svg" 
+                              alt="iOS" 
+                              className="w-5 h-5 mr-2"
+                            />
+                            Download for iOS
+                          </a>
+                        )}
+                        {appStoreLinks.androidUrl && (
+                          <a
+                            href={appStoreLinks.androidUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="btn-secondary inline-flex items-center justify-center px-6 py-3"
+                          >
+                            <img 
+                              src="/images/logo_icon/android.png" 
+                              alt="Android" 
+                              className="w-5 h-5 mr-2"
+                            />
+                            Download for Android
+                          </a>
+                        )}
+                        {!appStoreLinks.iosUrl && !appStoreLinks.androidUrl && (
+                          <div className="text-white/80">App store links will be available soon.</div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
               </div>
-            )}
+            </div>
           </div>
         </div>
-          
-        </div>
-      </div>
       <div className="mx-auto max-w-7xl  pb-12">
        <h2 className="text-center text-xl font-semibold text-alice-blue"> <span>{'{ '}</span>
             Activation Process 
@@ -249,6 +242,7 @@ export default function ActivationSection() {
             </div>
           </div>
         </div>
+      </div>
     </div>
   );
 }
