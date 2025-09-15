@@ -60,7 +60,7 @@ export async function POST(request) {
     }
 
     // Authenticate with Airalo API
-    const baseUrl = 'https://partners-api.airalo.com';
+    const baseUrl = 'https://theholylabs.com';
     const authResponse = await fetch(`${baseUrl}/v2/token`, {
       method: 'POST',
       headers: {

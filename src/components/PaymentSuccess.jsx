@@ -424,19 +424,21 @@ const PaymentSuccess = () => {
   };
 
   // Check if this is a payment success redirect
-  const orderParam = searchParams.get('order_id') || searchParams.get('order');
-  const email = searchParams.get('email');
-  const total = searchParams.get('total');
-  
-  if (orderParam && email && total) {
-    console.log('🎉 Payment success detected:', { orderParam, email, total });
-    handlePaymentSuccess();
-  } else {
-    console.log('⚠️ No payment parameters found, showing default message');
-    hasProcessed.current = true;
-    setLoading(false);
-    setError('No payment information found. If you just completed a payment, please wait a moment for the redirect.');
-  }
+  useEffect(() => {
+    const orderParam = searchParams.get('order_id') || searchParams.get('order');
+    const email = searchParams.get('email');
+    const total = searchParams.get('total');
+    
+    if (orderParam && email && total) {
+      console.log('🎉 Payment success detected:', { orderParam, email, total });
+      handlePaymentSuccess();
+    } else {
+      console.log('⚠️ No payment parameters found, showing default message');
+      hasProcessed.current = true;
+      setLoading(false);
+      setError('No payment information found. If you just completed a payment, please wait a moment for the redirect.');
+    }
+  }, [searchParams]);
 
   // Check if user is authenticated
   if (!currentUser) {
