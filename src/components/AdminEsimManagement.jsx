@@ -137,9 +137,6 @@ const AdminEsimManagement = () => {
   const filterOrders = () => {
     let filtered = esimOrders;
 
-    // Filter out "Unknown User" rows
-    filtered = filtered.filter(order => order.userName !== 'Unknown User');
-
     // Filter by search term
     if (searchTerm) {
       filtered = filtered.filter(order =>
@@ -417,10 +414,7 @@ const AdminEsimManagement = () => {
                   <tr key={order.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
-                        <div className="text-sm font-medium text-gray-900">
-                          {order.orderId || order.id}
-                        </div>
-                        <div className="text-sm text-gray-500 font-mono">
+                        <div className="text-sm font-medium text-gray-900 font-mono">
                           {order.iccid || order.qrCode?.iccid || 'No ICCID'}
                         </div>
                         <div className="text-xs text-gray-400 mt-1">
@@ -433,10 +427,10 @@ const AdminEsimManagement = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
                         <div className="text-sm font-medium text-gray-900">
-                          {order.userName}
+                          {order.userName === 'Unknown User' ? order.userEmail : order.userName}
                         </div>
                         <div className="text-sm text-gray-500">
-                          {order.userEmail}
+                          {order.userName === 'Unknown User' ? '' : order.userEmail}
                         </div>
                       </div>
                     </td>
