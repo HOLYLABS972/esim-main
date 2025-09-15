@@ -137,6 +137,9 @@ const AdminEsimManagement = () => {
   const filterOrders = () => {
     let filtered = esimOrders;
 
+    // Filter out "Unknown User" rows
+    filtered = filtered.filter(order => order.userName !== 'Unknown User');
+
     // Filter by search term
     if (searchTerm) {
       filtered = filtered.filter(order =>
