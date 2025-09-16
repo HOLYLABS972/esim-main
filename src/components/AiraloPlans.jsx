@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useI18n } from '../contexts/I18nContext';
 import { esimService } from '../services/esimService';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -22,6 +23,7 @@ import toast from 'react-hot-toast';
 
 const AiraloPlans = () => {
   const { currentUser } = useAuth();
+  const { t } = useI18n();
   const [packages, setPackages] = useState([]);
   const [countries, setCountries] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -196,7 +198,7 @@ const AiraloPlans = () => {
                 <Search className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Search packages, countries, or descriptions..."
+                  placeholder={t('search.packagesPlaceholder', 'Search packages, countries, or descriptions...')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -210,7 +212,7 @@ const AiraloPlans = () => {
               className="flex items-center px-4 py-3 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
             >
               <Filter className="w-5 h-5 mr-2" />
-              Filters
+              {t('search.filters', 'Filters')}
             </button>
           </div>
 

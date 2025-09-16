@@ -3,7 +3,26 @@
 import { useI18n } from '../../contexts/I18nContext';
 
 export default function HeroSection() {
-  const { t } = useI18n();
+  const { t, isLoading } = useI18n();
+  
+  if (isLoading) {
+    return (
+      <div className="bg-white">
+        <div className="relative isolate px-6 pt-14 lg:px-8">
+          <div className="mx-auto max-w-2xl py-32 sm:py-48 lg:py-56">
+            <div className="text-center">
+              <div className="animate-pulse space-y-4">
+                <div className="h-4 bg-gray-200 rounded w-3/4 mx-auto"></div>
+                <div className="h-8 bg-gray-200 rounded w-1/2 mx-auto"></div>
+                <div className="h-6 bg-gray-200 rounded w-2/3 mx-auto"></div>
+                <div className="h-12 bg-gray-200 rounded w-1/3 mx-auto"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
   const scrollToAppLinks = () => {
     const appLinksSection = document.querySelector('[id="AppLinksSection"]');
     if (appLinksSection) {

@@ -4,6 +4,9 @@
     "downloadApp": "Télécharger l'application",
     "contactUs": "Nous contacter",
     "blog": "Blog",
+    "login": "Se connecter",
+    "logout": "Se déconnecter",
+    "dashboard": "Tableau de bord",
     "openMenu": "Ouvrir le menu principal",
     "closeMenu": "Fermer le menu"
   },
@@ -76,6 +79,8 @@
     }
   },
   "footer": {
+    "logoAlt": "Logo RoamJet",
+    "brandName": "RoamJet",
     "companyDescription": "RoamJet - Votre partenaire de confiance pour les solutions eSIM mondiales. Activation instantanée, couverture mondiale et connectivité sécurisée pour les voyageurs et les entreprises.",
     "quickLinks": "Liens rapides",
     "home": "Accueil",
@@ -85,9 +90,20 @@
     "privacyPolicy": "Politique de confidentialité",
     "termsOfService": "Conditions d'utilisation",
     "cookiePolicy": "Politique des cookies",
-    "contactUs": "Nous contacter",
     "contactInfoNotAvailable": "Informations de contact non disponibles",
     "allRightsReserved": "Tous droits réservés"
+  },
+  "search": {
+    "destinationPlaceholder": "Recherchez votre destination (ex: France, Allemagne, États-Unis)",
+    "packagesPlaceholder": "Rechercher des forfaits, pays ou descriptions...",
+    "blogPlaceholder": "Rechercher dans les articles de blog...",
+    "emailPlaceholder": "Entrez votre email",
+    "searching": "Recherche en cours...",
+    "foundDestinations": "Trouvé {count} {count, plural, one {destination} other {destinations}}",
+    "noDestinationsFound": "Aucune destination trouvée pour \"{searchTerm}\"",
+    "typeToSearch": "Tapez au moins 2 caractères pour rechercher",
+    "allCategories": "Toutes les catégories",
+    "filters": "Filtres"
   },
   "language": {
     "select": "Sélectionner la langue",

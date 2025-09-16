@@ -1,6 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
+import RTLWrapper from '../../src/components/RTLWrapper';
 
 const Contact = dynamic(() => import('../../src/components/Contact'), {
   ssr: false,
@@ -12,5 +13,9 @@ const Contact = dynamic(() => import('../../src/components/Contact'), {
 });
 
 export default function ContactPage() {
-  return <Contact />;
+  return (
+    <RTLWrapper>
+      <Contact />
+    </RTLWrapper>
+  );
 }

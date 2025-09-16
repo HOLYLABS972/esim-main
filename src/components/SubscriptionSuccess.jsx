@@ -12,7 +12,7 @@ import toast from 'react-hot-toast';
 const SubscriptionSuccess = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { currentUser } = useAuth();
+  const { currentUser, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [order, setOrder] = useState(null);
@@ -94,8 +94,20 @@ const SubscriptionSuccess = () => {
     }
   }, [searchParams, router, currentUser]);
 
+  // Show loading spinner while auth is loading
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   // Check if user is authenticated
-  if (!currentUser) {
+  if (!authLoading && !currentUser) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="max-w-md mx-auto bg-white rounded-xl shadow-lg p-6 text-center">

@@ -3,9 +3,39 @@
 import { useI18n } from '../../contexts/I18nContext';
 
 export default function FeaturesSection() {
-  const { t } = useI18n();
+  const { t, locale, isLoading } = useI18n();
+  
+  if (isLoading) {
+    return (
+      <div className="bg-alice-blue py-24 sm:py-32">
+        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+          <div className="animate-pulse space-y-8">
+            <div className="text-center">
+              <div className="h-8 bg-gray-200 rounded w-1/3 mx-auto mb-4"></div>
+              <div className="h-6 bg-gray-200 rounded w-1/2 mx-auto"></div>
+            </div>
+            <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="bg-white rounded-lg p-6 space-y-4">
+                  <div className="h-6 bg-gray-200 rounded"></div>
+                  <div className="h-4 bg-gray-200 rounded"></div>
+                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
+  // Hide entire Features section for Hebrew and Arabic
+  if (locale === 'he' || locale === 'ar') {
+    return null;
+  }
+  
   return (
-    <div className="hidden md:block bg-white py-16 sm:py-24 lg:py-32">
+    <div className="features-section hidden md:block bg-white py-16 sm:py-24 lg:py-32">
       <div className="mx-auto max-w-2xl px-4 sm:px-6 lg:max-w-7xl lg:px-8">
         <h2 className="text-center text-lg sm:text-xl font-semibold text-tufts-blue"> <span>{'{ '}</span>
           {t('features.title')}
@@ -72,7 +102,7 @@ export default function FeaturesSection() {
                        <img 
                          src="/images/frontend/home/1200px-QR_Code_Example.svg.png" 
                          alt="QR Code Example" 
-                         
+                         className="w-full h-full object-contain"
                        />
                       </div>
                     <div className="text-cool-black text-xs sm:text-sm font-medium">{t('features.instantActivation.readyInSeconds')}</div>
@@ -124,7 +154,8 @@ export default function FeaturesSection() {
             <div className="pointer-events-none absolute inset-px rounded-lg shadow-sm ring-1 ring-black/5"></div>
           </div>
 
-          {/* Device Compatibility - Large right card */}
+          {/* Device Compatibility - Large right card - Hidden for Hebrew and Arabic */}
+          {locale !== 'he' && locale !== 'ar' && (
           <div className="relative lg:row-span-2">
             <div className="absolute inset-px rounded-lg bg-white max-lg:rounded-b-[2rem] lg:rounded-r-[2rem]"></div>
             <div className="relative flex h-full flex-col overflow-hidden rounded-[calc(0.75rem+1px)] max-lg:rounded-b-[calc(2rem+1px)] lg:rounded-r-[calc(2rem+1px)]">
@@ -164,6 +195,7 @@ export default function FeaturesSection() {
             </div>
             <div className="pointer-events-none absolute inset-px rounded-lg shadow-sm ring-1 ring-black/5 max-lg:rounded-b-[2rem] lg:rounded-r-[2rem]"></div>
           </div>
+          )}
         </div>
         
       </div>

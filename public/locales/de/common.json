@@ -4,6 +4,9 @@
     "downloadApp": "App herunterladen",
     "contactUs": "Kontaktieren Sie uns",
     "blog": "Blog",
+    "login": "Anmelden",
+    "logout": "Abmelden",
+    "dashboard": "Dashboard",
     "openMenu": "Hauptmenü öffnen",
     "closeMenu": "Menü schließen"
   },
@@ -88,6 +91,18 @@
     "contactUs": "Kontaktieren Sie uns",
     "contactInfoNotAvailable": "Kontaktinformationen nicht verfügbar",
     "allRightsReserved": "Alle Rechte vorbehalten"
+  },
+  "search": {
+    "destinationPlaceholder": "Suchen Sie Ihr Reiseziel (z.B. Frankreich, Deutschland, USA)",
+    "packagesPlaceholder": "Suchen Sie Pakete, Länder oder Beschreibungen...",
+    "blogPlaceholder": "Blog-Beiträge suchen...",
+    "emailPlaceholder": "Geben Sie Ihre E-Mail ein",
+    "searching": "Suche läuft...",
+    "foundDestinations": "{count} {count, plural, one {Ziel gefunden} other {Ziele gefunden}}",
+    "noDestinationsFound": "Keine Ziele gefunden für \"{searchTerm}\"",
+    "typeToSearch": "Geben Sie mindestens 2 Zeichen ein, um zu suchen",
+    "allCategories": "Alle Kategorien",
+    "filters": "Filter"
   },
   "language": {
     "select": "Sprache auswählen",

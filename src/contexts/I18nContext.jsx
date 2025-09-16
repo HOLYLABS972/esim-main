@@ -1,54 +1,68 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';
-import { getLanguageDirection } from '../utils/languageUtils';
+import { usePathname } from 'next/navigation';
 
 const I18nContext = createContext();
 
 export const useI18n = () => {
   const context = useContext(I18nContext);
   if (!context) {
-    throw new Error('useI18n must be used within an I18nProvider');
+    // Return a fallback context instead of throwing an error
+    return {
+      locale: 'en',
+      t: (key, fallback) => fallback || key,
+      translations: {},
+      isLoading: false,
+    };
   }
   return context;
 };
 
 export const I18nProvider = ({ children }) => {
+  const pathname = usePathname();
   const [locale, setLocale] = useState('en');
   const [translations, setTranslations] = useState({});
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Initialize locale from localStorage or default to 'en'
+  // Determine locale from pathname and load translations
   useEffect(() => {
-    const savedLocale = localStorage.getItem('locale') || 'en';
-    setLocale(savedLocale);
-    
-    // Set document direction and language
-    const direction = getLanguageDirection(savedLocale);
-    document.documentElement.setAttribute('dir', direction);
-    document.documentElement.setAttribute('lang', savedLocale);
-  }, []);
-
-  // Load translations
-  useEffect(() => {
-    const loadTranslations = async () => {
+    const initializeTranslations = async () => {
+      let detectedLocale = 'en';
+      
+      if (pathname === '/hebrew') detectedLocale = 'he';
+      else if (pathname === '/arabic') detectedLocale = 'ar';
+      else if (pathname === '/russian') detectedLocale = 'ru';
+      else if (pathname === '/german') detectedLocale = 'de';
+      else if (pathname === '/french') detectedLocale = 'fr';
+      else if (pathname === '/spanish') detectedLocale = 'es';
+      
+      setLocale(detectedLocale);
+      
+      // Load translations immediately
       try {
-        const response = await fetch(`/locales/${locale}/common.json`);
+        setIsLoading(true);
+        const response = await fetch(`/locales/${detectedLocale}/common.json`);
         if (response.ok) {
           const data = await response.json();
           setTranslations(data);
+        } else {
+          console.error('Failed to load translations, response not ok:', response.status);
         }
       } catch (error) {
         console.error('Failed to load translations:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    loadTranslations();
-  }, [locale]);
+    initializeTranslations();
+  }, [pathname]);
 
   const t = (key, fallback = '') => {
     const keys = key.split('.');
     let value = translations;
-    
+
     for (const k of keys) {
       if (value && typeof value === 'object' && k in value) {
         value = value[k];
@@ -60,21 +74,11 @@ export const I18nProvider = ({ children }) => {
     return typeof value === 'string' ? value : fallback || key;
   };
 
-  const changeLocale = (newLocale) => {
-    setLocale(newLocale);
-    localStorage.setItem('locale', newLocale);
-    
-    // Set document direction and language
-    const direction = getLanguageDirection(newLocale);
-    document.documentElement.setAttribute('dir', direction);
-    document.documentElement.setAttribute('lang', newLocale);
-  };
-
   const value = {
     locale,
     t,
     translations,
-    changeLocale,
+    isLoading,
   };
 
   return (
@@ -83,3 +87,4 @@ export const I18nProvider = ({ children }) => {
     </I18nContext.Provider>
   );
 };
+

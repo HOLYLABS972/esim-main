@@ -1,6 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
+import RTLWrapper from '../../src/components/RTLWrapper';
 
 const PrivacyPolicy = dynamic(() => import('../../src/components/PrivacyPolicy'), {
   ssr: false,
@@ -12,5 +13,9 @@ const PrivacyPolicy = dynamic(() => import('../../src/components/PrivacyPolicy')
 });
 
 export default function PrivacyPolicyPage() {
-  return <PrivacyPolicy />;
+  return (
+    <RTLWrapper>
+      <PrivacyPolicy />
+    </RTLWrapper>
+  );
 }

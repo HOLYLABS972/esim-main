@@ -7,6 +7,7 @@ import { db } from '../firebase/config';
 import { Search } from 'lucide-react';
 import PlanSelectionBottomSheet from './PlanSelectionBottomSheet';
 import { getCountriesWithPricing, getPricingStats } from '../services/plansService';
+import { useI18n } from '../contexts/I18nContext';
 
 // Helper function to get flag emoji from country code
 const getFlagEmoji = (countryCode) => {
@@ -23,6 +24,7 @@ const getFlagEmoji = (countryCode) => {
 
 
 const EsimPlans = () => {
+  const { t } = useI18n();
   const [searchTerm, setSearchTerm] = useState('');
   const [countries, setCountries] = useState([]);
   const [filteredCountries, setFilteredCountries] = useState([]);
@@ -244,19 +246,19 @@ const EsimPlans = () => {
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="text-center">
                       <div className="text-3xl font-bold text-tufts-blue">{pricingStats.totalPlans}</div>
-                      <div className="text-sm text-gray-600">Total Plans</div>
+                      <div className="text-sm text-gray-600">{t('plans.totalPlans', 'Total Plans')}</div>
                     </div>
                     <div className="text-center">
                       <div className="text-3xl font-bold text-tufts-blue">{pricingStats.totalCountries}</div>
-                      <div className="text-sm text-gray-600">Countries</div>
+                      <div className="text-sm text-gray-600">{t('plans.countries', 'Countries')}</div>
                     </div>
                     <div className="text-center">
                       <div className="text-3xl font-bold text-tufts-blue">${pricingStats.minPrice}</div>
-                      <div className="text-sm text-gray-600">Starting From</div>
+                      <div className="text-sm text-gray-600">{t('plans.startingFrom', 'Starting From')}</div>
                     </div>
                     <div className="text-center">
                       <div className="text-3xl font-bold text-tufts-blue">${pricingStats.averagePrice}</div>
-                      <div className="text-sm text-gray-600">Average Price</div>
+                      <div className="text-sm text-gray-600">{t('plans.averagePrice', 'Average Price')}</div>
                     </div>
                   </div>
                 </div>
@@ -269,7 +271,7 @@ const EsimPlans = () => {
               <input
                 className="search-box-field__input w-full px-4 py-3 pr-12 border border-jordy-blue rounded-full focus:ring-2 focus:ring-tufts-blue focus:border-transparent"
                 type="text"
-                placeholder="Search your destination (e.g., France, Germany, United States)"
+                placeholder={t('search.destinationPlaceholder', 'Search your destination (e.g., France, Germany, United States)')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -284,13 +286,13 @@ const EsimPlans = () => {
             {searchTerm && (
               <div className="text-center mt-2 text-sm text-gray-500">
                 {isSearching ? (
-                  "Searching..."
+                  t('search.searching', 'Searching...')
                 ) : searchResults.length > 0 ? (
-                  `Found ${searchResults.length} ${searchResults.length === 1 ? 'destination' : 'destinations'}`
+                  t('search.foundDestinations', `Found ${searchResults.length} ${searchResults.length === 1 ? 'destination' : 'destinations'}`, { count: searchResults.length })
                 ) : searchTerm.length >= 2 ? (
-                  `No destinations found for "${searchTerm}"`
+                  t('search.noDestinationsFound', `No destinations found for "${searchTerm}"`, { searchTerm })
                 ) : (
-                  "Type at least 2 characters to search"
+                  t('search.typeToSearch', 'Type at least 2 characters to search')
                 )}
               </div>
             )}
@@ -340,7 +342,7 @@ const EsimPlans = () => {
                               {country.name}
                             </h5>
                             <span className="esim-plan-card__price text-tufts-blue font-medium">
-                              {country.minPrice ? `From $${country.minPrice.toFixed(2)}` : 'No plans available'}
+                              {country.minPrice ? t('plans.fromPrice', `From $${country.minPrice.toFixed(2)}`).replace('${price}', `$${country.minPrice.toFixed(2)}`) : t('plans.noPlansAvailable', 'No plans available')}
                             </span>
                           </div>
                         </button>
@@ -375,7 +377,7 @@ const EsimPlans = () => {
                             {country.name}
                           </h5>
                           <span className="esim-plan-card__price text-tufts-blue font-medium text-sm">
-                            {country.minPrice ? `From $${country.minPrice.toFixed(2)}` : 'No plans available'}
+                            {country.minPrice ? t('plans.fromPrice', `From $${country.minPrice.toFixed(2)}`).replace('${price}', `$${country.minPrice.toFixed(2)}`) : t('plans.noPlansAvailable', 'No plans available')}
                           </span>
                         </div>
                         
@@ -395,7 +397,7 @@ const EsimPlans = () => {
                         onClick={() => setShowAllCountries(!showAllCountries)}
                         className="btn-primary px-8 py-3 text-white font-semibold rounded-full hover:bg-tufts-blue transition-all duration-200 shadow-lg"
                       >
-                        {showAllCountries ? 'Show Less' : 'Show All'}
+                        {showAllCountries ? t('plans.showLess', 'Show Less') : t('plans.showAll', 'Show All')}
                       </button>
                     </div>
                   )}

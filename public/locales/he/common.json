@@ -4,6 +4,9 @@
     "downloadApp": "הורד אפליקציה",
     "contactUs": "צור קשר",
     "blog": "בלוג",
+    "login": "התחבר",
+    "logout": "התנתק",
+    "dashboard": "לוח בקרה",
     "openMenu": "פתח תפריט ראשי",
     "closeMenu": "סגור תפריט"
   },
@@ -45,7 +48,15 @@
     "title": "מערכת תמחור ניידת",
     "subtitle": "בחר את תוכנית ה-eSIM המושלמת שלך",
     "description": "בחר מתוך מגוון רחב של תוכניות נתונים המיועדות לכל סוג של מטייל. מטיולים קצרים ועד שהיות ממושכות, אנחנו מכסים אותך.",
-    "loadingPlans": "טוען תוכניות..."
+    "loadingPlans": "טוען תוכניות...",
+    "fromPrice": "מ-${price}",
+    "noPlansAvailable": "אין תוכניות זמינות",
+    "totalPlans": "סה\"כ תוכניות",
+    "countries": "מדינות",
+    "startingFrom": "החל מ-",
+    "averagePrice": "מחיר ממוצע",
+    "showAll": "הצג הכל",
+    "showLess": "הצג פחות"
   },
   "activation": {
     "downloads": "הורדות",
@@ -88,6 +99,18 @@
     "contactUs": "צור קשר",
     "contactInfoNotAvailable": "מידע יצירת קשר לא זמין",
     "allRightsReserved": "כל הזכויות שמורות"
+  },
+  "search": {
+    "destinationPlaceholder": "חפש את היעד שלך (למשל צרפת, גרמניה, ארצות הברית)",
+    "packagesPlaceholder": "חפש חבילות, מדינות או תיאורים...",
+    "blogPlaceholder": "חפש בפוסטים של הבלוג...",
+    "emailPlaceholder": "הכנס את האימייל שלך",
+    "searching": "מחפש...",
+    "foundDestinations": "נמצאו {count} {count, plural, one {יעד} other {יעדים}}",
+    "noDestinationsFound": "לא נמצאו יעדים עבור \"{searchTerm}\"",
+    "typeToSearch": "הקלד לפחות 2 תווים כדי לחפש",
+    "allCategories": "כל הקטגוריות",
+    "filters": "מסננים"
   },
   "language": {
     "select": "בחר שפה",

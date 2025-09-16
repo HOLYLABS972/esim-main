@@ -5,8 +5,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { collection, query, where, getDocs, doc, setDoc, getDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { motion } from 'framer-motion';
-import { User, Globe, Activity, Settings, QrCode, Eye, Download, Trash2, MoreVertical, Smartphone } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { User, Globe, Activity, Settings, QrCode, Eye, Download, Trash2, MoreVertical, Smartphone, Shield, AlertTriangle } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import QRCode from 'qrcode';
 import { esimService } from '../services/esimService';
 
@@ -89,7 +89,7 @@ const LPAQRCodeDisplay = ({ lpaData }) => {
 };
 
 const Dashboard = () => {
-  const { currentUser, userProfile, loadUserProfile } = useAuth();
+  const { currentUser, userProfile, loadUserProfile, loading: authLoading } = useAuth();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -102,6 +102,7 @@ const Dashboard = () => {
   const [loadingEsimUsage, setLoadingEsimUsage] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -116,6 +117,15 @@ const Dashboard = () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [showDropdown]);
+
+  // Check for access denied error
+  useEffect(() => {
+    const error = searchParams.get('error');
+    if (error === 'access_denied') {
+      // Show access denied message
+      console.log('Access denied: User tried to access admin panel without permission');
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -219,7 +229,20 @@ const Dashboard = () => {
     fetchData();
   }, [currentUser, loadUserProfile]);
 
-  if (!currentUser) {
+  // Show loading spinner while auth is loading
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Only redirect to login if auth is not loading and user is not authenticated
+  if (!authLoading && !currentUser) {
     router.push('/login');
     return null;
   }
@@ -440,6 +463,25 @@ const Dashboard = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Access Denied Alert */}
+      {searchParams.get('error') === 'access_denied' && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4"
+        >
+          <div className="flex items-center">
+            <AlertTriangle className="w-5 h-5 text-red-600 mr-3" />
+            <div>
+              <h3 className="text-sm font-medium text-red-800">Access Denied</h3>
+              <p className="text-sm text-red-700 mt-1">
+                You don't have permission to access the admin panel. Only administrators can access this area.
+              </p>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

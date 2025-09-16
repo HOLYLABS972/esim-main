@@ -5,11 +5,11 @@ import {
   FeaturesSection,
   PlansSection,
   ActivationSection
-} from '../src/components/sections';
+} from '../../src/components/sections';
 
-export default function HomePage() {
+export default function RussianPage() {
   return (
-    <div dir="ltr" lang="en">
+    <div dir="ltr" lang="ru">
       <main className="min-h-screen bg-alice-blue">
         {/* Hero Section */}
         <HeroSection />

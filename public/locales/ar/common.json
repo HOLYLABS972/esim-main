@@ -4,6 +4,9 @@
     "downloadApp": "تحميل التطبيق",
     "contactUs": "اتصل بنا",
     "blog": "المدونة",
+    "login": "تسجيل الدخول",
+    "logout": "تسجيل الخروج",
+    "dashboard": "لوحة التحكم",
     "openMenu": "فتح القائمة الرئيسية",
     "closeMenu": "إغلاق القائمة"
   },
@@ -45,7 +48,15 @@
     "title": "نظام التسعير المحمول",
     "subtitle": "اختر خطة eSIM المثالية لك",
     "description": "اختر من مجموعة واسعة من خطط البيانات المصممة لكل نوع من المسافرين. من الرحلات القصيرة إلى الإقامات الممتدة، نحن نغطيك.",
-    "loadingPlans": "جاري تحميل الخطط..."
+    "loadingPlans": "جاري تحميل الخطط...",
+    "fromPrice": "من ${price}",
+    "noPlansAvailable": "لا توجد خطط متاحة",
+    "totalPlans": "إجمالي الخطط",
+    "countries": "الدول",
+    "startingFrom": "بدءاً من",
+    "averagePrice": "متوسط السعر",
+    "showAll": "عرض الكل",
+    "showLess": "عرض أقل"
   },
   "activation": {
     "downloads": "التحميلات",
@@ -88,6 +99,18 @@
     "contactUs": "اتصل بنا",
     "contactInfoNotAvailable": "معلومات الاتصال غير متاحة",
     "allRightsReserved": "جميع الحقوق محفوظة"
+  },
+  "search": {
+    "destinationPlaceholder": "ابحث عن وجهتك (مثل فرنسا، ألمانيا، الولايات المتحدة)",
+    "packagesPlaceholder": "ابحث في الحزم أو البلدان أو الأوصاف...",
+    "blogPlaceholder": "ابحث في منشورات المدونة...",
+    "emailPlaceholder": "أدخل بريدك الإلكتروني",
+    "searching": "جاري البحث...",
+    "foundDestinations": "تم العثور على {count} {count, plural, one {وجهة} other {وجهة}}",
+    "noDestinationsFound": "لم يتم العثور على وجهات لـ \"{searchTerm}\"",
+    "typeToSearch": "اكتب حرفين على الأقل للبحث",
+    "allCategories": "جميع الفئات",
+    "filters": "المرشحات"
   },
   "language": {
     "select": "اختر اللغة",

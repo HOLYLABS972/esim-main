@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import AdminDashboard from '../../src/components/AdminDashboard'
 import Loading from '../../src/components/Loading'
+import AdminGuard from '../../src/components/AdminGuard'
 
 export const metadata = {
   title: 'Admin Dashboard - eSIM Plans',
@@ -18,8 +19,10 @@ export const metadata = {
 
 export default function AdminPage() {
   return (
-    <Suspense fallback={<Loading />}>
-      <AdminDashboard />
-    </Suspense>
+    <AdminGuard>
+      <Suspense fallback={<Loading />}>
+        <AdminDashboard />
+      </Suspense>
+    </AdminGuard>
   )
 }

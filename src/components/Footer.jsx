@@ -79,14 +79,14 @@ const Footer = () => {
               <Link href="/" className="footer-item__logo inline-block mb-4 flex items-center">
                 <img 
                   src="/images/logo_icon/logo.png" 
-                  alt="RoamJet Logo" 
+                  alt={t('footer.logoAlt', 'RoamJet Logo')} 
                   className="h-10 w-auto"
                   onError={(e) => {
                     e.target.style.display = 'none';
                     e.target.nextSibling.style.display = 'inline';
                   }}
                 />
-                <span className="text-2xl font-bold text-eerie-black ml-2">Roam<span className="text-cobalt-blue font-bold">Jet</span></span>
+                <span className="text-2xl font-bold text-eerie-black ml-2">{t('footer.brandName', 'RoamJet')}</span>
               </Link>
               <p className="footer-item__desc text-eerie-black mb-6 leading-relaxed">
                 {t('footer.companyDescription')}
@@ -233,7 +233,7 @@ const Footer = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <div className="bottom-footer-text text-eerie-black">
-              &copy; {currentYear} <Link href="/" className="text-cobalt-blue hover:text-cobalt-blue transition-colors duration-200">RoamJet</Link>. 
+              &copy; {currentYear} <Link href="/" className="text-cobalt-blue hover:text-cobalt-blue transition-colors duration-200">{t('footer.brandName', 'RoamJet')}</Link>. 
               {t('footer.allRightsReserved')}
             </div>
           </div>

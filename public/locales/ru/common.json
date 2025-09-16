@@ -4,6 +4,9 @@
     "downloadApp": "Скачать приложение",
     "contactUs": "Связаться с нами",
     "blog": "Блог",
+    "login": "Войти",
+    "logout": "Выйти",
+    "dashboard": "Панель управления",
     "openMenu": "Открыть главное меню",
     "closeMenu": "Закрыть меню"
   },
@@ -88,6 +91,18 @@
     "contactUs": "Связаться с нами",
     "contactInfoNotAvailable": "Контактная информация недоступна",
     "allRightsReserved": "Все права защищены"
+  },
+  "search": {
+    "destinationPlaceholder": "Найдите свое направление (например, Франция, Германия, США)",
+    "packagesPlaceholder": "Поиск пакетов, стран или описаний...",
+    "blogPlaceholder": "Поиск в записях блога...",
+    "emailPlaceholder": "Введите ваш email",
+    "searching": "Поиск...",
+    "foundDestinations": "Найдено {count} {count, plural, one {направление} other {направлений}}",
+    "noDestinationsFound": "Направления не найдены для \"{searchTerm}\"",
+    "typeToSearch": "Введите хотя бы 2 символа для поиска",
+    "allCategories": "Все категории",
+    "filters": "Фильтры"
   },
   "language": {
     "select": "Выберите язык",

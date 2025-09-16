@@ -4,6 +4,9 @@
     "downloadApp": "Download App",
     "contactUs": "Contact Us",
     "blog": "Blog",
+    "login": "Login",
+    "logout": "Logout",
+    "dashboard": "Dashboard",
     "openMenu": "Open main menu",
     "closeMenu": "Close menu"
   },
@@ -45,7 +48,15 @@
     "title": "Portable Pricing System",
     "subtitle": "Choose Your Perfect eSIM Plan",
     "description": "Select from our wide range of data plans designed for every type of traveler. From short trips to extended stays, we have you covered.",
-    "loadingPlans": "Loading plans..."
+    "loadingPlans": "Loading plans...",
+    "fromPrice": "From ${price}",
+    "noPlansAvailable": "No plans available",
+    "totalPlans": "Total Plans",
+    "countries": "Countries",
+    "startingFrom": "Starting From",
+    "averagePrice": "Average Price",
+    "showAll": "Show All",
+    "showLess": "Show Less"
   },
   "activation": {
     "downloads": "Downloads",
@@ -76,6 +87,8 @@
     }
   },
   "footer": {
+    "logoAlt": "RoamJet Logo",
+    "brandName": "RoamJet",
     "companyDescription": "RoamJet - Your trusted partner for global eSIM solutions. Instant activation, worldwide coverage, and secure connectivity for travelers and businesses.",
     "quickLinks": "Quick Links",
     "home": "Home",
@@ -85,9 +98,20 @@
     "privacyPolicy": "Privacy Policy",
     "termsOfService": "Terms of Service",
     "cookiePolicy": "Cookie Policy",
-    "contactUs": "Contact Us",
     "contactInfoNotAvailable": "Contact information not available",
     "allRightsReserved": "All Rights Reserved"
+  },
+  "search": {
+    "destinationPlaceholder": "Search your destination (e.g., France, Germany, United States)",
+    "packagesPlaceholder": "Search packages, countries, or descriptions...",
+    "blogPlaceholder": "Search blog posts...",
+    "emailPlaceholder": "Enter your email",
+    "searching": "Searching...",
+    "foundDestinations": "Found {count} {count, plural, one {destination} other {destinations}}",
+    "noDestinationsFound": "No destinations found for \"{searchTerm}\"",
+    "typeToSearch": "Type at least 2 characters to search",
+    "allCategories": "All Categories",
+    "filters": "Filters"
   },
   "language": {
     "select": "Select Language",

@@ -4,10 +4,12 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { createPortal } from 'react-dom';
 import { useI18n } from '../contexts/I18nContext';
+import { useAuth } from '../contexts/AuthContext';
 import LanguageSelector from './LanguageSelector';
 
 const Navbar = () => {
   const { t } = useI18n();
+  const { currentUser, logout } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
@@ -42,6 +44,15 @@ const Navbar = () => {
     setMounted(true);
   }, []);
 
+  const handleLogout = async () => {
+    try {
+      await logout();
+      setIsMenuOpen(false);
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
+
   return (
     <header className={`navbar-header fixed w-full top-0 transition-transform duration-300 ${
       isVisible ? 'translate-y-0' : '-translate-y-full'
@@ -56,7 +67,7 @@ const Navbar = () => {
               alt="Roam Jet Plans Logo"
               className="h-8 w-auto"
             />
-            <span className="ml-1 text-xl font-bold text-gray-900">{t('navbar.logo')}</span>
+            <span className="ml-1 text-xl font-bold text-gray-900">{t('navbar.logo', 'RoamJet')}</span>
           </Link>
         </div>
         
@@ -67,7 +78,7 @@ const Navbar = () => {
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             className="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-gray-700"
           >
-            <span className="sr-only">{t('navbar.openMenu')}</span>
+            <span className="sr-only">{t('navbar.openMenu', 'Open main menu')}</span>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true" className="size-6">
               <path d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
@@ -76,14 +87,31 @@ const Navbar = () => {
         
         <div className="hidden lg:flex lg:gap-x-12">
           <Link href="/#how-it-works" className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
-            {t('navbar.downloadApp')}
+            {t('navbar.downloadApp', 'Download App')}
           </Link>
           <Link href="/contact" className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
-            {t('navbar.contactUs')}
+            {t('navbar.contactUs', 'Contact Us')}
           </Link>
           <Link href="/blog" className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
-            {t('navbar.blog')}
+            {t('navbar.blog', 'Blog')}
           </Link>
+          {currentUser ? (
+            <>
+              <Link href="/dashboard" className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
+                {t('navbar.dashboard', 'Dashboard')}
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors"
+              >
+                {t('navbar.logout', 'Logout')}
+              </button>
+            </>
+          ) : (
+            <Link href="/login" className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
+              {t('navbar.login', 'Login')}
+            </Link>
+          )}
         </div>
         
         {/* Right side with language selector */}
@@ -110,14 +138,14 @@ const Navbar = () => {
                   alt="RoamJet Plans Logo"
                   className="h-8 w-auto"
                 />
-                <span className="ml-2 text-xl font-bold text-gray-900">{t('navbar.logo')}</span>
+                <span className="ml-2 text-xl font-bold text-gray-900">RoamJet</span>
               </Link>
               <button
                 type="button"
                 onClick={() => setIsMenuOpen(false)}
                 className="-m-2.5 rounded-md p-2.5 text-gray-700 hover:bg-gray-100 transition-colors"
               >
-                <span className="sr-only">{t('navbar.closeMenu')}</span>
+                <span className="sr-only">{t('navbar.closeMenu', 'Close menu')}</span>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true" className="size-6">
                   <path d="M6 18 18 6M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
@@ -139,22 +167,50 @@ const Navbar = () => {
                     className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    {t('navbar.downloadApp')}
+                    {t('navbar.downloadApp', 'Download App')}
                   </Link>
                   <Link
                     href="/contact"
                     className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    {t('navbar.contactUs')}
+                    {t('navbar.contactUs', 'Contact Us')}
                   </Link>
                   <Link
                     href="/blog"
                     className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    {t('navbar.blog')}
+                    {t('navbar.blog', 'Blog')}
                   </Link>
+                  {currentUser ? (
+                    <>
+                      <Link
+                        href="/dashboard"
+                        className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        {t('navbar.dashboard', 'Dashboard')}
+                      </Link>
+                      <button
+                        onClick={() => {
+                          handleLogout();
+                          setIsMenuOpen(false);
+                        }}
+                        className="block w-full text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2"
+                      >
+                        {t('navbar.logout', 'Logout')}
+                      </button>
+                    </>
+                  ) : (
+                    <Link
+                      href="/login"
+                      className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      {t('navbar.login', 'Login')}
+                    </Link>
+                  )}
                 </div>
               </div>
             </div>

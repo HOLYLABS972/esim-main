@@ -10,10 +10,29 @@ const EsimPlans = dynamic(() => import('../EsimPlans'), {
 });
 
 export default function PlansSection() {
-  const { t } = useI18n();
+  const { t, locale, isLoading } = useI18n();
+  
+  if (isLoading) {
+    return (
+      <section className="py-16 bg-white relative overflow-hidden">
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="animate-pulse space-y-8">
+            <div className="text-center">
+              <div className="h-8 bg-gray-200 rounded w-1/3 mx-auto mb-4"></div>
+              <div className="h-6 bg-gray-200 rounded w-1/2 mx-auto mb-8"></div>
+            </div>
+            <div className="h-96 bg-gray-200 rounded"></div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+  
+  // Reduce top padding for Hebrew and Arabic since Features section is hidden
+  const topPadding = (locale === 'he' || locale === 'ar') ? 'pt-8' : 'py-16';
   
   return (
-    <section id="esim-plans" className="py-16 scroll-mt-20 bg-white relative overflow-hidden">
+    <section id="esim-plans" className={`${topPadding} pb-16 scroll-mt-20 bg-white relative overflow-hidden`}>
       <div className="container mx-auto px-4 relative z-10">
         
         {/* Section Header */}

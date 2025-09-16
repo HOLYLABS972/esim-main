@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import Login from '../../src/components/Login'
 import Loading from '../../src/components/Loading'
+import AuthRedirect from '../../src/components/AuthRedirect'
 
 export const metadata = {
   title: 'Login - eSIM Plans',
@@ -19,7 +20,9 @@ export const metadata = {
 export default function LoginPage() {
   return (
     <Suspense fallback={<Loading />}>
-      <Login />
+      <AuthRedirect redirectTo="/dashboard">
+        <Login />
+      </AuthRedirect>
     </Suspense>
   )
 }

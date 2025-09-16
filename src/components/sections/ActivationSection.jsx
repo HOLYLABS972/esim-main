@@ -5,9 +5,21 @@ import { useI18n } from '../../contexts/I18nContext';
 import { getAppStoreLinks } from '../../services/settingsService';
 
 export default function ActivationSection() {
-  const { t } = useI18n();
   const [appStoreLinks, setAppStoreLinks] = useState({ iosUrl: '', androidUrl: '' });
   const [loading, setLoading] = useState(true);
+  
+  // Safely get i18n context
+  let t, translationsLoading;
+  try {
+    const i18nContext = useI18n();
+    t = i18nContext.t;
+    translationsLoading = i18nContext.isLoading;
+  } catch (error) {
+    console.error('ActivationSection: I18n context not available:', error);
+    // Fallback to English
+    t = (key, fallback) => fallback || key;
+    translationsLoading = false;
+  }
 
   useEffect(() => {
     const fetchAppStoreLinks = async () => {
@@ -27,6 +39,29 @@ export default function ActivationSection() {
   const scrollToPlans = () => {
     document.getElementById('esim-plans')?.scrollIntoView({ behavior: 'smooth' });
   };
+
+  if (translationsLoading) {
+    return (
+      <div className="bg-white py-24 sm:py-32">
+        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+          <div className="animate-pulse space-y-12">
+            <div className="text-center">
+              <div className="h-8 bg-gray-200 rounded w-1/3 mx-auto mb-4"></div>
+              <div className="h-6 bg-gray-200 rounded w-1/2 mx-auto"></div>
+            </div>
+            <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="space-y-4">
+                  <div className="h-6 bg-gray-200 rounded"></div>
+                  <div className="h-4 bg-gray-200 rounded"></div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-eerie-black relative isolate overflow-hidden" id="how-it-works">

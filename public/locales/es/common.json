@@ -4,6 +4,9 @@
     "downloadApp": "Descargar aplicación",
     "contactUs": "Contáctanos",
     "blog": "Blog",
+    "login": "Iniciar sesión",
+    "logout": "Cerrar sesión",
+    "dashboard": "Panel de control",
     "openMenu": "Abrir menú principal",
     "closeMenu": "Cerrar menú"
   },
@@ -88,6 +91,18 @@
     "contactUs": "Contáctanos",
     "contactInfoNotAvailable": "Información de contacto no disponible",
     "allRightsReserved": "Todos los derechos reservados"
+  },
+  "search": {
+    "destinationPlaceholder": "Busca tu destino (ej: Francia, Alemania, Estados Unidos)",
+    "packagesPlaceholder": "Buscar paquetes, países o descripciones...",
+    "blogPlaceholder": "Buscar en publicaciones del blog...",
+    "emailPlaceholder": "Ingresa tu email",
+    "searching": "Buscando...",
+    "foundDestinations": "Encontrados {count} {count, plural, one {destino} other {destinos}}",
+    "noDestinationsFound": "No se encontraron destinos para \"{searchTerm}\"",
+    "typeToSearch": "Escribe al menos 2 caracteres para buscar",
+    "allCategories": "Todas las categorías",
+    "filters": "Filtros"
   },
   "language": {
     "select": "Seleccionar idioma",

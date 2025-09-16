@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import Register from '../../src/components/Register'
 import Loading from '../../src/components/Loading'
+import AuthRedirect from '../../src/components/AuthRedirect'
 
 export const metadata = {
   title: 'Register - eSIM Plans',
@@ -19,7 +20,9 @@ export const metadata = {
 export default function RegisterPage() {
   return (
     <Suspense fallback={<Loading />}>
-      <Register />
+      <AuthRedirect redirectTo="/dashboard">
+        <Register />
+      </AuthRedirect>
     </Suspense>
   )
 }

@@ -1,8 +1,19 @@
 'use client';
 
+import { usePathname } from 'next/navigation';
 import { I18nProvider } from '../contexts/I18nContext';
 
 const LanguageWrapper = ({ children }) => {
+  const pathname = usePathname();
+  
+  // Only apply i18n to landing page and specific pages that should be translated
+  const translatedPages = ['/', '/hebrew', '/arabic', '/russian', '/german', '/french', '/spanish', '/contact', '/privacy-policy', '/terms-of-service', '/cookie-policy'];
+  
+  // Don't apply i18n to admin, blog, or other pages
+  if (!translatedPages.includes(pathname)) {
+    return children;
+  }
+  
   return (
     <I18nProvider>
       {children}
