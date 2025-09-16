@@ -1,15 +1,18 @@
 'use client';
 
+import { useI18n } from '../../contexts/I18nContext';
+
 export default function FeaturesSection() {
+  const { t } = useI18n();
   return (
     <div className="hidden md:block bg-white py-16 sm:py-24 lg:py-32">
       <div className="mx-auto max-w-2xl px-4 sm:px-6 lg:max-w-7xl lg:px-8">
         <h2 className="text-center text-lg sm:text-xl font-semibold text-tufts-blue"> <span>{'{ '}</span>
-          Connect globally 
+          {t('features.title')}
           <span>{' }'}</span>
          </h2>
          <p className="mx-auto mt-6 sm:mt-12 max-w-4xl text-center text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-semibold tracking-tight text-eerie-black">
-          Everything you need for global connectivity
+          {t('features.subtitle')}
         </p>
         
         <div className="mt-8 sm:mt-10 lg:mt-16 grid gap-4 lg:grid-cols-3 lg:grid-rows-2">
@@ -19,10 +22,10 @@ export default function FeaturesSection() {
             <div className="relative flex h-full flex-col overflow-hidden rounded-[calc(0.75rem+1px)] lg:rounded-l-[calc(2rem+1px)]">
               <div className="px-6 pt-6 pb-3 sm:px-8 sm:pt-8 lg:px-10 lg:pt-10 sm:pb-0">
                 <p className="mt-2 text-base sm:text-lg font-medium tracking-tight text-eerie-black text-center lg:text-left">
-                  Global Coverage
+                  {t('features.globalCoverage.title')}
                 </p>
                 <p className="mt-2 max-w-lg text-sm/6 text-eerie-black text-center lg:text-left">
-                  Stay connected in 200+ countries with our extensive eSIM network coverage worldwide.
+                  {t('features.globalCoverage.description')}
                 </p>
               </div>
               <div className="relative min-h-[20rem] sm:min-h-[24rem] lg:min-h-[30rem] w-full grow max-lg:mx-auto max-lg:max-w-sm">
@@ -40,8 +43,8 @@ export default function FeaturesSection() {
                           className="w-32 h-32 sm:w-40 sm:h-40 lg:w-48 lg:h-48 mx-auto"
                         />
                       </div>
-                      <div className="text-eerie-black text-base sm:text-lg font-semibold">200+ Countries</div>
-                      <div className="text-eerie-black text-sm opacity-90">Worldwide Coverage</div>
+                      <div className="text-eerie-black text-base sm:text-lg font-semibold">{t('features.globalCoverage.countries')}</div>
+                      <div className="text-eerie-black text-sm opacity-90">{t('features.globalCoverage.worldwide')}</div>
                     </div>
                   </div>
                 </div>
@@ -56,10 +59,10 @@ export default function FeaturesSection() {
             <div className="relative flex h-full flex-col overflow-hidden rounded-[calc(0.75rem+1px)] max-lg:rounded-t-[calc(2rem+1px)]">
               <div className="px-6 pt-6 sm:px-8 sm:pt-8 lg:px-10 lg:pt-10">
                 <p className="mt-2 text-base sm:text-lg font-medium tracking-tight text-gray-950 text-center lg:text-left">
-                  Instant Activation
+                  {t('features.instantActivation.title')}
                 </p>
                 <p className="mt-2 max-w-lg text-sm/6 text-gray-600 text-center lg:text-left">
-                  Get connected immediately with our QR code activation. No waiting, no delays.
+                  {t('features.instantActivation.description')}
                 </p>
               </div>
               <div className="flex flex-1 items-center justify-center px-6 pt-6 pb-8 sm:px-8 lg:px-10 lg:pt-10 lg:pb-2">
@@ -72,7 +75,7 @@ export default function FeaturesSection() {
                          
                        />
                       </div>
-                    <div className="text-cool-black text-xs sm:text-sm font-medium">✓ Ready in seconds</div>
+                    <div className="text-cool-black text-xs sm:text-sm font-medium">{t('features.instantActivation.readyInSeconds')}</div>
                   </div>
                 </div>
               </div>
@@ -86,10 +89,10 @@ export default function FeaturesSection() {
             <div className="relative flex h-full flex-col overflow-hidden rounded-[calc(0.75rem+1px)]">
               <div className="px-6 pt-6 sm:px-8 sm:pt-8 lg:px-10 lg:pt-10">
                 <p className="mt-2 text-base sm:text-lg font-medium tracking-tight text-gray-950 text-center lg:text-left">
-                  Secure Payment
+                  {t('features.securePayment.title')}
                 </p>
                 <p className="mt-2 max-w-lg text-sm/6 text-gray-600 text-center lg:text-left">
-                  256-bit SSL encryption and multiple payment options for your security.
+                  {t('features.securePayment.description')}
                 </p>
               </div>
               <div className="flex flex-1 items-center py-6 lg:pb-2 justify-center">
@@ -127,10 +130,10 @@ export default function FeaturesSection() {
             <div className="relative flex h-full flex-col overflow-hidden rounded-[calc(0.75rem+1px)] max-lg:rounded-b-[calc(2rem+1px)] lg:rounded-r-[calc(2rem+1px)]">
               <div className="px-6 pt-6 pb-3 sm:px-8 sm:pt-8 lg:px-10 lg:pt-10 sm:pb-0">
                 <p className="mt-2 text-base sm:text-lg font-medium tracking-tight text-gray-950 text-center lg:text-left">
-                  Device Compatibility
+                  {t('features.deviceCompatibility.title')}
                 </p>
                 <p className="mt-2 max-w-lg text-sm/6 text-gray-600 text-center lg:text-left">
-                  Works with all modern smartphones and tablets that support eSIM technology.
+                  {t('features.deviceCompatibility.description')}
                 </p>
               </div>
               <div className="relative min-h-[20rem] sm:min-h-[24rem] lg:min-h-[30rem] w-full grow">
@@ -150,8 +153,8 @@ export default function FeaturesSection() {
                         <span className="text-tufts-blue">const</span> devices = &#123;
                       </div>
                       <div className="ml-2 sm:ml-4 space-y-1">  
-                       <div><span className="text-alice-blue">"eSIM Compatible"</span>: <span className="text-alice-blue">"True"</span>,</div>
-                        <div><span className="text-alice-blue">"Operating System"</span>: <span className="text-alice-blue">"Android 12+, iOS 15+"</span>,</div>
+                       <div><span className="text-alice-blue">"{t('features.deviceCompatibility.esimCompatible')}"</span>: <span className="text-alice-blue">"True"</span>,</div>
+                        <div><span className="text-alice-blue">"Operating System"</span>: <span className="text-alice-blue">"{t('features.deviceCompatibility.operatingSystem')}"</span>,</div>
                       </div>
                       <div>&#125;;<span className="animate-blink text-white ml-1">|</span></div>
                     </div>

@@ -1,0 +1,102 @@
+{
+  "navbar": {
+    "logo": "RoamJet",
+    "downloadApp": "Descargar aplicación",
+    "contactUs": "Contáctanos",
+    "blog": "Blog",
+    "openMenu": "Abrir menú principal",
+    "closeMenu": "Cerrar menú"
+  },
+  "hero": {
+    "announcement": "Ahora disponible en más de 200 países en todo el mundo.",
+    "stayConnected": "Mantente conectado",
+    "noMatterWhere": "sin importar dónde estés",
+    "with": "con",
+    "description": "Obtén datos móviles instantáneos en más de 200 países. No se necesita SIM física. Activa en cualquier lugar, en cualquier momento con nuestra red eSIM global confiable.",
+    "downloadApp": "Descargar aplicación",
+    "learnMore": "Saber más"
+  },
+  "features": {
+    "title": "Conéctate globalmente",
+    "subtitle": "Todo lo que necesitas para la conectividad global",
+    "globalCoverage": {
+      "title": "Cobertura global",
+      "description": "Mantente conectado en más de 200 países con nuestra extensa cobertura de red eSIM en todo el mundo.",
+      "countries": "200+ países",
+      "worldwide": "Cobertura mundial"
+    },
+    "instantActivation": {
+      "title": "Activación instantánea",
+      "description": "Conéctate inmediatamente con nuestra activación de código QR. Sin esperas, sin retrasos.",
+      "readyInSeconds": "✓ Listo en segundos"
+    },
+    "securePayment": {
+      "title": "Pago seguro",
+      "description": "Cifrado SSL de 256 bits y múltiples opciones de pago para tu seguridad."
+    },
+    "deviceCompatibility": {
+      "title": "Compatibilidad de dispositivos",
+      "description": "Funciona con todos los smartphones y tablets modernos que soportan tecnología eSIM.",
+      "esimCompatible": "Compatible con eSIM",
+      "operatingSystem": "Android 12+, iOS 15+"
+    }
+  },
+  "plans": {
+    "title": "Sistema de precios portátil",
+    "subtitle": "Elige tu plan eSIM perfecto",
+    "description": "Selecciona de nuestra amplia gama de planes de datos diseñados para cada tipo de viajero. Desde viajes cortos hasta estancias prolongadas, te tenemos cubierto.",
+    "loadingPlans": "Cargando planes..."
+  },
+  "activation": {
+    "downloads": "Descargas",
+    "appAvailable": "Nuestra aplicación está disponible para dispositivos iOS y Android.",
+    "downloadOurApp": "Descarga nuestra aplicación",
+    "appDescription": "Obtén el máximo de tu eSIM con nuestra aplicación móvil. Gestiona tus planes, rastrea el uso y obtén soporte instantáneo.",
+    "downloadForIOS": "Descargar para iOS",
+    "downloadForAndroid": "Descargar para Android",
+    "appLinksSoon": "Los enlaces de las tiendas de aplicaciones estarán disponibles pronto.",
+    "loadingAppLinks": "Cargando enlaces de aplicaciones...",
+    "activationProcess": "Proceso de activación",
+    "followSteps": "Sigue estos simples pasos para activar tu eSIM y conectarte instantáneamente.",
+    "step1": {
+      "title": "Compra tu plan",
+      "description": "Elige tu destino y plan de datos. Completa tu compra y recibe el código QR instantáneamente."
+    },
+    "step2": {
+      "title": "Acceder a configuraciones del dispositivo",
+      "description": "iOS: Ve a Configuración → Celular → Agregar plan celular\nAndroid: Ve a Configuración → Red e Internet → Red móvil → Agregar operador"
+    },
+    "step3": {
+      "title": "Escanear código QR",
+      "description": "Usa la cámara del dispositivo o galería de fotos para escanear el código QR. Tu teléfono detectará y procesará automáticamente el perfil eSIM."
+    },
+    "step4": {
+      "title": "¡Estás conectado!",
+      "description": "Tu eSIM ahora está activo y listo para usar. Cambia entre tus planes en la configuración del dispositivo en cualquier momento."
+    }
+  },
+  "footer": {
+    "companyDescription": "RoamJet - Tu socio confiable para soluciones eSIM globales. Activación instantánea, cobertura mundial y conectividad segura para viajeros y empresas.",
+    "quickLinks": "Enlaces rápidos",
+    "home": "Inicio",
+    "blog": "Blog",
+    "contactUs": "Contáctanos",
+    "usefulLinks": "Enlaces útiles",
+    "privacyPolicy": "Política de privacidad",
+    "termsOfService": "Términos de servicio",
+    "cookiePolicy": "Política de cookies",
+    "contactUs": "Contáctanos",
+    "contactInfoNotAvailable": "Información de contacto no disponible",
+    "allRightsReserved": "Todos los derechos reservados"
+  },
+  "language": {
+    "select": "Seleccionar idioma",
+    "english": "English",
+    "hebrew": "עברית",
+    "russian": "Русский",
+    "arabic": "العربية",
+    "german": "Deutsch",
+    "french": "Français",
+    "spanish": "Español"
+  }
+}

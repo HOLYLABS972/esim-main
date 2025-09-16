@@ -1,0 +1,102 @@
+{
+  "navbar": {
+    "logo": "RoamJet",
+    "downloadApp": "تحميل التطبيق",
+    "contactUs": "اتصل بنا",
+    "blog": "المدونة",
+    "openMenu": "فتح القائمة الرئيسية",
+    "closeMenu": "إغلاق القائمة"
+  },
+  "hero": {
+    "announcement": "متاح الآن في أكثر من 200 دولة حول العالم.",
+    "stayConnected": "ابق متصلاً",
+    "noMatterWhere": "بغض النظر عن مكان وجودك",
+    "with": "مع",
+    "description": "احصل على بيانات الهاتف المحمول الفورية في أكثر من 200 دولة. لا حاجة لبطاقة SIM مادية. فعّل في أي مكان، في أي وقت مع شبكة eSIM العالمية الموثوقة لدينا.",
+    "downloadApp": "تحميل التطبيق",
+    "learnMore": "اعرف المزيد"
+  },
+  "features": {
+    "title": "تواصل عالمياً",
+    "subtitle": "كل ما تحتاجه للاتصال العالمي",
+    "globalCoverage": {
+      "title": "التغطية العالمية",
+      "description": "ابق متصلاً في أكثر من 200 دولة مع تغطية شبكة eSIM الواسعة لدينا في جميع أنحاء العالم.",
+      "countries": "200+ دولة",
+      "worldwide": "التغطية العالمية"
+    },
+    "instantActivation": {
+      "title": "التفعيل الفوري",
+      "description": "اتصل فوراً مع تفعيل رمز QR الخاص بنا. لا انتظار، لا تأخير.",
+      "readyInSeconds": "✓ جاهز في ثوانٍ"
+    },
+    "securePayment": {
+      "title": "الدفع الآمن",
+      "description": "تشفير SSL 256 بت وخيارات دفع متعددة لأمانك."
+    },
+    "deviceCompatibility": {
+      "title": "توافق الأجهزة",
+      "description": "يعمل مع جميع الهواتف الذكية والأجهزة اللوحية الحديثة التي تدعم تقنية eSIM.",
+      "esimCompatible": "متوافق مع eSIM",
+      "operatingSystem": "Android 12+, iOS 15+"
+    }
+  },
+  "plans": {
+    "title": "نظام التسعير المحمول",
+    "subtitle": "اختر خطة eSIM المثالية لك",
+    "description": "اختر من مجموعة واسعة من خطط البيانات المصممة لكل نوع من المسافرين. من الرحلات القصيرة إلى الإقامات الممتدة، نحن نغطيك.",
+    "loadingPlans": "جاري تحميل الخطط..."
+  },
+  "activation": {
+    "downloads": "التحميلات",
+    "appAvailable": "تطبيقنا متاح لأجهزة iOS و Android.",
+    "downloadOurApp": "حمّل تطبيقنا",
+    "appDescription": "احصل على أقصى استفادة من eSIM الخاص بك مع تطبيقنا المحمول. أدر خططك، تتبع الاستخدام واحصل على الدعم الفوري.",
+    "downloadForIOS": "تحميل لـ iOS",
+    "downloadForAndroid": "تحميل لـ Android",
+    "appLinksSoon": "ستكون روابط متاجر التطبيقات متاحة قريباً.",
+    "loadingAppLinks": "جاري تحميل روابط التطبيقات...",
+    "activationProcess": "عملية التفعيل",
+    "followSteps": "اتبع هذه الخطوات البسيطة لتفعيل eSIM الخاص بك والاتصال فوراً.",
+    "step1": {
+      "title": "اشتر خطتك",
+      "description": "اختر وجهتك وخطة البيانات الخاصة بك. أكمل عملية الشراء واحصل على رمز QR فوراً."
+    },
+    "step2": {
+      "title": "الوصول إلى إعدادات الجهاز",
+      "description": "iOS: اذهب إلى الإعدادات → الخلوية → إضافة خطة خلوية\nAndroid: اذهب إلى الإعدادات → الشبكة والإنترنت → الشبكة المحمولة → إضافة مزود"
+    },
+    "step3": {
+      "title": "امسح رمز QR",
+      "description": "استخدم كاميرا الجهاز أو معرض الصور لمسح رمز QR. سيكتشف هاتفك ويعالج ملف تعريف eSIM تلقائياً."
+    },
+    "step4": {
+      "title": "أنت متصل!",
+      "description": "eSIM الخاص بك الآن نشط وجاهز للاستخدام. انتقل بين خططك في إعدادات الجهاز في أي وقت."
+    }
+  },
+  "footer": {
+    "companyDescription": "RoamJet - شريكك الموثوق لحلول eSIM العالمية. تفعيل فوري، تغطية عالمية واتصال آمن للمسافرين والشركات.",
+    "quickLinks": "الروابط السريعة",
+    "home": "الرئيسية",
+    "blog": "المدونة",
+    "contactUs": "اتصل بنا",
+    "usefulLinks": "روابط مفيدة",
+    "privacyPolicy": "سياسة الخصوصية",
+    "termsOfService": "شروط الخدمة",
+    "cookiePolicy": "سياسة ملفات تعريف الارتباط",
+    "contactUs": "اتصل بنا",
+    "contactInfoNotAvailable": "معلومات الاتصال غير متاحة",
+    "allRightsReserved": "جميع الحقوق محفوظة"
+  },
+  "language": {
+    "select": "اختر اللغة",
+    "english": "English",
+    "hebrew": "עברית",
+    "russian": "Русский",
+    "arabic": "العربية",
+    "german": "Deutsch",
+    "french": "Français",
+    "spanish": "Español"
+  }
+}

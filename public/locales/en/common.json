@@ -1,0 +1,102 @@
+{
+  "navbar": {
+    "logo": "RoamJet",
+    "downloadApp": "Download App",
+    "contactUs": "Contact Us",
+    "blog": "Blog",
+    "openMenu": "Open main menu",
+    "closeMenu": "Close menu"
+  },
+  "hero": {
+    "announcement": "Now available in 200+ countries worldwide.",
+    "stayConnected": "Stay connected",
+    "noMatterWhere": "no matter where you are",
+    "with": "with",
+    "description": "Get instant mobile data in 200+ countries. No physical SIM needed. Activate anywhere, anytime with our reliable global eSIM network.",
+    "downloadApp": "Download App",
+    "learnMore": "Learn more"
+  },
+  "features": {
+    "title": "Connect globally",
+    "subtitle": "Everything you need for global connectivity",
+    "globalCoverage": {
+      "title": "Global Coverage",
+      "description": "Stay connected in 200+ countries with our extensive eSIM network coverage worldwide.",
+      "countries": "200+ Countries",
+      "worldwide": "Worldwide Coverage"
+    },
+    "instantActivation": {
+      "title": "Instant Activation",
+      "description": "Get connected immediately with our QR code activation. No waiting, no delays.",
+      "readyInSeconds": "✓ Ready in seconds"
+    },
+    "securePayment": {
+      "title": "Secure Payment",
+      "description": "256-bit SSL encryption and multiple payment options for your security."
+    },
+    "deviceCompatibility": {
+      "title": "Device Compatibility",
+      "description": "Works with all modern smartphones and tablets that support eSIM technology.",
+      "esimCompatible": "eSIM Compatible",
+      "operatingSystem": "Android 12+, iOS 15+"
+    }
+  },
+  "plans": {
+    "title": "Portable Pricing System",
+    "subtitle": "Choose Your Perfect eSIM Plan",
+    "description": "Select from our wide range of data plans designed for every type of traveler. From short trips to extended stays, we have you covered.",
+    "loadingPlans": "Loading plans..."
+  },
+  "activation": {
+    "downloads": "Downloads",
+    "appAvailable": "Our App Available for both iOS and Android devices.",
+    "downloadOurApp": "Download Our App",
+    "appDescription": "Get the most out of your eSIM with our mobile app. Manage your plans, track usage, and get instant support.",
+    "downloadForIOS": "Download for iOS",
+    "downloadForAndroid": "Download for Android",
+    "appLinksSoon": "App store links will be available soon.",
+    "loadingAppLinks": "Loading app links...",
+    "activationProcess": "Activation Process",
+    "followSteps": "Follow these simple steps to activate your eSIM and get connected instantly.",
+    "step1": {
+      "title": "Purchase Your Plan",
+      "description": "Choose your destination and data plan. Complete your purchase and receive QR code instantly."
+    },
+    "step2": {
+      "title": "Access Device Settings",
+      "description": "iOS: Go to Settings → Cellular → Add Cellular Plan\nAndroid: Go to Settings → Network & Internet → Mobile Network → Add Carrier"
+    },
+    "step3": {
+      "title": "Scan QR Code",
+      "description": "Use your device camera or photo library to scan the QR code. Your phone will automatically detect and process the eSIM profile."
+    },
+    "step4": {
+      "title": "You're Connected!",
+      "description": "Your eSIM is now active and ready to use. Switch between your plans in your device settings anytime."
+    }
+  },
+  "footer": {
+    "companyDescription": "RoamJet - Your trusted partner for global eSIM solutions. Instant activation, worldwide coverage, and secure connectivity for travelers and businesses.",
+    "quickLinks": "Quick Links",
+    "home": "Home",
+    "blog": "Blog",
+    "contactUs": "Contact Us",
+    "usefulLinks": "Useful Links",
+    "privacyPolicy": "Privacy Policy",
+    "termsOfService": "Terms of Service",
+    "cookiePolicy": "Cookie Policy",
+    "contactUs": "Contact Us",
+    "contactInfoNotAvailable": "Contact information not available",
+    "allRightsReserved": "All Rights Reserved"
+  },
+  "language": {
+    "select": "Select Language",
+    "english": "English",
+    "hebrew": "עברית",
+    "russian": "Русский",
+    "arabic": "العربية",
+    "german": "Deutsch",
+    "french": "Français",
+    "spanish": "Español"
+  }
+}

@@ -1,0 +1,102 @@
+{
+  "navbar": {
+    "logo": "RoamJet",
+    "downloadApp": "App herunterladen",
+    "contactUs": "Kontaktieren Sie uns",
+    "blog": "Blog",
+    "openMenu": "Hauptmenü öffnen",
+    "closeMenu": "Menü schließen"
+  },
+  "hero": {
+    "announcement": "Jetzt verfügbar in über 200 Ländern weltweit.",
+    "stayConnected": "Bleiben Sie verbunden",
+    "noMatterWhere": "egal wo Sie sind",
+    "with": "mit",
+    "description": "Erhalten Sie sofortige mobile Daten in über 200 Ländern. Keine physische SIM-Karte erforderlich. Aktivieren Sie überall, jederzeit mit unserem zuverlässigen globalen eSIM-Netzwerk.",
+    "downloadApp": "App herunterladen",
+    "learnMore": "Mehr erfahren"
+  },
+  "features": {
+    "title": "Global verbinden",
+    "subtitle": "Alles was Sie für globale Konnektivität brauchen",
+    "globalCoverage": {
+      "title": "Globale Abdeckung",
+      "description": "Bleiben Sie in über 200 Ländern mit unserer umfangreichen eSIM-Netzwerkabdeckung weltweit verbunden.",
+      "countries": "200+ Länder",
+      "worldwide": "Weltweite Abdeckung"
+    },
+    "instantActivation": {
+      "title": "Sofortige Aktivierung",
+      "description": "Verbinden Sie sich sofort mit unserer QR-Code-Aktivierung. Kein Warten, keine Verzögerungen.",
+      "readyInSeconds": "✓ In Sekunden bereit"
+    },
+    "securePayment": {
+      "title": "Sichere Zahlung",
+      "description": "256-Bit SSL-Verschlüsselung und mehrere Zahlungsoptionen für Ihre Sicherheit."
+    },
+    "deviceCompatibility": {
+      "title": "Gerätekompatibilität",
+      "description": "Funktioniert mit allen modernen Smartphones und Tablets, die eSIM-Technologie unterstützen.",
+      "esimCompatible": "eSIM-kompatibel",
+      "operatingSystem": "Android 12+, iOS 15+"
+    }
+  },
+  "plans": {
+    "title": "Tragbares Preissystem",
+    "subtitle": "Wählen Sie Ihren perfekten eSIM-Plan",
+    "description": "Wählen Sie aus unserem breiten Spektrum von Datenplänen, die für jeden Reisetyp entwickelt wurden. Von kurzen Trips bis zu längeren Aufenthalten - wir haben Sie abgedeckt.",
+    "loadingPlans": "Pläne werden geladen..."
+  },
+  "activation": {
+    "downloads": "Downloads",
+    "appAvailable": "Unsere App ist für iOS- und Android-Geräte verfügbar.",
+    "downloadOurApp": "Laden Sie unsere App herunter",
+    "appDescription": "Holen Sie das Beste aus Ihrem eSIM mit unserer mobilen App heraus. Verwalten Sie Ihre Pläne, verfolgen Sie die Nutzung und erhalten Sie sofortigen Support.",
+    "downloadForIOS": "Für iOS herunterladen",
+    "downloadForAndroid": "Für Android herunterladen",
+    "appLinksSoon": "App Store-Links werden bald verfügbar sein.",
+    "loadingAppLinks": "App-Links werden geladen...",
+    "activationProcess": "Aktivierungsprozess",
+    "followSteps": "Folgen Sie diesen einfachen Schritten, um Ihr eSIM zu aktivieren und sich sofort zu verbinden.",
+    "step1": {
+      "title": "Kaufen Sie Ihren Plan",
+      "description": "Wählen Sie Ihr Reiseziel und Ihren Datenplan. Schließen Sie Ihren Kauf ab und erhalten Sie sofort einen QR-Code."
+    },
+    "step2": {
+      "title": "Auf Geräteeinstellungen zugreifen",
+      "description": "iOS: Gehen Sie zu Einstellungen → Mobilfunk → Mobilfunkplan hinzufügen\nAndroid: Gehen Sie zu Einstellungen → Netzwerk & Internet → Mobilfunknetz → Anbieter hinzufügen"
+    },
+    "step3": {
+      "title": "QR-Code scannen",
+      "description": "Verwenden Sie die Gerätekamera oder Fotogalerie, um den QR-Code zu scannen. Ihr Telefon erkennt und verarbeitet das eSIM-Profil automatisch."
+    },
+    "step4": {
+      "title": "Sie sind verbunden!",
+      "description": "Ihr eSIM ist jetzt aktiv und einsatzbereit. Wechseln Sie jederzeit zwischen Ihren Plänen in den Geräteeinstellungen."
+    }
+  },
+  "footer": {
+    "companyDescription": "RoamJet - Ihr vertrauenswürdiger Partner für globale eSIM-Lösungen. Sofortige Aktivierung, weltweite Abdeckung und sichere Konnektivität für Reisende und Unternehmen.",
+    "quickLinks": "Schnelle Links",
+    "home": "Startseite",
+    "blog": "Blog",
+    "contactUs": "Kontaktieren Sie uns",
+    "usefulLinks": "Nützliche Links",
+    "privacyPolicy": "Datenschutzrichtlinie",
+    "termsOfService": "Nutzungsbedingungen",
+    "cookiePolicy": "Cookie-Richtlinie",
+    "contactUs": "Kontaktieren Sie uns",
+    "contactInfoNotAvailable": "Kontaktinformationen nicht verfügbar",
+    "allRightsReserved": "Alle Rechte vorbehalten"
+  },
+  "language": {
+    "select": "Sprache auswählen",
+    "english": "English",
+    "hebrew": "עברית",
+    "russian": "Русский",
+    "arabic": "العربية",
+    "german": "Deutsch",
+    "french": "Français",
+    "spanish": "Español"
+  }
+}

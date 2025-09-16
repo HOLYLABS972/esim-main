@@ -2,6 +2,7 @@
 
 import { Suspense } from 'react';
 import dynamic from 'next/dynamic';
+import { useI18n } from '../../contexts/I18nContext';
 
 const EsimPlans = dynamic(() => import('../EsimPlans'), {
   loading: () => <div className="animate-pulse">Loading plans...</div>,
@@ -9,6 +10,8 @@ const EsimPlans = dynamic(() => import('../EsimPlans'), {
 });
 
 export default function PlansSection() {
+  const { t } = useI18n();
+  
   return (
     <section id="esim-plans" className="py-16 scroll-mt-20 bg-white relative overflow-hidden">
       <div className="container mx-auto px-4 relative z-10">
@@ -16,15 +19,14 @@ export default function PlansSection() {
         {/* Section Header */}
         <div className="text-center mb-16 max-w-4xl mx-auto">
         <h2 className="text-center text-xl font-semibold text-tufts-blue"> <span>{'{ '}</span>
-          Portable Pricing System
+          {t('plans.title')}
           <span>{' }'}</span>
          </h2>
          <p className="mx-auto mt-12 max-w-4xl text-center text-4xl font-semibold tracking-tight text-eerie-black sm:text-5xl ">
-            Choose Your Perfect eSIM Plan
+            {t('plans.subtitle')}
           </p>
           <p className="text-eerie-black max-w-3xl mx-auto mt-4">
-            Select from our wide range of data plans designed for every type of traveler. 
-            From short trips to extended stays, we have you covered.
+            {t('plans.description')}
           </p>
         </div>
 
@@ -38,7 +40,7 @@ export default function PlansSection() {
                 fontWeight: '400',
                 lineHeight: '160%',
                 letterSpacing: '0px'
-              }}>Loading plans...</p>
+              }}>{t('plans.loadingPlans')}</p>
             </div>
           }>
             <EsimPlans />

@@ -1,0 +1,102 @@
+{
+  "navbar": {
+    "logo": "RoamJet",
+    "downloadApp": "Télécharger l'application",
+    "contactUs": "Nous contacter",
+    "blog": "Blog",
+    "openMenu": "Ouvrir le menu principal",
+    "closeMenu": "Fermer le menu"
+  },
+  "hero": {
+    "announcement": "Maintenant disponible dans plus de 200 pays dans le monde.",
+    "stayConnected": "Restez connecté",
+    "noMatterWhere": "peu importe où vous êtes",
+    "with": "avec",
+    "description": "Obtenez des données mobiles instantanées dans plus de 200 pays. Aucune SIM physique nécessaire. Activez n'importe où, n'importe quand avec notre réseau eSIM mondial fiable.",
+    "downloadApp": "Télécharger l'application",
+    "learnMore": "En savoir plus"
+  },
+  "features": {
+    "title": "Connectez-vous globalement",
+    "subtitle": "Tout ce dont vous avez besoin pour la connectivité mondiale",
+    "globalCoverage": {
+      "title": "Couverture mondiale",
+      "description": "Restez connecté dans plus de 200 pays avec notre vaste couverture réseau eSIM dans le monde entier.",
+      "countries": "200+ pays",
+      "worldwide": "Couverture mondiale"
+    },
+    "instantActivation": {
+      "title": "Activation instantanée",
+      "description": "Connectez-vous immédiatement avec notre activation de code QR. Pas d'attente, pas de délais.",
+      "readyInSeconds": "✓ Prêt en quelques secondes"
+    },
+    "securePayment": {
+      "title": "Paiement sécurisé",
+      "description": "Chiffrement SSL 256 bits et plusieurs options de paiement pour votre sécurité."
+    },
+    "deviceCompatibility": {
+      "title": "Compatibilité des appareils",
+      "description": "Fonctionne avec tous les smartphones et tablettes modernes qui prennent en charge la technologie eSIM.",
+      "esimCompatible": "Compatible eSIM",
+      "operatingSystem": "Android 12+, iOS 15+"
+    }
+  },
+  "plans": {
+    "title": "Système de tarification portable",
+    "subtitle": "Choisissez votre plan eSIM parfait",
+    "description": "Sélectionnez parmi notre large gamme de plans de données conçus pour chaque type de voyageur. Des courts séjours aux séjours prolongés, nous vous couvrons.",
+    "loadingPlans": "Chargement des plans..."
+  },
+  "activation": {
+    "downloads": "Téléchargements",
+    "appAvailable": "Notre application est disponible pour les appareils iOS et Android.",
+    "downloadOurApp": "Téléchargez notre application",
+    "appDescription": "Tirez le meilleur parti de votre eSIM avec notre application mobile. Gérez vos plans, suivez l'utilisation et obtenez un support instantané.",
+    "downloadForIOS": "Télécharger pour iOS",
+    "downloadForAndroid": "Télécharger pour Android",
+    "appLinksSoon": "Les liens des magasins d'applications seront bientôt disponibles.",
+    "loadingAppLinks": "Chargement des liens d'applications...",
+    "activationProcess": "Processus d'activation",
+    "followSteps": "Suivez ces étapes simples pour activer votre eSIM et vous connecter instantanément.",
+    "step1": {
+      "title": "Achetez votre plan",
+      "description": "Choisissez votre destination et votre plan de données. Finalisez votre achat et recevez le code QR instantanément."
+    },
+    "step2": {
+      "title": "Accéder aux paramètres de l'appareil",
+      "description": "iOS : Allez dans Paramètres → Cellulaire → Ajouter un plan cellulaire\nAndroid : Allez dans Paramètres → Réseau et Internet → Réseau mobile → Ajouter un opérateur"
+    },
+    "step3": {
+      "title": "Scanner le code QR",
+      "description": "Utilisez l'appareil photo de l'appareil ou la galerie de photos pour scanner le code QR. Votre téléphone détectera et traitera automatiquement le profil eSIM."
+    },
+    "step4": {
+      "title": "Vous êtes connecté !",
+      "description": "Votre eSIM est maintenant actif et prêt à utiliser. Basculez entre vos plans dans les paramètres de l'appareil à tout moment."
+    }
+  },
+  "footer": {
+    "companyDescription": "RoamJet - Votre partenaire de confiance pour les solutions eSIM mondiales. Activation instantanée, couverture mondiale et connectivité sécurisée pour les voyageurs et les entreprises.",
+    "quickLinks": "Liens rapides",
+    "home": "Accueil",
+    "blog": "Blog",
+    "contactUs": "Nous contacter",
+    "usefulLinks": "Liens utiles",
+    "privacyPolicy": "Politique de confidentialité",
+    "termsOfService": "Conditions d'utilisation",
+    "cookiePolicy": "Politique des cookies",
+    "contactUs": "Nous contacter",
+    "contactInfoNotAvailable": "Informations de contact non disponibles",
+    "allRightsReserved": "Tous droits réservés"
+  },
+  "language": {
+    "select": "Sélectionner la langue",
+    "english": "English",
+    "hebrew": "עברית",
+    "russian": "Русский",
+    "arabic": "العربية",
+    "german": "Deutsch",
+    "french": "Français",
+    "spanish": "Español"
+  }
+}

@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useI18n } from '../../contexts/I18nContext';
 import { getAppStoreLinks } from '../../services/settingsService';
 
 export default function ActivationSection() {
+  const { t } = useI18n();
   const [appStoreLinks, setAppStoreLinks] = useState({ iosUrl: '', androidUrl: '' });
   const [loading, setLoading] = useState(true);
 
@@ -76,11 +78,11 @@ export default function ActivationSection() {
           <div className="text-center mb-16">
             <h2 className="text-center text-xl font-semibold text-alice-blue"> 
               <span>{'{ '}</span>
-              Downloads 
+              {t('activation.downloads')}
               <span>{' }'}</span>
             </h2>
             <p className="mx-auto mt-12 max-w-4xl text-center text-4xl font-semibold tracking-tight text-white sm:text-5xl">
-              Our App Available for both iOS and Android devices.
+              {t('activation.appAvailable')}
             </p>
           </div>
 
@@ -102,16 +104,16 @@ export default function ActivationSection() {
                 {/* App Store Links - Right Side */}
                 <div className="text-center lg:text-left space-y-6">
                   <h3 className="text-3xl font-semibold text-white mb-4">
-                    Download Our App
+                    {t('activation.downloadOurApp')}
                   </h3>
                   <p className="text-white/90 text-lg leading-relaxed mb-8">
-                    Get the most out of your eSIM with our mobile app. Manage your plans, track usage, and get instant support.
+                    {t('activation.appDescription')}
                   </p>
                   
                   {/* App Store Buttons */}
                   <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                     {loading ? (
-                      <div className="text-white">Loading app links...</div>
+                      <div className="text-white">{t('activation.loadingAppLinks')}</div>
                     ) : (
                       <>
                         {appStoreLinks.iosUrl && (
@@ -126,7 +128,7 @@ export default function ActivationSection() {
                               alt="iOS" 
                               className="w-5 h-5 mr-2"
                             />
-                            Download for iOS
+                            {t('activation.downloadForIOS')}
                           </a>
                         )}
                         {appStoreLinks.androidUrl && (
@@ -141,11 +143,11 @@ export default function ActivationSection() {
                               alt="Android" 
                               className="w-5 h-5 mr-2"
                             />
-                            Download for Android
+                            {t('activation.downloadForAndroid')}
                           </a>
                         )}
                         {!appStoreLinks.iosUrl && !appStoreLinks.androidUrl && (
-                          <div className="text-white/80">App store links will be available soon.</div>
+                          <div className="text-white/80">{t('activation.appLinksSoon')}</div>
                         )}
                       </>
                     )}
@@ -157,7 +159,7 @@ export default function ActivationSection() {
         </div>
       <div className="mx-auto max-w-7xl  pb-12">
        <h2 className="text-center text-xl font-semibold text-alice-blue"> <span>{'{ '}</span>
-            Activation Process 
+            {t('activation.activationProcess')}
           <span>{' }'}</span>
          </h2>
           <div className="relative isolate overflow-hidden bg-eerie-black px-6 pt-8  sm:rounded-3xl sm:px-16 md:pt-12 lg:flex lg:gap-x-20 lg:px-24 lg:pt-0">
@@ -166,7 +168,7 @@ export default function ActivationSection() {
             
             <div className="mx-auto max-w-md text-center lg:mx-0 lg:flex-auto lg:py-16 lg:text-left">
               <h3 className="mt-6 text-xl text-pretty text-white">
-                Follow these simple steps to activate your eSIM and get connected instantly. 
+                {t('activation.followSteps')}
               </h3>
               
               {/* Step-by-step Instructions */}
@@ -179,8 +181,8 @@ export default function ActivationSection() {
                     </div>
                   </div>
                   <div>
-                    <h3 className="text-xl font-semibold text-white mb-2">Purchase Your Plan</h3>
-                    <p className="text-gray-300">Choose your destination and data plan. Complete your purchase and receive QR code instantly.</p>
+                    <h3 className="text-xl font-semibold text-white mb-2">{t('activation.step1.title')}</h3>
+                    <p className="text-gray-300">{t('activation.step1.description')}</p>
                   </div>
                 </div>
 
@@ -192,10 +194,14 @@ export default function ActivationSection() {
                     </div>
                   </div>
                   <div>
-                    <h3 className="text-xl font-semibold text-white mb-2">Access Device Settings</h3>
+                    <h3 className="text-xl font-semibold text-white mb-2">{t('activation.step2.title')}</h3>
                     <p className="text-gray-300">
-                      <strong className="text-white">iOS:</strong> Go to Settings → Cellular → Add Cellular Plan<br />
-                      <strong className="text-white">Android:</strong> Go to Settings → Network & Internet → Mobile Network → Add Carrier
+                      {t('activation.step2.description').split('\n').map((line, index) => (
+                        <span key={index}>
+                          {line}
+                          {index < t('activation.step2.description').split('\n').length - 1 && <br />}
+                        </span>
+                      ))}
                     </p>
                   </div>
                 </div>
@@ -208,8 +214,8 @@ export default function ActivationSection() {
                     </div>
                   </div>
                   <div>
-                    <h3 className="text-xl font-semibold text-white mb-2">Scan QR Code</h3>
-                    <p className="text-gray-300">Use your device camera or photo library to scan the QR code. Your phone will automatically detect and process the eSIM profile.</p>
+                    <h3 className="text-xl font-semibold text-white mb-2">{t('activation.step3.title')}</h3>
+                    <p className="text-gray-300">{t('activation.step3.description')}</p>
                   </div>
                 </div>
 
@@ -221,8 +227,8 @@ export default function ActivationSection() {
                     </div>
                   </div>
                   <div>
-                    <h3 className="text-xl font-semibold text-white mb-2">You're Connected!</h3>
-                    <p className="text-gray-300">Your eSIM is now active and ready to use. Switch between your plans in your device settings anytime.</p>
+                    <h3 className="text-xl font-semibold text-white mb-2">{t('activation.step4.title')}</h3>
+                    <p className="text-gray-300">{t('activation.step4.description')}</p>
                   </div>
                 </div>
               </div>

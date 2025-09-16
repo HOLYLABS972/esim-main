@@ -3,8 +3,11 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { createPortal } from 'react-dom';
+import { useI18n } from '../contexts/I18nContext';
+import LanguageSelector from './LanguageSelector';
 
 const Navbar = () => {
+  const { t } = useI18n();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
@@ -53,17 +56,18 @@ const Navbar = () => {
               alt="Roam Jet Plans Logo"
               className="h-8 w-auto"
             />
-            <span className="ml-1 text-xl font-bold text-gray-900">RoamJet</span>
+            <span className="ml-1 text-xl font-bold text-gray-900">{t('navbar.logo')}</span>
           </Link>
         </div>
         
-        <div className="flex lg:hidden">
+        <div className="flex lg:hidden items-center space-x-2">
+          <LanguageSelector />
           <button
             type="button"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             className="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-gray-700"
           >
-            <span className="sr-only">Open main menu</span>
+            <span className="sr-only">{t('navbar.openMenu')}</span>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true" className="size-6">
               <path d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
@@ -72,18 +76,20 @@ const Navbar = () => {
         
         <div className="hidden lg:flex lg:gap-x-12">
           <Link href="/#how-it-works" className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
-            Download App
+            {t('navbar.downloadApp')}
           </Link>
           <Link href="/contact" className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
-            Contact Us
+            {t('navbar.contactUs')}
           </Link>
           <Link href="/blog" className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
-            Blog
+            {t('navbar.blog')}
           </Link>
         </div>
         
-        {/* Right side spacer */}
-        <div className="hidden lg:flex lg:flex-1 lg:justify-end"></div>
+        {/* Right side with language selector */}
+        <div className="hidden lg:flex lg:flex-1 lg:justify-end">
+          <LanguageSelector />
+        </div>
       </nav>
       </div>
 
@@ -104,14 +110,14 @@ const Navbar = () => {
                   alt="RoamJet Plans Logo"
                   className="h-8 w-auto"
                 />
-                <span className="ml-2 text-xl font-bold text-gray-900">RoamJet</span>
+                <span className="ml-2 text-xl font-bold text-gray-900">{t('navbar.logo')}</span>
               </Link>
               <button
                 type="button"
                 onClick={() => setIsMenuOpen(false)}
                 className="-m-2.5 rounded-md p-2.5 text-gray-700 hover:bg-gray-100 transition-colors"
               >
-                <span className="sr-only">Close menu</span>
+                <span className="sr-only">{t('navbar.closeMenu')}</span>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true" className="size-6">
                   <path d="M6 18 18 6M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
@@ -121,6 +127,11 @@ const Navbar = () => {
             {/* Centered menu items */}
             <div className="flex flex-col items-center justify-center min-h-[calc(100vh-120px)] p-6">
               <div className="space-y-8 text-center">
+                {/* Language Selector */}
+                <div className="mb-4">
+                  <LanguageSelector />
+                </div>
+                
                 {/* Main Navigation Group */}
                 <div className="p-4 w-full max-w-xs">
                   <Link
@@ -128,21 +139,21 @@ const Navbar = () => {
                     className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    Download App
+                    {t('navbar.downloadApp')}
                   </Link>
                   <Link
                     href="/contact"
                     className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    Contact Us
+                    {t('navbar.contactUs')}
                   </Link>
                   <Link
                     href="/blog"
                     className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    Blog
+                    {t('navbar.blog')}
                   </Link>
                 </div>
               </div>

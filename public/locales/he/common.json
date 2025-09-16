@@ -1,0 +1,102 @@
+{
+  "navbar": {
+    "logo": "RoamJet",
+    "downloadApp": "הורד אפליקציה",
+    "contactUs": "צור קשר",
+    "blog": "בלוג",
+    "openMenu": "פתח תפריט ראשי",
+    "closeMenu": "סגור תפריט"
+  },
+  "hero": {
+    "announcement": "כעת זמין ביותר מ-200 מדינות ברחבי העולם.",
+    "stayConnected": "הישאר מחובר",
+    "noMatterWhere": "לא משנה איפה אתה",
+    "with": "עם",
+    "description": "קבל נתונים ניידים מיידיים ביותר מ-200 מדינות. אין צורך בסים פיזי. הפעל בכל מקום, בכל זמן עם רשת ה-eSIM הגלובלית האמינה שלנו.",
+    "downloadApp": "הורד אפליקציה",
+    "learnMore": "למד עוד"
+  },
+  "features": {
+    "title": "התחבר גלובלית",
+    "subtitle": "כל מה שאתה צריך לחיבור גלובלי",
+    "globalCoverage": {
+      "title": "כיסוי גלובלי",
+      "description": "הישאר מחובר ביותר מ-200 מדינות עם כיסוי רשת ה-eSIM הנרחב שלנו ברחבי העולם.",
+      "countries": "200+ מדינות",
+      "worldwide": "כיסוי עולמי"
+    },
+    "instantActivation": {
+      "title": "הפעלה מיידית",
+      "description": "התחבר מיד עם הפעלת קוד QR שלנו. ללא המתנה, ללא עיכובים.",
+      "readyInSeconds": "✓ מוכן תוך שניות"
+    },
+    "securePayment": {
+      "title": "תשלום מאובטח",
+      "description": "הצפנת SSL של 256 סיביות ואפשרויות תשלום מרובות לביטחונך."
+    },
+    "deviceCompatibility": {
+      "title": "תאימות מכשירים",
+      "description": "עובד עם כל הסמארטפונים והטאבלטים המודרניים התומכים בטכנולוגיית eSIM.",
+      "esimCompatible": "תואם eSIM",
+      "operatingSystem": "Android 12+, iOS 15+"
+    }
+  },
+  "plans": {
+    "title": "מערכת תמחור ניידת",
+    "subtitle": "בחר את תוכנית ה-eSIM המושלמת שלך",
+    "description": "בחר מתוך מגוון רחב של תוכניות נתונים המיועדות לכל סוג של מטייל. מטיולים קצרים ועד שהיות ממושכות, אנחנו מכסים אותך.",
+    "loadingPlans": "טוען תוכניות..."
+  },
+  "activation": {
+    "downloads": "הורדות",
+    "appAvailable": "האפליקציה שלנו זמינה למכשירי iOS ו-Android.",
+    "downloadOurApp": "הורד את האפליקציה שלנו",
+    "appDescription": "השתמש במלוא הפוטנציאל של ה-eSIM שלך עם האפליקציה הניידת שלנו. נהל את התוכניות שלך, עקוב אחר השימוש וקבל תמיכה מיידית.",
+    "downloadForIOS": "הורד עבור iOS",
+    "downloadForAndroid": "הורד עבור Android",
+    "appLinksSoon": "קישורי חנות האפליקציות יהיו זמינים בקרוב.",
+    "loadingAppLinks": "טוען קישורי אפליקציות...",
+    "activationProcess": "תהליך הפעלה",
+    "followSteps": "עקוב אחר השלבים הפשוטים הבאים כדי להפעיל את ה-eSIM שלך ולהתחבר מיד.",
+    "step1": {
+      "title": "קנה את התוכנית שלך",
+      "description": "בחר את היעד ותוכנית הנתונים שלך. השלם את הרכישה וקבל קוד QR מיידית."
+    },
+    "step2": {
+      "title": "גש להגדרות המכשיר",
+      "description": "iOS: עבור להגדרות → סלולרי → הוסף תוכנית סלולרית\nAndroid: עבור להגדרות → רשת ואינטרנט → רשת ניידת → הוסף ספק"
+    },
+    "step3": {
+      "title": "סרוק קוד QR",
+      "description": "השתמש במצלמת המכשיר או בגלריית התמונות כדי לסרוק את קוד ה-QR. הטלפון שלך יזהה ויעבד אוטומטית את פרופיל ה-eSIM."
+    },
+    "step4": {
+      "title": "אתה מחובר!",
+      "description": "ה-eSIM שלך כעת פעיל ומוכן לשימוש. החלף בין התוכניות שלך בהגדרות המכשיר בכל עת."
+    }
+  },
+  "footer": {
+    "companyDescription": "RoamJet - השותף המהימן שלך לפתרונות eSIM גלובליים. הפעלה מיידית, כיסוי עולמי וחיבור מאובטח למטיילים ועסקים.",
+    "quickLinks": "קישורים מהירים",
+    "home": "בית",
+    "blog": "בלוג",
+    "contactUs": "צור קשר",
+    "usefulLinks": "קישורים שימושיים",
+    "privacyPolicy": "מדיניות פרטיות",
+    "termsOfService": "תנאי שירות",
+    "cookiePolicy": "מדיניות עוגיות",
+    "contactUs": "צור קשר",
+    "contactInfoNotAvailable": "מידע יצירת קשר לא זמין",
+    "allRightsReserved": "כל הזכויות שמורות"
+  },
+  "language": {
+    "select": "בחר שפה",
+    "english": "English",
+    "hebrew": "עברית",
+    "russian": "Русский",
+    "arabic": "العربية",
+    "german": "Deutsch",
+    "french": "Français",
+    "spanish": "Español"
+  }
+}
