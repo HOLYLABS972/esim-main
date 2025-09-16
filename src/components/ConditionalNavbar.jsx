@@ -34,6 +34,11 @@ const ConditionalNavbar = () => {
     );
   }
   
+  // Hide language selector on dashboard page
+  if (pathname === '/dashboard') {
+    return <Navbar hideLanguageSelector={true} />;
+  }
+  
   return <Navbar />;
 };
 

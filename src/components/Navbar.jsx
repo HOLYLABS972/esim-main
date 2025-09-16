@@ -7,7 +7,7 @@ import { useI18n } from '../contexts/I18nContext';
 import { useAuth } from '../contexts/AuthContext';
 import LanguageSelector from './LanguageSelector';
 
-const Navbar = () => {
+const Navbar = ({ hideLanguageSelector = false }) => {
   const { t } = useI18n();
   const { currentUser, logout } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -72,7 +72,7 @@ const Navbar = () => {
         </div>
         
         <div className="flex lg:hidden items-center space-x-2">
-          <LanguageSelector />
+          {!hideLanguageSelector && <LanguageSelector />}
           <button
             type="button"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -116,7 +116,7 @@ const Navbar = () => {
         
         {/* Right side with language selector */}
         <div className="hidden lg:flex lg:flex-1 lg:justify-end">
-          <LanguageSelector />
+          {!hideLanguageSelector && <LanguageSelector />}
         </div>
       </nav>
       </div>
@@ -156,9 +156,11 @@ const Navbar = () => {
             <div className="flex flex-col items-center justify-center min-h-[calc(100vh-120px)] p-6">
               <div className="space-y-8 text-center">
                 {/* Language Selector */}
-                <div className="mb-4">
-                  <LanguageSelector />
-                </div>
+                {!hideLanguageSelector && (
+                  <div className="mb-4">
+                    <LanguageSelector />
+                  </div>
+                )}
                 
                 {/* Main Navigation Group */}
                 <div className="p-4 w-full max-w-xs">
