@@ -4,24 +4,36 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { MapPin, Mail, Phone, Facebook, Twitter, Instagram, Linkedin, Youtube } from 'lucide-react';
+import { usePathname } from 'next/navigation';
+import { useI18n } from '../contexts/I18nContext';
 import { getSocialMediaLinks, getContactInfo } from '../services/settingsService';
 
 const Footer = () => {
+  const pathname = usePathname();
+  const { t } = useI18n();
   const currentYear = new Date().getFullYear();
   const [socialMedia, setSocialMedia] = useState({});
   const [contactInfo, setContactInfo] = useState({});
   const [loading, setLoading] = useState(true);
 
+  // Check if we're on a language-specific page
+  const isLanguagePage = ['/hebrew', '/arabic', '/russian', '/german', '/french', '/spanish'].includes(pathname);
+  
+  // Use translations only on language-specific pages, otherwise use English
+  const getText = (key, englishText) => {
+    return isLanguagePage ? t(key, englishText) : englishText;
+  };
+
   const quickLinks = [
-    { name: 'Home', path: '/' },
-    { name: 'Blog', path: '/blog' },
-    { name: 'Contact Us', path: '/contact' }
+    { name: getText('footer.home', 'Home'), path: '/' },
+    { name: getText('footer.blog', 'Blog'), path: '/blog' },
+    { name: getText('footer.contactUs', 'Contact Us'), path: '/contact' }
   ];
 
   const usefulLinks = [
-    { name: 'Privacy Policy', path: '/privacy-policy' },
-    { name: 'Terms of Service', path: '/terms-of-service' },
-    { name: 'Cookie Policy', path: '/cookie-policy' }
+    { name: getText('footer.privacyPolicy', 'Privacy Policy'), path: '/privacy-policy' },
+    { name: getText('footer.termsOfService', 'Terms of Service'), path: '/terms-of-service' },
+    { name: getText('footer.cookiePolicy', 'Cookie Policy'), path: '/cookie-policy' }
   ];
 
   // Load settings data
@@ -84,10 +96,10 @@ const Footer = () => {
                     e.target.nextSibling.style.display = 'inline';
                   }}
                 />
-                <span className="text-2xl font-bold text-eerie-black ml-2">RoamJet</span>
+                <span className="text-2xl font-bold text-eerie-black ml-2">{getText('footer.brandName', 'RoamJet')}</span>
               </Link>
               <p className="footer-item__desc text-eerie-black mb-6 leading-relaxed">
-                Your trusted partner for global eSIM connectivity. Stay connected worldwide with our reliable data plans.
+                {getText('footer.companyDescription', 'Your trusted partner for global eSIM connectivity. Stay connected worldwide with our reliable data plans.')}
               </p>
               {socialLinks.length > 0 && (
                 <ul className="social-list flex space-x-4">
@@ -118,7 +130,7 @@ const Footer = () => {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="footer-item"
             >
-              <h5 className="footer-item__title text-xl font-semibold mb-6">Quick Links</h5>
+              <h5 className="footer-item__title text-xl font-semibold mb-6">{getText('footer.quickLinks', 'Quick Links')}</h5>
               <ul className="footer-menu space-y-3">
                 {quickLinks.map((link, index) => (
                   <li key={index} className="footer-menu__item">
@@ -140,7 +152,7 @@ const Footer = () => {
               transition={{ duration: 0.6, delay: 0.3 }}
               className="footer-item"
             >
-              <h5 className="footer-item__title text-xl font-semibold mb-6">Useful Links</h5>
+              <h5 className="footer-item__title text-xl font-semibold mb-6">{getText('footer.usefulLinks', 'Useful Links')}</h5>
               <ul className="footer-menu space-y-3">
                 {usefulLinks.map((link, index) => (
                   <li key={index} className="footer-menu__item">
@@ -162,7 +174,7 @@ const Footer = () => {
               transition={{ duration: 0.6, delay: 0.4 }}
               className="footer-item"
             >
-              <h5 className="footer-item__title text-xl font-semibold mb-6">Contact Us</h5>
+              <h5 className="footer-item__title text-xl font-semibold mb-6">{getText('footer.contactUs', 'Contact Us')}</h5>
               <ul className="footer-contact-menu space-y-4">
                 {/* Address - only show if address is provided */}
                 {contactInfo.address && contactInfo.address.trim() !== '' && (
@@ -216,7 +228,7 @@ const Footer = () => {
                 {!contactInfo.address && !contactInfo.email && !contactInfo.phone && !loading && (
                   <li className="footer-contact-menu__item">
                     <p className="footer-contact__desc text-gray-500 italic">
-                      Contact information not available
+                      {getText('footer.contactInfoNotAvailable', 'Contact information not available')}
                     </p>
                   </li>
                 )}
@@ -231,8 +243,8 @@ const Footer = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <div className="bottom-footer-text text-eerie-black">
-              &copy; {currentYear} <Link href="/" className="text-cobalt-blue hover:text-cobalt-blue transition-colors duration-200">RoamJet</Link>. 
-              All rights reserved.
+              &copy; {currentYear} <Link href="/" className="text-cobalt-blue hover:text-cobalt-blue transition-colors duration-200">{getText('footer.brandName', 'RoamJet')}</Link>. 
+              {getText('footer.allRightsReserved', 'All rights reserved.')}
             </div>
           </div>
         </div>
