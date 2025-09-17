@@ -66,14 +66,24 @@ import AdminEsimManagement from './AdminEsimManagement';
 
 // Helper function to get flag emoji from country code
 const getFlagEmoji = (countryCode) => {
-  if (!countryCode || countryCode.length !== 2) return null;
+  if (!countryCode || countryCode.length !== 2) return '🌍';
   
-  const codePoints = countryCode
-    .toUpperCase()
-    .split('')
-    .map(char => 127397 + char.charCodeAt());
+  // Handle special cases like PT-MA, multi-region codes, etc.
+  if (countryCode.includes('-') || countryCode.length > 2) {
+    return '🌍';
+  }
   
-  return String.fromCodePoint(...codePoints);
+  try {
+    const codePoints = countryCode
+      .toUpperCase()
+      .split('')
+      .map(char => 127397 + char.charCodeAt());
+    
+    return String.fromCodePoint(...codePoints);
+  } catch (error) {
+    console.warn(`Invalid country code: ${countryCode}`, error);
+    return '🌍';
+  }
 };
 
 const AdminDashboard = () => {
@@ -2815,14 +2825,22 @@ const AdminDashboard = () => {
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="flex flex-wrap gap-1">
-                                  {(plan.country_codes || plan.country_ids || []).slice(0, 3).map((code, index) => (
-                                    <span key={index} className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                      {getFlagEmoji(code) || code}
-                                    </span>
-                                  ))}
-                                  {(plan.country_codes || plan.country_ids || []).length > 3 && (
+                                  {(plan.country_codes || plan.country_ids || []).length > 0 ? (
+                                    <>
+                                      {(plan.country_codes || plan.country_ids || []).slice(0, 3).map((code, index) => (
+                                        <span key={index} className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                          {getFlagEmoji(code)}
+                                        </span>
+                                      ))}
+                                      {(plan.country_codes || plan.country_ids || []).length > 3 && (
+                                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                          +{(plan.country_codes || plan.country_ids || []).length - 3}
+                                        </span>
+                                      )}
+                                    </>
+                                  ) : (
                                     <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                      +{(plan.country_codes || plan.country_ids || []).length - 3}
+                                      🌍
                                     </span>
                                   )}
                                 </div>

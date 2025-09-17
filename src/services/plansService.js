@@ -8,14 +8,24 @@ import { db } from '../firebase/config';
 
 // Helper function to get flag emoji from country code
 const getFlagEmoji = (countryCode) => {
-  if (!countryCode || countryCode.length !== 2) return null;
+  if (!countryCode || countryCode.length !== 2) return '🌍';
   
-  const codePoints = countryCode
-    .toUpperCase()
-    .split('')
-    .map(char => 127397 + char.charCodeAt());
+  // Handle special cases like PT-MA, multi-region codes, etc.
+  if (countryCode.includes('-') || countryCode.length > 2) {
+    return '🌍';
+  }
   
-  return String.fromCodePoint(...codePoints);
+  try {
+    const codePoints = countryCode
+      .toUpperCase()
+      .split('')
+      .map(char => 127397 + char.charCodeAt());
+    
+    return String.fromCodePoint(...codePoints);
+  } catch (error) {
+    console.warn(`Invalid country code: ${countryCode}`, error);
+    return '🌍';
+  }
 };
 
 // Get all plans from Firebase (only enabled plans)

@@ -60,8 +60,15 @@ const PlanCard = ({ plan, isSelected, onClick, index, hasReferralDiscount }) => 
               <div className="flex items-center space-x-1 mt-1">
                 <span className="text-lg">
                   {plan.country_codes.map(code => {
-                    const codePoints = code.toUpperCase().split('').map(char => 127397 + char.charCodeAt());
-                    return String.fromCodePoint(...codePoints);
+                    if (!code || code.length !== 2 || code.includes('-')) {
+                      return '🌍';
+                    }
+                    try {
+                      const codePoints = code.toUpperCase().split('').map(char => 127397 + char.charCodeAt());
+                      return String.fromCodePoint(...codePoints);
+                    } catch (error) {
+                      return '🌍';
+                    }
                   }).join(' ')}
                 </span>
                 <span className="text-xs text-gray-500">
