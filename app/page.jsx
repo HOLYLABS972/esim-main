@@ -14,11 +14,11 @@ export default function HomePage() {
         {/* Hero Section */}
         <HeroSection />
 
-        {/* Features Section */}
-        <FeaturesSection />
-
         {/* Plans Section */}
         <PlansSection />
+
+        {/* Features Section */}
+        <FeaturesSection />
 
         {/* How It Works & Mobile Apps Section (Combined) */}
         <ActivationSection />
