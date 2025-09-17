@@ -39,7 +39,10 @@ const ConditionalNavbar = () => {
     return <Navbar hideLanguageSelector={true} />;
   }
   
-  return <Navbar />;
+  // Hide back button on landing page (root route)
+  const isLandingPage = pathname === '/';
+  
+  return <Navbar hideBackButton={isLandingPage} />;
 };
 
 export default ConditionalNavbar;

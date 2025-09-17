@@ -89,6 +89,7 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [syncStatus, setSyncStatus] = useState('Ready to sync data from Airalo API');
+  const [rawApiData, setRawApiData] = useState(null);
 
   
   // Countries Management
@@ -1490,18 +1491,35 @@ const AdminDashboard = () => {
     }
   };
 
+
   const syncAllDataFromAiralo = async () => {
     try {
       setLoading(true);
+      setRawApiData(null);
       
       if (!airaloClientId.trim()) {
         toast.error('Please configure Airalo Client ID first');
         return;
       }
 
-      setSyncStatus('Syncing all data via Firebase Functions...');
+      setSyncStatus('Syncing all data and fetching raw response...');
       
-      // Use Next.js API route to sync ALL data
+      // First, get raw response data for display
+      console.log('🧪 Fetching raw API response...');
+      const rawResponse = await fetch('/api/test-airalo', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      const rawResult = await rawResponse.json();
+      
+      if (rawResult.success) {
+        setRawApiData(rawResult);
+        console.log(`✅ Raw response fetched: ${rawResult.analysis?.totalCountries || 0} countries found`);
+      }
+      
+      // Then sync the data
       console.log('🔄 Starting to sync all data via Next.js API...');
       const response = await fetch('/api/sync-airalo', {
         method: 'POST',
@@ -2089,6 +2107,9 @@ const AdminDashboard = () => {
                       <Globe className="w-8 h-8 text-green-600 mb-2" />
                       <p className="font-medium">Manage Countries</p>
                       <p className="text-sm text-gray-600">View and manage country plans</p>
+                      <p className="text-xs text-green-600 font-medium mt-1">
+                        {countries.length} countries loaded
+                      </p>
                     </button>
                     <button
                       onClick={() => setActiveTab('referral-codes')}
@@ -2120,14 +2141,25 @@ const AdminDashboard = () => {
                       </div>
                     </div>
                     <div className="space-y-4">
-                      <button
-                        onClick={syncAllDataFromAiralo}
-                        disabled={loading}
-                        className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:from-gray-400 disabled:to-gray-500 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 flex items-center"
-                      >
-                        {loading ? <RefreshCw className="w-5 h-5 mr-2 animate-spin" /> : <Download className="w-5 h-5 mr-2" />}
-                        Sync All Data from Airalo API
-                      </button>
+                      <div className="space-y-4">
+                        <button
+                          onClick={syncAllDataFromAiralo}
+                          disabled={loading}
+                          className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:from-gray-400 disabled:to-gray-500 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 flex items-center"
+                        >
+                          {loading ? <RefreshCw className="w-5 h-5 mr-2 animate-spin" /> : <Download className="w-5 h-5 mr-2" />}
+                          Sync All Data from Airalo API
+                        </button>
+                      </div>
+                      
+                      {rawApiData && (
+                        <div className="mt-6 bg-gray-900 text-green-400 p-4 rounded-lg overflow-auto max-h-96">
+                          <h4 className="text-white font-semibold mb-2">Raw API Response:</h4>
+                          <pre className="text-xs whitespace-pre-wrap">
+                            {JSON.stringify(rawApiData, null, 2)}
+                          </pre>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -2247,6 +2279,7 @@ const AdminDashboard = () => {
                     </div>
                   </div>
                 </div>
+
 
                 {/* Add spacing after the section */}
                 <div className="h-8"></div>

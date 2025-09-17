@@ -105,31 +105,57 @@ export async function POST(request) {
     
     let totalSynced = { countries: 0, packages: 0 };
     
-    // Fetch and sync packages (which include country data)
+    // Fetch and sync packages (which include country data) with pagination
     try {
-      console.log('📱 Fetching packages from Airalo API...');
-      const packagesResponse = await fetch(`${baseUrl}/v2/packages`, {
-        headers
-      });
+      console.log('📱 Fetching packages from Airalo API with pagination...');
       
-      if (!packagesResponse.ok) {
-        throw new Error(`Failed to fetch packages: ${packagesResponse.statusText}`);
-      }
+      // Function to fetch all pages
+      const fetchAllPages = async () => {
+        let allPlans = [];
+        let currentPage = 1;
+        let hasNextPage = true;
+        
+        while (hasNextPage) {
+          console.log(`📱 Fetching page ${currentPage}...`);
+          
+          const packagesResponse = await fetch(`${baseUrl}/v2/packages?page=${currentPage}`, {
+            headers
+          });
+          
+          if (!packagesResponse.ok) {
+            throw new Error(`Failed to fetch packages page ${currentPage}: ${packagesResponse.statusText}`);
+          }
+          
+          const packagesData = await packagesResponse.json();
+          console.log(`📱 Page ${currentPage} - Data length:`, packagesData.data?.length);
+          console.log(`📱 Page ${currentPage} - Pagination links:`, packagesData.links);
+          
+          if (packagesData.data && Array.isArray(packagesData.data)) {
+            allPlans = allPlans.concat(packagesData.data);
+          }
+          
+          // Check if there's a next page
+          hasNextPage = packagesData.links && packagesData.links.next;
+          currentPage++;
+          
+          // Safety check to prevent infinite loops
+          if (currentPage > 50) {
+            console.log('⚠️ Reached maximum page limit (50), stopping pagination');
+            break;
+          }
+        }
+        
+        console.log(`📱 Total plans fetched from all pages: ${allPlans.length}`);
+        return allPlans;
+      };
       
-      const packagesData = await packagesResponse.json();
-      console.log('📱 Raw API response structure:', Object.keys(packagesData));
-      console.log('📱 Data type:', typeof packagesData.data);
-      console.log('📱 Data length:', packagesData.data?.length);
+      const packagesData = await fetchAllPages();
+      console.log('📱 Raw API response structure:', Object.keys(packagesData[0] || {}));
+      console.log('📱 Data type:', typeof packagesData);
+      console.log('📱 Total data length:', packagesData.length);
       
-      // The API might return different structures, let's handle both
-      let plans = [];
-      if (packagesData.data && Array.isArray(packagesData.data)) {
-        plans = packagesData.data;
-      } else if (packagesData.plans && Array.isArray(packagesData.plans)) {
-        plans = packagesData.plans;
-      } else if (Array.isArray(packagesData)) {
-        plans = packagesData;
-      }
+      // packagesData is now an array of all plans from all pages
+      const plans = packagesData;
       
       console.log('📱 Processed plans count:', plans.length);
       
