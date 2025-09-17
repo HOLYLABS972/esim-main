@@ -24,8 +24,6 @@ export default function GermanPage() {
         <ActivationSection />
       </main>
       
-      {/* Promo Bottom Sheet */}
-      <PromoBottomSheet />
     </div>
   )
 }

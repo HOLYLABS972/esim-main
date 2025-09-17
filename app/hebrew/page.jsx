@@ -24,8 +24,6 @@ export default function HebrewPage() {
         <ActivationSection />
       </main>
       
-      {/* Promo Bottom Sheet */}
-      <PromoBottomSheet />
     </div>
   )
 }

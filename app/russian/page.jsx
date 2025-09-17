@@ -24,8 +24,6 @@ export default function RussianPage() {
         <ActivationSection />
       </main>
       
-      {/* Promo Bottom Sheet */}
-      <PromoBottomSheet />
     </div>
   )
 }
