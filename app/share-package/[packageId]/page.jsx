@@ -156,16 +156,27 @@ const SharePackagePage = () => {
   };
 
   const formatPrice = (price, currency = 'USD') => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency
-    }).format(price);
+    // Handle cases where price might already be a string with currency symbol
+    let numericPrice = price;
+    if (typeof price === 'string') {
+      // Remove any existing currency symbols and parse as number
+      numericPrice = parseFloat(price.replace(/[$€£¥]/g, '')) || 0;
+    }
+    
+    // Return just the number without currency symbol
+    return numericPrice.toFixed(2);
   };
 
   const formatData = (data, unit = 'GB') => {
     if (data === 'Unlimited' || data === -1) {
       return 'Unlimited';
     }
+    
+    // Handle cases where data might already contain the unit
+    if (typeof data === 'string' && data.includes(unit)) {
+      return data; // Return as-is if unit is already included
+    }
+    
     return `${data} ${unit}`;
   };
 
