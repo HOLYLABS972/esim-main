@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Wifi, Globe, Download, Star, Check, DollarSign, SortAsc, Smartphone } from 'lucide-react';
+import { Wifi, Globe, Download, Star, Check, DollarSign, SortAsc, Smartphone, CreditCard } from 'lucide-react';
 import BottomSheet from './BottomSheet';
 import { useAuth } from '../contexts/AuthContext';
 import { useRouter } from 'next/navigation';
@@ -43,9 +43,33 @@ const PlanCard = ({ plan, isSelected, onClick, index, hasReferralDiscount }) => 
 
       {/* Plan Header */}
       <div className="flex items-start justify-between mb-3">
-        <div>
-          <h3 className="font-semibold text-gray-900 text-lg">{plan.name}</h3>
-          <p className="text-sm text-gray-600">{plan.description}</p>
+        <div className="flex items-start space-x-4">
+          <div className="flex-shrink-0 bg-blue-100 p-3 rounded-xl">
+            <svg 
+              className="w-8 h-8 text-blue-600" 
+              fill="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zM4 6h16v12H4V6zm2 3h4v2H6V9zm6 0h4v2h-4V9zm-6 4h4v2H6v-2zm6 0h4v2h-4v-2z"/>
+            </svg>
+          </div>
+          <div>
+            <h3 className="font-semibold text-gray-900 text-lg">{plan.name}</h3>
+            <p className="text-sm text-gray-600">{plan.description}</p>
+            {plan.country_codes && plan.country_codes.length > 0 && (
+              <div className="flex items-center space-x-1 mt-1">
+                <span className="text-lg">
+                  {plan.country_codes.map(code => {
+                    const codePoints = code.toUpperCase().split('').map(char => 127397 + char.charCodeAt());
+                    return String.fromCodePoint(...codePoints);
+                  }).join(' ')}
+                </span>
+                <span className="text-xs text-gray-500">
+                  {plan.country_codes.length > 1 ? `${plan.country_codes.length} countries` : plan.country_codes[0]}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
         <div className="text-right">
           {hasDiscount ? (
@@ -64,12 +88,10 @@ const PlanCard = ({ plan, isSelected, onClick, index, hasReferralDiscount }) => 
       {/* Plan Features */}
       <div className="space-y-2 mb-4">
         <div className="flex items-center text-sm text-gray-700">
-          <Wifi size={16} className="mr-2 text-green-500" />
           <span>{plan.data} {plan.dataUnit}</span>
         </div>
         {plan.speed && (
           <div className="flex items-center text-sm text-gray-700">
-            <Download size={16} className="mr-2 text-purple-500" />
             <span>Up to {plan.speed}</span>
           </div>
         )}
@@ -187,8 +209,20 @@ const PlanSelectionBottomSheet = ({
   };
 
   const handlePlanSelect = (plan) => {
-    // Navigate to the share package page
-    router.push(`/share-package/${plan.id}`);
+    // Get country flag and code for the plan
+    const countryCode = plan.country_codes?.[0] || plan.country_code;
+    const countryFlag = countryCode ? (() => {
+      const codePoints = countryCode.toUpperCase().split('').map(char => 127397 + char.charCodeAt());
+      return String.fromCodePoint(...codePoints);
+    })() : '🌍';
+    
+    // Navigate to the share package page with country info
+    const params = new URLSearchParams({
+      country: countryCode || '',
+      flag: countryFlag
+    });
+    
+    router.push(`/share-package/${plan.id}?${params.toString()}`);
   };
 
 

@@ -23,6 +23,11 @@ const SharePackagePage = () => {
   const { currentUser } = useAuth();
   const packageId = params.packageId;
   
+  // Get country info from URL parameters
+  const searchParams = new URLSearchParams(window.location.search);
+  const urlCountryCode = searchParams.get('country');
+  const urlCountryFlag = searchParams.get('flag');
+  
   const [packageData, setPackageData] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -31,24 +36,26 @@ const SharePackagePage = () => {
       const response = await fetch(`/api/airalo/plans`);
       const data = await response.json();
       
-      if (data.success && data.packages) {
-        const packageData = data.packages.find(pkg => pkg.slug === packageId);
+      if (data.success && data.plans) {
+        const packageData = data.plans.find(pkg => pkg.slug === packageId || pkg.id === packageId);
         if (packageData) {
+          console.log('📦 Airalo package data:', packageData);
           const transformedData = {
-            id: packageData.slug,
+            id: packageData.slug || packageData.id,
             name: packageData.name,
             description: packageData.description,
             price: packageData.price,
             currency: packageData.currency || 'USD',
-            data: packageData.data,
+            data: packageData.capacity || packageData.data,
             dataUnit: packageData.data_unit || 'GB',
-            period: packageData.validity,
-            duration: packageData.validity,
-            country_code: packageData.country_code,
+            period: packageData.period || packageData.validity,
+            duration: packageData.period || packageData.validity,
+            country_code: packageData.country_codes?.[0] || packageData.country_code,
             benefits: packageData.features || [],
             speed: packageData.speed,
             region_slug: packageData.region_slug
           };
+          console.log('🔄 Transformed package data:', transformedData);
           setPackageData(transformedData);
         }
       }
@@ -70,6 +77,7 @@ const SharePackagePage = () => {
       
       if (packageSnap.exists()) {
         const data = packageSnap.data();
+        console.log('📦 Firebase package data:', data);
         setPackageData({
           id: packageSnap.id,
           ...data
@@ -236,8 +244,21 @@ const SharePackagePage = () => {
           {/* Package Title */}
           <div className="bg-white p-4">
             <div className="text-center">
-              <h2 className="text-4xl font-bold text-black">{packageData.name}</h2>
+              <div className="flex items-center justify-center space-x-3 mb-4">
+                <span className="text-4xl">
+                  {urlCountryFlag || (packageData.country_code ? getCountryFlag(packageData.country_code) : '🌍')}
+                </span>
+                <h2 className="text-4xl font-bold text-black">{packageData.name}</h2>
+              </div>
               <p className="text-gray-600 text-lg mt-2">{packageData.description || 'Travel Package'}</p>
+              {(urlCountryCode || packageData.country_code) && (
+                <div className="flex items-center justify-center space-x-2 mt-3">
+                  <span className="text-sm text-gray-500">Country:</span>
+                  <span className="text-sm font-medium text-gray-700">
+                    {urlCountryCode || packageData.country_code}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
           
