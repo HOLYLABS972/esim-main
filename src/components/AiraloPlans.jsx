@@ -15,8 +15,6 @@ import {
   RefreshCw,
   Search,
   Filter,
-  Star,
-  Shield,
   Zap
 } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -101,36 +99,11 @@ const AiraloPlans = () => {
     }
   };
 
-  const handlePurchase = async (packageData) => {
-    if (!currentUser) {
-      toast.error('Please log in to purchase eSIM packages');
-      return;
-    }
-
-    try {
-      const orderData = {
-        package_id: packageData.slug,
-        quantity: "1",
-        type: "sim",
-        description: `eSIM order for ${currentUser.email}`,
-        to_email: currentUser.email,
-        sharing_option: ["link"]
-      };
-
-      const result = await esimService.createAiraloOrderV2(orderData);
-      
-      if (result.success) {
-        toast.success('eSIM package ordered successfully!');
-        // You can redirect to a success page or show order details
-        console.log('Order created:', result);
-      } else {
-        throw new Error(result.error || 'Failed to create order');
-      }
-    } catch (error) {
-      console.error('❌ Error creating order:', error);
-      toast.error(`Failed to create order: ${error.message}`);
-    }
+  const handlePackageSelect = (packageData) => {
+    // Navigate to the share package page using the package slug as ID
+    window.location.href = `/share-package/${packageData.slug}`;
   };
+
 
   const formatPrice = (price, currency = 'USD') => {
     return new Intl.NumberFormat('en-US', {
@@ -293,7 +266,8 @@ const AiraloPlans = () => {
               key={pkg.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden"
+              className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden cursor-pointer"
+              onClick={() => handlePackageSelect(pkg)}
             >
               {/* Package Header */}
               <div className="p-6 border-b border-gray-100">
@@ -359,14 +333,6 @@ const AiraloPlans = () => {
                   ))}
                 </div>
 
-                {/* Purchase Button */}
-                <button
-                  onClick={() => handlePurchase(pkg)}
-                  className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-3 px-4 rounded-lg font-medium transition-all duration-200 flex items-center justify-center"
-                >
-                  <Zap className="w-4 h-4 mr-2" />
-                  Purchase Now
-                </button>
               </div>
             </motion.div>
           ))}

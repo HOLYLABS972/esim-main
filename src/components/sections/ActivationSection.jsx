@@ -5,21 +5,9 @@ import { useI18n } from '../../contexts/I18nContext';
 import { getAppStoreLinks } from '../../services/settingsService';
 
 export default function ActivationSection() {
+  const { t, isLoading: translationsLoading } = useI18n();
   const [appStoreLinks, setAppStoreLinks] = useState({ iosUrl: '', androidUrl: '' });
   const [loading, setLoading] = useState(true);
-  
-  // Safely get i18n context
-  let t, translationsLoading;
-  try {
-    const i18nContext = useI18n();
-    t = i18nContext.t;
-    translationsLoading = i18nContext.isLoading;
-  } catch (error) {
-    console.error('ActivationSection: I18n context not available:', error);
-    // Fallback to English
-    t = (key, fallback) => fallback || key;
-    translationsLoading = false;
-  }
 
   useEffect(() => {
     const fetchAppStoreLinks = async () => {

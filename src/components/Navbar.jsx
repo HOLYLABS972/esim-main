@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { createPortal } from 'react-dom';
+import { useRouter } from 'next/navigation';
+import { ArrowLeft } from 'lucide-react';
 import { useI18n } from '../contexts/I18nContext';
 import { useAuth } from '../contexts/AuthContext';
 import LanguageSelector from './LanguageSelector';
@@ -10,6 +12,7 @@ import LanguageSelector from './LanguageSelector';
 const Navbar = ({ hideLanguageSelector = false }) => {
   const { t } = useI18n();
   const { currentUser, logout } = useAuth();
+  const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
@@ -86,6 +89,12 @@ const Navbar = ({ hideLanguageSelector = false }) => {
         </div>
         
         <div className="hidden lg:flex lg:gap-x-12">
+          <button
+            onClick={() => router.back()}
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5 text-gray-600" />
+          </button>
           <Link href="/esim-plans" className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
             Plans
           </Link>

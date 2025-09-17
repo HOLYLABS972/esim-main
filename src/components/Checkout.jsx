@@ -28,9 +28,11 @@ const Checkout = ({ plan }) => {
             planId: plan.id,
             planName: plan.name,
             customerEmail: currentUser.email,
-            amount: plan.price,
+            amount: parseFloat(plan.price) || 0,
             currency: 'usd'
           };
+          
+          console.log('💳 Order data for payment:', orderData);
 
           const order = await esimService.createOrder(orderData);
           console.log('✅ Order created:', order.id);
@@ -45,7 +47,7 @@ const Checkout = ({ plan }) => {
           }));
 
           // Redirect to payment
-          const result = await paymentService.createCheckoutSession(orderData);
+          await paymentService.createCheckoutSession(orderData);
           
         } catch (err) {
           console.error('❌ Payment redirect failed:', err);

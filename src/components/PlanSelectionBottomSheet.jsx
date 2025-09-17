@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Wifi, Globe, Clock, Download, Star, Check, DollarSign, SortAsc, Smartphone } from 'lucide-react';
+import { Wifi, Globe, Download, Star, Check, DollarSign, SortAsc, Smartphone } from 'lucide-react';
 import BottomSheet from './BottomSheet';
 import { useAuth } from '../contexts/AuthContext';
 import { useRouter } from 'next/navigation';
@@ -186,43 +186,11 @@ const PlanSelectionBottomSheet = ({
     });
   };
 
-  const handlePlanSelect = async (plan) => {
-    // Check if user is authenticated
-    if (!currentUser) {
-      console.log('❌ User not authenticated, redirecting to login');
-      router.push('/login');
-      return;
-    }
-
-    try {
-      // Import payment service dynamically
-      const { paymentService } = await import('../services/paymentService');
-      
-      // Calculate discounted price if user has referral discount
-      const originalPrice = parseFloat(plan.price);
-      const discountedPrice = userProfile?.referralCodeUsed ? Math.max(0.5, originalPrice - 2.5) : originalPrice;
-      
-      // Create order data with real user email
-      const orderData = {
-        planId: plan.id,
-        planName: plan.name,
-        customerEmail: currentUser.email, // Must have user email
-        amount: discountedPrice, // Use discounted price
-        originalAmount: originalPrice, // Keep original price for reference
-        currency: 'usd',
-        hasReferralDiscount: userProfile?.referralCodeUsed || false
-      };
-
-      console.log('🚀 Redirecting to Stripe for plan:', plan.name);
-      console.log('👤 User email:', orderData.customerEmail);
-
-      // Redirect directly to Stripe
-      await paymentService.createCheckoutSession(orderData);
-      
-    } catch (error) {
-      console.error('Failed to redirect to payment:', error);
-    }
+  const handlePlanSelect = (plan) => {
+    // Navigate to the share package page
+    router.push(`/share-package/${plan.id}`);
   };
+
 
   return (
     <BottomSheet
@@ -316,7 +284,7 @@ const PlanSelectionBottomSheet = ({
                     
                     {/* Countries Grid */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {countries.map((country, index) => (
+                      {countries.map((country) => (
                         <div key={`${days}-${country.id}`} className="col-span-1">
                           <button
                             className="w-full bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-4 text-left border border-gray-200 hover:border-blue-300 hover:scale-105"
@@ -369,7 +337,7 @@ const PlanSelectionBottomSheet = ({
             </div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">No Plans Available</h3>
             <p className="text-gray-600 mb-4">
-              We couldn't find any plans for your current selection
+              We couldn&apos;t find any plans for your current selection
             </p>
             <p className="text-sm text-gray-500">
               Try adjusting your filters or selecting a different country

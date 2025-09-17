@@ -74,7 +74,9 @@ export const paymentService = {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        console.error('❌ Server error response:', errorText);
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
       }
 
       const result = await response.json();
@@ -85,6 +87,7 @@ export const paymentService = {
         console.log('🔄 Redirecting to Stripe checkout for single order:', result.sessionUrl);
         window.location.href = result.sessionUrl;
       } else {
+        console.error('❌ Server response missing sessionUrl:', result);
         throw new Error('No session URL received from server');
       }
       

@@ -20,6 +20,40 @@ export default function CheckoutPageClient() {
         const planId = searchParams.get('plan');
         const planType = searchParams.get('type');
         
+        // First, check if we have package data in localStorage (from share page)
+        const selectedPackage = localStorage.getItem('selectedPackage');
+        if (selectedPackage) {
+          try {
+            const packageData = JSON.parse(selectedPackage);
+            console.log('📦 Package data from localStorage:', packageData);
+            
+            const planData = {
+              id: packageData.packageId,
+              name: packageData.packageName,
+              description: packageData.packageDescription,
+              price: packageData.price,
+              currency: packageData.currency,
+              data: packageData.data,
+              dataUnit: packageData.dataUnit,
+              period: packageData.period,
+              duration: packageData.period,
+              country_code: packageData.country_code,
+              benefits: packageData.benefits,
+              speed: packageData.speed,
+              type: 'package'
+            };
+            
+            console.log('🎯 Plan data for checkout:', planData);
+            setPlan(planData);
+            setLoading(false);
+            return;
+          } catch (parseError) {
+            console.error('Error parsing selected package:', parseError);
+            // Data removal removed - keeping selectedPackage in localStorage
+          }
+        }
+        
+        // If no localStorage data, check URL parameters
         if (!planId) {
           setError('No plan selected');
           setLoading(false);
