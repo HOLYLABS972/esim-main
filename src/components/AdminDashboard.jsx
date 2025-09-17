@@ -10,6 +10,7 @@ import { getContactRequests, updateContactRequestStatus, deleteContactRequest } 
 import { getNewsletterSubscriptions, updateNewsletterSubscriptionStatus, deleteNewsletterSubscription, getNewsletterStats } from '../services/newsletterService';
 import { getSettings, updateSettings, updateSettingsSection, resetSettingsToDefaults, validateSettings } from '../services/settingsService';
 import { getJobApplications, updateJobApplicationStatus, deleteJobApplication, getJobApplicationStats } from '../services/jobsService';
+import { getAllReferralCodes, getReferralUsageStats, nukeAllReferralData } from '../services/referralService';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Settings, 
@@ -30,6 +31,7 @@ import {
   TrendingUp,
   Database,
   Activity,
+  X,
   DollarSign,
   FileText,
   MessageSquare,
@@ -55,7 +57,8 @@ import {
   User,
   Calendar,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  Gift
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import BlogManagement from './BlogManagement';
@@ -133,7 +136,15 @@ const AdminDashboard = () => {
   const [filteredJobApplications, setFilteredJobApplications] = useState([]);
   const [jobSearchTerm, setJobSearchTerm] = useState('');
   const [jobStatusFilter, setJobStatusFilter] = useState('all');
+
   const [jobStats, setJobStats] = useState({ total: 0, pending: 0, reviewed: 0, contacted: 0, rejected: 0, hired: 0 });
+  
+  // Referral Codes Management
+  const [referralCodes, setReferralCodes] = useState([]);
+  const [referralUsageStats, setReferralUsageStats] = useState({});
+  const [loadingReferralCodes, setLoadingReferralCodes] = useState(false);
+  const [showUsageModal, setShowUsageModal] = useState(false);
+  const [selectedOwnerData, setSelectedOwnerData] = useState(null);
   
   // Settings Management
   const [settings, setSettings] = useState(null);
@@ -191,6 +202,7 @@ const AdminDashboard = () => {
       loadContactRequests();
       loadNewsletterSubscriptions();
       loadJobApplications();
+      loadReferralCodes();
       loadSettings();
       loadMarkupPercentage();
     }
@@ -1029,6 +1041,77 @@ const AdminDashboard = () => {
     }
   };
 
+  // Referral Codes Management Functions
+  const loadReferralCodes = async () => {
+    try {
+      setLoadingReferralCodes(true);
+      
+      // Load all referral codes
+      const codesResult = await getAllReferralCodes();
+      if (codesResult.success) {
+        setReferralCodes(codesResult.referralCodes);
+      } else {
+        throw new Error(codesResult.error);
+      }
+      
+      // Load usage statistics
+      const statsResult = await getReferralUsageStats();
+      if (statsResult.success) {
+        setReferralUsageStats(statsResult.stats);
+      }
+    } catch (error) {
+      console.error('❌ Error loading referral codes:', error);
+      toast.error(`Error loading referral codes: ${error.message}`);
+    } finally {
+      setLoadingReferralCodes(false);
+    }
+  };
+
+  const handleNukeReferralData = async () => {
+    if (!window.confirm('⚠️ NUCLEAR OPTION: Are you absolutely sure you want to DELETE ALL referral data? This will permanently remove:\n\n• All referral code documents\n• All referral transactions\n• All referral codes from user accounts\n\nThis action CANNOT be undone!')) {
+      return;
+    }
+
+    try {
+      setLoadingReferralCodes(true);
+      const result = await nukeAllReferralData();
+      if (result.success) {
+        toast.success(`💥 NUKED ${result.deletedCodes} referral codes and deleted ${result.deletedTransactions} transactions`);
+        await loadReferralCodes(); // Reload to show updated data
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error) {
+      console.error('❌ Error nuking referral data:', error);
+      toast.error(`Error nuking referral data: ${error.message}`);
+    } finally {
+      setLoadingReferralCodes(false);
+    }
+  };
+
+  // Group referral codes by owner
+  const groupedReferralCodes = referralCodes.reduce((groups, code) => {
+    const ownerEmail = code.ownerEmail;
+    if (!groups[ownerEmail]) {
+      groups[ownerEmail] = {
+        ownerEmail,
+        ownerId: code.ownerId,
+        codes: [],
+        totalUsage: 0,
+        totalSpent: 0
+      };
+    }
+    groups[ownerEmail].codes.push(code);
+    groups[ownerEmail].totalUsage += code.usageCount || 0;
+    groups[ownerEmail].totalSpent += code.totalEarnings || 0;
+    return groups;
+  }, {});
+
+  const handleShowUsageModal = (ownerData) => {
+    setSelectedOwnerData(ownerData);
+    setShowUsageModal(true);
+  };
+
   const handleUpdateJobApplicationStatus = async (applicationId, newStatus) => {
     try {
       setLoading(true);
@@ -1800,6 +1883,7 @@ const AdminDashboard = () => {
               { id: 'plans', label: 'Plans Management', icon: Smartphone, permission: canManagePlans },
               { id: 'esim', label: 'eSIM Management', icon: Activity, permission: canManagePlans },
               { id: 'blog', label: 'Blog Management', icon: FileText, permission: canManageBlog },
+              { id: 'referral-codes', label: 'Referral Usage', icon: Gift, permission: canManageConfig },
             ].filter(tab => tab.permission).map((tab) => {
               const Icon = tab.icon;
               return (
@@ -1920,6 +2004,7 @@ const AdminDashboard = () => {
                 { id: 'plans', label: 'Plans Management' },
                 { id: 'esim', label: 'eSIM Management' },
                 { id: 'blog', label: 'Blog Management' },
+                { id: 'referral-codes', label: 'Referral Usage' },
                 { id: 'requests', label: 'Contact Requests' },
                 { id: 'newsletter', label: 'Newsletter' },
                 { id: 'jobs', label: 'Job Applications' },
@@ -2004,6 +2089,14 @@ const AdminDashboard = () => {
                       <Globe className="w-8 h-8 text-green-600 mb-2" />
                       <p className="font-medium">Manage Countries</p>
                       <p className="text-sm text-gray-600">View and manage country plans</p>
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('referral-codes')}
+                      className="p-4 border border-gray-200 rounded-lg hover:border-purple-300 hover:bg-purple-50 transition-all duration-200"
+                    >
+                      <Gift className="w-8 h-8 text-purple-600 mb-2" />
+                      <p className="font-medium">Referral Codes</p>
+                      <p className="text-sm text-gray-600">Track referral code usage and owners</p>
                     </button>
                   </div>
                 </div>
@@ -3378,6 +3471,144 @@ const AdminDashboard = () => {
               </div>
             )}
 
+            {/* Referral Codes Tab */}
+            {activeTab === 'referral-codes' && (
+              <div className="space-y-6">
+                {/* Header */}
+                <div className="bg-white rounded-xl shadow-lg p-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                      <h2 className="text-xl font-semibold text-eerie-black">Referral Usage</h2>
+                      <p className="text-gray-600">Track referral code usage and performance</p>
+                    </div>
+                    <button
+                      onClick={handleNukeReferralData}
+                      disabled={loadingReferralCodes}
+                      className="bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center"
+                    >
+                      {loadingReferralCodes ? (
+                        <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <RefreshCw className="w-4 h-4 mr-2" />
+                      )}
+                      Clear
+                    </button>
+                  </div>
+                </div>
+
+                {/* Stats Overview */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-gray-600 mb-1">Total Codes</p>
+                        <p className="text-2xl font-bold text-eerie-black">{referralCodes.length}</p>
+                      </div>
+                      <div className="w-12 h-12 bg-alice-blue rounded-lg flex items-center justify-center">
+                        <Gift className="w-6 h-6 text-tufts-blue" />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-gray-600 mb-1">Total Usage</p>
+                        <p className="text-2xl font-bold text-eerie-black">{referralUsageStats.totalUsages || 0}</p>
+                      </div>
+                      <div className="w-12 h-12 bg-alice-blue rounded-lg flex items-center justify-center">
+                        <TrendingUp className="w-6 h-6 text-tufts-blue" />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-gray-600 mb-1">Unique Referrers</p>
+                        <p className="text-2xl font-bold text-eerie-black">{referralUsageStats.uniqueReferrers || 0}</p>
+                      </div>
+                      <div className="w-12 h-12 bg-alice-blue rounded-lg flex items-center justify-center">
+                        <Users className="w-6 h-6 text-tufts-blue" />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-gray-600 mb-1">Total Spent</p>
+                        <p className="text-2xl font-bold text-eerie-black">${referralUsageStats.totalEarnings || 0}</p>
+                      </div>
+                      <div className="w-12 h-12 bg-alice-blue rounded-lg flex items-center justify-center">
+                        <DollarSign className="w-6 h-6 text-tufts-blue" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Referral Codes by Owner */}
+                <div className="bg-white rounded-xl shadow-lg p-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-lg font-semibold text-eerie-black">Referral Codes by Owner</h3>
+                    <div className="text-sm text-gray-600">
+                      {Object.keys(groupedReferralCodes).length} owners, {referralCodes.length} total codes
+                    </div>
+                  </div>
+                  
+                  {loadingReferralCodes ? (
+                    <div className="flex items-center justify-center py-12">
+                      <div className="text-center">
+                        <RefreshCw className="w-8 h-8 mx-auto mb-4 animate-spin text-tufts-blue" />
+                        <p className="text-gray-600">Loading referral codes...</p>
+                      </div>
+                    </div>
+                  ) : Object.keys(groupedReferralCodes).length > 0 ? (
+                    <div className="space-y-4">
+                      {Object.values(groupedReferralCodes).map((ownerData, index) => (
+                        <motion.div
+                          key={ownerData.ownerEmail}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.05 }}
+                          className="bg-alice-blue rounded-lg p-4 border border-gray-100 hover:shadow-md transition-all duration-200"
+                        >
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3 mb-2">
+                                <h4 className="font-medium text-eerie-black">{ownerData.ownerEmail}</h4>
+                                <span className="text-sm text-gray-600">
+                                  {ownerData.codes.length} code{ownerData.codes.length !== 1 ? 's' : ''}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-4 text-sm text-gray-600">
+                                <span>Total Usage: <span className="font-medium text-eerie-black">{ownerData.totalUsage}</span></span>
+                                <span>Total Spent: <span className="font-medium text-eerie-black">${ownerData.totalSpent}</span></span>
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => handleShowUsageModal(ownerData)}
+                              className="btn-primary text-sm px-4 py-2"
+                            >
+                              View Usage
+                            </button>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12">
+                      <div className="w-16 h-16 bg-alice-blue rounded-lg flex items-center justify-center mx-auto mb-4">
+                        <Gift className="w-8 h-8 text-tufts-blue" />
+                      </div>
+                      <h4 className="text-lg font-medium text-eerie-black mb-2">No referral codes found</h4>
+                      <p className="text-gray-600">Referral codes will appear here when users create them.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Manage Users Tab */}
             {activeTab === 'users' && canManageAdmins && (
               <div className="space-y-6">
@@ -3939,6 +4170,77 @@ const AdminDashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* Usage Details Modal */}
+      {showUsageModal && selectedOwnerData && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-semibold text-eerie-black">
+                  Usage Details - {selectedOwnerData.ownerEmail}
+                </h3>
+                <button
+                  onClick={() => setShowUsageModal(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {selectedOwnerData.codes.map((code, index) => (
+                  <div
+                    key={code.id}
+                    className="bg-alice-blue rounded-lg p-4 border border-gray-100"
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <span className="font-mono text-sm font-medium text-tufts-blue bg-white px-3 py-1 rounded-lg border border-gray-200">
+                            {code.code}
+                          </span>
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                            code.isActive 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-gray-100 text-gray-800'
+                          }`}>
+                            {code.isActive ? 'Active' : 'Inactive'}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-4 text-sm text-gray-600">
+                          <span>Usage: <span className="font-medium text-eerie-black">{code.usageCount || 0}</span></span>
+                          <span>Spent: <span className="font-medium text-eerie-black">${code.totalEarnings || 0}</span></span>
+                        </div>
+                      </div>
+                      <div className="text-right text-sm text-gray-500">
+                        <div>Created: {code.createdAt ? new Date(code.createdAt).toLocaleDateString() : 'N/A'}</div>
+                        <div>Expires: {code.expiryDate ? new Date(code.expiryDate).toLocaleDateString() : 'Never'}</div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-6 pt-4 border-t border-gray-200">
+                <div className="flex justify-between items-center">
+                  <div className="text-sm text-gray-600">
+                    Total: {selectedOwnerData.codes.length} code{selectedOwnerData.codes.length !== 1 ? 's' : ''}
+                  </div>
+                  <div className="text-right">
+                    <div className="text-sm text-gray-600">
+                      Combined Usage: <span className="font-medium text-eerie-black">{selectedOwnerData.totalUsage}</span>
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      Combined Spent: <span className="font-medium text-eerie-black">${selectedOwnerData.totalSpent}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

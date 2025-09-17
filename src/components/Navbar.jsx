@@ -86,6 +86,9 @@ const Navbar = ({ hideLanguageSelector = false }) => {
         </div>
         
         <div className="hidden lg:flex lg:gap-x-12">
+          <Link href="/esim-plans" className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
+            Plans
+          </Link>
           <Link href="/#how-it-works" className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
             {t('navbar.downloadApp', 'Download App')}
           </Link>
@@ -164,6 +167,13 @@ const Navbar = ({ hideLanguageSelector = false }) => {
                 
                 {/* Main Navigation Group */}
                 <div className="p-4 w-full max-w-xs">
+                  <Link
+                    href="/esim-plans"
+                    className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Plans
+                  </Link>
                   <Link
                     href="/#how-it-works"
                     className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2"

@@ -289,12 +289,45 @@ export const getAllReferralCodes = async () => {
       )
     );
     
-    const referralCodes = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      createdAt: doc.data().createdAt?.toDate() || new Date(),
-      expiryDate: doc.data().expiryDate?.toDate() || null,
-    }));
+    const referralCodes = await Promise.all(
+      snapshot.docs.map(async (doc) => {
+        const data = doc.data();
+        const ownerId = data.ownerId;
+        
+        // Calculate actual earnings from transactions
+        let totalEarnings = 0;
+        if (ownerId) {
+          try {
+            const earningsSnapshot = await getDocs(
+              query(
+                collection(db, 'users', ownerId, 'transactions'),
+                where('type', '==', 'deposit'),
+                where('method', '==', 'referral')
+              )
+            );
+            
+            totalEarnings = earningsSnapshot.docs.reduce((sum, transactionDoc) => {
+              const transactionData = transactionDoc.data();
+              // Only count transactions that match this specific referral code
+              if (transactionData.referralCode === doc.id) {
+                return sum + (transactionData.amount || 0);
+              }
+              return sum;
+            }, 0);
+          } catch (error) {
+            console.error('Error calculating earnings for referral code:', doc.id, error);
+          }
+        }
+        
+        return {
+          id: doc.id,
+          ...data,
+          createdAt: data.createdAt?.toDate() || new Date(),
+          expiryDate: data.expiryDate?.toDate() || null,
+          totalEarnings: totalEarnings,
+        };
+      })
+    );
     
     return { success: true, referralCodes };
   } catch (error) {
@@ -303,19 +336,91 @@ export const getAllReferralCodes = async () => {
   }
 };
 
+// Nuke all referral data (for admin - completely delete all referral records)
+export const nukeAllReferralData = async () => {
+  try {
+    const referralCodesResult = await getAllReferralCodes();
+    if (!referralCodesResult.success) {
+      throw new Error(referralCodesResult.error);
+    }
+    
+    const referralCodes = referralCodesResult.referralCodes;
+    const batch = writeBatch(db);
+    let deletedCodes = 0;
+    let deletedTransactions = 0;
+    
+    for (const code of referralCodes) {
+      const ownerId = code.ownerId;
+      
+      // Delete all referral transactions for this code
+      if (ownerId) {
+        try {
+          const earningsSnapshot = await getDocs(
+            query(
+              collection(db, 'users', ownerId, 'transactions'),
+              where('type', '==', 'deposit'),
+              where('method', '==', 'referral'),
+              where('referralCode', '==', code.id)
+            )
+          );
+          
+          earningsSnapshot.docs.forEach(transactionDoc => {
+            batch.delete(transactionDoc.ref);
+            deletedTransactions++;
+          });
+        } catch (error) {
+          console.error('Error deleting transactions for code:', code.id, error);
+        }
+      }
+      
+      // Delete the referral code document itself
+      const referralCodeRef = doc(db, 'referralCodes', code.id);
+      batch.delete(referralCodeRef);
+      deletedCodes++;
+      
+      console.log(`Nuking referral code ${code.id}`);
+    }
+    
+    // Also clear referral codes from user documents
+    const usersSnapshot = await getDocs(collection(db, 'users'));
+    usersSnapshot.docs.forEach(userDoc => {
+      const userData = userDoc.data();
+      if (userData.referralCode || userData.referralCodeUsed) {
+        batch.update(userDoc.ref, {
+          referralCode: null,
+          referralCodeUsed: false,
+          referralCodeExpiryDate: null,
+        });
+      }
+    });
+    
+    if (deletedCodes > 0) {
+      await batch.commit();
+      console.log(`✅ NUKED ${deletedCodes} referral codes and deleted ${deletedTransactions} transactions`);
+    }
+    
+    return { success: true, deletedCodes, deletedTransactions };
+  } catch (error) {
+    console.error('Error nuking referral data:', error);
+    return { success: false, error: error.message };
+  }
+};
+
 // Get referral usage statistics (for admin)
 export const getReferralUsageStats = async () => {
   try {
-    const snapshot = await getDocs(collection(db, 'referralUsages'));
-    const usages = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      createdAt: doc.data().createdAt?.toDate() || new Date(),
-    }));
+    // Get all referral codes to calculate stats
+    const referralCodesResult = await getAllReferralCodes();
+    if (!referralCodesResult.success) {
+      throw new Error(referralCodesResult.error);
+    }
     
-    const totalUsages = usages.length;
-    const uniqueReferrers = new Set(usages.map(u => u.referrerId)).size;
-    const totalEarnings = usages.reduce((sum, usage) => sum + (usage.earnings || 0), 0);
+    const referralCodes = referralCodesResult.referralCodes;
+    
+    // Calculate statistics
+    const totalUsages = referralCodes.reduce((sum, code) => sum + (code.usageCount || 0), 0);
+    const uniqueReferrers = new Set(referralCodes.map(code => code.ownerId)).size;
+    const totalEarnings = referralCodes.reduce((sum, code) => sum + (code.totalEarnings || 0), 0);
     
     return {
       success: true,
@@ -323,7 +428,7 @@ export const getReferralUsageStats = async () => {
         totalUsages,
         uniqueReferrers,
         totalEarnings,
-        recentUsages: usages.slice(0, 10), // Last 10 usages
+        recentUsages: referralCodes.slice(0, 10), // Last 10 codes
       }
     };
   } catch (error) {
