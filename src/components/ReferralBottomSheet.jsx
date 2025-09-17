@@ -1,0 +1,245 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { X, Gift, CheckCircle, AlertCircle, Lock } from 'lucide-react';
+import { isValidReferralCode, hasUserUsedReferralCode } from '../services/referralService';
+import { useAuth } from '../contexts/AuthContext';
+import { doc, updateDoc } from 'firebase/firestore';
+import { db } from '../firebase/config';
+import toast from 'react-hot-toast';
+
+const ReferralBottomSheet = ({ isOpen, onClose }) => {
+  const [referralCode, setReferralCode] = useState('');
+  const [isValidating, setIsValidating] = useState(false);
+  const [isValid, setIsValid] = useState(false);
+  const [validationError, setValidationError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasUsedReferral, setHasUsedReferral] = useState(false);
+  const [isCheckingReferralStatus, setIsCheckingReferralStatus] = useState(false);
+  const { currentUser, loadUserProfile } = useAuth();
+
+  // Check if user has already used a referral code
+  useEffect(() => {
+    const checkReferralStatus = async () => {
+      if (currentUser && isOpen) {
+        setIsCheckingReferralStatus(true);
+        try {
+          const hasUsed = await hasUserUsedReferralCode(currentUser.uid);
+          setHasUsedReferral(hasUsed);
+        } catch (error) {
+          console.error('Error checking referral status:', error);
+        } finally {
+          setIsCheckingReferralStatus(false);
+        }
+      }
+    };
+
+    checkReferralStatus();
+  }, [currentUser, isOpen]);
+
+  const validateReferralCode = async (code) => {
+    if (!code.trim()) {
+      setIsValid(false);
+      setValidationError('');
+      return;
+    }
+
+    setIsValidating(true);
+    setValidationError('');
+
+    try {
+      const isValidCode = await isValidReferralCode(code.trim().toUpperCase());
+      setIsValid(isValidCode);
+      
+      if (!isValidCode) {
+        setValidationError('Invalid or expired referral code');
+      }
+    } catch (error) {
+      console.error('Error validating referral code:', error);
+      setIsValid(false);
+      setValidationError('Error validating referral code');
+    } finally {
+      setIsValidating(false);
+    }
+  };
+
+  const handleCodeChange = (e) => {
+    const value = e.target.value.toUpperCase();
+    setReferralCode(value);
+    
+    // Clear previous validation
+    setIsValid(false);
+    setValidationError('');
+    
+    // Validate after a short delay
+    if (value.length >= 3) {
+      const timeoutId = setTimeout(() => {
+        validateReferralCode(value);
+      }, 500);
+      
+      return () => clearTimeout(timeoutId);
+    }
+  };
+
+  const handleApply = async () => {
+    if (!referralCode.trim()) {
+      toast.error('Please enter a referral code');
+      return;
+    }
+
+    if (!isValid) {
+      toast.error('Please enter a valid referral code');
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // Process referral code usage
+      const { processReferralUsage } = await import('../services/referralService');
+      const result = await processReferralUsage(referralCode.trim().toUpperCase(), currentUser.uid);
+      
+      if (result.success) {
+        // Update user profile to mark referral code as used
+        await updateDoc(doc(db, 'users', currentUser.uid), {
+          referralCodeUsed: true,
+          referredBy: referralCode.trim().toUpperCase()
+        });
+        
+        // Reload user profile to reflect changes
+        await loadUserProfile();
+        
+        toast.success('Referral code applied successfully!');
+        onClose();
+      } else {
+        toast.error(result.error || 'Failed to apply referral code');
+      }
+    } catch (error) {
+      console.error('Error applying referral code:', error);
+      toast.error('Failed to apply referral code');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleClose = () => {
+    setReferralCode('');
+    setIsValid(false);
+    setValidationError('');
+    onClose();
+  };
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-50 z-50"
+            onClick={handleClose}
+          />
+          
+          {/* Bottom Sheet */}
+          <motion.div
+            initial={{ y: '100%' }}
+            animate={{ y: 0 }}
+            exit={{ y: '100%' }}
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            className="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-2xl z-50 max-h-[80vh] overflow-y-auto"
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <div className="flex items-center space-x-3">
+                <div className="bg-blue-100 p-2 rounded-full">
+                  <Gift className="w-6 h-6 text-blue-600" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900">Apply Referral Code</h2>
+                  <p className="text-sm text-gray-600">Enter a referral code to get rewards</p>
+                </div>
+              </div>
+              <button
+                onClick={handleClose}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <X className="w-6 h-6 text-gray-600" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-6">
+              <div className="space-y-6">
+                {/* Referral Code Input */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Referral Code
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={referralCode}
+                      onChange={handleCodeChange}
+                      placeholder="Enter referral code"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center text-lg font-mono tracking-wider"
+                      maxLength={8}
+                      disabled={hasUsedReferral}
+                    />
+                    {isValidating && (
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                      </div>
+                    )}
+                    {isValid && !isValidating && (
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                        <CheckCircle className="w-5 h-5 text-green-600" />
+                      </div>
+                    )}
+                    {validationError && !isValidating && (
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                        <AlertCircle className="w-5 h-5 text-red-600" />
+                      </div>
+                    )}
+                  </div>
+                  
+                  {validationError && (
+                    <p className="text-red-600 text-sm mt-2">{validationError}</p>
+                  )}
+                  
+                  {isValid && (
+                    <p className="text-green-600 text-sm mt-2">✓ Valid referral code!</p>
+                  )}
+                </div>
+
+                {/* Action Buttons */}
+                <div className="space-y-3">
+                  {!hasUsedReferral && (
+                    <button
+                      onClick={handleApply}
+                      disabled={isSubmitting || isValidating || (referralCode && !isValid)}
+                      className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed px-6 py-3 rounded-lg text-white font-medium transition-colors"
+                    >
+                      {isSubmitting ? 'Applying...' : 'Apply Referral Code'}
+                    </button>
+                  )}
+                  
+                  <button
+                    onClick={handleClose}
+                    className="w-full bg-gray-100 hover:bg-gray-200 px-6 py-3 rounded-lg text-gray-700 font-medium transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+  );
+};
+
+export default ReferralBottomSheet;

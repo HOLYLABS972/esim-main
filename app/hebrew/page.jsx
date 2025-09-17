@@ -23,6 +23,9 @@ export default function HebrewPage() {
         {/* How It Works & Mobile Apps Section (Combined) */}
         <ActivationSection />
       </main>
+      
+      {/* Promo Bottom Sheet */}
+      <PromoBottomSheet />
     </div>
   )
 }

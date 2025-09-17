@@ -9,6 +9,7 @@ import { db } from '../firebase/config';
 import { getContactRequests, updateContactRequestStatus, deleteContactRequest } from '../services/contactService';
 import { getNewsletterSubscriptions, updateNewsletterSubscriptionStatus, deleteNewsletterSubscription, getNewsletterStats } from '../services/newsletterService';
 import { getSettings, updateSettings, updateSettingsSection, resetSettingsToDefaults, validateSettings } from '../services/settingsService';
+import { getJobApplications, updateJobApplicationStatus, deleteJobApplication, getJobApplicationStats } from '../services/jobsService';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Settings, 
@@ -49,7 +50,12 @@ import {
   LogOut,
   Smartphone,
   Apple,
-  Play
+  Play,
+  Briefcase,
+  User,
+  Calendar,
+  ChevronDown,
+  ChevronRight
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import BlogManagement from './BlogManagement';
@@ -74,6 +80,7 @@ const AdminDashboard = () => {
 
   // State Management - ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
   const [activeTab, setActiveTab] = useState('countries');
+  const [showAdminDropdown, setShowAdminDropdown] = useState(false);
   const [currentEnvironment, setCurrentEnvironment] = useState('production');
   const [airaloClientId, setAiraloClientId] = useState('');
   const [loading, setLoading] = useState(false);
@@ -120,6 +127,13 @@ const AdminDashboard = () => {
   const [newsletterSearchTerm, setNewsletterSearchTerm] = useState('');
   const [newsletterStatusFilter, setNewsletterStatusFilter] = useState('all');
   const [newsletterStats, setNewsletterStats] = useState({ total: 0, active: 0, unsubscribed: 0, bounced: 0 });
+  
+  // Jobs Management
+  const [jobApplications, setJobApplications] = useState([]);
+  const [filteredJobApplications, setFilteredJobApplications] = useState([]);
+  const [jobSearchTerm, setJobSearchTerm] = useState('');
+  const [jobStatusFilter, setJobStatusFilter] = useState('all');
+  const [jobStats, setJobStats] = useState({ total: 0, pending: 0, reviewed: 0, contacted: 0, rejected: 0, hired: 0 });
   
   // Settings Management
   const [settings, setSettings] = useState(null);
@@ -176,6 +190,7 @@ const AdminDashboard = () => {
       loadUsersFromFirestore();
       loadContactRequests();
       loadNewsletterSubscriptions();
+      loadJobApplications();
       loadSettings();
       loadMarkupPercentage();
     }
@@ -228,6 +243,22 @@ const AdminDashboard = () => {
     
     setFilteredNewsletterSubscriptions(filtered);
   }, [newsletterSubscriptions, newsletterSearchTerm, newsletterStatusFilter]);
+
+  // Filter job applications based on search and status
+  useEffect(() => {
+    let filtered = jobApplications.filter(application => 
+      application.name?.toLowerCase().includes(jobSearchTerm.toLowerCase()) ||
+      application.email?.toLowerCase().includes(jobSearchTerm.toLowerCase()) ||
+      application.position?.toLowerCase().includes(jobSearchTerm.toLowerCase()) ||
+      application.status?.toLowerCase().includes(jobSearchTerm.toLowerCase())
+    );
+    
+    if (jobStatusFilter !== 'all') {
+      filtered = filtered.filter(application => application.status === jobStatusFilter);
+    }
+    
+    setFilteredJobApplications(filtered);
+  }, [jobApplications, jobSearchTerm, jobStatusFilter]);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -980,6 +1011,56 @@ const AdminDashboard = () => {
     }
   };
 
+  // Jobs Management Functions
+  const loadJobApplications = async () => {
+    try {
+      setLoading(true);
+      const applications = await getJobApplications();
+      const stats = await getJobApplicationStats();
+      setJobApplications(applications);
+      setFilteredJobApplications(applications);
+      setJobStats(stats);
+      console.log('✅ Loaded', applications.length, 'job applications from Firestore');
+    } catch (error) {
+      console.error('❌ Error loading job applications:', error);
+      toast.error(`Error loading job applications: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdateJobApplicationStatus = async (applicationId, newStatus) => {
+    try {
+      setLoading(true);
+      await updateJobApplicationStatus(applicationId, newStatus);
+      toast.success(`Application status updated to ${newStatus}`);
+      await loadJobApplications();
+    } catch (error) {
+      console.error('❌ Error updating job application status:', error);
+      toast.error(`Error updating job application status: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteJobApplication = async (applicationId, applicantName) => {
+    if (!window.confirm(`Delete job application from ${applicantName}? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await deleteJobApplication(applicationId);
+      toast.success('Job application deleted successfully');
+      await loadJobApplications();
+    } catch (error) {
+      console.error('❌ Error deleting job application:', error);
+      toast.error(`Error deleting job application: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Settings Management Functions
   const loadSettings = async () => {
     try {
@@ -1712,16 +1793,13 @@ const AdminDashboard = () => {
 
           {/* Sidebar Navigation */}
           <nav className="flex-1 p-4 space-y-2">
+            {/* Main Navigation Items */}
             {[
               { id: 'config', label: 'Configuration', icon: Settings, permission: canManageConfig },
-              { id: 'settings', label: 'Links', icon: Link, permission: canManageConfig },
               { id: 'countries', label: 'Countries', icon: Globe, permission: canManageCountries },
               { id: 'plans', label: 'Plans Management', icon: Smartphone, permission: canManagePlans },
               { id: 'esim', label: 'eSIM Management', icon: Activity, permission: canManagePlans },
               { id: 'blog', label: 'Blog Management', icon: FileText, permission: canManageBlog },
-              { id: 'requests', label: 'Contact Requests', icon: MessageSquare, permission: canManageContactRequests },
-              { id: 'newsletter', label: 'Newsletter', icon: Mail, permission: canManageNewsletter },
-              { id: 'users', label: 'Manage Users', icon: Users, permission: canManageAdmins },
             ].filter(tab => tab.permission).map((tab) => {
               const Icon = tab.icon;
               return (
@@ -1739,6 +1817,57 @@ const AdminDashboard = () => {
                 </button>
               );
             })}
+
+            {/* Administration Dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setShowAdminDropdown(!showAdminDropdown)}
+                className={`w-full flex items-center justify-between px-4 py-3 rounded-lg font-medium transition-all duration-200 text-left ${
+                  ['settings', 'requests', 'newsletter', 'jobs', 'users'].includes(activeTab)
+                    ? 'bg-black text-white shadow-lg'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                }`}
+              >
+                <div className="flex items-center">
+                  <Database className="w-5 h-5 mr-3" />
+                  Administration
+                </div>
+                {showAdminDropdown ? (
+                  <ChevronDown className="w-4 h-4" />
+                ) : (
+                  <ChevronRight className="w-4 h-4" />
+                )}
+              </button>
+              
+              {/* Administration Dropdown Menu */}
+              {showAdminDropdown && (
+                <div className="ml-4 mt-2 space-y-1">
+                  {[
+                    { id: 'settings', label: 'Links', icon: Link, permission: canManageConfig },
+                    { id: 'requests', label: 'Contact Requests', icon: MessageSquare, permission: canManageContactRequests },
+                    { id: 'newsletter', label: 'Newsletter', icon: Mail, permission: canManageNewsletter },
+                    { id: 'jobs', label: 'Job Applications', icon: Briefcase, permission: canManageContactRequests },
+                    { id: 'users', label: 'Manage Users', icon: Users, permission: canManageAdmins },
+                  ].filter(tab => tab.permission).map((tab) => {
+                    const Icon = tab.icon;
+                    return (
+                      <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        className={`w-full flex items-center px-4 py-2 rounded-lg font-medium transition-all duration-200 text-left text-sm ${
+                          activeTab === tab.id
+                            ? 'bg-gray-800 text-white shadow-lg'
+                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                        }`}
+                      >
+                        <Icon className="w-4 h-4 mr-3" />
+                        {tab.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </nav>
 
           {/* Sidebar Footer */}
@@ -1793,6 +1922,7 @@ const AdminDashboard = () => {
                 { id: 'blog', label: 'Blog Management' },
                 { id: 'requests', label: 'Contact Requests' },
                 { id: 'newsletter', label: 'Newsletter' },
+                { id: 'jobs', label: 'Job Applications' },
                 { id: 'users', label: 'Manage Users' },
               ].find(tab => tab.id === activeTab)?.label || 'Dashboard'}
             </h2>
@@ -3035,6 +3165,209 @@ const AdminDashboard = () => {
                               {newsletterSearchTerm && (
                                 <p className="text-xs mt-1">Try adjusting your search terms</p>
                               )}
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Jobs Tab */}
+            {activeTab === 'jobs' && canManageContactRequests && (
+              <div className="space-y-6">
+                {/* Header with Stats */}
+                <div className="bg-white rounded-xl shadow-lg p-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                      <h2 className="text-xl font-semibold">Job Applications</h2>
+                      <p className="text-gray-600">Manage job applications and candidate status</p>
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      {filteredJobApplications.length} application{filteredJobApplications.length !== 1 ? 's' : ''} found
+                    </div>
+                  </div>
+                  
+                  {/* Stats Cards */}
+                  <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mt-6">
+                    <div className="bg-blue-50 rounded-lg p-4">
+                      <div className="text-2xl font-bold text-blue-600">{jobStats.total}</div>
+                      <div className="text-sm text-blue-800">Total Applications</div>
+                    </div>
+                    <div className="bg-yellow-50 rounded-lg p-4">
+                      <div className="text-2xl font-bold text-yellow-600">{jobStats.pending}</div>
+                      <div className="text-sm text-yellow-800">Pending</div>
+                    </div>
+                    <div className="bg-purple-50 rounded-lg p-4">
+                      <div className="text-2xl font-bold text-purple-600">{jobStats.reviewed}</div>
+                      <div className="text-sm text-purple-800">Reviewed</div>
+                    </div>
+                    <div className="bg-green-50 rounded-lg p-4">
+                      <div className="text-2xl font-bold text-green-600">{jobStats.contacted}</div>
+                      <div className="text-sm text-green-800">Contacted</div>
+                    </div>
+                    <div className="bg-red-50 rounded-lg p-4">
+                      <div className="text-2xl font-bold text-red-600">{jobStats.rejected}</div>
+                      <div className="text-sm text-red-800">Rejected</div>
+                    </div>
+                    <div className="bg-emerald-50 rounded-lg p-4">
+                      <div className="text-2xl font-bold text-emerald-600">{jobStats.hired}</div>
+                      <div className="text-sm text-emerald-800">Hired</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Search and Filter */}
+                <div className="bg-white rounded-xl shadow-lg p-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div className="relative flex-1 max-w-md">
+                      <Search className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+                      <input
+                        type="text"
+                        placeholder="Search applications by name, email, or position..."
+                        value={jobSearchTerm}
+                        onChange={(e) => setJobSearchTerm(e.target.value)}
+                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <select
+                        value={jobStatusFilter}
+                        onChange={(e) => setJobStatusFilter(e.target.value)}
+                        className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      >
+                        <option value="all">All Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="reviewed">Reviewed</option>
+                        <option value="contacted">Contacted</option>
+                        <option value="rejected">Rejected</option>
+                        <option value="hired">Hired</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Applications Table */}
+                <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Applicant
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Position
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Contact
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Status
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Applied
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {filteredJobApplications.length > 0 ? (
+                          filteredJobApplications.map((application) => (
+                            <tr key={application.id} className="hover:bg-gray-50">
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="flex items-center">
+                                  <div className="flex-shrink-0 h-10 w-10">
+                                    <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                                      <User className="w-5 h-5 text-gray-600" />
+                                    </div>
+                                  </div>
+                                  <div className="ml-4">
+                                    <div className="text-sm font-medium text-gray-900">
+                                      {application.name}
+                                    </div>
+                                    <div className="text-sm text-gray-500">
+                                      {application.email}
+                                    </div>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="flex items-center">
+                                  <Briefcase className="w-4 h-4 text-gray-400 mr-2" />
+                                  <span className="text-sm text-gray-900">{application.position}</span>
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="text-sm text-gray-900">{application.phone}</div>
+                                <div className="text-sm text-gray-500">{application.email}</div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                  application.status === 'pending' 
+                                    ? 'bg-yellow-100 text-yellow-800'
+                                    : application.status === 'reviewed'
+                                    ? 'bg-purple-100 text-purple-800'
+                                    : application.status === 'contacted'
+                                    ? 'bg-green-100 text-green-800'
+                                    : application.status === 'rejected'
+                                    ? 'bg-red-100 text-red-800'
+                                    : application.status === 'hired'
+                                    ? 'bg-emerald-100 text-emerald-800'
+                                    : 'bg-gray-100 text-gray-800'
+                                }`}>
+                                  {application.status || 'pending'}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {application.createdAt ? new Date(application.createdAt).toLocaleDateString() : 'Unknown'}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <div className="flex space-x-2">
+                                  {application.resumeUrl && (
+                                    <a
+                                      href={application.resumeUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-blue-600 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded text-xs transition-colors"
+                                      title="View Resume"
+                                    >
+                                      <ExternalLink className="w-3 h-3 inline mr-1" />
+                                      Resume
+                                    </a>
+                                  )}
+                                  <select
+                                    value={application.status || 'pending'}
+                                    onChange={(e) => handleUpdateJobApplicationStatus(application.id, e.target.value)}
+                                    className="text-xs px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                  >
+                                    <option value="pending">Pending</option>
+                                    <option value="reviewed">Reviewed</option>
+                                    <option value="contacted">Contacted</option>
+                                    <option value="rejected">Rejected</option>
+                                    <option value="hired">Hired</option>
+                                  </select>
+                                  <button
+                                    onClick={() => handleDeleteJobApplication(application.id, application.name)}
+                                    className="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 px-2 py-1 rounded text-xs transition-colors"
+                                    title="Delete application"
+                                  >
+                                    Delete
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
+                              <Briefcase className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                              <p className="text-lg font-medium">No job applications found</p>
+                              <p className="text-sm">Applications will appear here when candidates apply for positions.</p>
                             </td>
                           </tr>
                         )}

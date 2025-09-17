@@ -220,7 +220,7 @@ const TermsOfService = () => {
                   <p>275 New North Road Islington # 1432</p>
                   <p>London, N1 7AA, United Kingdom</p>
                   <p>Email: <a href="mailto:support@theholylabs.com" className="text-jordy-blue hover:text-white transition-colors duration-200">support@theholylabs.com</a></p>
-                  <p>Phone: <a href="tel:+972515473526" className="text-jordy-blue hover:text-white transition-colors duration-200">+972 51 547 3526</a></p>
+                  <p>Phone: <a href="https://wa.me/972515473526" className="text-jordy-blue hover:text-white transition-colors duration-200">+972 51 547 3526</a></p>
                 </div>
               </div>
             </div>

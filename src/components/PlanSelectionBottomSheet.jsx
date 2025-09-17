@@ -7,7 +7,12 @@ import BottomSheet from './BottomSheet';
 import { useAuth } from '../contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 
-const PlanCard = ({ plan, isSelected, onClick, index }) => {
+const PlanCard = ({ plan, isSelected, onClick, index, hasReferralDiscount }) => {
+  // Calculate discounted price if user has referral discount
+  const originalPrice = parseFloat(plan.price);
+  const discountedPrice = hasReferralDiscount ? Math.max(0.5, originalPrice - 2.5) : originalPrice;
+  const hasDiscount = hasReferralDiscount && discountedPrice < originalPrice;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -28,6 +33,14 @@ const PlanCard = ({ plan, isSelected, onClick, index }) => {
         </div>
       )}
 
+      {/* Hot Deal Badge */}
+      {hasDiscount && (
+        <div className="absolute -top-2 -left-2 bg-gradient-to-r from-red-500 to-orange-500 text-white text-xs px-2 py-1 rounded-full font-medium">
+          <DollarSign size={12} className="inline mr-1" />
+          Hot Deal
+        </div>
+      )}
+
       {/* Plan Header */}
       <div className="flex items-start justify-between mb-3">
         <div>
@@ -35,7 +48,15 @@ const PlanCard = ({ plan, isSelected, onClick, index }) => {
           <p className="text-sm text-gray-600">{plan.description}</p>
         </div>
         <div className="text-right">
-          <div className="text-2xl font-bold text-green-600">${Math.round(plan.price)}</div>
+          {hasDiscount ? (
+            <div>
+              <div className="text-2xl font-bold text-red-600">${discountedPrice.toFixed(2)}</div>
+              <div className="text-sm text-gray-500 line-through">${originalPrice.toFixed(2)}</div>
+              <div className="text-xs text-red-600 font-medium">Save $2.50!</div>
+            </div>
+          ) : (
+            <div className="text-2xl font-bold text-green-600">${originalPrice.toFixed(2)}</div>
+          )}
           <div className="text-xs text-gray-500">{plan.currency || 'USD'}</div>
         </div>
       </div>
@@ -83,7 +104,7 @@ const PlanSelectionBottomSheet = ({
   loadingPlans,
   filteredCountries
 }) => {
-  const { currentUser } = useAuth();
+  const { currentUser, userProfile } = useAuth();
   const router = useRouter();
 
 
@@ -177,13 +198,19 @@ const PlanSelectionBottomSheet = ({
       // Import payment service dynamically
       const { paymentService } = await import('../services/paymentService');
       
+      // Calculate discounted price if user has referral discount
+      const originalPrice = parseFloat(plan.price);
+      const discountedPrice = userProfile?.referralCodeUsed ? Math.max(0.5, originalPrice - 2.5) : originalPrice;
+      
       // Create order data with real user email
       const orderData = {
         planId: plan.id,
         planName: plan.name,
         customerEmail: currentUser.email, // Must have user email
-        amount: plan.price,
-        currency: 'usd'
+        amount: discountedPrice, // Use discounted price
+        originalAmount: originalPrice, // Keep original price for reference
+        currency: 'usd',
+        hasReferralDiscount: userProfile?.referralCodeUsed || false
       };
 
       console.log('🚀 Redirecting to Stripe for plan:', plan.name);
@@ -233,6 +260,7 @@ const PlanSelectionBottomSheet = ({
                 key={plan.id}
                 plan={plan}
                 index={index}
+                hasReferralDiscount={userProfile?.referralCodeUsed}
                 onClick={() => handlePlanSelect(plan)}
               />
             ))}

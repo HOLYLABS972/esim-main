@@ -104,10 +104,10 @@ const Contact = () => {
       console.log('Adding phone:', contactInfo.phone);
       info.push({
         icon: Phone,
-        title: "Call Us",
+        title: "WhatsApp Us",
         content: contactInfo.phone,
-        description: "Contact us by phone",
-        link: `tel:${contactInfo.phone.replace(/\s/g, '')}`
+        description: "Contact us via WhatsApp",
+        link: `https://wa.me/${contactInfo.phone.replace(/[^\d]/g, '')}`
       });
     }
     
@@ -363,7 +363,7 @@ const Contact = () => {
                               {office.phone && office.phone.trim() !== '' && (
                                 <p className="flex items-center">
                                   <Phone className="w-5 h-5 mr-2 text-tufts-blue" />
-                                  <a href={`tel:${office.phone.replace(/\s/g, '')}`} className="text-tufts-blue hover:text-cobalt-blue transition-colors duration-200">
+                                  <a href={`https://wa.me/${office.phone.replace(/[^\d]/g, '')}`} className="text-tufts-blue hover:text-cobalt-blue transition-colors duration-200">
                                     {office.phone}
                                   </a>
                                 </p>

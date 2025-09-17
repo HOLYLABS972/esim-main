@@ -27,13 +27,15 @@ const Footer = () => {
   const quickLinks = [
     { name: getText('footer.home', 'Home'), path: '/' },
     { name: getText('footer.blog', 'Blog'), path: '/blog' },
+    { name: getText('footer.jobs', 'Jobs'), path: '/jobs' },
     { name: getText('footer.contactUs', 'Contact Us'), path: '/contact' }
   ];
 
   const usefulLinks = [
     { name: getText('footer.privacyPolicy', 'Privacy Policy'), path: '/privacy-policy' },
     { name: getText('footer.termsOfService', 'Terms of Service'), path: '/terms-of-service' },
-    { name: getText('footer.cookiePolicy', 'Cookie Policy'), path: '/cookie-policy' }
+    { name: getText('footer.cookiePolicy', 'Cookie Policy'), path: '/cookie-policy' },
+    { name: getText('footer.affiliateProgram', 'Affiliate Program'), path: '/affiliate' }
   ];
 
   // Load settings data
@@ -216,7 +218,7 @@ const Footer = () => {
                     <div className="footer-contact-menu__item-content">
                       <a 
                         className="footer-contact__desc text-eerie-black hover:text-cobalt-blue transition-colors duration-200" 
-                        href={`tel:${contactInfo.phone}`}
+                        href={`https://wa.me/${contactInfo.phone.replace(/[^\d]/g, '')}`}
                       >
                         {contactInfo.phone}
                       </a>

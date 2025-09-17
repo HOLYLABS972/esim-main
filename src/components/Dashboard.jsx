@@ -2,13 +2,15 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { collection, query, where, getDocs, doc, setDoc, getDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, setDoc, getDoc, deleteDoc, serverTimestamp, addDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { motion } from 'framer-motion';
-import { User, Globe, Activity, Settings, QrCode, Eye, Download, Trash2, MoreVertical, Smartphone, Shield, AlertTriangle } from 'lucide-react';
+import { User, Globe, Activity, Settings, QrCode, Eye, Download, Trash2, MoreVertical, Smartphone, Shield, AlertTriangle, Wallet, Flame, Gift } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import QRCode from 'qrcode';
 import { esimService } from '../services/esimService';
+import { getReferralStats, createReferralCode } from '../services/referralService';
+import ReferralBottomSheet from './ReferralBottomSheet';
 
 // Generate actual QR code from LPA data using qrcode library
 const generateLPAQRCode = async (lpaData) => {
@@ -101,6 +103,17 @@ const Dashboard = () => {
   const [esimUsage, setEsimUsage] = useState(null);
   const [loadingEsimUsage, setLoadingEsimUsage] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [showReferralSheet, setShowReferralSheet] = useState(false);
+  
+  // Affiliate data
+  const [referralStats, setReferralStats] = useState({
+    referralCode: null,
+    usageCount: 0,
+    totalEarnings: 0,
+    isActive: false
+  });
+  const [loadingReferralStats, setLoadingReferralStats] = useState(false);
+  
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -117,6 +130,32 @@ const Dashboard = () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [showDropdown]);
+
+  // Load referral stats
+  const loadReferralStats = async () => {
+    if (!currentUser) return;
+    
+    try {
+      setLoadingReferralStats(true);
+      const stats = await getReferralStats(currentUser.uid);
+      
+      if (stats.referralCode) {
+        setReferralStats(stats);
+      } else {
+        // Create referral code if user doesn't have one
+        const result = await createReferralCode(currentUser.uid, currentUser.email);
+        if (result.success) {
+          // Reload stats after creating code
+          const newStats = await getReferralStats(currentUser.uid);
+          setReferralStats(newStats);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading referral stats:', error);
+    } finally {
+      setLoadingReferralStats(false);
+    }
+  };
 
   // Check for access denied error
   useEffect(() => {
@@ -135,6 +174,8 @@ const Dashboard = () => {
       }
 
       try {
+        // Load referral stats
+        await loadReferralStats();
         console.log('🔍 Current user:', currentUser.email);
         console.log('🔍 Firebase db:', db);
         
@@ -249,6 +290,7 @@ const Dashboard = () => {
 
   const activeOrders = orders.filter(order => order && order.status === 'active');
   const pendingOrders = orders.filter(order => order && order.status === 'pending');
+
 
   const handleViewQRCode = async (order) => {
     try {
@@ -489,20 +531,76 @@ const Dashboard = () => {
       >
         {/* Header */}
         <div className="bg-white rounded-xl shadow-lg p-6">
-          <div className="flex items-center space-x-4">
-            <div className="bg-blue-100 p-3 rounded-full">
-              <User className="w-8 h-8 text-blue-600" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="bg-blue-100 p-3 rounded-full">
+                <User className="w-8 h-8 text-blue-600" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">
+                  Welcome back, {currentUser.displayName || currentUser.email}!
+                </h1>
+                <p className="text-gray-600">
+                  Manage your eSIM orders and account settings
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                Welcome back, {currentUser.displayName || currentUser.email}!
-              </h1>
-              <p className="text-gray-600">
-                Manage your eSIM orders and account settings
-              </p>
-            </div>
+            {!userProfile?.referralCodeUsed && (
+              <button
+                onClick={() => setShowReferralSheet(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-2"
+              >
+                <Gift className="w-4 h-4" />
+                <span>Apply Referral</span>
+              </button>
+            )}
           </div>
         </div>
+
+        {/* Hot Deals Banner - Only for users who used referral code */}
+        {userProfile?.referralCodeUsed && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="bg-white rounded-xl shadow-lg p-6 text-gray-900 cursor-pointer hover:shadow-xl transition-shadow duration-200 border border-gray-200"
+            onClick={() => router.push('/esim-plans')}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="bg-blue-100 p-3 rounded-full">
+                  <Flame className="w-8 h-8 text-blue-600" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold">Hot Deals!</h2>
+                  <p className="text-gray-600">
+                    Get up to 50% off on all eSIM plans
+                  </p>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-3xl font-bold text-blue-600">$2.50</div>
+                <div className="text-sm text-gray-500">Starting from</div>
+              </div>
+            </div>
+            <div className="mt-4 flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm font-medium">
+                  Limited Time
+                </span>
+                <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-sm font-medium">
+                  Premium Plans
+                </span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-gray-600">View Deals</span>
+                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            </div>
+          </motion.div>
+        )}
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -540,6 +638,24 @@ const Dashboard = () => {
             </div>
           </motion.div>
 
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.3 }}
+            className="bg-white rounded-xl shadow-lg p-6 cursor-pointer hover:shadow-xl transition-shadow duration-200"
+            onClick={() => router.push('/affiliate-program')}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Your Performance</p>
+                <p className="text-3xl font-bold text-purple-600">${referralStats.totalEarnings.toFixed(2)}</p>
+                <p className="text-xs text-purple-600 mt-2 font-medium">Tap to join affiliate program →</p>
+              </div>
+              <div className="bg-purple-100 p-3 rounded-full">
+                <Wallet className="w-6 h-6 text-purple-600" />
+              </div>
+            </div>
+          </motion.div>
         </div>
 
         {/* Recent Orders */}
@@ -659,6 +775,7 @@ const Dashboard = () => {
             </div>
           </div>
         </motion.div>
+
       </motion.div>
 
       {/* QR Code Modal */}
@@ -1177,6 +1294,12 @@ const Dashboard = () => {
           </motion.div>
         </div>
       )}
+
+      {/* Referral Bottom Sheet */}
+      <ReferralBottomSheet 
+        isOpen={showReferralSheet} 
+        onClose={() => setShowReferralSheet(false)} 
+      />
     </div>
   );
 };

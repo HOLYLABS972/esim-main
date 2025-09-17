@@ -17,20 +17,25 @@ const VerifyEmail = () => {
   const [loading, setLoading] = useState(false);
   const [otpSent, setOtpSent] = useState(null);
   const [verificationComplete, setVerificationComplete] = useState(false);
+  const [referralCode, setReferralCode] = useState('');
   const { verifyEmailOTP } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    // Get email and user name from URL params
+    // Get email, user name, and referral code from URL params
     const emailParam = searchParams.get('email');
     const nameParam = searchParams.get('name');
+    const referralCodeParam = searchParams.get('referralCode');
     
     if (emailParam) {
       setEmail(emailParam);
     }
     if (nameParam) {
       setUserName(nameParam);
+    }
+    if (referralCodeParam) {
+      setReferralCode(referralCodeParam);
     }
 
     // Check if there's pending signup data
@@ -42,6 +47,14 @@ const VerifyEmail = () => {
         timestamp: pendingSignup.timestamp,
         expiresAt: pendingSignup.expiresAt
       });
+    }
+
+    // Check if there's pending user data from referral code step
+    const pendingUserData = localStorage.getItem('pendingUserData');
+    if (pendingUserData) {
+      const userData = JSON.parse(pendingUserData);
+      if (userData.email) setEmail(userData.email);
+      if (userData.name) setUserName(userData.name);
     }
   }, [searchParams]);
 
@@ -68,7 +81,7 @@ const VerifyEmail = () => {
       setVerificationComplete(true);
       toast.success('Account created and email verified successfully!');
       
-      // Redirect to dashboard after 2 seconds
+      // Redirect to dashboard
       setTimeout(() => {
         router.push('/dashboard');
       }, 2000);

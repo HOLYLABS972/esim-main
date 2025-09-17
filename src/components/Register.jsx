@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '../contexts/AuthContext';
 import { motion } from 'framer-motion';
-import { Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, User, Eye, EyeOff, Gift } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const Register = () => {
@@ -14,8 +14,18 @@ const Register = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [referralCode, setReferralCode] = useState('');
   const { signup } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Check for referral code in URL
+  useEffect(() => {
+    const refCode = searchParams.get('ref');
+    if (refCode) {
+      setReferralCode(refCode.toUpperCase());
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -32,10 +42,10 @@ const Register = () => {
 
     try {
       setLoading(true);
-      const result = await signup(email, password, displayName);
+      const result = await signup(email, password, displayName, referralCode);
       
       if (result.pending) {
-        toast.success('Verification code sent! Please check your email.');
+        toast.success('Account created! Please check your email for verification code.');
         router.push(`/verify-email?email=${encodeURIComponent(email)}&name=${encodeURIComponent(displayName)}`);
       }
     } catch (error) {
@@ -147,6 +157,7 @@ const Register = () => {
                 </button>
               </div>
             </div>
+
 
           </div>
 

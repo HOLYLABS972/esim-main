@@ -23,6 +23,7 @@ export default function HomePage() {
         {/* How It Works & Mobile Apps Section (Combined) */}
         <ActivationSection />
       </main>
+      
     </div>
   )
 }
