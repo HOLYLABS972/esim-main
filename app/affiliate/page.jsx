@@ -1,30 +1,18 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { 
   Users, 
   DollarSign, 
   Share2, 
-  Gift, 
   TrendingUp,
-  CheckCircle,
   ArrowRight,
   Star,
-  Zap
 } from 'lucide-react';
-import toast from 'react-hot-toast';
 
 const AffiliatePage = () => {
-  const [copiedCode, setCopiedCode] = useState(false);
-
-  const copyToClipboard = (text) => {
-    navigator.clipboard.writeText(text);
-    setCopiedCode(true);
-    toast.success('Referral code copied to clipboard!');
-    setTimeout(() => setCopiedCode(false), 2000);
-  };
 
   const features = [
     {
@@ -49,35 +37,6 @@ const AffiliatePage = () => {
     }
   ];
 
-  const steps = [
-    {
-      number: "01",
-      title: "Join Our Platform",
-      description: "Sign up for a free account and get access to our eSIM services",
-      icon: CheckCircle
-    },
-    {
-      number: "02", 
-      title: "Get Your Referral Code",
-      description: "Generate your unique referral code from your dashboard",
-      icon: Gift
-    },
-    {
-      number: "03",
-      title: "Share & Earn",
-      description: "Share your code with friends and earn $1 for each successful referral",
-      icon: Share2
-    }
-  ];
-
-  const benefits = [
-    "No upfront costs or fees",
-    "Instant earnings tracking",
-    "Real-time referral statistics", 
-    "Easy-to-use dashboard",
-    "Mobile and web compatible",
-    "Secure and reliable platform"
-  ];
 
   return (
     <div className="min-h-screen bg-white">

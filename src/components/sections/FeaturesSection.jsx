@@ -68,9 +68,11 @@ export default function FeaturesSection() {
                   <div className="w-full h-full bg-white rounded-t-[10cqw] flex items-center justify-center relative overflow-hidden">
                     <div className="text-center z-10">
                       <div className="text-4xl mb-4 mx-auto">
-                        <img 
+                        <Image 
                           src="/images/frontend/home/361053945_fb50482a-76fc-47ca-82b4-9fd33e920ad6.svg" 
                           alt="World Globe" 
+                          width={192}
+                          height={192}
                           className="w-32 h-32 sm:w-40 sm:h-40 lg:w-48 lg:h-48 mx-auto"
                         />
                       </div>
@@ -131,24 +133,32 @@ export default function FeaturesSection() {
               <div className="flex flex-1 items-center py-6 lg:pb-2 justify-center">
                 {/* Payment Icons - Mobile Responsive */}
                 <div className="flex items-center space-x-2 sm:space-x-3 flex-wrap justify-center gap-2">
-                  <img 
+                  <Image 
                     src="/images/frontend/home/visa.png" 
                     alt="Visa" 
+                    width={48}
+                    height={48}
                     className="h-8 sm:h-10 lg:h-12 w-auto"
                   />
-                  <img 
+                  <Image 
                     src="/images/frontend/home/card.png" 
                     alt="Mastercard" 
+                    width={48}
+                    height={48}
                     className="h-8 sm:h-10 lg:h-12 w-auto"
                   />
-                  <img 
+                  <Image 
                     src="/images/frontend/home/paypal.png" 
                     alt="PayPal" 
+                    width={48}
+                    height={48}
                     className="h-8 sm:h-10 lg:h-12 w-auto"
                   />
-                  <img 
+                  <Image 
                     src="/images/frontend/home/apple-pay.png" 
                     alt="Apple Pay" 
+                    width={48}
+                    height={48}
                     className="h-8 sm:h-10 lg:h-12 w-auto"
                   />
                 </div>
@@ -182,13 +192,13 @@ export default function FeaturesSection() {
                   </div>
                   <div className="px-3 sm:px-6 pt-3 sm:pt-6 pb-8 sm:pb-14 space-y-2 sm:space-y-4">
                     <div className="text-jordy-blue text-xs sm:text-xs lg:text-sm font-mono">
-                      <div className="text-jordy-blue">// Device Requirements</div>
+                      <div className="text-jordy-blue">{/* Device Requirements */}</div>
                       <div className="mt-1 sm:mt-2">
                         <span className="text-tufts-blue">const</span> devices = &#123;
                       </div>
                       <div className="ml-2 sm:ml-4 space-y-1">  
-                       <div><span className="text-alice-blue">"{t('features.deviceCompatibility.esimCompatible')}"</span>: <span className="text-alice-blue">"True"</span>,</div>
-                        <div><span className="text-alice-blue">"Operating System"</span>: <span className="text-alice-blue">"{t('features.deviceCompatibility.operatingSystem')}"</span>,</div>
+                       <div><span className="text-alice-blue">&quot;{t('features.deviceCompatibility.esimCompatible')}&quot;</span>: <span className="text-alice-blue">&quot;True&quot;</span>,</div>
+                        <div><span className="text-alice-blue">&quot;Operating System&quot;</span>: <span className="text-alice-blue">&quot;{t('features.deviceCompatibility.operatingSystem')}&quot;</span>,</div>
                       </div>
                       <div>&#125;;<span className="animate-blink text-white ml-1">|</span></div>
                     </div>
