@@ -292,6 +292,63 @@ const AdminDashboard = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showAttachPlanModal, showAttachCountryPlanModal]);
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showUserDropdown && !event.target.closest('.user-dropdown-container')) {
+        setShowUserDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showUserDropdown]);
+
+  // Auto-load plans when Plans tab is selected
+  useEffect(() => {
+    if (activeTab === 'plans' && allPlans.length === 0) {
+      loadAllPlans();
+    }
+  }, [activeTab, allPlans.length, loadAllPlans]);
+
+  // Filter and sort plans
+  useEffect(() => {
+    let filtered = [...allPlans];
+
+    // Filter by status
+    if (planStatusFilter !== 'all') {
+      filtered = filtered.filter(plan => 
+        planStatusFilter === 'enabled' ? plan.enabled : !plan.enabled
+      );
+    }
+
+    // Filter by country
+    if (planCountryFilter !== 'all') {
+      filtered = filtered.filter(plan => 
+        plan.country_codes?.includes(planCountryFilter) || 
+        plan.country_ids?.includes(planCountryFilter)
+      );
+    }
+
+    // Sort plans
+    filtered.sort((a, b) => {
+      if (planSortBy === 'name') {
+        return a.name.localeCompare(b.name);
+      } else if (planSortBy === 'price') {
+        return (a.price || 0) - (b.price || 0);
+      } else if (planSortBy === 'country') {
+        const aCountry = a.country_codes?.[0] || '';
+        const bCountry = b.country_codes?.[0] || '';
+        return aCountry.localeCompare(bCountry);
+      }
+      return 0;
+    });
+
+    setFilteredPlans(filtered);
+  }, [allPlans, planStatusFilter, planCountryFilter, planSortBy]);
+
   // Error handling - AFTER ALL HOOKS
   if (!currentUser) {
     return (
@@ -1263,20 +1320,6 @@ const AdminDashboard = () => {
       toast.error(`Error logging out: ${error.message}`);
     }
   };
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (showUserDropdown && !event.target.closest('.user-dropdown-container')) {
-        setShowUserDropdown(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [showUserDropdown]);
 
   const handleResetSettings = async () => {
     if (!window.confirm('Are you sure you want to reset all settings to defaults? This action cannot be undone.')) {
