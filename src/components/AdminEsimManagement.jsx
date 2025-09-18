@@ -186,31 +186,6 @@ const AdminEsimManagement = () => {
     }
   };
 
-  // View success page for this order
-  const handleViewSuccessPage = (order) => {
-    console.log('👁️ Viewing success page for order:', order.id);
-    
-    // Create URL parameters for success page
-    const params = new URLSearchParams({
-      order_id: order.orderId || order.id,
-      plan_id: order.planId || 'ae-1gb-7',
-      email: order.userEmail,
-      total: (order.price || 0).toString(),
-      name: order.planName || 'eSIM Plan',
-      currency: 'usd',
-      user_id: order.userId
-    });
-    
-    // Redirect to success page
-    const successUrl = `/payment-success?${params.toString()}`;
-    console.log('👁️ Redirecting to success page:', successUrl);
-    
-    toast.success('Redirecting to success page...');
-    
-    // Use window.location for full page redirect
-    window.location.href = successUrl;
-  };
-
   // Format date
   const formatDate = (date) => {
     if (!date) return 'N/A';
@@ -502,17 +477,6 @@ const AdminEsimManagement = () => {
                                 View Details
                               </button>
                               
-                              {/* Show View Success Page option for all orders */}
-                              <button
-                                onClick={() => {
-                                  handleViewSuccessPage(order);
-                                  setOpenDropdown(null);
-                                }}
-                                className="flex items-center w-full px-4 py-2 text-sm text-blue-600 hover:bg-gray-100"
-                              >
-                                <Eye className="w-4 h-4 mr-3" />
-                                View Success Page
-                              </button>
                               
                               <button
                                 onClick={() => {
