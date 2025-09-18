@@ -113,7 +113,9 @@ const AdminDashboard = () => {
   const [planCountryFilter, setPlanCountryFilter] = useState('all'); // 'all' or specific country code
   const [pendingPriceChanges, setPendingPriceChanges] = useState({}); // Track pending price changes
   const [editingPrices, setEditingPrices] = useState({}); // Track which prices are being edited
-  const [markupPercentage, setMarkupPercentage] = useState(17); // Configurable markup percentage
+  const [markupPercentage, setMarkupPercentage] = useState(17);
+  const [regularDiscountPercentage, setRegularDiscountPercentage] = useState(10); // Configurable markup percentage
+  const [transactionCommissionPercentage, setTransactionCommissionPercentage] = useState(5); // Commission for referral owners
   
   
   // User Management
@@ -159,6 +161,7 @@ const AdminDashboard = () => {
     socialMedia: {},
     contact: {},
     businessHours: {},
+    referral: {},
     appStore: {}
   });
   const [settingsErrors, setSettingsErrors] = useState({});
@@ -1237,6 +1240,7 @@ const AdminDashboard = () => {
         socialMedia: settingsData.socialMedia || {},
         contact: settingsData.contact || {},
         businessHours: settingsData.businessHours || {},
+        referral: settingsData.referral || {},
         appStore: settingsData.appStore || {}
       });
       console.log('✅ Loaded settings from Firestore');
@@ -1809,7 +1813,11 @@ const AdminDashboard = () => {
       if (pricingConfig.exists()) {
         const data = pricingConfig.data();
         setMarkupPercentage(data.markup_percentage || 17);
+        setRegularDiscountPercentage(data.regular_discount_percentage || 10);
+        setTransactionCommissionPercentage(data.transaction_commission_percentage || 5);
         console.log(`💰 Loaded markup percentage: ${data.markup_percentage || 17}%`);
+        console.log(`💰 Loaded regular discount percentage: ${data.regular_discount_percentage || 10}%`);
+        console.log(`💰 Loaded transaction commission percentage: ${data.transaction_commission_percentage || 5}%`);
       }
     } catch (error) {
       console.error('❌ Error loading markup percentage:', error);
@@ -1820,15 +1828,36 @@ const AdminDashboard = () => {
   const saveMarkupPercentage = async () => {
     try {
       setLoading(true);
+      
+      // Save to both locations for compatibility
+      // 1. Save to config/pricing (for backward compatibility)
       const pricingConfigRef = doc(db, 'config', 'pricing');
       await setDoc(pricingConfigRef, {
         markup_percentage: markupPercentage,
+        regular_discount_percentage: regularDiscountPercentage,
+        transaction_commission_percentage: transactionCommissionPercentage,
         updated_at: serverTimestamp(),
         updated_by: currentUser?.uid || 'admin'
       }, { merge: true });
       
-      toast.success(`Markup percentage updated to ${markupPercentage}%`);
-      console.log(`✅ Markup percentage saved: ${markupPercentage}%`);
+      // 2. Save to settings/general/referral (for referral system)
+      const settingsRef = doc(db, 'settings', 'general');
+      await setDoc(settingsRef, {
+        referral: {
+          discountPercentage: markupPercentage,
+          minimumPrice: 0.5,
+          transactionCommissionPercentage: transactionCommissionPercentage
+        },
+        regular: {
+          discountPercentage: regularDiscountPercentage,
+          minimumPrice: 0.5
+        },
+        updatedAt: serverTimestamp(),
+        updatedBy: currentUser?.uid || 'admin'
+      }, { merge: true });
+      
+      toast.success(`Settings updated: Referral ${markupPercentage}%, Regular ${regularDiscountPercentage}%, Commission ${transactionCommissionPercentage}%`);
+      console.log(`✅ Settings saved: Referral ${markupPercentage}%, Regular ${regularDiscountPercentage}%, Commission ${transactionCommissionPercentage}%`);
     } catch (error) {
       console.error('❌ Error saving markup percentage:', error);
       toast.error(`Error saving markup percentage: ${error.message}`);
@@ -2142,14 +2171,6 @@ const AdminDashboard = () => {
                         </button>
                       </div>
                       
-                      {rawApiData && (
-                        <div className="mt-6 bg-gray-900 text-green-400 p-4 rounded-lg overflow-auto max-h-96">
-                          <h4 className="text-white font-semibold mb-2">Raw API Response:</h4>
-                          <pre className="text-xs whitespace-pre-wrap">
-                            {JSON.stringify(rawApiData, null, 2)}
-                          </pre>
-                        </div>
-                      )}
                     </div>
                   </div>
 
@@ -2194,14 +2215,14 @@ const AdminDashboard = () => {
                     Price Configuration
                   </h2>
                   <p className="text-sm text-gray-600 mb-6">
-                    Configure markup percentage for retail pricing.
+                    Configure referral program discount percentage.
                   </p>
                   
                   <div className="space-y-4">
                     <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                      <h3 className="font-semibold text-gray-800 mb-2">Retail Markup Percentage</h3>
+                      <h3 className="font-semibold text-gray-800 mb-2">Referral Program Discount</h3>
                       <p className="text-sm text-gray-600 mb-3">
-                        Set the markup percentage applied to original prices to calculate retail prices.
+                        Set the discount percentage applied to original prices for users with referral codes.
                       </p>
                       <div className="flex items-center space-x-4">
                         <div className="flex items-center space-x-2">
@@ -2217,16 +2238,67 @@ const AdminDashboard = () => {
                           <span className="text-sm text-gray-600">%</span>
                         </div>
                         <div className="text-sm text-gray-600">
-                          Example: $10 original → ${Math.round(10 * (1 + markupPercentage / 100))} retail
+                          Example: $10 original → ${(10 * (100 - markupPercentage) / 100).toFixed(2)} discounted
                         </div>
-                        <button
-                          onClick={saveMarkupPercentage}
-                          disabled={loading}
-                          className="ml-4 px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
-                        >
-                          {loading ? 'Saving...' : 'Save Markup'}
-                        </button>
                       </div>
+                    </div>
+
+                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                      <h3 className="font-semibold text-gray-800 mb-2">Regular/Basic Discount</h3>
+                      <p className="text-sm text-gray-600 mb-3">
+                        Set the discount percentage applied to original prices for all regular users.
+                      </p>
+                      <div className="flex items-center space-x-4">
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="number"
+                            value={regularDiscountPercentage}
+                            onChange={(e) => setRegularDiscountPercentage(parseFloat(e.target.value) || 0)}
+                            className="w-20 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
+                            min="0"
+                            max="100"
+                            step="0.1"
+                          />
+                          <span className="text-sm text-gray-600">%</span>
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          Example: $10 original → ${(10 * (100 - regularDiscountPercentage) / 100).toFixed(2)} discounted
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                      <h3 className="font-semibold text-gray-800 mb-2">Transaction Commission</h3>
+                      <p className="text-sm text-gray-600 mb-3">
+                        Set the commission percentage that referral code owners earn from each transaction made by their referred users.
+                      </p>
+                      <div className="flex items-center space-x-4">
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="number"
+                            value={transactionCommissionPercentage}
+                            onChange={(e) => setTransactionCommissionPercentage(parseFloat(e.target.value) || 0)}
+                            className="w-20 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+                            min="0"
+                            max="100"
+                            step="0.1"
+                          />
+                          <span className="text-sm text-gray-600">%</span>
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          Example: $10 transaction → ${(10 * transactionCommissionPercentage / 100).toFixed(2)} commission earned
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="text-center pt-4">
+                      <button
+                        onClick={saveMarkupPercentage}
+                        disabled={loading}
+                        className="px-6 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                      >
+                        {loading ? 'Saving...' : 'Save All Discount Settings'}
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -2298,6 +2370,7 @@ const AdminDashboard = () => {
                       { id: 'social', label: 'Social Media', icon: Link },
                       { id: 'contact', label: 'Contact Info', icon: Phone },
                       { id: 'hours', label: 'Business Hours', icon: Clock },
+                      { id: 'referral', label: 'Referral Settings', icon: Gift },
                       { id: 'appstore', label: 'App Store Links', icon: Smartphone }
                     ].map((tab) => {
                       const Icon = tab.icon;
@@ -2532,6 +2605,125 @@ const AdminDashboard = () => {
                               ) : (
                                 <p className="text-gray-500">No business hours set. Click "Manage Hours" to add them.</p>
                               )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Referral Settings Tab */}
+                      {activeSettingsTab === 'referral' && (
+                        <div className="space-y-6">
+                          <div className="flex items-center justify-between">
+                            <h3 className="text-lg font-semibold">Referral Discount Settings</h3>
+                            <button
+                              onClick={() => handleSaveSettings('referral')}
+                              disabled={settingsLoading}
+                              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center"
+                            >
+                              <Save className="w-4 h-4 mr-2" />
+                              Save Referral Settings
+                            </button>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* Discount Percentage */}
+                            <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 border border-green-200">
+                              <div className="flex items-center mb-4">
+                                <div className="w-12 h-12 bg-green-600 rounded-xl flex items-center justify-center mr-4">
+                                  <Gift className="w-6 h-6 text-white" />
+                                </div>
+                                <div>
+                                  <h4 className="font-semibold text-gray-900">Discount Percentage</h4>
+                                  <p className="text-sm text-gray-600">Percentage discount for users who used referral codes</p>
+                                </div>
+                              </div>
+                              <div className="space-y-2">
+                                <label className="block text-sm font-medium text-gray-700">
+                                  Discount Percentage (%)
+                                </label>
+                                <div className="relative">
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    max="100"
+                                    value={settingsFormData.referral?.discountPercentage || 10}
+                                    onChange={(e) => handleSettingsInputChange('referral', 'discountPercentage', parseInt(e.target.value) || 0)}
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                                    placeholder="50"
+                                  />
+                                  <span className="absolute right-3 top-2 text-gray-500">%</span>
+                                </div>
+                                <p className="text-xs text-gray-500">
+                                  Example: 50% means users pay half the original price
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Minimum Price */}
+                            <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200">
+                              <div className="flex items-center mb-4">
+                                <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center mr-4">
+                                  <DollarSign className="w-6 h-6 text-white" />
+                                </div>
+                                <div>
+                                  <h4 className="font-semibold text-gray-900">Minimum Price</h4>
+                                  <p className="text-sm text-gray-600">Minimum price after discount (in USD)</p>
+                                </div>
+                              </div>
+                              <div className="space-y-2">
+                                <label className="block text-sm font-medium text-gray-700">
+                                  Minimum Price ($)
+                                </label>
+                                <div className="relative">
+                                  <span className="absolute left-3 top-2 text-gray-500">$</span>
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    value={settingsFormData.referral?.minimumPrice || 0.5}
+                                    onChange={(e) => handleSettingsInputChange('referral', 'minimumPrice', parseFloat(e.target.value) || 0)}
+                                    className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    placeholder="0.50"
+                                  />
+                                </div>
+                                <p className="text-xs text-gray-500">
+                                  Example: $0.50 means no plan will cost less than $0.50
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Preview */}
+                          <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
+                            <h4 className="font-semibold text-gray-900 mb-4">Discount Preview</h4>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                              <div className="bg-white rounded-lg p-4 border border-gray-200">
+                                <div className="text-sm text-gray-600 mb-2">Original Price: $5.00</div>
+                                <div className="text-lg font-semibold text-green-600">
+                                  Discounted: ${((5.00 * (100 - (settingsFormData.referral?.discountPercentage || 10))) / 100).toFixed(2)}
+                                </div>
+                                <div className="text-xs text-gray-500">
+                                  Save: ${(5.00 - ((5.00 * (100 - (settingsFormData.referral?.discountPercentage || 10))) / 100)).toFixed(2)}
+                                </div>
+                              </div>
+                              <div className="bg-white rounded-lg p-4 border border-gray-200">
+                                <div className="text-sm text-gray-600 mb-2">Original Price: $10.00</div>
+                                <div className="text-lg font-semibold text-green-600">
+                                  Discounted: ${Math.max((settingsFormData.referral?.minimumPrice || 0.5), ((10.00 * (100 - (settingsFormData.referral?.discountPercentage || 10))) / 100)).toFixed(2)}
+                                </div>
+                                <div className="text-xs text-gray-500">
+                                  Save: ${(10.00 - Math.max((settingsFormData.referral?.minimumPrice || 0.5), ((10.00 * (100 - (settingsFormData.referral?.discountPercentage || 10))) / 100))).toFixed(2)}
+                                </div>
+                              </div>
+                              <div className="bg-white rounded-lg p-4 border border-gray-200">
+                                <div className="text-sm text-gray-600 mb-2">Original Price: $1.00</div>
+                                <div className="text-lg font-semibold text-green-600">
+                                  Discounted: ${Math.max((settingsFormData.referral?.minimumPrice || 0.5), ((1.00 * (100 - (settingsFormData.referral?.discountPercentage || 10))) / 100)).toFixed(2)}
+                                </div>
+                                <div className="text-xs text-gray-500">
+                                  Save: ${(1.00 - Math.max((settingsFormData.referral?.minimumPrice || 0.5), ((1.00 * (100 - (settingsFormData.referral?.discountPercentage || 10))) / 100))).toFixed(2)}
+                                </div>
+                              </div>
                             </div>
                           </div>
                         </div>

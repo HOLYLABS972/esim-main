@@ -11,9 +11,12 @@ import {
   Shield, 
   Zap,
   Smartphone,
-  DollarSign
+  DollarSign,
+  Gift
 } from 'lucide-react';
 import { useAuth } from '../../../src/contexts/AuthContext';
+import { hasUserUsedReferralCode } from '../../../src/services/referralService';
+import { getReferralSettings } from '../../../src/services/settingsService';
 import toast from 'react-hot-toast';
 
 const SharePackagePage = () => {
@@ -29,6 +32,8 @@ const SharePackagePage = () => {
   
   const [packageData, setPackageData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [hasReferralDiscount, setHasReferralDiscount] = useState(false);
+  const [referralSettings, setReferralSettings] = useState({ discountPercentage: 10, minimumPrice: 0.5 });
 
   const loadFromAiraloAPI = useCallback(async () => {
     try {
@@ -93,11 +98,43 @@ const SharePackagePage = () => {
     }
   }, [packageId, loadFromAiraloAPI]);
 
+  // Load referral settings
+  const loadReferralSettings = useCallback(async () => {
+    try {
+      const settings = await getReferralSettings();
+      setReferralSettings(settings);
+      console.log('⚙️ Loaded referral settings:', settings);
+    } catch (error) {
+      console.error('Error loading referral settings:', error);
+    }
+  }, []);
+
+  // Check if user has referral discount
+  const checkReferralDiscount = useCallback(async () => {
+    if (currentUser) {
+      try {
+        const hasUsed = await hasUserUsedReferralCode(currentUser.uid);
+        setHasReferralDiscount(hasUsed);
+        console.log('🎁 User has referral discount:', hasUsed);
+      } catch (error) {
+        console.error('Error checking referral discount:', error);
+      }
+    }
+  }, [currentUser]);
+
   useEffect(() => {
     if (packageId) {
       loadPackageData();
     }
   }, [packageId, loadPackageData]);
+
+  useEffect(() => {
+    loadReferralSettings();
+  }, [loadReferralSettings]);
+
+  useEffect(() => {
+    checkReferralDiscount();
+  }, [checkReferralDiscount]);
 
   const handlePurchase = async () => {
     if (!currentUser) {
@@ -111,19 +148,41 @@ const SharePackagePage = () => {
       return;
     }
     
+    // Calculate discounted price if user has referral discount
+    const originalPrice = parseFloat(packageData.price);
+    const discountPercentage = referralSettings.discountPercentage || 10;
+    const minimumPrice = referralSettings.minimumPrice || 0.5;
+    
+    // Calculate percentage-based discount
+    const discountedPrice = hasReferralDiscount 
+      ? Math.max(minimumPrice, originalPrice * (100 - discountPercentage) / 100)
+      : originalPrice;
+    const finalPrice = hasReferralDiscount ? discountedPrice : originalPrice;
+    
+    console.log('💰 Pricing calculation:', {
+      originalPrice,
+      hasReferralDiscount,
+      discountPercentage,
+      minimumPrice,
+      discountedPrice,
+      finalPrice
+    });
+    
     // Store package data in localStorage for the checkout process
     const checkoutData = {
       packageId: packageId,
       packageName: packageData.name,
       packageDescription: packageData.description,
-      price: parseFloat(packageData.price), // Ensure price is a number
+      price: finalPrice, // Use discounted price
+      originalPrice: originalPrice, // Keep original price for reference
       currency: packageData.currency || 'USD',
       data: packageData.data,
       dataUnit: packageData.dataUnit || 'GB',
       period: packageData.period || packageData.duration,
       country_code: packageData.country_code,
       benefits: packageData.benefits || [],
-      speed: packageData.speed
+      speed: packageData.speed,
+      hasReferralDiscount: hasReferralDiscount
     };
     
     console.log('💾 Storing checkout data:', checkoutData);
@@ -139,8 +198,10 @@ const SharePackagePage = () => {
         planId: packageId,
         planName: packageData.name,
         customerEmail: currentUser.email,
-        amount: parseFloat(packageData.price),
-        currency: 'usd'
+        amount: finalPrice, // Use discounted price
+        currency: 'usd',
+        originalAmount: originalPrice, // Include original amount for reference
+        hasReferralDiscount: hasReferralDiscount
       };
       
       console.log('💳 Order data for payment:', orderData);
@@ -310,7 +371,19 @@ const SharePackagePage = () => {
                   <DollarSign className="w-5 h-5 text-gray-600" />
                   <div>
                     <div className="text-sm text-gray-600">Price</div>
-                    <div className="font-semibold text-green-600">{formatPrice(packageData.price, packageData.currency)}</div>
+                    {hasReferralDiscount ? (
+                      <div>
+                        <div className="font-semibold text-red-600">
+                          ${Math.max(referralSettings.minimumPrice, parseFloat(packageData.price) * (100 - referralSettings.discountPercentage) / 100).toFixed(2)}
+                        </div>
+                        <div className="text-xs text-gray-500 line-through">${formatPrice(packageData.price)}</div>
+                        <div className="text-xs text-red-600 font-medium">
+                          Save ${(parseFloat(packageData.price) - Math.max(referralSettings.minimumPrice, parseFloat(packageData.price) * (100 - referralSettings.discountPercentage) / 100)).toFixed(2)}!
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="font-semibold text-green-600">${formatPrice(packageData.price)}</div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -333,6 +406,17 @@ const SharePackagePage = () => {
               {/* Get Package Section */}
               <div className="text-center mb-8">
                 <h3 className="text-2xl font-semibold text-gray-900 mb-4">Get This Package</h3>
+                {hasReferralDiscount && (
+                  <div className="bg-green-100 border border-green-300 rounded-lg p-3 mb-4 max-w-md mx-auto">
+                    <div className="flex items-center justify-center space-x-2">
+                      <Gift className="w-5 h-5 text-green-600" />
+                      <span className="text-green-800 font-medium">Referral Discount Applied!</span>
+                    </div>
+                    <p className="text-sm text-green-700 mt-1">
+                      You're saving ${(parseFloat(packageData.price) - Math.max(referralSettings.minimumPrice, parseFloat(packageData.price) * (100 - referralSettings.discountPercentage) / 100)).toFixed(2)} on this purchase ({referralSettings.discountPercentage}% off)
+                    </p>
+                  </div>
+                )}
                 <button
                   onClick={handlePurchase}
                   className="w-full max-w-md mx-auto flex items-center justify-center space-x-3 bg-blue-600 hover:bg-blue-700 text-white py-4 px-6 rounded-xl transition-colors font-medium text-lg shadow-lg"

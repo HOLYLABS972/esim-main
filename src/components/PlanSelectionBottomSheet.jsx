@@ -1,17 +1,43 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Globe, Star, Check, DollarSign, SortAsc, Smartphone } from 'lucide-react';
 import BottomSheet from './BottomSheet';
 import { useAuth } from '../contexts/AuthContext';
+import { getReferralSettings, getRegularSettings } from '../services/settingsService';
 import { useRouter } from 'next/navigation';
 
-const PlanCard = ({ plan, isSelected, onClick, index, hasReferralDiscount }) => {
-  // Calculate discounted price if user has referral discount
+const PlanCard = ({ plan, isSelected, onClick, index, hasReferralDiscount, referralSettings, regularSettings }) => {
+  // Calculate discounted price based on user type
   const originalPrice = parseFloat(plan.price);
-  const discountedPrice = hasReferralDiscount ? Math.max(0.5, originalPrice - 2.5) : originalPrice;
-  const hasDiscount = hasReferralDiscount && discountedPrice < originalPrice;
+  
+  let discountedPrice, hasDiscount, discountPercentage;
+  
+  if (hasReferralDiscount) {
+    // User has referral code - use ONLY referral discount
+    discountPercentage = referralSettings?.discountPercentage || 17;
+    const minimumPrice = referralSettings?.minimumPrice || 0.5;
+    discountedPrice = Math.max(minimumPrice, originalPrice * (100 - discountPercentage) / 100);
+    hasDiscount = discountedPrice < originalPrice;
+  } else {
+    // User has no referral code - use regular discount
+    discountPercentage = regularSettings?.discountPercentage || 10;
+    const minimumPrice = regularSettings?.minimumPrice || 0.5;
+    discountedPrice = Math.max(minimumPrice, originalPrice * (100 - discountPercentage) / 100);
+    hasDiscount = discountedPrice < originalPrice;
+  }
+  
+  console.log('💳 PlanCard calculation:', {
+    planName: plan.name,
+    originalPrice,
+    discountPercentage,
+    hasReferralDiscount,
+    discountedPrice,
+    hasDiscount,
+    referralSettings,
+    regularSettings
+  });
 
   return (
     <motion.div
@@ -83,7 +109,9 @@ const PlanCard = ({ plan, isSelected, onClick, index, hasReferralDiscount }) => 
             <div>
               <div className="text-2xl font-bold text-red-600">${discountedPrice.toFixed(2)}</div>
               <div className="text-sm text-gray-500 line-through">${originalPrice.toFixed(2)}</div>
-              <div className="text-xs text-red-600 font-medium">Save $2.50!</div>
+              <div className="text-xs text-red-600 font-medium">
+                Save ${(originalPrice - discountedPrice).toFixed(2)}!
+              </div>
             </div>
           ) : (
             <div className="text-2xl font-bold text-green-600">${originalPrice.toFixed(2)}</div>
@@ -135,7 +163,33 @@ const PlanSelectionBottomSheet = ({
 }) => {
   const { userProfile } = useAuth();
   const router = useRouter();
+  const [referralSettings, setReferralSettings] = useState({ discountPercentage: 17, minimumPrice: 0.5 });
+  const [regularSettings, setRegularSettings] = useState({ discountPercentage: 10, minimumPrice: 0.5 });
 
+  // Load both referral and regular settings
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const [referral, regular] = await Promise.all([
+          getReferralSettings(),
+          getRegularSettings()
+        ]);
+        console.log('🎯 Bottom sheet loaded referral settings:', referral);
+        console.log('🎯 Bottom sheet loaded regular settings:', regular);
+        setReferralSettings(referral);
+        setRegularSettings(regular);
+      } catch (error) {
+        console.error('Error loading settings:', error);
+      }
+    };
+    
+    if (isOpen) {
+      loadSettings();
+      // Refresh settings every 5 seconds while bottom sheet is open
+      const interval = setInterval(loadSettings, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [isOpen]);
 
   // Group countries by specific days (30, 7, 10, 15 days)
   const groupCountriesByDays = (countriesList) => {
@@ -270,6 +324,8 @@ const PlanSelectionBottomSheet = ({
                 plan={plan}
                 index={index}
                 hasReferralDiscount={userProfile?.referralCodeUsed}
+                referralSettings={referralSettings}
+                regularSettings={regularSettings}
                 onClick={() => handlePlanSelect(plan)}
               />
             ))}

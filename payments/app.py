@@ -200,7 +200,7 @@ def create_payment_order():
             }],
             mode='payment',
             success_url=f'{domain}/payment-success?order={order}&email={email}&total={total}&name={name}&currency={currency}',
-            cancel_url=f'{domain}/cart',
+            cancel_url=f'{domain}/esim-plans',
             customer_email=email,
             metadata={
                 'order_id': order,

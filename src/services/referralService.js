@@ -1,5 +1,5 @@
 import { db } from '../firebase/config';
-import { collection, doc, getDoc, setDoc, updateDoc, query, where, orderBy, limit, getDocs, serverTimestamp, increment, writeBatch } from 'firebase/firestore';
+import { collection, doc, getDoc, setDoc, updateDoc, query, where, orderBy, limit, getDocs, serverTimestamp, increment, writeBatch, addDoc } from 'firebase/firestore';
 
 // Process referral when a user signs up with a referral code
 export const processReferralUsage = async (referralCode, newUserId) => {
@@ -433,6 +433,135 @@ export const getReferralUsageStats = async () => {
     };
   } catch (error) {
     console.error('Error getting referral usage stats:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+// Process transaction commission for referral code owners
+export const processTransactionCommission = async (transactionData) => {
+  try {
+    console.log('💰 Processing transaction commission:', transactionData);
+    
+    const { userId, amount, transactionId, planId, planName } = transactionData;
+    
+    // Get user data to find their referral code owner
+    const userDoc = await getDoc(doc(db, 'users', userId));
+    if (!userDoc.exists()) {
+      console.log('❌ User not found:', userId);
+      return { success: false, error: 'User not found' };
+    }
+    
+    const userData = userDoc.data();
+    const referralCodeUsed = userData.referralCodeUsed;
+    
+    if (!referralCodeUsed) {
+      console.log('ℹ️ User did not use a referral code, no commission to process');
+      return { success: true, commission: 0, message: 'No referral code used' };
+    }
+    
+    // Get referral code owner
+    const referralDoc = await getDoc(doc(db, 'referralCodes', referralCodeUsed));
+    if (!referralDoc.exists()) {
+      console.log('❌ Referral code not found:', referralCodeUsed);
+      return { success: false, error: 'Referral code not found' };
+    }
+    
+    const referralData = referralDoc.data();
+    const referrerId = referralData.ownerId;
+    
+    // Get commission percentage from settings
+    const settingsDoc = await getDoc(doc(db, 'settings', 'general'));
+    const settings = settingsDoc.exists() ? settingsDoc.data() : {};
+    const commissionPercentage = settings.referral?.transactionCommissionPercentage || 5;
+    
+    // Calculate commission amount
+    const commissionAmount = (amount * commissionPercentage) / 100;
+    
+    console.log(`💰 Commission calculation: $${amount} × ${commissionPercentage}% = $${commissionAmount.toFixed(2)}`);
+    
+    // Create commission record
+    const commissionData = {
+      referrerId,
+      referredUserId: userId,
+      referralCode: referralCodeUsed,
+      transactionId,
+      planId,
+      planName,
+      transactionAmount: amount,
+      commissionPercentage,
+      commissionAmount,
+      status: 'pending', // pending, paid, cancelled
+      createdAt: serverTimestamp(),
+      processedAt: null
+    };
+    
+    const commissionRef = await addDoc(collection(db, 'referralCommissions'), commissionData);
+    
+    // Update referrer's total earnings
+    const referrerRef = doc(db, 'users', referrerId);
+    await updateDoc(referrerRef, {
+      totalCommissions: increment(commissionAmount),
+      lastCommissionDate: serverTimestamp()
+    });
+    
+    // Update referral code usage stats
+    await updateDoc(doc(db, 'referralCodes', referralCodeUsed), {
+      totalTransactions: increment(1),
+      totalTransactionValue: increment(amount),
+      totalCommissionsEarned: increment(commissionAmount),
+      lastTransactionDate: serverTimestamp()
+    });
+    
+    console.log(`✅ Commission processed: $${commissionAmount.toFixed(2)} for referrer ${referrerId}`);
+    
+    return {
+      success: true,
+      commission: commissionAmount,
+      commissionId: commissionRef.id,
+      referrerId,
+      referralCode: referralCodeUsed
+    };
+    
+  } catch (error) {
+    console.error('❌ Error processing transaction commission:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+// Get commission history for a referrer
+export const getCommissionHistory = async (referrerId) => {
+  try {
+    console.log('📊 Getting commission history for:', referrerId);
+    
+    const commissionsQuery = query(
+      collection(db, 'referralCommissions'),
+      where('referrerId', '==', referrerId),
+      orderBy('createdAt', 'desc'),
+      limit(50)
+    );
+    
+    const commissionsSnapshot = await getDocs(commissionsQuery);
+    const commissions = commissionsSnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+    
+    // Calculate totals
+    const totalCommissions = commissions.reduce((sum, commission) => sum + commission.commissionAmount, 0);
+    const pendingCommissions = commissions
+      .filter(c => c.status === 'pending')
+      .reduce((sum, commission) => sum + commission.commissionAmount, 0);
+    
+    return {
+      success: true,
+      commissions,
+      totalCommissions,
+      pendingCommissions,
+      totalTransactions: commissions.length
+    };
+    
+  } catch (error) {
+    console.error('Error getting commission history:', error);
     return { success: false, error: error.message };
   }
 };

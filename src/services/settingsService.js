@@ -197,6 +197,39 @@ export const getCompanyInfo = async () => {
   }
 };
 
+// Get referral settings only
+export const getReferralSettings = async () => {
+  try {
+    const settings = await getSettings();
+    console.log('🔍 All settings:', settings);
+    console.log('🔍 Referral settings from DB:', settings.referral);
+    console.log('🔍 Default referral settings:', defaultSettings.referral);
+    
+    const referralSettings = settings.referral || defaultSettings.referral;
+    console.log('🔍 Final referral settings:', referralSettings);
+    return referralSettings;
+  } catch (error) {
+    console.error('Error getting referral settings:', error);
+    return defaultSettings.referral;
+  }
+};
+
+// Get regular settings only
+export const getRegularSettings = async () => {
+  try {
+    const settings = await getSettings();
+    console.log('🔍 All settings:', settings);
+    console.log('🔍 Regular settings from DB:', settings.regular);
+    
+    const regularSettings = settings.regular || { discountPercentage: 10, minimumPrice: 0.5 };
+    console.log('🔍 Final regular settings:', regularSettings);
+    return regularSettings;
+  } catch (error) {
+    console.error('Error getting regular settings:', error);
+    return { discountPercentage: 10, minimumPrice: 0.5 };
+  }
+};
+
 // Reset settings to defaults
 export const resetSettingsToDefaults = async (userId) => {
   try {
