@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useAdmin } from '../contexts/AdminContext';
-import { collection, query, where, getDocs, getDoc, doc, updateDoc, deleteDoc, writeBatch, addDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, getDoc, doc, updateDoc, deleteDoc, writeBatch, addDoc, setDoc, serverTimestamp, orderBy } from 'firebase/firestore';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { db } from '../firebase/config';
 import { getContactRequests, updateContactRequestStatus, deleteContactRequest } from '../services/contactService';
@@ -29,7 +29,6 @@ import {
   TrendingUp,
   Database,
   Activity,
-  X,
   DollarSign,
   FileText,
   MessageSquare,
@@ -52,7 +51,8 @@ import {
   User,
   ChevronDown,
   ChevronRight,
-  Gift
+  Gift,
+  CreditCard
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import BlogManagement from './BlogManagement';
@@ -150,8 +150,13 @@ const AdminDashboard = () => {
   const [referralCodes, setReferralCodes] = useState([]);
   const [referralUsageStats, setReferralUsageStats] = useState({});
   const [loadingReferralCodes, setLoadingReferralCodes] = useState(false);
-  const [showUsageModal, setShowUsageModal] = useState(false);
-  const [selectedOwnerData, setSelectedOwnerData] = useState(null);
+  
+  // Withdrawal Requests Management
+  const [withdrawalRequests, setWithdrawalRequests] = useState([]);
+  const [loadingWithdrawals, setLoadingWithdrawals] = useState(false);
+  const [withdrawalFilter, setWithdrawalFilter] = useState('all'); // all, pending, approved, rejected
+  const [userWithdrawalRequests, setUserWithdrawalRequests] = useState([]);
+  const [loadingUserWithdrawals, setLoadingUserWithdrawals] = useState(false);
   
   // Settings Management
   const [settings, setSettings] = useState(null);
@@ -211,6 +216,7 @@ const AdminDashboard = () => {
       loadNewsletterSubscriptions();
       loadJobApplications();
       loadReferralCodes();
+      loadWithdrawalRequests();
       loadSettings();
       loadMarkupPercentage();
     }
@@ -1175,6 +1181,96 @@ const AdminDashboard = () => {
     }
   };
 
+  // Withdrawal Requests Management Functions
+  const loadWithdrawalRequests = async () => {
+    try {
+      setLoadingWithdrawals(true);
+      
+      // Get all withdrawal requests from all users
+      const usersSnapshot = await getDocs(collection(db, 'users'));
+      const allWithdrawals = [];
+      
+      for (const userDoc of usersSnapshot.docs) {
+        const userId = userDoc.id;
+        const userData = userDoc.data();
+        
+        // Get withdrawal transactions for this user
+        const withdrawalsSnapshot = await getDocs(
+          query(
+            collection(db, 'users', userId, 'transactions'),
+            where('method', '==', 'withdrawal'),
+            orderBy('timestamp', 'desc')
+          )
+        );
+        
+        // Also get referral commission transactions (real earnings)
+        const commissionSnapshot = await getDocs(
+          query(
+            collection(db, 'users', userId, 'transactions'),
+            where('method', '==', 'referral_commission'),
+            orderBy('timestamp', 'desc')
+          )
+        );
+        
+        withdrawalsSnapshot.docs.forEach(withdrawalDoc => {
+          const withdrawalData = withdrawalDoc.data();
+          allWithdrawals.push({
+            id: withdrawalDoc.id,
+            userId: userId,
+            userEmail: userData.email || 'Unknown',
+            userName: userData.displayName || userData.email || 'Unknown',
+            bankAccount: userData.bankAccount || null,
+            ...withdrawalData
+          });
+        });
+        
+        // Add commission transactions as earnings (not withdrawals)
+        commissionSnapshot.docs.forEach(commissionDoc => {
+          const commissionData = commissionDoc.data();
+          allWithdrawals.push({
+            id: commissionDoc.id,
+            userId: userId,
+            userEmail: userData.email || 'Unknown',
+            userName: userData.displayName || userData.email || 'Unknown',
+            bankAccount: userData.bankAccount || null,
+            ...commissionData,
+            type: 'commission' // Mark as commission for display
+          });
+        });
+      }
+      
+      setWithdrawalRequests(allWithdrawals);
+      console.log('✅ Loaded', allWithdrawals.length, 'withdrawal requests');
+    } catch (error) {
+      console.error('❌ Error loading withdrawal requests:', error);
+      toast.error(`Error loading withdrawal requests: ${error.message}`);
+    } finally {
+      setLoadingWithdrawals(false);
+    }
+  };
+
+  const handleUpdateWithdrawalStatus = async (withdrawalId, userId, newStatus) => {
+    try {
+      setLoadingWithdrawals(true);
+      
+      // Update the withdrawal transaction status
+      const withdrawalRef = doc(db, 'users', userId, 'transactions', withdrawalId);
+      await updateDoc(withdrawalRef, {
+        status: newStatus,
+        processedAt: new Date(),
+        processedBy: currentUser.email
+      });
+      
+      toast.success(`Withdrawal request ${newStatus} successfully`);
+      await loadWithdrawalRequests(); // Reload to show updated data
+    } catch (error) {
+      console.error('❌ Error updating withdrawal status:', error);
+      toast.error(`Error updating withdrawal status: ${error.message}`);
+    } finally {
+      setLoadingWithdrawals(false);
+    }
+  };
+
   // Group referral codes by owner
   const groupedReferralCodes = referralCodes.reduce((groups, code) => {
     const ownerEmail = code.ownerEmail;
@@ -1183,20 +1279,14 @@ const AdminDashboard = () => {
         ownerEmail,
         ownerId: code.ownerId,
         codes: [],
-        totalUsage: 0,
-        totalSpent: 0
+        totalUsage: 0
       };
     }
     groups[ownerEmail].codes.push(code);
     groups[ownerEmail].totalUsage += code.usageCount || 0;
-    groups[ownerEmail].totalSpent += code.totalEarnings || 0;
     return groups;
   }, {});
 
-  const handleShowUsageModal = (ownerData) => {
-    setSelectedOwnerData(ownerData);
-    setShowUsageModal(true);
-  };
 
   const handleUpdateJobApplicationStatus = async (applicationId, newStatus) => {
     try {
@@ -1920,7 +2010,6 @@ const AdminDashboard = () => {
               { id: 'plans', label: 'Plans Management', icon: Smartphone, permission: canManagePlans },
               { id: 'esim', label: 'eSIM Management', icon: Activity, permission: canManagePlans },
               { id: 'blog', label: 'Blog Management', icon: FileText, permission: canManageBlog },
-              { id: 'referral-codes', label: 'Referral Usage', icon: Gift, permission: canManageConfig },
             ].filter(tab => tab.permission).map((tab) => {
               const Icon = tab.icon;
               return (
@@ -2041,7 +2130,6 @@ const AdminDashboard = () => {
                 { id: 'plans', label: 'Plans Management' },
                 { id: 'esim', label: 'eSIM Management' },
                 { id: 'blog', label: 'Blog Management' },
-                { id: 'referral-codes', label: 'Referral Usage' },
                 { id: 'requests', label: 'Contact Requests' },
                 { id: 'newsletter', label: 'Newsletter' },
                 { id: 'jobs', label: 'Job Applications' },
@@ -2129,14 +2217,6 @@ const AdminDashboard = () => {
                       <p className="text-xs text-green-600 font-medium mt-1">
                         {countries.length} countries loaded
                       </p>
-                    </button>
-                    <button
-                      onClick={() => setActiveTab('referral-codes')}
-                      className="p-4 border border-gray-200 rounded-lg hover:border-purple-300 hover:bg-purple-50 transition-all duration-200"
-                    >
-                      <Gift className="w-8 h-8 text-purple-600 mb-2" />
-                      <p className="font-medium">Referral Codes</p>
-                      <p className="text-sm text-gray-600">Track referral code usage and owners</p>
                     </button>
                   </div>
                 </div>
@@ -2724,6 +2804,57 @@ const AdminDashboard = () => {
                                   Save: ${(1.00 - Math.max((settingsFormData.referral?.minimumPrice || 0.5), ((1.00 * (100 - (settingsFormData.referral?.discountPercentage || 10))) / 100))).toFixed(2)}
                                 </div>
                               </div>
+                            </div>
+                          </div>
+
+                          {/* Commission Display Section */}
+                          <div className="bg-white rounded-xl shadow-lg p-6">
+                            <h3 className="text-lg font-semibold mb-4 flex items-center">
+                              <Gift className="w-5 h-5 mr-2" />
+                              Recent Commissions
+                            </h3>
+                            <div className="space-y-4">
+                              {withdrawalRequests
+                                .filter(request => request.type === 'commission')
+                                .slice(0, 10)
+                                .map((commission, index) => (
+                                  <div key={index} className="flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200">
+                                    <div className="flex items-center space-x-4">
+                                      <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center">
+                                        <Gift className="w-5 h-5 text-white" />
+                                      </div>
+                                      <div>
+                                        <p className="font-medium text-gray-900">
+                                          Commission from {commission.referralCode}
+                                        </p>
+                                        <p className="text-sm text-gray-600">
+                                          Referred user: {commission.referredUserId}
+                                        </p>
+                                        <p className="text-xs text-gray-500">
+                                          {commission.timestamp?.toDate ? 
+                                            new Date(commission.timestamp.toDate()).toLocaleString() : 
+                                            'Recent'
+                                          }
+                                        </p>
+                                      </div>
+                                    </div>
+                                    <div className="text-right">
+                                      <p className="text-lg font-semibold text-green-600">
+                                        +${commission.amount?.toFixed(2) || '0.00'}
+                                      </p>
+                                      <p className="text-xs text-gray-500">
+                                        {commission.planName || 'eSIM Plan'}
+                                      </p>
+                                    </div>
+                                  </div>
+                                ))}
+                              {withdrawalRequests.filter(request => request.type === 'commission').length === 0 && (
+                                <div className="text-center py-8 text-gray-500">
+                                  <Gift className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                                  <p>No commissions earned yet</p>
+                                  <p className="text-sm">Commissions will appear here when users make purchases with referral codes</p>
+                                </div>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -3694,143 +3825,6 @@ const AdminDashboard = () => {
               </div>
             )}
 
-            {/* Referral Codes Tab */}
-            {activeTab === 'referral-codes' && (
-              <div className="space-y-6">
-                {/* Header */}
-                <div className="bg-white rounded-xl shadow-lg p-6">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <div>
-                      <h2 className="text-xl font-semibold text-eerie-black">Referral Usage</h2>
-                      <p className="text-gray-600">Track referral code usage and performance</p>
-                    </div>
-                    <button
-                      onClick={handleNukeReferralData}
-                      disabled={loadingReferralCodes}
-                      className="bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center"
-                    >
-                      {loadingReferralCodes ? (
-                        <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                      ) : (
-                        <RefreshCw className="w-4 h-4 mr-2" />
-                      )}
-                      Clear
-                    </button>
-                  </div>
-                </div>
-
-                {/* Stats Overview */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-gray-600 mb-1">Total Codes</p>
-                        <p className="text-2xl font-bold text-eerie-black">{referralCodes.length}</p>
-                      </div>
-                      <div className="w-12 h-12 bg-alice-blue rounded-lg flex items-center justify-center">
-                        <Gift className="w-6 h-6 text-tufts-blue" />
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-gray-600 mb-1">Total Usage</p>
-                        <p className="text-2xl font-bold text-eerie-black">{referralUsageStats.totalUsages || 0}</p>
-                      </div>
-                      <div className="w-12 h-12 bg-alice-blue rounded-lg flex items-center justify-center">
-                        <TrendingUp className="w-6 h-6 text-tufts-blue" />
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-gray-600 mb-1">Unique Referrers</p>
-                        <p className="text-2xl font-bold text-eerie-black">{referralUsageStats.uniqueReferrers || 0}</p>
-                      </div>
-                      <div className="w-12 h-12 bg-alice-blue rounded-lg flex items-center justify-center">
-                        <Users className="w-6 h-6 text-tufts-blue" />
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-gray-600 mb-1">Total Spent</p>
-                        <p className="text-2xl font-bold text-eerie-black">${referralUsageStats.totalEarnings || 0}</p>
-                      </div>
-                      <div className="w-12 h-12 bg-alice-blue rounded-lg flex items-center justify-center">
-                        <DollarSign className="w-6 h-6 text-tufts-blue" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Referral Codes by Owner */}
-                <div className="bg-white rounded-xl shadow-lg p-6">
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-lg font-semibold text-eerie-black">Referral Codes by Owner</h3>
-                    <div className="text-sm text-gray-600">
-                      {Object.keys(groupedReferralCodes).length} owners, {referralCodes.length} total codes
-                    </div>
-                  </div>
-                  
-                  {loadingReferralCodes ? (
-                    <div className="flex items-center justify-center py-12">
-                      <div className="text-center">
-                        <RefreshCw className="w-8 h-8 mx-auto mb-4 animate-spin text-tufts-blue" />
-                        <p className="text-gray-600">Loading referral codes...</p>
-                      </div>
-                    </div>
-                  ) : Object.keys(groupedReferralCodes).length > 0 ? (
-                    <div className="space-y-4">
-                      {Object.values(groupedReferralCodes).map((ownerData, index) => (
-                        <motion.div
-                          key={ownerData.ownerEmail}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: index * 0.05 }}
-                          className="bg-alice-blue rounded-lg p-4 border border-gray-100 hover:shadow-md transition-all duration-200"
-                        >
-                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-3 mb-2">
-                                <h4 className="font-medium text-eerie-black">{ownerData.ownerEmail}</h4>
-                                <span className="text-sm text-gray-600">
-                                  {ownerData.codes.length} code{ownerData.codes.length !== 1 ? 's' : ''}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-4 text-sm text-gray-600">
-                                <span>Total Usage: <span className="font-medium text-eerie-black">{ownerData.totalUsage}</span></span>
-                                <span>Total Spent: <span className="font-medium text-eerie-black">${ownerData.totalSpent}</span></span>
-                              </div>
-                            </div>
-                            <button
-                              onClick={() => handleShowUsageModal(ownerData)}
-                              className="btn-primary text-sm px-4 py-2"
-                            >
-                              View Usage
-                            </button>
-                          </div>
-                        </motion.div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-12">
-                      <div className="w-16 h-16 bg-alice-blue rounded-lg flex items-center justify-center mx-auto mb-4">
-                        <Gift className="w-8 h-8 text-tufts-blue" />
-                      </div>
-                      <h4 className="text-lg font-medium text-eerie-black mb-2">No referral codes found</h4>
-                      <p className="text-gray-600">Referral codes will appear here when users create them.</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
 
             {/* Manage Users Tab */}
             {activeTab === 'users' && canManageAdmins && (
@@ -3925,6 +3919,16 @@ const AdminDashboard = () => {
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                 <div className="flex space-x-2">
+                                  <button
+                                    onClick={() => {
+                                      // Navigate to user details page in same window
+                                      window.location.href = `/admin/user/${user.id}`;
+                                    }}
+                                    className="text-blue-600 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 px-3 py-1 rounded-md text-xs transition-colors"
+                                    title="View user details"
+                                  >
+                                    View Details
+                                  </button>
                                   {(user.role === 'admin' || user.role === 'super_admin') && (
                                     <button
                                       onClick={() => {
@@ -4388,82 +4392,10 @@ const AdminDashboard = () => {
             </motion.div>
           </div>
         )}
-
             </div>
           </div>
         </div>
       </div>
-
-      {/* Usage Details Modal */}
-      {showUsageModal && selectedOwnerData && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-semibold text-eerie-black">
-                  Usage Details - {selectedOwnerData.ownerEmail}
-                </h3>
-                <button
-                  onClick={() => setShowUsageModal(false)}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
-                >
-                  <X className="w-6 h-6" />
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                {selectedOwnerData.codes.map((code, index) => (
-                  <div
-                    key={code.id}
-                    className="bg-alice-blue rounded-lg p-4 border border-gray-100"
-                  >
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <span className="font-mono text-sm font-medium text-tufts-blue bg-white px-3 py-1 rounded-lg border border-gray-200">
-                            {code.code}
-                          </span>
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                            code.isActive 
-                              ? 'bg-green-100 text-green-800' 
-                              : 'bg-gray-100 text-gray-800'
-                          }`}>
-                            {code.isActive ? 'Active' : 'Inactive'}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-4 text-sm text-gray-600">
-                          <span>Usage: <span className="font-medium text-eerie-black">{code.usageCount || 0}</span></span>
-                          <span>Spent: <span className="font-medium text-eerie-black">${code.totalEarnings || 0}</span></span>
-                        </div>
-                      </div>
-                      <div className="text-right text-sm text-gray-500">
-                        <div>Created: {code.createdAt ? new Date(code.createdAt).toLocaleDateString() : 'N/A'}</div>
-                        <div>Expires: {code.expiryDate ? new Date(code.expiryDate).toLocaleDateString() : 'Never'}</div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-6 pt-4 border-t border-gray-200">
-                <div className="flex justify-between items-center">
-                  <div className="text-sm text-gray-600">
-                    Total: {selectedOwnerData.codes.length} code{selectedOwnerData.codes.length !== 1 ? 's' : ''}
-                  </div>
-                  <div className="text-right">
-                    <div className="text-sm text-gray-600">
-                      Combined Usage: <span className="font-medium text-eerie-black">{selectedOwnerData.totalUsage}</span>
-                    </div>
-                    <div className="text-sm text-gray-600">
-                      Combined Spent: <span className="font-medium text-eerie-black">${selectedOwnerData.totalSpent}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

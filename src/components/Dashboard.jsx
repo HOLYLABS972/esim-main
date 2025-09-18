@@ -295,6 +295,13 @@ const Dashboard = () => {
     fetchData();
   }, [currentUser, loadUserProfile]);
 
+  // Redirect to login if user is not authenticated
+  useEffect(() => {
+    if (!authLoading && !currentUser) {
+      router.push('/login');
+    }
+  }, [authLoading, currentUser, router]);
+
   // Show loading spinner while auth is loading
   if (authLoading) {
     return (
@@ -302,25 +309,6 @@ const Dashboard = () => {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading dashboard...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Redirect to login if user is not authenticated (moved to useEffect to avoid render warning)
-  useEffect(() => {
-    if (!authLoading && !currentUser) {
-      router.push('/login');
-    }
-  }, [authLoading, currentUser, router]);
-
-  // Show loading while auth is loading
-  if (authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
         </div>
       </div>
     );
@@ -546,6 +534,104 @@ const Dashboard = () => {
     }
   };
 
+  // Handle order activation - generate QR code via API
+  const handleActivateOrder = async (order) => {
+    try {
+      console.log('🚀 Activating order:', order);
+      
+      // Show loading state
+      setSelectedOrder({ ...order, isActivating: true });
+      
+      // Make API request to generate QR code
+      const response = await fetch('/api/airalo/order', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          package_id: order.planId,
+          quantity: "1",
+          type: "sim",
+          description: `eSIM order for ${order.customerEmail || currentUser.email}`,
+          to_email: order.customerEmail || currentUser.email,
+          sharing_option: ["link"]
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      console.log('✅ Order activation result:', result);
+      
+      if (result.success && result.orderData) {
+        // Extract QR code data from response
+        const sims = result.orderData.sims;
+        if (sims && sims.length > 0) {
+          const simData = sims[0];
+          const qrCodeData = {
+            qrCode: simData.qrcode,
+            qrCodeUrl: simData.qrcode_url,
+            directAppleInstallationUrl: simData.direct_apple_installation_url,
+            iccid: simData.iccid,
+            lpa: simData.lpa,
+            matchingId: simData.matching_id,
+            isReal: true
+          };
+          
+          // Update order in Firebase
+          const orderRef = doc(db, 'users', currentUser.uid, 'esims', order.orderId || order.id);
+          await setDoc(orderRef, {
+            status: 'active',
+            qrCode: qrCodeData.qrCode,
+            qrCodeUrl: qrCodeData.qrCodeUrl,
+            directAppleInstallationUrl: qrCodeData.directAppleInstallationUrl,
+            iccid: qrCodeData.iccid,
+            lpa: qrCodeData.lpa,
+            matchingId: qrCodeData.matchingId,
+            orderResult: {
+              ...order.orderResult,
+              qrCode: qrCodeData.qrCode,
+              qrCodeUrl: qrCodeData.qrCodeUrl,
+              directAppleInstallationUrl: qrCodeData.directAppleInstallationUrl,
+              iccid: qrCodeData.iccid,
+              lpa: qrCodeData.lpa,
+              matchingId: qrCodeData.matchingId,
+              status: 'active',
+              updatedAt: new Date().toISOString()
+            },
+            updatedAt: serverTimestamp()
+          }, { merge: true });
+          
+          // Update local state
+          setOrders(prev => prev.map(o => 
+            o.id === order.id || o.orderId === order.orderId 
+              ? { ...o, status: 'active', qrCode: qrCodeData }
+              : o
+          ));
+          
+          // Show QR code modal
+          setSelectedOrder({ ...order, status: 'active', qrCode: qrCodeData });
+          setShowQRModal(true);
+          
+          console.log('✅ Order activated successfully with QR code');
+        } else {
+          throw new Error('No SIM data received from API');
+        }
+      } else {
+        throw new Error(result.error || 'Failed to activate order');
+      }
+      
+    } catch (error) {
+      console.error('❌ Error activating order:', error);
+      alert(`Failed to activate order: ${error.message}`);
+    } finally {
+      // Remove loading state
+      setSelectedOrder(prev => prev ? { ...prev, isActivating: false } : null);
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Access Denied Alert */}
@@ -759,6 +845,29 @@ const Dashboard = () => {
                         >
                           <QrCode className="w-4 h-4" />
                           <span className="text-sm">View QR</span>
+                        </button>
+                      )}
+                      {order.status === 'pending' && (
+                        <button
+                          onClick={() => handleActivateOrder(order)}
+                          disabled={order.isActivating}
+                          className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors duration-200 ${
+                            order.isActivating 
+                              ? 'bg-gray-100 text-gray-500 cursor-not-allowed' 
+                              : 'bg-green-100 text-green-700 hover:bg-green-200'
+                          }`}
+                        >
+                          {order.isActivating ? (
+                            <>
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-500"></div>
+                              <span className="text-sm">Activating...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Activity className="w-4 h-4" />
+                              <span className="text-sm">Activate</span>
+                            </>
+                          )}
                         </button>
                       )}
                     </div>

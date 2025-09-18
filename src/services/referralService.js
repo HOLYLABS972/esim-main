@@ -54,7 +54,7 @@ export const processReferralUsage = async (referralCode, newUserId) => {
     // Use a transaction to ensure atomicity
     const batch = writeBatch(db);
     
-    console.log('💰 Creating transaction for referrer:', referrerId, 'amount: $1.00');
+    console.log('🎁 Processing referral usage for referrer:', referrerId);
     
     // Update referral code stats
     const referralCodeRef = doc(db, 'referralCodes', referralCode);
@@ -63,19 +63,7 @@ export const processReferralUsage = async (referralCode, newUserId) => {
       lastUsed: serverTimestamp(),
     });
     
-    // Create transaction for referral usage (like mobile app - subcollection)
-    const transactionRef = doc(collection(db, 'users', referrerId, 'transactions'));
-    batch.set(transactionRef, {
-      type: 'deposit', // Positive transaction like mobile app
-      amount: 1.0, // $1 per referral
-      description: `Referral earnings from code ${referralCode}`,
-      status: 'completed',
-      method: 'referral',
-      referralCode: referralCode,
-      referredUserId: newUserId,
-      timestamp: serverTimestamp(),
-      createdAt: serverTimestamp(),
-    });
+    // Note: No transaction is created for referral usage - only when the referred user makes a purchase
     
     console.log('💳 Committing batch transaction...');
     await batch.commit();
@@ -123,10 +111,12 @@ export const getReferralStats = async (userId) => {
     const referralData = referralDoc.data();
     
     // Get recent earnings from transactions (subcollection like mobile app)
+    // Look for referral_commission transactions (real commissions) instead of referral (flat $1)
     const earningsSnapshot = await getDocs(
       query(
         collection(db, 'users', userId, 'transactions'),
         where('type', '==', 'deposit'),
+        where('method', '==', 'referral_commission'),
         orderBy('timestamp', 'desc'),
         limit(10)
       )
@@ -294,37 +284,42 @@ export const getAllReferralCodes = async () => {
         const data = doc.data();
         const ownerId = data.ownerId;
         
-        // Calculate actual earnings from transactions
-        let totalEarnings = 0;
+        // Calculate usage count from transactions (no earnings since no monetary reward)
+        let actualUsageCount = 0;
         if (ownerId) {
           try {
-            const earningsSnapshot = await getDocs(
+            const usageSnapshot = await getDocs(
               query(
                 collection(db, 'users', ownerId, 'transactions'),
-                where('type', '==', 'deposit'),
+                where('type', '==', 'referral_usage'),
                 where('method', '==', 'referral')
               )
             );
             
-            totalEarnings = earningsSnapshot.docs.reduce((sum, transactionDoc) => {
+            console.log(`🔍 Found ${usageSnapshot.docs.length} referral usage transactions for user ${ownerId}`);
+            
+            usageSnapshot.docs.forEach((transactionDoc) => {
               const transactionData = transactionDoc.data();
               // Only count transactions that match this specific referral code
               if (transactionData.referralCode === doc.id) {
-                return sum + (transactionData.amount || 0);
+                actualUsageCount += 1;
+                console.log(`📊 Referral code ${doc.id}: Found usage transaction`);
               }
-              return sum;
-            }, 0);
+            });
           } catch (error) {
-            console.error('Error calculating earnings for referral code:', doc.id, error);
+            console.error('Error calculating usage for referral code:', doc.id, error);
           }
         }
+        
+        console.log(`📊 Referral code ${doc.id}: ${actualUsageCount} usages`);
         
         return {
           id: doc.id,
           ...data,
           createdAt: data.createdAt?.toDate() || new Date(),
           expiryDate: data.expiryDate?.toDate() || null,
-          totalEarnings: totalEarnings,
+          totalEarnings: 0, // No monetary rewards
+          usageCount: actualUsageCount, // Use actual count from transactions
         };
       })
     );
@@ -420,7 +415,9 @@ export const getReferralUsageStats = async () => {
     // Calculate statistics
     const totalUsages = referralCodes.reduce((sum, code) => sum + (code.usageCount || 0), 0);
     const uniqueReferrers = new Set(referralCodes.map(code => code.ownerId)).size;
-    const totalEarnings = referralCodes.reduce((sum, code) => sum + (code.totalEarnings || 0), 0);
+    const totalEarnings = 0; // No monetary rewards in referral system
+    
+    console.log(`📈 Total stats: ${totalUsages} usages, ${uniqueReferrers} referrers, $${totalEarnings} total earnings`);
     
     return {
       success: true,
@@ -444,6 +441,37 @@ export const processTransactionCommission = async (transactionData) => {
     
     const { userId, amount, transactionId, planId, planName } = transactionData;
     
+    // Check if commission has already been processed for this transaction
+    console.log('🔍 Checking for existing commission for transaction:', transactionId);
+    const existingCommissionQuery = query(
+      collection(db, 'referralCommissions'),
+      where('transactionId', '==', transactionId),
+      where('referredUserId', '==', userId)
+    );
+    const existingCommissionSnapshot = await getDocs(existingCommissionQuery);
+    
+    if (!existingCommissionSnapshot.empty) {
+      console.log('⚠️ Commission already processed for this transaction:', transactionId);
+      const existingCommission = existingCommissionSnapshot.docs[0].data();
+      console.log('📊 Existing commission details:', {
+        commissionAmount: existingCommission.commissionAmount,
+        commissionPercentage: existingCommission.commissionPercentage,
+        transactionAmount: existingCommission.transactionAmount,
+        referralCode: existingCommission.referralCode,
+        referrerId: existingCommission.referrerId
+      });
+      
+      return { 
+        success: true, 
+        commission: existingCommission.commissionAmount,
+        referrerId: existingCommission.referrerId,
+        referralCode: existingCommission.referralCode,
+        commissionId: existingCommissionSnapshot.docs[0].id,
+        message: 'Commission already processed',
+        duplicate: true
+      };
+    }
+    
     // Get user data to find their referral code owner
     const userDoc = await getDoc(doc(db, 'users', userId));
     if (!userDoc.exists()) {
@@ -460,6 +488,7 @@ export const processTransactionCommission = async (transactionData) => {
     console.log('🔍 Full user data:', JSON.stringify(userData, null, 2));
     console.log('🔍 Referral code used (referredBy):', referralCodeUsed, typeof referralCodeUsed);
     console.log('🔍 ReferralCodeUsed flag:', userData.referralCodeUsed);
+    console.log('🔍 User ID:', userId);
     
     if (!referralCodeUsed || typeof referralCodeUsed !== 'string') {
       console.log('ℹ️ User did not use a referral code, no commission to process');
@@ -476,10 +505,54 @@ export const processTransactionCommission = async (transactionData) => {
     const referralData = referralDoc.data();
     const referrerId = referralData.ownerId;
     
-    // Get commission percentage from settings
+    // Get commission percentage from settings - try both paths
+    let commissionPercentage;
+    
+    // First try settings/general (new path)
     const settingsDoc = await getDoc(doc(db, 'settings', 'general'));
-    const settings = settingsDoc.exists() ? settingsDoc.data() : {};
-    const commissionPercentage = settings.referral?.transactionCommissionPercentage || 17;
+    if (settingsDoc.exists()) {
+      const settings = settingsDoc.data();
+      commissionPercentage = settings.referral?.transactionCommissionPercentage;
+      console.log('📊 Reading from settings/general:', commissionPercentage);
+      console.log('📊 Settings data:', settings);
+    }
+    
+    // If not found, try config/pricing (old path)
+    let pricingDoc;
+    if (!commissionPercentage && commissionPercentage !== 0) {
+      pricingDoc = await getDoc(doc(db, 'config', 'pricing'));
+      if (pricingDoc.exists()) {
+        const pricingData = pricingDoc.data();
+        commissionPercentage = pricingData.transaction_commission_percentage;
+        console.log('📊 Reading from config/pricing:', commissionPercentage);
+        console.log('📊 Pricing data:', pricingData);
+      }
+    }
+    
+    if (!commissionPercentage && commissionPercentage !== 0) {
+      console.error('❌ No commission percentage found in settings!');
+      return { success: false, error: 'Commission percentage not configured' };
+    }
+    
+    console.log('📊 Commission Percentage Details:');
+    console.log('  - Final Commission Percentage Used:', commissionPercentage);
+    console.log('  - Commission percentage type:', typeof commissionPercentage);
+    console.log('  - Is commission percentage exactly 17?', commissionPercentage === 17);
+    console.log('  - Commission percentage source: settings/general or config/pricing');
+    console.log('  - Settings document exists:', settingsDoc.exists());
+    console.log('  - Pricing document exists:', pricingDoc?.exists());
+    
+    if (settingsDoc.exists()) {
+      const settings = settingsDoc.data();
+      console.log('  - Settings referral object:', settings.referral);
+      console.log('  - Settings transactionCommissionPercentage:', settings.referral?.transactionCommissionPercentage);
+    }
+    
+    if (pricingDoc?.exists()) {
+      const pricingData = pricingDoc.data();
+      console.log('  - Pricing transaction_commission_percentage:', pricingData.transaction_commission_percentage);
+      console.log('  - Pricing markup_percentage:', pricingData.markup_percentage);
+    }
     
     // Calculate commission amount
     const commissionAmount = (amount * commissionPercentage) / 100;

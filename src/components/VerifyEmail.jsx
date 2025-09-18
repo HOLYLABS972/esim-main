@@ -11,6 +11,8 @@ import { validateOTPFormat } from '../utils/otpUtils';
 const VerifyEmail = () => {
   const [otp, setOtp] = useState('');
   const [email, setEmail] = useState('');
+  const [userName, setUserName] = useState('');
+  const [otpSent, setOtpSent] = useState(null);
   const [loading, setLoading] = useState(false);
   const [verificationComplete, setVerificationComplete] = useState(false);
   const { verifyEmailOTP } = useAuth();
