@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { ArrowLeft, DollarSign, Calendar, Filter, Download, CreditCard } from 'lucide-react';
+import { ArrowLeft, DollarSign, Calendar, Download, CreditCard } from 'lucide-react';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { collection, query, where, orderBy, getDocs, limit, startAfter } from 'firebase/firestore';
 import { db } from '../../src/firebase/config';
@@ -21,9 +21,9 @@ const TransactionsPage = () => {
     if (currentUser) {
       loadTransactions();
     }
-  }, [currentUser, filter]);
+  }, [currentUser, loadTransactions]);
 
-  const loadTransactions = async (loadMore = false) => {
+  const loadTransactions = useCallback(async (loadMore = false) => {
     if (!currentUser) return;
 
     try {
@@ -76,7 +76,7 @@ const TransactionsPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentUser, filter, lastDoc]);
 
   const formatDate = (timestamp) => {
     if (!timestamp) return 'N/A';
@@ -108,7 +108,7 @@ const TransactionsPage = () => {
     }
   };
 
-  const getTypeIcon = (type) => {
+  const getTypeIcon = () => {
     return <DollarSign className="w-4 h-4" />;
   };
 

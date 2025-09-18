@@ -8,7 +8,7 @@ import { getFunctions, httpsCallable } from 'firebase/functions';
 import { db } from '../firebase/config';
 import { getContactRequests, updateContactRequestStatus, deleteContactRequest } from '../services/contactService';
 import { getNewsletterSubscriptions, updateNewsletterSubscriptionStatus, deleteNewsletterSubscription, getNewsletterStats } from '../services/newsletterService';
-import { getSettings, updateSettings, updateSettingsSection, resetSettingsToDefaults, validateSettings } from '../services/settingsService';
+import { getSettings, updateSettingsSection, resetSettingsToDefaults, validateSettings } from '../services/settingsService';
 import { getJobApplications, updateJobApplicationStatus, deleteJobApplication, getJobApplicationStats } from '../services/jobsService';
 import { getAllReferralCodes, getReferralUsageStats, nukeAllReferralData } from '../services/referralService';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -20,11 +20,9 @@ import {
   Edit, 
   Eye, 
   EyeOff, 
-  ToggleRight,
   Search,
   Download,
   AlertTriangle,
-  Info,
   Users,
   Plus,
   MapPin,
@@ -41,21 +39,17 @@ import {
   Building,
   Clock,
   Save,
-  RotateCcw,
   ExternalLink,
   Linkedin,
   Facebook,
-  Twitter,
   Instagram,
   Youtube,
-  MessageCircle,
   LogOut,
   Smartphone,
   Apple,
   Play,
   Briefcase,
   User,
-  Calendar,
   ChevronDown,
   ChevronRight,
   Gift
