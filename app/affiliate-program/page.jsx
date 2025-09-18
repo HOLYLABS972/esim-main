@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, Copy, Share2, Users, CreditCard, Wallet } from 'lucide-react';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { getReferralStats, createReferralCode } from '../../src/services/referralService';
-import { doc, getDoc, collection, query, where, getDocs, writeBatch } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs, writeBatch, setDoc } from 'firebase/firestore';
 import { db } from '../../src/firebase/config';
 import toast from 'react-hot-toast';
 
@@ -122,7 +122,7 @@ const AffiliateProgramPage = () => {
           query(
             collection(db, 'users', currentUser.uid, 'transactions'),
             where('type', '==', 'deposit'),
-            where('method', '==', 'referral'),
+            where('method', '==', 'referral_commission'),
             where('status', '==', 'completed')
           )
         );
@@ -131,6 +131,17 @@ const AffiliateProgramPage = () => {
           toast('No pending referral earnings to withdraw', {
             icon: 'ℹ️',
             duration: 3000,
+          });
+          return;
+        }
+
+        // Calculate total amount first to check minimum withdrawal
+        const totalAmount = transactionsSnapshot.docs.reduce((sum, doc) => sum + (doc.data().amount || 0), 0);
+        const minimumWithdrawal = 50;
+
+        if (totalAmount < minimumWithdrawal) {
+          toast.error(`Minimum withdrawal amount is $${minimumWithdrawal}. You have $${totalAmount.toFixed(2)} available.`, {
+            duration: 5000,
           });
           return;
         }
@@ -151,7 +162,22 @@ const AffiliateProgramPage = () => {
 
         await batch.commit();
         
-        toast.success(`Successfully marked ${updatedCount} referral earnings as paid!`);
+        // Create a withdrawal record
+        const withdrawalRef = doc(collection(db, 'users', currentUser.uid, 'transactions'));
+        
+        await setDoc(withdrawalRef, {
+          type: 'purchase', // Withdrawal is a purchase/expense
+          amount: totalAmount,
+          description: `Withdrawal of ${updatedCount} referral earnings`,
+          status: 'completed',
+          method: 'withdrawal',
+          withdrawalDate: new Date(),
+          transactionCount: updatedCount,
+          timestamp: new Date(),
+          createdAt: new Date(),
+        });
+        
+        toast.success(`Successfully withdrew $${totalAmount.toFixed(2)} from ${updatedCount} referral earnings!`);
         
         // Reload referral stats to reflect changes
         loadReferralStats();
@@ -267,37 +293,68 @@ const AffiliateProgramPage = () => {
         </motion.div>
 
         {/* Withdraw Button */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
-          className="bg-white rounded-xl shadow-lg p-6 mb-8"
-        >
-          <div className="text-center">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Withdraw Your Earnings</h3>
-            <p className="text-gray-600 mb-6">
-              {hasBankAccount 
-                ? 'Transfer your referral earnings to your bank account' 
-                : 'Add your bank account details to withdraw your earnings'
-              }
-            </p>
-            <button
-              onClick={handleWithdrawClick}
-              disabled={checkingBankAccount}
-              className="bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed px-6 py-3 rounded-lg text-white font-medium transition-colors flex items-center space-x-2 mx-auto"
-            >
-              <CreditCard className="w-5 h-5" />
-              <span>
-                {checkingBankAccount 
-                  ? 'Checking...' 
-                  : hasBankAccount 
-                    ? 'Withdraw Funds' 
-                    : 'Add Bank Account'
-                }
-              </span>
-            </button>
-          </div>
-        </motion.div>
+        {/* Only show withdrawal section if user has a bank account */}
+        {hasBankAccount && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+            className="bg-white rounded-xl shadow-lg p-6 mb-8"
+          >
+            <div className="text-center">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">Withdraw Your Earnings</h3>
+              <p className="text-gray-600 mb-2">
+                Transfer your referral earnings to your bank account
+              </p>
+              <p className="text-sm text-gray-500 mb-6">
+                Minimum withdrawal: $50.00
+              </p>
+              <button
+                onClick={handleWithdrawClick}
+                disabled={checkingBankAccount || referralStats.totalEarnings < 50}
+                className={`${
+                  referralStats.totalEarnings < 50 
+                    ? 'bg-gray-400 cursor-not-allowed' 
+                    : 'bg-green-600 hover:bg-green-700'
+                } disabled:opacity-50 disabled:cursor-not-allowed px-6 py-3 rounded-lg text-white font-medium transition-colors flex items-center space-x-2 mx-auto`}
+              >
+                <CreditCard className="w-5 h-5" />
+                <span>
+                  {checkingBankAccount 
+                    ? 'Checking...' 
+                    : referralStats.totalEarnings < 50 
+                      ? `Need $${(50 - referralStats.totalEarnings).toFixed(2)} more` 
+                      : 'Withdraw Funds'
+                  }
+                </span>
+              </button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Show add bank account section if user doesn't have a bank account */}
+        {!hasBankAccount && !checkingBankAccount && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+            className="bg-white rounded-xl shadow-lg p-6 mb-8"
+          >
+            <div className="text-center">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">Add Bank Account</h3>
+              <p className="text-gray-600 mb-6">
+                Add your bank account details to withdraw your earnings
+              </p>
+              <button
+                onClick={handleWithdrawClick}
+                className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg text-white font-medium transition-colors flex items-center space-x-2 mx-auto"
+              >
+                <CreditCard className="w-5 h-5" />
+                <span>Add Bank Account</span>
+              </button>
+            </div>
+          </motion.div>
+        )}
 
         {/* How It Works */}
         <motion.div
