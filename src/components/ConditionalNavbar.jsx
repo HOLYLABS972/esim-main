@@ -2,6 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import Navbar from './Navbar';
 
 const ConditionalNavbar = () => {
@@ -20,9 +21,11 @@ const ConditionalNavbar = () => {
           <div className="flex h-16 items-center justify-between">
             <div className="flex items-center">
               <Link href="/" className="flex items-center">
-                <img
+                <Image
                   src="/images/logo_icon/logo.png"
                   alt="RoamJet Plans Logo"
+                  width={120}
+                  height={32}
                   className="h-8 w-auto"
                 />
                 <span className="ml-1 text-xl font-bold text-gray-900">RoamJet</span>

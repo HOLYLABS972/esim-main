@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, User, ArrowRight, Clock, Search, Mail } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import blogService from '../services/blogService';
 import { subscribeToNewsletter } from '../services/newsletterService';
 import toast from 'react-hot-toast';
@@ -199,9 +200,11 @@ const Blog = () => {
                 <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
                   <div className="relative">
                     {post.featuredImage ? (
-                      <img
+                      <Image
                         src={post.featuredImage}
                         alt={post.title}
+                        width={400}
+                        height={192}
                         className="w-full h-48 object-cover"
                       />
                     ) : (

@@ -1,6 +1,7 @@
 'use client';
 
 import { useI18n } from '../../contexts/I18nContext';
+import Image from 'next/image';
 
 export default function FeaturesSection() {
   const { t, locale, isLoading } = useI18n();
@@ -99,9 +100,11 @@ export default function FeaturesSection() {
                 <div className="w-full max-w-xs lg:max-w-none">
                   <div className="bg-white rounded-xl p-4 sm:p-6 text-center">
                     <div className="w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 mx-auto mb-3 sm:mb-4 bg-white rounded-lg flex items-center justify-center">
-                       <img 
+                       <Image 
                          src="/images/frontend/home/1200px-QR_Code_Example.svg.png" 
                          alt="QR Code Example" 
+                         width={128}
+                         height={128}
                          className="w-full h-full object-contain"
                        />
                       </div>

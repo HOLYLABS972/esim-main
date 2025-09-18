@@ -11,10 +11,7 @@ import {
   TrendingUp,
   CheckCircle,
   ArrowRight,
-  Copy,
-  ExternalLink,
   Star,
-  Target,
   Zap
 } from 'lucide-react';
 import toast from 'react-hot-toast';

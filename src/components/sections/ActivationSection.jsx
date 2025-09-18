@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useI18n } from '../../contexts/I18nContext';
+import Image from 'next/image';
 import { getAppStoreLinks } from '../../services/settingsService';
 
 export default function ActivationSection() {
@@ -116,9 +117,11 @@ export default function ActivationSection() {
                 {/* Phone Image - Left Side */}
                 <div className="flex justify-center lg:justify-start">
                   <div className="relative max-w-sm">
-                    <img
+                    <Image
                       src="/images/logo_icon/phones.png"
                       alt="Mobile App on iPhone and Android"
+                      width={400}
+                      height={300}
                       className="w-full h-auto"
                     />
                   </div>
@@ -146,9 +149,11 @@ export default function ActivationSection() {
                             rel="noopener noreferrer"
                             className="btn-primary inline-flex items-center justify-center px-6 py-3"
                           >
-                            <img 
+                            <Image 
                               src="/images/logo_icon/apple.svg" 
                               alt="iOS" 
+                              width={20}
+                              height={20}
                               className="w-5 h-5 mr-2"
                             />
                             {t('activation.downloadForIOS')}
@@ -161,9 +166,11 @@ export default function ActivationSection() {
                             rel="noopener noreferrer"
                             className="btn-secondary inline-flex items-center justify-center px-6 py-3"
                           >
-                            <img 
+                            <Image 
                               src="/images/logo_icon/android.png" 
                               alt="Android" 
+                              width={20}
+                              height={20}
                               className="w-5 h-5 mr-2"
                             />
                             {t('activation.downloadForAndroid')}
@@ -261,9 +268,11 @@ export default function ActivationSection() {
             <div className="relative mt-16 h-80 lg:mb-0">
               <div className="flex justify-end lg:justify-end">
                 <div className="max-w-md lg:max-w-lg xl:max-w-xl">
-                  <img 
+                  <Image 
                     src="/images/frontend/example.png" 
                     alt="eSIM Mobile App Interface" 
+                    width={600}
+                    height={400}
                     className="w-full h-auto rounded-lg shadow-2xl"
                   />
                 </div>

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { ArrowLeft, CreditCard, Building2, User, CheckCircle, Phone } from 'lucide-react';
+import { ArrowLeft, CreditCard, Building2, User, Phone } from 'lucide-react';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { db } from '../../src/firebase/config';

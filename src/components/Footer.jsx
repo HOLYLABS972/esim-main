@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { MapPin, Mail, Phone, Facebook, Twitter, Instagram, Linkedin, Youtube } from 'lucide-react';
 import { usePathname } from 'next/navigation';
@@ -89,14 +90,12 @@ const Footer = () => {
               className="footer-item"
             >
               <Link href="/" className="footer-item__logo inline-block mb-4 flex items-center">
-                <img 
+                <Image 
                   src="/images/logo_icon/logo.png" 
                   alt="RoamJet Logo" 
+                  width={120}
+                  height={40}
                   className="h-10 w-auto"
-                  onError={(e) => {
-                    e.target.style.display = 'none';
-                    e.target.nextSibling.style.display = 'inline';
-                  }}
                 />
                 <span className="text-2xl font-bold text-eerie-black ml-2">{getText('footer.brandName', 'RoamJet')}</span>
               </Link>
