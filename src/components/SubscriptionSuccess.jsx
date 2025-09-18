@@ -1,12 +1,13 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuth } from '../contexts/AuthContext';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '../firebase/config';
 import { motion } from 'framer-motion';
-import { CheckCircle, Download, QrCode, AlertCircle, Globe } from 'lucide-react';
+import { CheckCircle, Download, QrCode, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const SubscriptionSuccess = () => {
@@ -176,7 +177,7 @@ const SubscriptionSuccess = () => {
             Order Not Found
           </h2>
           <p className="text-gray-600 mb-4">
-            We couldn't find your order details. Please contact support.
+            We couldn&apos;t find your order details. Please contact support.
           </p>
           <button
             onClick={() => router.push('/plans')}
@@ -264,9 +265,11 @@ const SubscriptionSuccess = () => {
             
             {qrCode && qrCode.qrCodeUrl && (
               <div className="flex justify-center mb-6">
-                <img 
+                <Image 
                   src={qrCode.qrCodeUrl} 
                   alt="eSIM QR Code" 
+                  width={256}
+                  height={256}
                   className="w-64 h-64 border-4 border-gray-200 rounded-lg"
                 />
               </div>
@@ -313,7 +316,7 @@ const SubscriptionSuccess = () => {
               <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
                 <span className="text-blue-600 font-bold text-lg">1</span>
               </div>
-              <p>Scan the QR code with your device's camera</p>
+              <p>Scan the QR code with your device&apos;s camera</p>
             </div>
             <div className="text-center">
               <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">

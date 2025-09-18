@@ -61,7 +61,7 @@ export default function CheckoutPageClient() {
         }
 
         // Load plan data from Firestore
-        const { collection, doc, getDoc } = await import('firebase/firestore');
+        const { doc, getDoc } = await import('firebase/firestore');
         const { db } = await import('../../src/firebase/config');
         
         const planDoc = await getDoc(doc(db, 'plans', planId));

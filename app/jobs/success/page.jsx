@@ -37,7 +37,7 @@ const JobApplicationSuccess = () => {
               Application Submitted Successfully!
             </h1>
             <p className="text-lg text-gray-600 mb-8">
-              Thank you for your interest in joining our team. We've received your application for the Sales Development position.
+              Thank you for your interest in joining our team. We&apos;ve received your application for the Sales Development position.
             </p>
           </motion.div>
 
@@ -58,7 +58,7 @@ const JobApplicationSuccess = () => {
                 </div>
                 <div>
                   <p className="font-medium text-gray-900">Application Review</p>
-                  <p className="text-gray-600 text-sm">We'll review your application and resume within 2-3 business days</p>
+                  <p className="text-gray-600 text-sm">We&apos;ll review your application and resume within 2-3 business days</p>
                 </div>
               </div>
               
@@ -68,7 +68,7 @@ const JobApplicationSuccess = () => {
                 </div>
                 <div>
                   <p className="font-medium text-gray-900">Initial Contact</p>
-                  <p className="text-gray-600 text-sm">If selected, we'll contact you via email or phone to schedule an interview</p>
+                  <p className="text-gray-600 text-sm">If selected, we&apos;ll contact you via email or phone to schedule an interview</p>
                 </div>
               </div>
               
@@ -88,7 +88,7 @@ const JobApplicationSuccess = () => {
                 </div>
                 <div>
                   <p className="font-medium text-gray-900">Final Decision</p>
-                  <p className="text-gray-600 text-sm">We'll notify you of our decision via email</p>
+                  <p className="text-gray-600 text-sm">We&apos;ll notify you of our decision via email</p>
                 </div>
               </div>
             </div>

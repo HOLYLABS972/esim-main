@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Gift, CheckCircle, X, Lock } from 'lucide-react';
+import { ArrowLeft, Gift, CheckCircle, X } from 'lucide-react';
 import { isValidReferralCode, hasUserUsedReferralCode } from '../services/referralService';
 import { useAuth } from '../contexts/AuthContext';
 import toast from 'react-hot-toast';

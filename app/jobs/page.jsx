@@ -43,7 +43,7 @@ const JobsPage = () => {
             Join Our Team
           </h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            We're looking for talented individuals to join our growing team. 
+            We&apos;re looking for talented individuals to join our growing team. 
             Explore our open positions and find the perfect role for you.
           </p>
         </motion.div>
@@ -109,10 +109,10 @@ const JobsPage = () => {
             What happens next?
           </h3>
           <div className="space-y-3 text-gray-600">
-            <p>• We'll review your application within 2-3 business days</p>
-            <p>• If selected, we'll contact you to schedule an interview</p>
+            <p>• We&apos;ll review your application within 2-3 business days</p>
+            <p>• If selected, we&apos;ll contact you to schedule an interview</p>
             <p>• The interview process typically takes 1-2 weeks</p>
-            <p>• We'll notify you of our decision via email</p>
+            <p>• We&apos;ll notify you of our decision via email</p>
           </div>
         </motion.div>
       </div>

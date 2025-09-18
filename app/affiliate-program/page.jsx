@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Gift, Copy, Share2, DollarSign, Users, CheckCircle, CreditCard, Wallet } from 'lucide-react';
+import { ArrowLeft, Copy, Share2, Users, CreditCard, Wallet } from 'lucide-react';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { getReferralStats, createReferralCode } from '../../src/services/referralService';
-import { doc, getDoc, collection, query, where, getDocs, updateDoc, writeBatch } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs, writeBatch } from 'firebase/firestore';
 import { db } from '../../src/firebase/config';
 import toast from 'react-hot-toast';
 
@@ -28,9 +28,9 @@ const AffiliateProgramPage = () => {
       loadReferralStats();
       checkBankAccount();
     }
-  }, [currentUser]);
+  }, [currentUser, loadReferralStats, checkBankAccount]);
 
-  const loadReferralStats = async () => {
+  const loadReferralStats = useCallback(async () => {
     if (!currentUser) return;
 
     try {
@@ -53,7 +53,7 @@ const AffiliateProgramPage = () => {
     } finally {
       setLoadingReferralStats(false);
     }
-  };
+  }, [currentUser]);
 
   const copyReferralCode = async () => {
     if (referralStats.referralCode) {
@@ -92,7 +92,7 @@ const AffiliateProgramPage = () => {
     }
   };
 
-  const checkBankAccount = async () => {
+  const checkBankAccount = useCallback(async () => {
     if (!currentUser) return;
 
     try {
@@ -111,7 +111,7 @@ const AffiliateProgramPage = () => {
     } finally {
       setCheckingBankAccount(false);
     }
-  };
+  }, [currentUser]);
 
   const handleWithdrawClick = async () => {
     if (hasBankAccount) {

@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import QRCode from 'qrcode';
 import { Download, Copy, Share2, RefreshCw } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -16,7 +17,7 @@ const SimpleQRGenerator = ({
   const [loading, setLoading] = useState(false);
 
   // Generate QR code from data
-  const generateQRCode = async (qrData) => {
+  const generateQRCode = useCallback(async (qrData) => {
     if (!qrData) return;
     
     setLoading(true);
@@ -37,14 +38,14 @@ const SimpleQRGenerator = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [size]);
 
   // Generate QR code when data changes
   useEffect(() => {
     if (data) {
       generateQRCode(data);
     }
-  }, [data, size]);
+  }, [data, size, generateQRCode]);
 
   // Download QR code as PNG
   const handleDownload = () => {
@@ -124,11 +125,12 @@ const SimpleQRGenerator = ({
             <RefreshCw className="w-6 h-6 text-gray-400 animate-spin" />
           </div>
         ) : qrCodeUrl ? (
-          <img 
+          <Image 
             src={qrCodeUrl} 
             alt={title}
+            width={size}
+            height={size}
             className="border-2 border-gray-300 rounded-lg"
-            style={{ width: size, height: size }}
           />
         ) : (
           <div className={`w-${size/4} h-${size/4} bg-gray-100 border-2 border-gray-300 rounded-lg flex items-center justify-center`}>

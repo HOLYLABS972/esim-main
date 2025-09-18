@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Gift, CheckCircle, AlertCircle, Lock } from 'lucide-react';
+import { X, Gift, CheckCircle, AlertCircle } from 'lucide-react';
 import { isValidReferralCode, hasUserUsedReferralCode } from '../services/referralService';
 import { useAuth } from '../contexts/AuthContext';
 import { doc, updateDoc } from 'firebase/firestore';

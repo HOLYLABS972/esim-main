@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '../../../src/firebase/config';
 import { collection, doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 
-export async function POST(request) {
+export async function POST() {
   try {
     console.log('🔄 Starting Airalo sync...');
     
