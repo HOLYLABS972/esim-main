@@ -306,6 +306,27 @@ const AdminDashboard = () => {
     };
   }, [showUserDropdown]);
 
+  // Plans Management Functions
+  const loadAllPlans = async () => {
+    try {
+      setLoading(true);
+      const plansSnapshot = await getDocs(collection(db, 'plans'));
+      const plans = plansSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        enabled: doc.data().enabled !== false // Default to enabled if not set
+      }));
+      
+      setAllPlans(plans);
+      setFilteredPlans(plans);
+    } catch (error) {
+      console.error('Error loading plans:', error);
+      toast.error(`Error loading plans: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Auto-load plans when Plans tab is selected
   useEffect(() => {
     if (activeTab === 'plans' && allPlans.length === 0) {
@@ -1667,27 +1688,6 @@ const AdminDashboard = () => {
     } catch (error) {
       console.error('❌ Error attaching plan to country:', error);
       toast.error(`Error attaching plan: ${error.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Plans Management Functions
-  const loadAllPlans = async () => {
-    try {
-      setLoading(true);
-      const plansSnapshot = await getDocs(collection(db, 'plans'));
-      const plans = plansSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        enabled: doc.data().enabled !== false // Default to enabled if not set
-      }));
-      
-      setAllPlans(plans);
-      setFilteredPlans(plans);
-    } catch (error) {
-      console.error('Error loading plans:', error);
-      toast.error(`Error loading plans: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -3702,13 +3702,13 @@ const AdminDashboard = () => {
                                   <div className="flex-shrink-0 h-10 w-10">
                                     <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
                                       <span className="text-sm font-medium text-gray-700">
-                                        {user.email.charAt(0).toUpperCase()}
+                                        {user.email ? user.email.charAt(0).toUpperCase() : 'U'}
                                       </span>
                                     </div>
                                   </div>
                                   <div className="ml-4">
                                     <div className="text-sm font-medium text-gray-900">
-                                      {user.email}
+                                      {user.email || 'No email'}
                                     </div>
                                     <div className="text-sm text-gray-500">
                                       User ID: {user.id}
@@ -3746,7 +3746,7 @@ const AdminDashboard = () => {
                                     </button>
                                   )}
                                   <button
-                                    onClick={() => deleteUser(user.id, user.email)}
+                                    onClick={() => deleteUser(user.id, user.email || 'Unknown')}
                                     className="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 px-3 py-1 rounded-md text-xs transition-colors"
                                     title="Delete user"
                                   >
