@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Wifi, Globe, Download, Star, Check, DollarSign, SortAsc, Smartphone, CreditCard } from 'lucide-react';
+import { Globe, Star, Check, DollarSign, SortAsc, Smartphone } from 'lucide-react';
 import BottomSheet from './BottomSheet';
 import { useAuth } from '../contexts/AuthContext';
 import { useRouter } from 'next/navigation';

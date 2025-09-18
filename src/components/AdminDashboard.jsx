@@ -1851,63 +1851,6 @@ const AdminDashboard = () => {
     return Array.from(countrySet).sort();
   };
 
-  // Auto-load plans when Plans tab is selected
-  useEffect(() => {
-    if (activeTab === 'plans' && allPlans.length === 0) {
-      loadAllPlans();
-    }
-  }, [activeTab]);
-
-  // Filter and sort plans
-  useEffect(() => {
-    let filtered = [...allPlans];
-
-    // Filter by status
-    if (planStatusFilter !== 'all') {
-      filtered = filtered.filter(plan => 
-        planStatusFilter === 'enabled' ? plan.enabled : !plan.enabled
-      );
-    }
-
-    // Filter by country
-    if (planCountryFilter !== 'all') {
-      filtered = filtered.filter(plan => 
-        plan.country_codes?.includes(planCountryFilter) || 
-        plan.country_ids?.includes(planCountryFilter)
-      );
-    }
-
-    // Sort plans
-    filtered.sort((a, b) => {
-      let aValue, bValue;
-      
-      switch (planSortBy) {
-        case 'price':
-          aValue = parseFloat(a.price) || 0;
-          bValue = parseFloat(b.price) || 0;
-          break;
-        case 'name':
-          aValue = a.name || '';
-          bValue = b.name || '';
-          break;
-        case 'country':
-          aValue = a.country_codes?.[0] || a.country_ids?.[0] || '';
-          bValue = b.country_codes?.[0] || b.country_ids?.[0] || '';
-          break;
-        default:
-          aValue = parseFloat(a.price) || 0;
-          bValue = parseFloat(b.price) || 0;
-      }
-
-      if (planSortOrder === 'asc') {
-        return aValue > bValue ? 1 : -1;
-      } else {
-        return aValue < bValue ? 1 : -1;
-      }
-    });
-
-    setFilteredPlans(filtered);
-  }, [allPlans, planSortBy, planSortOrder, planStatusFilter, planCountryFilter]);
 
   // Overview Stats
   const statsData = [
