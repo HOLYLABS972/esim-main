@@ -6,6 +6,28 @@ import { collection, query, where, getDocs, doc, setDoc, getDoc, deleteDoc, serv
 import { db } from '../firebase/config';
 import { motion } from 'framer-motion';
 import { User, Globe, Activity, Settings, QrCode, Eye, Download, Trash2, MoreVertical, Smartphone, Shield, AlertTriangle, Wallet, Flame, Gift } from 'lucide-react';
+
+// Helper function to get flag emoji from country code
+const getFlagEmoji = (countryCode) => {
+  if (!countryCode || countryCode.length !== 2) return '🌍';
+  
+  // Handle special cases like PT-MA, multi-region codes, etc.
+  if (countryCode.includes('-') || countryCode.length > 2) {
+    return '🌍';
+  }
+  
+  try {
+    const codePoints = countryCode
+      .toUpperCase()
+      .split('')
+      .map(char => 127397 + char.charCodeAt());
+    
+    return String.fromCodePoint(...codePoints);
+  } catch (error) {
+    console.warn('Invalid country code: ' + countryCode, error);
+    return '🌍';
+  }
+};
 import { useRouter, useSearchParams } from 'next/navigation';
 import QRCode from 'qrcode';
 import { esimService } from '../services/esimService';
@@ -203,6 +225,9 @@ const Dashboard = () => {
                 customerEmail: data.customerEmail || currentUser.email,
                 createdAt: data.createdAt || data.created_at,
                 updatedAt: data.updatedAt || data.updated_at,
+                // Map country information
+                countryCode: data.countryCode || data.orderResult?.countryCode,
+                countryName: data.countryName || data.orderResult?.countryName,
                 // Map QR code data
                 qrCode: {
                   qrCode: data.qrCode || data.orderResult?.qrCode,
@@ -686,20 +711,28 @@ const Dashboard = () => {
                     key={order.id || order.orderId || Math.random()}
                     className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200"
                   >
-                    <div className="flex items-center space-x-4">
-                      <div className={`w-3 h-3 rounded-full ${
-                        order.status === 'active' ? 'bg-green-500' :
-                        order.status === 'pending' ? 'bg-yellow-500' : 'bg-gray-500'
-                      }`}></div>
+                    <div className="flex items-center space-x-3">
+                      <div className="text-2xl">
+                        {getFlagEmoji(order.countryCode)}
+                      </div>
                       <div>
                         <p className="font-medium text-gray-900">{order.planName || 'Unknown Plan'}</p>
                         <p className="text-sm text-gray-500">Order #{order.orderId || order.id || 'Unknown'}</p>
+                        <p className="text-xs text-gray-400">
+                          {order.countryName || order.countryCode || 'Unknown Country'}
+                        </p>
                       </div>
                     </div>
                     <div className="flex items-center space-x-4">
                       <div className="text-right">
                         <p className="font-medium text-gray-900">${Math.round(order.amount || 0)}</p>
-                        <p className="text-sm text-gray-500 capitalize">{order.status || 'unknown'}</p>
+                        <div className="flex items-center justify-end space-x-2">
+                          <div className={`w-2 h-2 rounded-full ${
+                            order.status === 'active' ? 'bg-green-500' :
+                            order.status === 'pending' ? 'bg-yellow-500' : 'bg-gray-500'
+                          }`}></div>
+                          <p className="text-sm text-gray-500 capitalize">{order.status || 'unknown'}</p>
+                        </div>
                       </div>
                       {order.status === 'active' && (
                         <button

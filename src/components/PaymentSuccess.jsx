@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '../contexts/AuthContext';
-import { doc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { esimService } from '../services/esimService';
 import toast from 'react-hot-toast';
@@ -171,6 +171,72 @@ const PaymentSuccess = () => {
     } catch (error) {
       console.error('❌ Order creation failed:', error);
       throw error;
+    }
+  };
+
+  // Order view handler - just display existing order data (for anyone)
+  const handleOrderView = async (userId, orderId) => {
+    try {
+      setLoading(true);
+      setProgress(25);
+      setProgressText('Loading order data...');
+      
+      // Get existing order from Firestore
+      const orderRef = doc(db, 'users', userId, 'esims', orderId);
+      const orderDoc = await getDoc(orderRef);
+      
+      if (orderDoc.exists()) {
+        const orderData = orderDoc.data();
+        console.log('📋 Found existing order:', orderData);
+        
+        setProgress(50);
+        setProgressText('Loading QR code...');
+        
+        // Set order state
+        setOrder({
+          id: orderId,
+          planName: orderData.planName || 'eSIM Plan',
+          amount: orderData.price || 0,
+          currency: orderData.currency || 'usd',
+          status: orderData.status || 'active'
+        });
+        
+        setProgress(75);
+        setProgressText('Preparing display...');
+        
+        // Set QR code if available
+        if (orderData.qrCode || orderData.orderResult?.qrCode) {
+          setQrCode({
+            qrCode: orderData.qrCode || orderData.orderResult?.qrCode,
+            qrCodeUrl: orderData.qrCodeUrl || orderData.orderResult?.qrCodeUrl,
+            directAppleInstallationUrl: orderData.directAppleInstallationUrl || orderData.orderResult?.directAppleInstallationUrl,
+            iccid: orderData.iccid || orderData.orderResult?.iccid,
+            lpa: orderData.lpa || orderData.orderResult?.lpa,
+            matchingId: orderData.matchingId || orderData.orderResult?.matchingId,
+            isReal: true
+          });
+        } else {
+          setQrCode({
+            error: 'No QR code available for this order',
+            isReal: false
+          });
+        }
+        
+        setProgress(100);
+        setProgressText('Complete!');
+        
+        setTimeout(() => {
+          setLoading(false);
+        }, 1000);
+        
+      } else {
+        throw new Error('Order not found');
+      }
+      
+    } catch (error) {
+      console.error('❌ Error loading order for admin view:', error);
+      setError('Failed to load order data: ' + error.message);
+      setLoading(false);
     }
   };
 
@@ -428,40 +494,32 @@ const PaymentSuccess = () => {
     const orderParam = searchParams.get('order_id') || searchParams.get('order');
     const email = searchParams.get('email');
     const total = searchParams.get('total');
+    const userId = searchParams.get('user_id');
     
     if (orderParam && email && total) {
-      console.log('🎉 Payment success detected:', { orderParam, email, total });
-      handlePaymentSuccess();
+      console.log('🎉 Order view detected:', { orderParam, email, total, userId });
+      
+      if (userId) {
+        // Show read-only view for specific user's order
+        handleOrderView(userId, orderParam);
+      } else {
+        // Process as new payment (for regular users) - but wait for currentUser to load
+        if (currentUser) {
+          handlePaymentSuccess();
+        } else {
+          console.log('⏳ Waiting for user authentication...');
+          setProgressText('Waiting for authentication...');
+        }
+      }
     } else {
-      console.log('⚠️ No payment parameters found, showing default message');
+      console.log('⚠️ No order parameters found, showing default message');
       hasProcessed.current = true;
       setLoading(false);
-      setError('No payment information found. If you just completed a payment, please wait a moment for the redirect.');
+      setError('No order information found.');
     }
-  }, [searchParams]);
+  }, [searchParams, currentUser]);
 
-  // Check if user is authenticated
-  if (!currentUser) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="max-w-md mx-auto bg-white rounded-xl shadow-lg p-6 text-center">
-          <div className="text-gray-400 text-6xl mb-4">🔒</div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">
-            Authentication Required
-          </h2>
-          <p className="text-gray-600 mb-4">
-            You must be logged in to view your eSIM.
-          </p>
-          <button
-            onClick={() => router.push('/login')}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            Go to Login
-          </button>
-        </div>
-      </div>
-    );
-  }
+  // No authentication check - allow anyone to view order details
 
   if (error) {
     return (
@@ -585,7 +643,6 @@ const PaymentSuccess = () => {
             </div>
           </div>
         )}
-        
         
         {/* Always show a button to go to dashboard */}
         <div className="mt-6">

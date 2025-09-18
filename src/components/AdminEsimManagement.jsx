@@ -21,7 +21,9 @@ import {
   Clock,
   AlertTriangle,
   DollarSign,
-  X
+  X,
+  Zap,
+  MoreVertical
 } from 'lucide-react';
 import { esimService } from '../services/esimService';
 import toast from 'react-hot-toast';
@@ -36,6 +38,8 @@ const AdminEsimManagement = () => {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletingOrder, setDeletingOrder] = useState(false);
+  const [resubmittingOrder, setResubmittingOrder] = useState(null);
+  const [openDropdown, setOpenDropdown] = useState(null);
 
   // Load all eSIM orders from all users
   const loadEsimOrders = async () => {
@@ -182,6 +186,31 @@ const AdminEsimManagement = () => {
     }
   };
 
+  // View success page for this order
+  const handleViewSuccessPage = (order) => {
+    console.log('👁️ Viewing success page for order:', order.id);
+    
+    // Create URL parameters for success page
+    const params = new URLSearchParams({
+      order_id: order.orderId || order.id,
+      plan_id: order.planId || 'ae-1gb-7',
+      email: order.userEmail,
+      total: (order.price || 0).toString(),
+      name: order.planName || 'eSIM Plan',
+      currency: 'usd',
+      user_id: order.userId
+    });
+    
+    // Redirect to success page
+    const successUrl = `/payment-success?${params.toString()}`;
+    console.log('👁️ Redirecting to success page:', successUrl);
+    
+    toast.success('Redirecting to success page...');
+    
+    // Use window.location for full page redirect
+    window.location.href = successUrl;
+  };
+
   // Format date
   const formatDate = (date) => {
     if (!date) return 'N/A';
@@ -258,14 +287,6 @@ const AdminEsimManagement = () => {
             <p className="text-gray-600 mt-1">Manage all eSIM orders across all users</p>
           </div>
           <div className="flex items-center space-x-3">
-            <button
-              onClick={loadEsimOrders}
-              disabled={loading}
-              className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-            >
-              <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-              Refresh
-            </button>
             <button
               onClick={exportToCSV}
               disabled={filteredOrders.length === 0}
@@ -456,28 +477,57 @@ const AdminEsimManagement = () => {
                       {formatDate(order.createdAt)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex items-center space-x-2">
+                      <div className="relative dropdown-container">
                         <button
-                          onClick={() => {
-                            setSelectedOrder(order);
-                            setShowDetailsModal(true);
-                          }}
-                          className="text-blue-600 hover:text-blue-900"
-                          title="View Details"
+                          onClick={() => setOpenDropdown(openDropdown === order.id ? null : order.id)}
+                          className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100"
+                          title="Actions"
                         >
-                          <Eye className="w-4 h-4" />
+                          <MoreVertical className="w-4 h-4" />
                         </button>
                         
-                        <button
-                          onClick={() => {
-                            setSelectedOrder(order);
-                            setShowDeleteModal(true);
-                          }}
-                          className="text-red-600 hover:text-red-900"
-                          title="Delete Order"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        {/* Dropdown Menu */}
+                        {openDropdown === order.id && (
+                          <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200">
+                            <div className="py-1">
+                              <button
+                                onClick={() => {
+                                  setSelectedOrder(order);
+                                  setShowDetailsModal(true);
+                                  setOpenDropdown(null);
+                                }}
+                                className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                              >
+                                <Eye className="w-4 h-4 mr-3" />
+                                View Details
+                              </button>
+                              
+                              {/* Show View Success Page option for all orders */}
+                              <button
+                                onClick={() => {
+                                  handleViewSuccessPage(order);
+                                  setOpenDropdown(null);
+                                }}
+                                className="flex items-center w-full px-4 py-2 text-sm text-blue-600 hover:bg-gray-100"
+                              >
+                                <Eye className="w-4 h-4 mr-3" />
+                                View Success Page
+                              </button>
+                              
+                              <button
+                                onClick={() => {
+                                  setSelectedOrder(order);
+                                  setShowDeleteModal(true);
+                                  setOpenDropdown(null);
+                                }}
+                                className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                              >
+                                <Trash2 className="w-4 h-4 mr-3" />
+                                Delete Order
+                              </button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </td>
                   </tr>

@@ -1,4 +1,33 @@
 // API routes for eSIM operations (replacing Cloud Functions)
+import { db } from '../firebase/config';
+import { doc, getDoc } from 'firebase/firestore';
+
+// Helper function to get Airalo credentials from Firestore
+const getAiraloCredentials = async () => {
+  try {
+    const configRef = doc(db, 'config', 'airalo');
+    const configDoc = await getDoc(configRef);
+    
+    if (!configDoc.exists()) {
+      throw new Error('Airalo configuration not found');
+    }
+    
+    const configData = configDoc.data();
+    const clientId = configData.api_key;
+    
+    if (!clientId) {
+      throw new Error('Airalo API key not found');
+    }
+    
+    return {
+      client_id: clientId,
+      client_secret: configData.client_secret || configData.api_secret
+    };
+  } catch (error) {
+    console.error('Error getting Airalo credentials:', error);
+    throw error;
+  }
+};
 
 export const esimService = {
   // Create Airalo eSIM order
@@ -37,6 +66,9 @@ export const esimService = {
     copy_address
   }) {
     try {
+      // Get Airalo credentials from Firestore
+      const credentials = await getAiraloCredentials();
+      
       const response = await fetch('/api/airalo/order', {
         method: 'POST',
         headers: {
@@ -50,7 +82,9 @@ export const esimService = {
           brand_settings_name,
           to_email,
           sharing_option,
-          copy_address
+          copy_address,
+          client_id: credentials.client_id,
+          client_secret: credentials.client_secret
         })
       });
 

@@ -60,7 +60,7 @@ export async function POST(request) {
     }
 
     // Authenticate with Airalo API
-    const baseUrl = 'https://theholylabs.com';
+    const baseUrl = 'https://partners-api.airalo.com';
     const authResponse = await fetch(`${baseUrl}/v2/token`, {
       method: 'POST',
       headers: {
@@ -156,46 +156,7 @@ export async function POST(request) {
     const orderResult = await orderResponse.json();
     console.log('✅ Order created with Airalo:', orderResult);
 
-    // Save order to Firestore
     const orderId = orderResult.data?.id ? orderResult.data.id.toString() : `airalo_${Date.now()}`;
-    const orderRef = doc(db, 'orders', orderId);
-    
-    // Prepare order data, filtering out undefined values
-    const orderData = {
-      id: orderId,
-      package_id: package_id,
-      quantity: quantity,
-      type: type,
-      status: 'completed',
-      provider: 'airalo',
-      airaloOrderId: orderResult.data?.id,
-      airaloOrderData: orderResult.data,
-      // Store important response data
-      esimData: {
-        qrcode: orderResult.data?.sims?.[0]?.qrcode,
-        qrcode_url: orderResult.data?.sims?.[0]?.qrcode_url,
-        direct_apple_installation_url: orderResult.data?.sims?.[0]?.direct_apple_installation_url,
-        iccid: orderResult.data?.sims?.[0]?.iccid,
-        lpa: orderResult.data?.sims?.[0]?.lpa,
-        matching_id: orderResult.data?.sims?.[0]?.matching_id,
-        manual_installation: orderResult.data?.manual_installation,
-        qrcode_installation: orderResult.data?.qrcode_installation,
-        installation_guides: orderResult.data?.installation_guides
-      },
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
-    };
-
-    // Only add optional fields if they have values (avoid undefined in Firestore)
-    if (description && description.trim()) orderData.description = description;
-    if (brand_settings_name && brand_settings_name.trim()) orderData.brand_settings_name = brand_settings_name;
-    if (to_email && to_email.trim()) orderData.to_email = to_email;
-    if (sharing_option && Array.isArray(sharing_option) && sharing_option.length > 0) orderData.sharing_option = sharing_option;
-    if (copy_address && Array.isArray(copy_address) && copy_address.length > 0) orderData.copy_address = copy_address;
-    
-    console.log('💾 Saving order to Firestore:', { orderId, orderDataKeys: Object.keys(orderData) });
-    await setDoc(orderRef, orderData);
-    console.log('✅ Order saved to Firestore successfully');
 
     return NextResponse.json({
       success: true,
