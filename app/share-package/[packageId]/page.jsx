@@ -11,8 +11,7 @@ import {
   Shield, 
   Zap,
   Smartphone,
-  DollarSign,
-  CheckCircle
+  DollarSign
 } from 'lucide-react';
 import { useAuth } from '../../../src/contexts/AuthContext';
 import toast from 'react-hot-toast';

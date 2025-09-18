@@ -102,7 +102,7 @@ const AffiliatePage = () => {
               Why Choose Our Affiliate Program?
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Simple, transparent, and rewarding. Here's what makes our program special.
+              Simple, transparent, and rewarding. Here&apos;s what makes our program special.
             </p>
           </motion.div>
 
