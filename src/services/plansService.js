@@ -21,7 +21,7 @@ const getFlagEmoji = (countryCode) => {
     
     return String.fromCodePoint(...codePoints);
   } catch (error) {
-    console.warn(`Invalid country code: ${countryCode}`, error);
+    console.warn('Invalid country code: ' + countryCode, error);
     return '🌍';
   }
 };

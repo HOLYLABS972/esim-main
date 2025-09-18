@@ -1,6 +1,6 @@
 // Admin service for managing user roles and permissions
 
-import { doc, setDoc, getDoc, collection, query, where, getDocs, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
 
 // Admin roles constants
@@ -39,10 +39,9 @@ export const ADMIN_PERMISSIONS = {
 /**
  * Create a super admin user
  * @param {string} email - Email of the user to make super admin
- * @param {string} displayName - Display name of the user
  * @returns {Promise<boolean>} Success status
  */
-export async function createSuperAdmin(email, displayName) {
+export async function createSuperAdmin(email) {
   try {
     // Check if user already exists
     const usersRef = collection(db, 'users');
@@ -82,10 +81,9 @@ export async function createSuperAdmin(email, displayName) {
 /**
  * Create an admin user
  * @param {string} email - Email of the user to make admin
- * @param {string} displayName - Display name of the user
  * @returns {Promise<boolean>} Success status
  */
-export async function createAdmin(email, displayName) {
+export async function createAdmin(email) {
   try {
     // Check if user already exists
     const usersRef = collection(db, 'users');

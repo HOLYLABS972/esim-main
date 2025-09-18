@@ -1,6 +1,7 @@
 'use client';
 
 import { useI18n } from '../../contexts/I18nContext';
+import Image from 'next/image';
 
 export default function HeroSection() {
   const { t, isLoading } = useI18n();
@@ -28,9 +29,6 @@ export default function HeroSection() {
     if (appLinksSection) {
       appLinksSection.scrollIntoView({ behavior: 'smooth' });
     }
-  };
-  const scrollToPlans = () => {
-    document.getElementById('sections/PlansSection')?.scrollIntoView({ behavior: 'smooth' });
   };
 
   return (
@@ -65,7 +63,7 @@ export default function HeroSection() {
                   <span className="text-eerie-black font-semibold">{t('hero.stayConnected')}</span>
                   <span className="inline-block transform -rotate-12 pointer-events-none">
                     <div className="w-10 h-10 bg-white border-2 border-cobalt-blue rounded-lg shadow-lg flex items-center justify-center">
-                      <img src="/images/logo_icon/sx.png" alt="Globe" className="w-8 h-8"  />
+                      <Image src="/images/logo_icon/sx.png" alt="Globe" width={32} height={32} className="w-8 h-8" />
                     </div>
                   </span> 
                 </div>
@@ -73,7 +71,7 @@ export default function HeroSection() {
                 <div className="flex items-center justify-center gap-2">
                   <span className="text-eerie-black font-semibold">{t('hero.with')}</span>
                   <div className="w-10 h-10 bg-alice-blue border-2 border-alice-blue rounded-xl shadow-lg flex items-center justify-center rotate-6">
-                    <img src="/images/logo_icon/ioslogo.png" alt="iOS Logo" className="w-8 h-8 rounded-lg" />
+                    <Image src="/images/logo_icon/ioslogo.png" alt="iOS Logo" width={32} height={32} className="w-8 h-8 rounded-lg" />
                   </div>
                   <span className="text-eerie-black font-semibold">Roam<span className="text-cobalt-blue font-semibold">Jet</span></span>
                 </div>
@@ -86,7 +84,7 @@ export default function HeroSection() {
                   <span className="text-eerie-black font-semibold">{t('hero.stayConnected')} </span> 
                   <span className="inline-block transform -rotate-12 pointer-events-none mr-2">
                     <div className="w-12 h-12 lg:w-16 lg:h-16 bg-white border-3 lg:border-4 border-cobalt-blue rounded-xl shadow-lg shadow-cool-black flex items-center justify-center">
-                      <img src="/images/logo_icon/sx.png" alt="Globe" className="w-10 h-10 lg:w-12 lg:h-12" />
+                      <Image src="/images/logo_icon/sx.png" alt="Globe" width={48} height={48} className="w-10 h-10 lg:w-12 lg:h-12" />
                     </div>
                   </span> 
                   {t('hero.noMatterWhere').split(' ')[0]} 
@@ -94,7 +92,7 @@ export default function HeroSection() {
                 <span>{t('hero.noMatterWhere').split(' ').slice(1).join(' ')} <span className="text-eerie-black font-semibold">{t('hero.with')}</span></span>
                 
                 <div className="w-12 h-12 lg:w-14 lg:h-14 bg-alice-blue border-3 lg:border-4 border-alice-blue rounded-2xl shadow-lg shadow-cobalt-blue flex items-center justify-center rotate-6">
-                  <img src="/images/logo_icon/ioslogo.png" alt="iOS Logo" className="w-10 h-10 lg:w-12 lg:h-12 rounded-xl" />
+                  <Image src="/images/logo_icon/ioslogo.png" alt="iOS Logo" width={48} height={48} className="w-10 h-10 lg:w-12 lg:h-12 rounded-xl" />
                 </div>
                   
                 <span className="text-eerie-black font-semibold">Roam<span className="text-cobalt-blue font-semibold">Jet</span></span>
