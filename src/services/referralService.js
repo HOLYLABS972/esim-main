@@ -1,5 +1,5 @@
 import { db } from '../firebase/config';
-import { collection, doc, getDoc, setDoc, updateDoc, addDoc, query, where, orderBy, limit, getDocs, serverTimestamp, increment, writeBatch } from 'firebase/firestore';
+import { collection, doc, getDoc, setDoc, updateDoc, query, where, orderBy, limit, getDocs, serverTimestamp, increment, writeBatch } from 'firebase/firestore';
 
 // Process referral when a user signs up with a referral code
 export const processReferralUsage = async (referralCode, newUserId) => {
