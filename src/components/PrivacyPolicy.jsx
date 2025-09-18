@@ -65,7 +65,7 @@ const PrivacyPolicy = () => {
             </p>
             <p className="mx-auto mt-6 max-w-2xl text-center text-lg text-cool-black">
               Learn how we collect, use, and protect your information. 
-              We're committed to transparency and data security.
+              We&apos;re committed to transparency and data security.
             </p>
             <div className="flex items-center justify-center mt-8">
               <Shield className="w-8 h-8 text-tufts-blue mr-2" />
@@ -88,7 +88,7 @@ const PrivacyPolicy = () => {
               <div className="px-8 pt-8 pb-8">
                 <h2 className="text-2xl font-medium tracking-tight text-eerie-black mb-4">Introduction</h2>
                 <p className="text-cool-black leading-relaxed mb-4">
-                  At Holylabs Ltd ("we," "our," or "us"), we are committed to protecting your privacy and ensuring 
+                  At Holylabs Ltd (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;), we are committed to protecting your privacy and ensuring 
                   the security of your personal information. This Privacy Policy explains how we collect, use, 
                   disclose, and safeguard your information when you use our eSIM services and website.
                 </p>

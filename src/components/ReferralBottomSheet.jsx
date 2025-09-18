@@ -16,21 +16,18 @@ const ReferralBottomSheet = ({ isOpen, onClose }) => {
   const [validationError, setValidationError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasUsedReferral, setHasUsedReferral] = useState(false);
-  const [isCheckingReferralStatus, setIsCheckingReferralStatus] = useState(false);
   const { currentUser, loadUserProfile } = useAuth();
 
   // Check if user has already used a referral code
   useEffect(() => {
     const checkReferralStatus = async () => {
       if (currentUser && isOpen) {
-        setIsCheckingReferralStatus(true);
         try {
           const hasUsed = await hasUserUsedReferralCode(currentUser.uid);
           setHasUsedReferral(hasUsed);
         } catch (error) {
           console.error('Error checking referral status:', error);
         } finally {
-          setIsCheckingReferralStatus(false);
         }
       }
     };

@@ -133,7 +133,7 @@ const PlanSelectionBottomSheet = ({
   loadingPlans,
   filteredCountries
 }) => {
-  const { currentUser, userProfile } = useAuth();
+  const { userProfile } = useAuth();
   const router = useRouter();
 
 

@@ -18,7 +18,6 @@ const ReferralCodeStep = () => {
   const [validationError, setValidationError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasUsedReferral, setHasUsedReferral] = useState(false);
-  const [isCheckingReferralStatus, setIsCheckingReferralStatus] = useState(false);
 
   // Get user data from URL params (passed from registration)
   const email = searchParams.get('email');
@@ -36,14 +35,12 @@ const ReferralCodeStep = () => {
   useEffect(() => {
     const checkReferralStatus = async () => {
       if (currentUser) {
-        setIsCheckingReferralStatus(true);
         try {
           const hasUsed = await hasUserUsedReferralCode(currentUser.uid);
           setHasUsedReferral(hasUsed);
         } catch (error) {
           console.error('Error checking referral status:', error);
         } finally {
-          setIsCheckingReferralStatus(false);
         }
       }
     };
