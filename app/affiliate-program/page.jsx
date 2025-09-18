@@ -23,13 +23,6 @@ const AffiliateProgramPage = () => {
   const [hasBankAccount, setHasBankAccount] = useState(false);
   const [checkingBankAccount, setCheckingBankAccount] = useState(false);
 
-  useEffect(() => {
-    if (currentUser) {
-      loadReferralStats();
-      checkBankAccount();
-    }
-  }, [currentUser, loadReferralStats, checkBankAccount]);
-
   const loadReferralStats = useCallback(async () => {
     if (!currentUser) return;
 
@@ -54,6 +47,34 @@ const AffiliateProgramPage = () => {
       setLoadingReferralStats(false);
     }
   }, [currentUser]);
+
+  const checkBankAccount = useCallback(async () => {
+    if (!currentUser) return;
+
+    try {
+      setCheckingBankAccount(true);
+      const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+      const userData = userDoc.data();
+      
+      if (userData?.bankAccount) {
+        setHasBankAccount(true);
+      } else {
+        setHasBankAccount(false);
+      }
+    } catch (error) {
+      console.error('Error checking bank account:', error);
+      setHasBankAccount(false);
+    } finally {
+      setCheckingBankAccount(false);
+    }
+  }, [currentUser]);
+
+  useEffect(() => {
+    if (currentUser) {
+      loadReferralStats();
+      checkBankAccount();
+    }
+  }, [currentUser, loadReferralStats, checkBankAccount]);
 
   const copyReferralCode = async () => {
     if (referralStats.referralCode) {
@@ -91,27 +112,6 @@ const AffiliateProgramPage = () => {
       }
     }
   };
-
-  const checkBankAccount = useCallback(async () => {
-    if (!currentUser) return;
-
-    try {
-      setCheckingBankAccount(true);
-      const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
-      const userData = userDoc.data();
-      
-      if (userData?.bankAccount) {
-        setHasBankAccount(true);
-      } else {
-        setHasBankAccount(false);
-      }
-    } catch (error) {
-      console.error('Error checking bank account:', error);
-      setHasBankAccount(false);
-    } finally {
-      setCheckingBankAccount(false);
-    }
-  }, [currentUser]);
 
   const handleWithdrawClick = async () => {
     if (hasBankAccount) {

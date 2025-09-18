@@ -17,12 +17,6 @@ const TransactionsPage = () => {
   const [lastDoc, setLastDoc] = useState(null);
   const [hasMore, setHasMore] = useState(true);
 
-  useEffect(() => {
-    if (currentUser) {
-      loadTransactions();
-    }
-  }, [currentUser, loadTransactions]);
-
   const loadTransactions = useCallback(async (loadMore = false) => {
     if (!currentUser) return;
 
@@ -77,6 +71,20 @@ const TransactionsPage = () => {
       setLoading(false);
     }
   }, [currentUser, filter, lastDoc]);
+
+  useEffect(() => {
+    if (currentUser) {
+      loadTransactions();
+    }
+  }, [currentUser, loadTransactions]);
+
+  useEffect(() => {
+    if (currentUser) {
+      setLastDoc(null);
+      setHasMore(true);
+      loadTransactions();
+    }
+  }, [filter, currentUser, loadTransactions]);
 
   const formatDate = (timestamp) => {
     if (!timestamp) return 'N/A';
