@@ -37,15 +37,16 @@ const ConditionalNavbar = () => {
     );
   }
   
-  // Hide language selector on dashboard page
+  // Hide language selector and back button on dashboard page
   if (pathname === '/dashboard') {
-    return <Navbar hideLanguageSelector={true} />;
+    return <Navbar hideLanguageSelector={true} hideBackButton={true} />;
   }
   
-  // Hide back button on landing page (root route)
+  // Hide back button on landing page (root route) and payment success page
   const isLandingPage = pathname === '/';
+  const isPaymentSuccessPage = pathname === '/payment-success';
   
-  return <Navbar hideBackButton={isLandingPage} />;
+  return <Navbar hideBackButton={isLandingPage || isPaymentSuccessPage} />;
 };
 
 export default ConditionalNavbar;

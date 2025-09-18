@@ -307,9 +307,27 @@ const Dashboard = () => {
     );
   }
 
-  // Only redirect to login if auth is not loading and user is not authenticated
-  if (!authLoading && !currentUser) {
-    router.push('/login');
+  // Redirect to login if user is not authenticated (moved to useEffect to avoid render warning)
+  useEffect(() => {
+    if (!authLoading && !currentUser) {
+      router.push('/login');
+    }
+  }, [authLoading, currentUser, router]);
+
+  // Show loading while auth is loading
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show nothing while redirecting
+  if (!currentUser) {
     return null;
   }
 

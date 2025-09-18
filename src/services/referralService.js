@@ -452,9 +452,16 @@ export const processTransactionCommission = async (transactionData) => {
     }
     
     const userData = userDoc.data();
-    const referralCodeUsed = userData.referralCodeUsed;
     
-    if (!referralCodeUsed) {
+    // The actual referral code is stored in 'referredBy' field
+    // 'referralCodeUsed' is just a boolean flag
+    const referralCodeUsed = userData.referredBy;
+    
+    console.log('🔍 Full user data:', JSON.stringify(userData, null, 2));
+    console.log('🔍 Referral code used (referredBy):', referralCodeUsed, typeof referralCodeUsed);
+    console.log('🔍 ReferralCodeUsed flag:', userData.referralCodeUsed);
+    
+    if (!referralCodeUsed || typeof referralCodeUsed !== 'string') {
       console.log('ℹ️ User did not use a referral code, no commission to process');
       return { success: true, commission: 0, message: 'No referral code used' };
     }
@@ -472,7 +479,7 @@ export const processTransactionCommission = async (transactionData) => {
     // Get commission percentage from settings
     const settingsDoc = await getDoc(doc(db, 'settings', 'general'));
     const settings = settingsDoc.exists() ? settingsDoc.data() : {};
-    const commissionPercentage = settings.referral?.transactionCommissionPercentage || 5;
+    const commissionPercentage = settings.referral?.transactionCommissionPercentage || 17;
     
     // Calculate commission amount
     const commissionAmount = (amount * commissionPercentage) / 100;
@@ -503,6 +510,25 @@ export const processTransactionCommission = async (transactionData) => {
       totalCommissions: increment(commissionAmount),
       lastCommissionDate: serverTimestamp()
     });
+    
+    // Create transaction record in referrer's transactions subcollection
+    const referrerTransactionRef = doc(collection(db, 'users', referrerId, 'transactions'));
+    await setDoc(referrerTransactionRef, {
+      type: 'deposit', // Positive transaction
+      amount: commissionAmount,
+      description: `Referral commission from ${referralCodeUsed}`,
+      status: 'completed',
+      method: 'referral_commission',
+      referralCode: referralCodeUsed,
+      referredUserId: userId,
+      transactionId: transactionId,
+      planId: planId,
+      planName: planName,
+      timestamp: serverTimestamp(),
+      createdAt: serverTimestamp(),
+    });
+    
+    console.log('✅ Transaction record created in referrer\'s transactions subcollection');
     
     // Update referral code usage stats
     await updateDoc(doc(db, 'referralCodes', referralCodeUsed), {

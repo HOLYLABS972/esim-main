@@ -13,7 +13,7 @@ const TransactionsPage = () => {
   const { currentUser } = useAuth();
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('all'); // all, earnings, withdrawals
+  const [filter, setFilter] = useState('earnings'); // earnings, withdrawals
   const [lastDoc, setLastDoc] = useState(null);
   const [hasMore, setHasMore] = useState(true);
 
@@ -70,13 +70,13 @@ const TransactionsPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [currentUser, filter, lastDoc]);
+  }, [currentUser, filter]);
 
   useEffect(() => {
     if (currentUser) {
       loadTransactions();
     }
-  }, [currentUser, loadTransactions]);
+  }, [currentUser]);
 
   useEffect(() => {
     if (currentUser) {
@@ -84,7 +84,7 @@ const TransactionsPage = () => {
       setHasMore(true);
       loadTransactions();
     }
-  }, [filter, currentUser, loadTransactions]);
+  }, [filter, currentUser]);
 
   const formatDate = (timestamp) => {
     if (!timestamp) return 'N/A';
@@ -186,7 +186,6 @@ const TransactionsPage = () => {
         <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
           <div className="flex items-center space-x-1 bg-gray-100 rounded-lg p-1">
             {[
-              { key: 'all', label: 'All Transactions' },
               { key: 'earnings', label: 'Earnings' },
               { key: 'withdrawals', label: 'Withdrawals' }
             ].map((tab) => (
@@ -220,9 +219,9 @@ const TransactionsPage = () => {
               <DollarSign className="w-12 h-12 text-gray-300 mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-gray-900 mb-2">No Transactions Yet</h3>
               <p className="text-gray-600">
-                {filter === 'all' 
-                  ? "You don't have any transactions yet. Start referring friends to earn!"
-                  : `No ${filter} found.`
+                {filter === 'earnings' 
+                  ? "You don't have any earnings yet. Start referring friends to earn!"
+                  : "No withdrawals found."
                 }
               </p>
             </div>

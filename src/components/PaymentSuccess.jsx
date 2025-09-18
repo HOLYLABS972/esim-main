@@ -3,22 +3,26 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '../contexts/AuthContext';
+import { useAdmin } from '../contexts/AdminContext';
 import { doc, getDoc, setDoc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { esimService } from '../services/esimService';
+import { processTransactionCommission } from '../services/referralService';
 import toast from 'react-hot-toast';
 import QRCode from 'qrcode';
+import { MoreVertical, Download } from 'lucide-react';
 
 const PaymentSuccess = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { currentUser } = useAuth();
-  const [loading, setLoading] = useState(true);
+  const { isAdmin } = useAdmin();
   const [error, setError] = useState(null);
   const [order, setOrder] = useState(null);
   const [qrCode, setQrCode] = useState(null);
-  const [progress, setProgress] = useState(0);
-  const [progressText, setProgressText] = useState('Initializing...');
+  const [testMode, setTestMode] = useState(false);
+  const [showCommissionButton, setShowCommissionButton] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
   const hasProcessed = useRef(false);
 
   // Calculate expiry date (30 days from now)
@@ -28,11 +32,20 @@ const PaymentSuccess = () => {
     return expiryDate;
   };
 
-  // Handle QR code download
+  // Download QR code function
   const handleDownloadQR = async () => {
-    if (qrCode && qrCode.qrCode) {
-      try {
-        // Generate QR code from LPA data using the correct QRCode library
+    if (!qrCode) return;
+    
+    try {
+      if (qrCode.qrCodeUrl) {
+        // Download from URL
+        const link = document.createElement('a');
+        link.href = qrCode.qrCodeUrl;
+        link.download = `esim-qr-${order?.id || 'code'}.png`;
+        link.click();
+      } else if (qrCode.qrCode) {
+        // Generate QR code from LPA data
+        const QRCode = (await import('qrcode')).default;
         const qrDataUrl = await QRCode.toDataURL(qrCode.qrCode, {
           width: 256,
           margin: 2,
@@ -42,26 +55,18 @@ const PaymentSuccess = () => {
           }
         });
         
-        // Convert data URL to blob and download
-        const response = await fetch(qrDataUrl);
-        const blob = await response.blob();
-        
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `esim-qr-code-${order?.id || 'order'}.png`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        
-        toast.success('QR code downloaded successfully!');
-      } catch (error) {
-        console.error('Error downloading QR code:', error);
-        toast.error('Failed to download QR code');
+        const link = document.createElement('a');
+        link.href = qrDataUrl;
+        link.download = `esim-qr-${order?.id || 'code'}.png`;
+        link.click();
       }
+      toast.success('QR code downloaded successfully!');
+    } catch (error) {
+      console.error('Error downloading QR code:', error);
+      toast.error('Failed to download QR code');
     }
   };
+
 
   // LPA QR Code Display Component
   const LPAQRCodeDisplay = ({ lpaData }) => {
@@ -177,10 +182,6 @@ const PaymentSuccess = () => {
   // Order view handler - just display existing order data (for anyone)
   const handleOrderView = async (userId, orderId) => {
     try {
-      setLoading(true);
-      setProgress(25);
-      setProgressText('Loading order data...');
-      
       // Get existing order from Firestore
       const orderRef = doc(db, 'users', userId, 'esims', orderId);
       const orderDoc = await getDoc(orderRef);
@@ -188,9 +189,6 @@ const PaymentSuccess = () => {
       if (orderDoc.exists()) {
         const orderData = orderDoc.data();
         console.log('📋 Found existing order:', orderData);
-        
-        setProgress(50);
-        setProgressText('Loading QR code...');
         
         // Set order state
         setOrder({
@@ -200,9 +198,6 @@ const PaymentSuccess = () => {
           currency: orderData.currency || 'usd',
           status: orderData.status || 'active'
         });
-        
-        setProgress(75);
-        setProgressText('Preparing display...');
         
         // Set QR code if available
         if (orderData.qrCode || orderData.orderResult?.qrCode) {
@@ -222,13 +217,6 @@ const PaymentSuccess = () => {
           });
         }
         
-        setProgress(100);
-        setProgressText('Complete!');
-        
-        setTimeout(() => {
-          setLoading(false);
-        }, 1000);
-        
       } else {
         throw new Error('Order not found');
       }
@@ -236,7 +224,187 @@ const PaymentSuccess = () => {
     } catch (error) {
       console.error('❌ Error loading order for admin view:', error);
       setError('Failed to load order data: ' + error.message);
-      setLoading(false);
+    }
+  };
+
+  // Test mode handler for referral testing (no Airalo API calls) - Admin only
+  const handleTestModePayment = async () => {
+    if (hasProcessed.current) return;
+    
+    // Check if user is admin
+    if (!isAdmin) {
+      setError('Test mode is only available for administrators.');
+      return;
+    }
+    
+    // Check if this transaction has already been processed (prevent duplicate on refresh)
+    const orderParam = searchParams.get('order_id') || searchParams.get('order');
+    const transactionKey = `processed_${orderParam}_${currentUser.uid}`;
+    
+    if (localStorage.getItem(transactionKey)) {
+      console.log('🔄 Test transaction already processed, skipping duplicate processing');
+      hasProcessed.current = true;
+      return;
+    }
+    
+    try {
+      hasProcessed.current = true;
+      setTestMode(true);
+      const planId = searchParams.get('plan_id');
+      const email = searchParams.get('email');
+      const total = searchParams.get('total');
+      const name = searchParams.get('name');
+      const currency = searchParams.get('currency');
+      const order_id = searchParams.get('order_id');
+      const user_id = searchParams.get('user_id');
+      
+      console.log('🧪 TEST MODE - Processing referral commission only:', { orderParam, planId, email, total, name, currency, order_id, user_id });
+      
+      // Prepare order data for commission processing
+      const orderData = {
+        planId: planId || orderParam || 'test-plan',
+        planName: decodeURIComponent(name || 'Test eSIM Plan'),
+        amount: Math.round(parseFloat(total || 0)),
+        currency: currency || 'usd',
+        customerEmail: email,
+        customerId: currentUser.uid,
+        status: 'active',
+        createdAt: serverTimestamp(),
+        paymentMethod: 'test',
+        orderId: order_id || `test_order_${Date.now()}`,
+        userId: user_id || currentUser.uid
+      };
+      
+      // Create a test order in Firebase (without Airalo API)
+      const testOrderRef = doc(db, 'users', currentUser.uid, 'esims', orderData.orderId);
+      await setDoc(testOrderRef, {
+        ...orderData,
+        testMode: true,
+        qrCode: 'TEST_QR_CODE_FOR_REFERRAL_TESTING',
+        qrCodeUrl: null,
+        directAppleInstallationUrl: null,
+        iccid: `TEST_ICCID_${Date.now()}`,
+        lpa: 'TEST_LPA_SERVER',
+        matchingId: `TEST_MATCHING_${Date.now()}`,
+        countryCode: 'US',
+        countryName: 'United States',
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+      
+      // Process referral commission
+      try {
+        console.log('🧪 TEST MODE - Processing referral commission for user:', currentUser.uid);
+        const commissionResult = await processTransactionCommission({
+          userId: currentUser.uid,
+          amount: orderData.amount,
+          transactionId: orderData.orderId,
+          planId: orderData.planId,
+          planName: orderData.planName
+        });
+        
+        if (commissionResult.success && commissionResult.commission > 0) {
+          console.log(`✅ TEST MODE - Referral commission processed: $${commissionResult.commission.toFixed(2)} for referrer ${commissionResult.referrerId}`);
+          toast.success(`TEST MODE: Referral commission of $${commissionResult.commission.toFixed(2)} credited!`);
+        } else if (commissionResult.success) {
+          console.log('ℹ️ TEST MODE - No referral commission to process (user did not use referral code)');
+          toast.info('TEST MODE: No referral commission (user did not use referral code)');
+        } else {
+          console.error('❌ TEST MODE - Referral commission processing failed:', commissionResult.error);
+          toast.error(`TEST MODE: Referral commission failed - ${commissionResult.error}`);
+        }
+      } catch (commissionError) {
+        console.error('❌ TEST MODE - Error processing referral commission:', commissionError);
+        toast.error(`TEST MODE: Referral commission error - ${commissionError.message}`);
+      }
+      
+      // Set test order state
+      setOrder({
+        id: orderData.orderId,
+        planName: orderData.planName,
+        amount: orderData.amount,
+        currency: orderData.currency,
+        status: 'active',
+        testMode: true
+      });
+      
+      // Set test QR code
+      setQrCode({
+        qrCode: 'TEST_QR_CODE_FOR_REFERRAL_TESTING',
+        qrCodeUrl: null,
+        directAppleInstallationUrl: null,
+        iccid: `TEST_ICCID_${Date.now()}`,
+        lpa: 'TEST_LPA_SERVER',
+        matchingId: `TEST_MATCHING_${Date.now()}`,
+        isReal: false
+      });
+      
+      // Mark test transaction as processed to prevent duplicate processing on refresh
+      localStorage.setItem(transactionKey, 'true');
+      console.log('✅ Test transaction marked as processed:', transactionKey);
+      
+      toast.success('TEST MODE: Payment processed! Referral commission tested.');
+      
+    } catch (err) {
+      console.error('❌ TEST MODE - Payment processing failed:', err);
+      setError('TEST MODE: Error processing payment');
+    }
+  };
+
+  // Manual commission processing for existing transactions (Admin only)
+  const handleManualCommissionProcessing = async () => {
+    if (!isAdmin) {
+      toast.error('Only administrators can process commissions manually.');
+      return;
+    }
+
+    try {
+      // Get order data from URL params
+      const orderParam = searchParams.get('order_id') || searchParams.get('order');
+      const planId = searchParams.get('plan_id');
+      const email = searchParams.get('email');
+      const total = searchParams.get('total');
+      const name = searchParams.get('name');
+      const currency = searchParams.get('currency');
+      const order_id = searchParams.get('order_id');
+      const user_id = searchParams.get('user_id');
+      
+      const orderData = {
+        planId: planId || orderParam || 'manual-process',
+        planName: decodeURIComponent(name || 'Manual Commission Processing'),
+        amount: Math.round(parseFloat(total || 0)),
+        currency: currency || 'usd',
+        customerEmail: email,
+        customerId: currentUser.uid,
+        orderId: order_id || `manual_${Date.now()}`,
+        userId: user_id || currentUser.uid
+      };
+      
+      console.log('🔧 MANUAL COMMISSION PROCESSING:', orderData);
+      
+      // Process referral commission
+      const commissionResult = await processTransactionCommission({
+        userId: currentUser.uid,
+        amount: orderData.amount,
+        transactionId: orderData.orderId,
+        planId: orderData.planId,
+        planName: orderData.planName
+      });
+      
+      if (commissionResult.success && commissionResult.commission > 0) {
+        console.log(`✅ MANUAL - Referral commission processed: $${commissionResult.commission.toFixed(2)} for referrer ${commissionResult.referrerId}`);
+        toast.success(`Manual: Referral commission of $${commissionResult.commission.toFixed(2)} credited!`);
+      } else if (commissionResult.success) {
+        console.log('ℹ️ MANUAL - No referral commission to process (user did not use referral code)');
+        toast('Manual: No referral commission (user did not use referral code)');
+      } else {
+        console.error('❌ MANUAL - Referral commission processing failed:', commissionResult.error);
+        toast.error(`Manual: Referral commission failed - ${commissionResult.error}`);
+      }
+      
+    } catch (commissionError) {
+      console.error('❌ MANUAL - Error processing referral commission:', commissionError);
+      toast.error(`Manual: Referral commission error - ${commissionError.message}`);
     }
   };
 
@@ -244,9 +412,18 @@ const PaymentSuccess = () => {
   const handlePaymentSuccess = async () => {
     if (hasProcessed.current) return;
     
+    // Check if this transaction has already been processed (prevent duplicate on refresh)
+    const orderParam = searchParams.get('order_id') || searchParams.get('order');
+    const transactionKey = `processed_${orderParam}_${currentUser.uid}`;
+    
+    if (localStorage.getItem(transactionKey)) {
+      console.log('🔄 Transaction already processed, skipping duplicate processing');
+      hasProcessed.current = true;
+      return;
+    }
+    
     try {
       hasProcessed.current = true;
-      setLoading(true);
       
       // Get payment info from URL params
       const orderParam = searchParams.get('order_id') || searchParams.get('order');
@@ -259,10 +436,6 @@ const PaymentSuccess = () => {
       const user_id = searchParams.get('user_id');
       
       console.log('📋 Payment details:', { orderParam, planId, email, total, name, currency, order_id, user_id });
-      
-      // Progress updates
-      setProgress(25);
-      setProgressText('Processing payment...');
       
       // Prepare order data
       const orderData = {
@@ -281,18 +454,12 @@ const PaymentSuccess = () => {
       
       console.log('📝 Creating order in Firebase:', orderData);
       
-      setProgress(50);
-      setProgressText('Creating order...');
-      
       try {
         // Create order in mobile app collection structure
         const orderResult = await createOrderInMobileApp(orderData);
         
         if (orderResult.success) {
           console.log('✅ Order creation successful:', orderResult);
-          
-          setProgress(75);
-          setProgressText('Generating QR code...');
           
           // Set the order state
           setOrder({
@@ -323,6 +490,30 @@ const PaymentSuccess = () => {
             console.log('📱 Airalo order data:', airaloOrderData);
             airaloOrderResult = await esimService.createAiraloOrderV2(airaloOrderData);
             console.log('✅ Airalo order created:', airaloOrderResult);
+            
+            // Process referral commission immediately after successful Airalo order creation
+            try {
+              console.log('💰 Processing referral commission for user:', currentUser.uid);
+              const commissionResult = await processTransactionCommission({
+                userId: currentUser.uid,
+                amount: orderData.amount,
+                transactionId: orderResult.orderId,
+                planId: orderData.planId,
+                planName: orderData.planName
+              });
+              
+              if (commissionResult.success && commissionResult.commission > 0) {
+                console.log(`✅ Referral commission processed: $${commissionResult.commission.toFixed(2)} for referrer ${commissionResult.referrerId}`);
+                toast.success(`Referral commission of $${commissionResult.commission.toFixed(2)} credited!`);
+              } else if (commissionResult.success) {
+                console.log('ℹ️ No referral commission to process (user did not use referral code)');
+              } else {
+                console.error('❌ Referral commission processing failed:', commissionResult.error);
+              }
+            } catch (commissionError) {
+              console.error('❌ Error processing referral commission:', commissionError);
+              // Don't fail the entire process if commission processing fails
+            }
             
           // Extract QR code data directly from the order response
           console.log('📱 Extracting QR code from order response...');
@@ -463,14 +654,15 @@ const PaymentSuccess = () => {
             });
           }
           
-          setProgress(100);
-          setProgressText('Complete!');
+          // Mark transaction as processed to prevent duplicate processing on refresh
+          localStorage.setItem(transactionKey, 'true');
+          console.log('✅ Transaction marked as processed:', transactionKey);
           
-          // Complete the process
-          setTimeout(() => {
-            setLoading(false);
-            toast.success('Payment successful! Your eSIM is now active with QR code.');
-          }, 1000);
+          toast.success('Payment successful! Your eSIM is now active with QR code.');
+          // Show commission button for admins
+          if (isAdmin) {
+            setShowCommissionButton(true);
+          }
           
         } else {
           throw new Error('Order creation failed');
@@ -479,13 +671,11 @@ const PaymentSuccess = () => {
       } catch (orderError) {
         console.error('❌ Order creation failed:', orderError);
         setError('Failed to create order. Please contact support.');
-        setLoading(false);
       }
       
     } catch (err) {
       console.error('❌ Payment success processing failed:', err);
       setError('Error processing payment success');
-      setLoading(false);
     }
   };
 
@@ -495,9 +685,10 @@ const PaymentSuccess = () => {
     const email = searchParams.get('email');
     const total = searchParams.get('total');
     const userId = searchParams.get('user_id');
+    const testMode = searchParams.get('test_mode') === 'true';
     
     if (orderParam && email && total) {
-      console.log('🎉 Order view detected:', { orderParam, email, total, userId });
+      console.log('🎉 Order view detected:', { orderParam, email, total, userId, testMode });
       
       if (userId) {
         // Show read-only view for specific user's order
@@ -505,90 +696,74 @@ const PaymentSuccess = () => {
       } else {
         // Process as new payment (for regular users) - but wait for currentUser to load
         if (currentUser) {
-          handlePaymentSuccess();
-        } else {
-          console.log('⏳ Waiting for user authentication...');
-          setProgressText('Waiting for authentication...');
+          if (testMode) {
+            handleTestModePayment();
+          } else {
+            handlePaymentSuccess();
+          }
         }
       }
     } else {
       console.log('⚠️ No order parameters found, showing default message');
       hasProcessed.current = true;
-      setLoading(false);
       setError('No order information found.');
+    }
+    
+    // Show commission button for admins if order parameters exist
+    const hasOrderParams = (searchParams.get('order_id') || searchParams.get('order')) && 
+                          searchParams.get('email') && 
+                          searchParams.get('total');
+    
+    if (hasOrderParams && isAdmin) {
+      setShowCommissionButton(true);
     }
   }, [searchParams, currentUser]);
 
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showMenu && !event.target.closest('.menu-container')) {
+        setShowMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showMenu]);
+
   // No authentication check - allow anyone to view order details
 
+  // Always show the success screen - no error handling
   if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="max-w-md mx-auto bg-white rounded-xl shadow-lg p-6 text-center">
-          <div className="text-gray-400 text-6xl mb-4">⚠️</div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">
-            Payment Processing Error
-          </h2>
-          <p className="text-gray-600 mb-4">
-            {error}
-          </p>
-          <button
-            onClick={() => router.push('/dashboard')}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            Go to Dashboard
-          </button>
-        </div>
-      </div>
-    );
+    // Still show success screen even with errors
+    console.error('Error occurred but showing success screen:', error);
   }
 
-  // Always show the animated loading screen
+
+  // Only show success screen when order data is ready - no prescreen
+  if (!order) {
+    return null; // Don't show anything until order is ready
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="max-w-md mx-auto bg-white rounded-xl shadow-lg p-8 text-center">
-        <div className="mb-6">
-          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <div className="animate-pulse">
-              <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center">
-                <span className="text-white text-2xl">📱</span>
-              </div>
+        {testMode && (
+          <div className="mb-4 p-3 bg-green-100 border border-green-300 rounded-lg">
+            <div className="flex items-center justify-center space-x-2">
+              <span className="text-green-600 font-semibold">🧪 ADMIN TEST MODE</span>
+              <span className="text-green-600 text-sm">No Airalo API calls</span>
             </div>
           </div>
-        </div>
+        )}
         
         <h2 className="text-2xl font-bold text-gray-900 mb-4">
           🎉 Payment Successful!
         </h2>
         
-        <div className="space-y-4 mb-6">
-          <div className="flex items-center justify-center space-x-2">
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-            <span className="text-green-600 font-medium">Processing payment</span>
-          </div>
-          <div className="flex items-center justify-center space-x-2">
-            <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-            <span className="text-blue-600 font-medium">Setting up eSIM</span>
-          </div>
-          <div className="flex items-center justify-center space-x-2">
-            <span className="text-purple-600 font-medium">Finalizing setup</span>
-            <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
-          </div>
-        </div>
-        
-        <p className="text-gray-600 mb-6">
-          Please wait while we set up your eSIM. This usually takes a few seconds...
-        </p>
-        
-        {/* Show progress status */}
-        {loading && (
-          <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-            <p className="text-blue-700 text-sm">{progressText}</p>
-          </div>
-        )}
-        
-        
-        {order && qrCode && (
+        {qrCode && (
           <div className="mt-4 p-3 bg-green-50 rounded-lg">
             <p className="text-green-700 text-sm">✅ eSIM Setup Complete!</p>
             <p className="text-xs text-green-600 mt-1">Your QR code is ready!</p>
@@ -596,11 +771,51 @@ const PaymentSuccess = () => {
         )}
         
         {/* QR Code Display */}
-        {order && qrCode && qrCode.qrCode && !qrCode.error && (
+        {qrCode && qrCode.qrCode && !qrCode.error && (
           <div className="mt-4 p-4 bg-white border border-gray-200 rounded-lg">
-            <h3 className="text-lg font-semibold text-gray-800 mb-3 text-center">
-              Your eSIM QR Code 📱
-            </h3>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-lg font-semibold text-gray-800">
+                Your eSIM QR Code 📱
+              </h3>
+              
+              {/* 3-dots menu */}
+              <div className="relative menu-container">
+                <button
+                  onClick={() => setShowMenu(!showMenu)}
+                  className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-full transition-colors"
+                >
+                  <MoreVertical className="w-5 h-5" />
+                </button>
+                
+                {showMenu && (
+                  <div className="absolute right-0 top-10 bg-white border border-gray-200 rounded-lg shadow-lg py-2 z-10 min-w-[200px]">
+                    <button
+                      onClick={() => {
+                        handleDownloadQR();
+                        setShowMenu(false);
+                      }}
+                      className="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+                    >
+                      <Download className="w-4 h-4" />
+                      <span>Download QR Code</span>
+                    </button>
+                    
+                    {isAdmin && (
+                      <button
+                        onClick={() => {
+                          handleManualCommissionProcessing();
+                          setShowMenu(false);
+                        }}
+                        className="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+                      >
+                        <span>💰</span>
+                        <span>Process Commission (17%)</span>
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
             
             {/* Order Summary */}
             <div className="mb-4 p-3 bg-blue-50 rounded-lg">
@@ -624,14 +839,6 @@ const PaymentSuccess = () => {
               )}
             </div>
             
-            {/* Download Button */}
-            <button
-              onClick={handleDownloadQR}
-              className="w-full bg-green-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-green-700 transition-all duration-200 mb-3"
-            >
-              Download QR Code 💾
-            </button>
-            
             {/* Instructions */}
             <div className="text-sm text-gray-600 text-left">
               <p className="mb-2"><strong>How to use:</strong></p>
@@ -644,11 +851,11 @@ const PaymentSuccess = () => {
           </div>
         )}
         
-        {/* Always show a button to go to dashboard */}
+        {/* Go to dashboard button */}
         <div className="mt-6">
           <button
             onClick={() => router.push('/dashboard')}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             Go to Dashboard
           </button>
