@@ -87,8 +87,8 @@ const TermsOfService = () => {
               <div className="px-8 pt-8 pb-8">
                 <h2 className="text-2xl font-medium tracking-tight text-eerie-black mb-4">Agreement Overview</h2>
                 <p className="text-cool-black leading-relaxed mb-4">
-                  These Terms of Service ("Terms") govern your use of the eSIM services provided by 
-                  Holylabs Ltd ("Company," "we," "our," or "us"). These Terms constitute a legally 
+                  These Terms of Service (&quot;Terms&quot;) govern your use of the eSIM services provided by 
+                  Holylabs Ltd (&quot;Company,&quot; &quot;we,&quot; &quot;our,&quot; or &quot;us&quot;). These Terms constitute a legally 
                   binding agreement between you and Holylabs Ltd.
                 </p>
                 <p className="text-cool-black leading-relaxed">

@@ -154,7 +154,7 @@ const SharePackagePage = () => {
     }
   };
 
-  const formatPrice = (price, currency = 'USD') => {
+  const formatPrice = (price) => {
     // Handle cases where price might already be a string with currency symbol
     let numericPrice = price;
     if (typeof price === 'string') {

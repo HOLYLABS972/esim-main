@@ -1,41 +1,28 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '../contexts/AuthContext';
 import { motion } from 'framer-motion';
 import { Mail, ArrowLeft, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { generateOTPWithTimestamp, validateOTPFormat, isOTPExpired } from '../utils/otpUtils';
-import { sendVerificationEmail } from '../services/emailService';
+import { validateOTPFormat } from '../utils/otpUtils';
 
 const VerifyEmail = () => {
   const [otp, setOtp] = useState('');
   const [email, setEmail] = useState('');
-  const [userName, setUserName] = useState('');
   const [loading, setLoading] = useState(false);
-  const [otpSent, setOtpSent] = useState(null);
   const [verificationComplete, setVerificationComplete] = useState(false);
-  const [referralCode, setReferralCode] = useState('');
   const { verifyEmailOTP } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    // Get email, user name, and referral code from URL params
+    // Get email from URL params
     const emailParam = searchParams.get('email');
-    const nameParam = searchParams.get('name');
-    const referralCodeParam = searchParams.get('referralCode');
     
     if (emailParam) {
       setEmail(emailParam);
-    }
-    if (nameParam) {
-      setUserName(nameParam);
-    }
-    if (referralCodeParam) {
-      setReferralCode(referralCodeParam);
     }
 
     // Check if there's pending signup data
@@ -76,7 +63,7 @@ const VerifyEmail = () => {
       setLoading(true);
       
       // Use AuthContext's verifyEmailOTP function to create account
-      const user = await verifyEmailOTP(otp);
+      await verifyEmailOTP(otp);
       
       setVerificationComplete(true);
       toast.success('Account created and email verified successfully!');
@@ -144,7 +131,7 @@ const VerifyEmail = () => {
             Verify Your Email
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            We've sent a 6-digit verification code to your email address.
+            We&apos;ve sent a 6-digit verification code to your email address.
           </p>
           {email && (
             <p className="mt-1 text-center text-sm font-medium text-blue-600">

@@ -25,9 +25,6 @@ export default function ActivationSection() {
     fetchAppStoreLinks();
   }, []);
 
-  const scrollToPlans = () => {
-    document.getElementById('esim-plans')?.scrollIntoView({ behavior: 'smooth' });
-  };
 
   if (translationsLoading) {
     return (
