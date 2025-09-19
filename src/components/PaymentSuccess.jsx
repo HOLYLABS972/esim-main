@@ -57,19 +57,63 @@ const PaymentSuccess = () => {
       const orderRef = doc(db, 'users', currentUser.uid, 'esims', orderData.orderId);
       
       // Extract country info from plan name (e.g., "kargi-mobile-7days-1gb" -> "kargi")
-      const getCountryFromPlan = (planId) => {
-        if (!planId) return { code: "US", name: "United States" };
+    const getCountryFromPlan = (planId) => {
+      if (!planId) return { code: "US", name: "United States" };
+
+      const countryMap = {
+        // Existing mappings
+        'kargi': { code: "GE", name: "Georgia" },
+        'viennetz': { code: "AT", name: "Austria" },
+        'billionconnect': { code: "AE", name: "United Arab Emirates" },
+        'ahava': { code: "IL", name: "Israel" },
+        'kallur': { code: "IN", name: "India" },
         
-        const countryMap = {
-          'kargi': { code: "GE", name: "Georgia" },
-          'viennetz': { code: "AT", name: "Austria" },
-          'billionconnect': { code: "AE", name: "United Arab Emirates" },
-          'default': { code: "US", name: "United States" }
-        };
+        // New mappings from comprehensive data
+        'change': { code: "US", name: "United States" },
+        'elan': { code: "FR", name: "France" },
+        'chinacom': { code: "CN", name: "China" },
+        'guay-mobile': { code: "ES", name: "Spain" },
+        'mamma-mia': { code: "IT", name: "Italy" },
+        'merhaba': { code: "TR", name: "Turkey" },
+        'uki-mobile': { code: "GB", name: "United Kingdom" },
+        'hallo-mobil': { code: "DE", name: "Germany" },
+        'chido': { code: "MX", name: "Mexico" },
+        'maew': { code: "TH", name: "Thailand" },
+        'hkmobile': { code: "HK", name: "Hong Kong" },
+        'sambungkan': { code: "MY", name: "Malaysia" },
+        'meraki-mobile': { code: "GR", name: "Greece" },
+        'canada-mobile': { code: "CA", name: "Canada" },
+        'jang': { code: "KR", name: "South Korea" },
+        'moshi-moshi': { code: "JP", name: "Japan" },
+        'connect-lah': { code: "SG", name: "Singapore" },
+        'noord-communications': { code: "AW", name: "Aruba" },
+        'sohbat-mobile': { code: "AF", name: "Afghanistan" },
+        'dolphin-mobile': { code: "AI", name: "Anguilla" },
+        'hej-telecom': { code: "AL", name: "Albania" },
+        'handi': { code: "AD", name: "Andorra" },
+        'burj-mobile': { code: "AE", name: "United Arab Emirates" },
+        'abrazo': { code: "AR", name: "Argentina" },
+        'arpi-telecom': { code: "AM", name: "Armenia" },
+        '17-miles': { code: "AG", name: "Antigua And Barbuda" },
+        'yes-go': { code: "AU", name: "Australia" },
+        'yaxsi-mobile': { code: "AZ", name: "Azerbaijan" },
+        'belganet': { code: "BE", name: "Belgium" },
+        'cotton-mobile': { code: "BJ", name: "Benin" },
+        'hatonet': { code: "BQ", name: "Bonaire" },
+        'volta': { code: "BF", name: "Burkina Faso" },
+        'fatafati': { code: "BD", name: "Bangladesh" },
+        'bultel': { code: "BG", name: "Bulgaria" },
+        'saar-mobile': { code: "BH", name: "Bahrain" },
+        'jitney-mobile': { code: "BS", name: "Bahamas" },
+        'bosher': { code: "BA", name: "Bosnia and Herzegovina" },
+        'barnet': { code: "BL", name: "Saint Barthélemy" },
         
-        const countryKey = Object.keys(countryMap).find(key => planId.includes(key));
-        return countryMap[countryKey] || countryMap.default;
+        'default': { code: "US", name: "United States" }
       };
+
+      const countryKey = Object.keys(countryMap).find(key => planId.includes(key));
+      return countryMap[countryKey] || countryMap.default;
+    };
       
       const countryInfo = getCountryFromPlan(orderData.planId);
       

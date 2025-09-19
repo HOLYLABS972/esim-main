@@ -2,10 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { collection, query, where, getDocs, doc, setDoc, getDoc, deleteDoc, serverTimestamp, addDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, setDoc, getDoc, deleteDoc, serverTimestamp, addDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { motion } from 'framer-motion';
 import { User, Globe, Activity, Settings, QrCode, Eye, Download, Trash2, MoreVertical, Smartphone, Shield, AlertTriangle, Wallet, Flame, Gift } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 // Helper function to get flag emoji from country code
 const getFlagEmoji = (countryCode) => {
@@ -394,6 +395,132 @@ const Dashboard = () => {
     }
   };
 
+  // Update Firebase order with correct country information
+  const updateOrderCountryInfo = async (order, esimDetails) => {
+    try {
+      console.log('🔄 Updating country info for order:', order.id);
+      
+        // Extract country info from plan ID using the same logic as PaymentSuccess
+        const getCountryFromPlan = (planId) => {
+          if (!planId) return null;
+
+          const countryMap = {
+            // Existing mappings
+            'kargi': { code: "GE", name: "Georgia" },
+            'viennetz': { code: "AT", name: "Austria" },
+            'billionconnect': { code: "AE", name: "United Arab Emirates" },
+            'ahava': { code: "IL", name: "Israel" },
+            'kallur': { code: "IN", name: "India" },
+            
+            // New mappings from comprehensive data
+            'change': { code: "US", name: "United States" },
+            'elan': { code: "FR", name: "France" },
+            'chinacom': { code: "CN", name: "China" },
+            'guay-mobile': { code: "ES", name: "Spain" },
+            'mamma-mia': { code: "IT", name: "Italy" },
+            'merhaba': { code: "TR", name: "Turkey" },
+            'uki-mobile': { code: "GB", name: "United Kingdom" },
+            'hallo-mobil': { code: "DE", name: "Germany" },
+            'chido': { code: "MX", name: "Mexico" },
+            'maew': { code: "TH", name: "Thailand" },
+            'hkmobile': { code: "HK", name: "Hong Kong" },
+            'sambungkan': { code: "MY", name: "Malaysia" },
+            'meraki-mobile': { code: "GR", name: "Greece" },
+            'canada-mobile': { code: "CA", name: "Canada" },
+            'jang': { code: "KR", name: "South Korea" },
+            'moshi-moshi': { code: "JP", name: "Japan" },
+            'connect-lah': { code: "SG", name: "Singapore" },
+            'noord-communications': { code: "AW", name: "Aruba" },
+            'sohbat-mobile': { code: "AF", name: "Afghanistan" },
+            'dolphin-mobile': { code: "AI", name: "Anguilla" },
+            'hej-telecom': { code: "AL", name: "Albania" },
+            'handi': { code: "AD", name: "Andorra" },
+            'burj-mobile': { code: "AE", name: "United Arab Emirates" },
+            'abrazo': { code: "AR", name: "Argentina" },
+            'arpi-telecom': { code: "AM", name: "Armenia" },
+            '17-miles': { code: "AG", name: "Antigua And Barbuda" },
+            'yes-go': { code: "AU", name: "Australia" },
+            'yaxsi-mobile': { code: "AZ", name: "Azerbaijan" },
+            'belganet': { code: "BE", name: "Belgium" },
+            'cotton-mobile': { code: "BJ", name: "Benin" },
+            'hatonet': { code: "BQ", name: "Bonaire" },
+            'volta': { code: "BF", name: "Burkina Faso" },
+            'fatafati': { code: "BD", name: "Bangladesh" },
+            'bultel': { code: "BG", name: "Bulgaria" },
+            'saar-mobile': { code: "BH", name: "Bahrain" },
+            'jitney-mobile': { code: "BS", name: "Bahamas" },
+            'bosher': { code: "BA", name: "Bosnia and Herzegovina" },
+            'barnet': { code: "BL", name: "Saint Barthélemy" },
+            
+            'default': { code: "US", name: "United States" }
+          };
+
+          const countryKey = Object.keys(countryMap).find(key => planId.includes(key));
+          return countryMap[countryKey] || countryMap.default;
+        };
+      
+      // Get country info from plan ID
+      const countryInfo = getCountryFromPlan(order.planId || order.id);
+      
+      if (!countryInfo) {
+        console.log('⚠️ Could not determine country from plan ID:', order.planId);
+        return;
+      }
+      
+      // Check if country info needs updating
+      const currentCountryCode = order.countryCode;
+      const currentCountryName = order.countryName;
+      
+      if (currentCountryCode === countryInfo.code && currentCountryName === countryInfo.name) {
+        console.log('✅ Country info is already correct, no update needed');
+        return;
+      }
+      
+      console.log('🔄 Updating country info:', {
+        from: { code: currentCountryCode, name: currentCountryName },
+        to: { code: countryInfo.code, name: countryInfo.name }
+      });
+      
+      // Update the order in Firebase
+      const orderRef = doc(db, 'users', currentUser.uid, 'esims', order.id);
+      await updateDoc(orderRef, {
+        countryCode: countryInfo.code,
+        countryName: countryInfo.name,
+        updatedAt: serverTimestamp(),
+        countryUpdatedAt: serverTimestamp(),
+        countryUpdateReason: 'Corrected from eSIM details check'
+      });
+      
+      // Update local state
+      setOrders(prevOrders => 
+        prevOrders.map(o => 
+          o.id === order.id 
+            ? { ...o, countryCode: countryInfo.code, countryName: countryInfo.name }
+            : o
+        )
+      );
+      
+      console.log('✅ Country info updated successfully');
+      toast.success(`Country info updated: ${countryInfo.name} (${countryInfo.code})`, {
+        duration: 3000,
+        style: {
+          background: '#10B981',
+          color: '#fff',
+        },
+      });
+      
+    } catch (error) {
+      console.error('❌ Error updating country info:', error);
+      toast.error(`Failed to update country info: ${error.message}`, {
+        duration: 4000,
+        style: {
+          background: '#EF4444',
+          color: '#fff',
+        },
+      });
+    }
+  };
+
   const handleCheckEsimDetails = async () => {
     if (!selectedOrder || loadingEsimDetails) return;
     
@@ -416,6 +543,10 @@ const Dashboard = () => {
       if (result.success) {
         setEsimDetails(result.data);
         console.log('✅ eSIM details retrieved:', result.data);
+        
+        // Update Firebase with correct country information if available
+        await updateOrderCountryInfo(selectedOrder, result.data);
+        
       } else {
         console.log('❌ Failed to get eSIM details:', result.error);
         alert(`Failed to get eSIM details: ${result.error}`);
