@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { collection, query, getDocs, doc, updateDoc, deleteDoc, orderBy, where, limit, serverTimestamp } from 'firebase/firestore';
+import { collection, query, getDocs, getDoc, doc, updateDoc, deleteDoc, orderBy, where, limit, serverTimestamp, startAfter } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { motion } from 'framer-motion';
 import { 
@@ -42,92 +42,144 @@ const AdminEsimManagement = () => {
   const [openDropdown, setOpenDropdown] = useState(null);
   const [fetchingQrCode, setFetchingQrCode] = useState(null);
 
-  // Load all eSIM orders from all users
-  const loadEsimOrders = async () => {
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalOrders, setTotalOrders] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [lastDoc, setLastDoc] = useState(null);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const ORDERS_PER_PAGE = 50;
+
+  // Load eSIM orders from orders collection with pagination
+  const loadEsimOrders = async (loadMore = false) => {
     try {
-      setLoading(true);
-      console.log('Loading all eSIM orders...');
-      
-      // Get all users
-      const usersSnapshot = await getDocs(collection(db, 'users'));
-      console.log(`Found ${usersSnapshot.docs.length} users`);
-      const allOrders = [];
-      
-      for (const userDoc of usersSnapshot.docs) {
-        const userId = userDoc.id;
-        const userData = userDoc.data();
-        
-        // Get eSIM orders for this user
-        const esimsQuery = query(
-          collection(db, 'users', userId, 'esims'),
-          orderBy('createdAt', 'desc')
-        );
-        
-        const esimsSnapshot = await getDocs(esimsQuery);
-        console.log(`User ${userId}: Found ${esimsSnapshot.docs.length} eSIM orders`);
-        
-        esimsSnapshot.docs.forEach(esimDoc => {
-          const esimData = esimDoc.data();
-          
-          // Debug: Log raw data for first document
-          if (allOrders.length === 0) {
-            console.log('🔍 Raw esimData from Firestore:', esimData);
-            console.log('🔍 esimData.qrCode:', esimData.qrCode);
-            console.log('🔍 esimData.orderResult:', esimData.orderResult);
-            console.log('🔍 esimData.iccid:', esimData.iccid);
-          }
-          
-          allOrders.push({
-            id: esimDoc.id,
-            userId: userId,
-            userEmail: userData.email || 'Unknown',
-            userName: userData.displayName || 'Unknown User',
-            ...esimData,
-            // Map QR code data properly - check all possible locations
-            qrCode: {
-              qrCode: esimData.qrCode || esimData.orderResult?.qrCode,
-              qrCodeUrl: esimData.qrCodeUrl || esimData.orderResult?.qrCodeUrl,
-              directAppleInstallationUrl: esimData.directAppleInstallationUrl || esimData.orderResult?.directAppleInstallationUrl,
-              iccid: esimData.iccid || esimData.orderResult?.iccid,
-              lpa: esimData.lpa || esimData.orderResult?.lpa,
-              matchingId: esimData.matchingId || esimData.orderResult?.matchingId
-            },
-            // Also keep top-level ICCID for backward compatibility
-            iccid: esimData.iccid || esimData.orderResult?.iccid,
-            // Keep original orderResult for debugging
-            orderResult: esimData.orderResult,
-            createdAt: esimData.createdAt?.toDate() || null,
-            updatedAt: esimData.updatedAt?.toDate() || null,
-            purchaseDate: esimData.purchaseDate?.toDate() || null,
-          });
-        });
+      if (!loadMore) {
+        setLoading(true);
+        setCurrentPage(1);
+        setEsimOrders([]);
+        setLastDoc(null);
+      } else {
+        setLoadingMore(true);
       }
       
-      // Sort by creation date (newest first)
-      allOrders.sort((a, b) => (b.createdAt || new Date(0)) - (a.createdAt || new Date(0)));
+      console.log(`Loading eSIM orders from orders collection (page ${loadMore ? currentPage + 1 : 1})...`);
       
-      setEsimOrders(allOrders);
-      setFilteredOrders(allOrders);
-      console.log(`Loaded ${allOrders.length} eSIM orders`);
+      // Create query for orders collection with pagination
+      let ordersQuery = query(
+        collection(db, 'orders'),
+        orderBy('createdAt', 'desc'),
+        limit(ORDERS_PER_PAGE)
+      );
+
+      if (loadMore && lastDoc) {
+        ordersQuery = query(
+          collection(db, 'orders'),
+          orderBy('createdAt', 'desc'),
+          startAfter(lastDoc),
+          limit(ORDERS_PER_PAGE)
+        );
+      }
       
-      // Debug: Log first order to see data structure
-      if (allOrders.length > 0) {
-        console.log('🔍 Sample eSIM order data:', allOrders[0]);
-        console.log('🔍 QR Code data:', allOrders[0].qrCode);
-        console.log('🔍 ICCID:', allOrders[0].iccid);
-        console.log('🔍 Raw esimData:', allOrders[0]);
-        console.log('🔍 orderResult:', allOrders[0].orderResult);
+      // Get orders from the orders collection
+      const ordersSnapshot = await getDocs(ordersQuery);
+      console.log(`Found ${ordersSnapshot.docs.length} orders in this batch`);
+      
+      // No need to fetch user data since we're only displaying user IDs
+      
+      const newOrders = ordersSnapshot.docs.map(orderDoc => {
+        const orderData = orderDoc.data();
         
-        // Test specific fields
-        console.log('🔍 Testing ICCID fields:');
-        console.log('  - order.iccid:', allOrders[0].iccid);
-        console.log('  - order.qrCode?.iccid:', allOrders[0].qrCode?.iccid);
-        console.log('  - order.orderResult?.iccid:', allOrders[0].orderResult?.iccid);
+        // Debug: Log raw data for first document
+        if (!loadMore && ordersSnapshot.docs.indexOf(orderDoc) === 0) {
+          console.log('🔍 Raw orderData from Firestore:', orderData);
+          console.log('🔍 orderData.airaloOrderData:', orderData.airaloOrderData);
+        }
         
-        console.log('🔍 Testing QR Code fields:');
-        console.log('  - order.qrCode?.qrCode:', allOrders[0].qrCode?.qrCode);
-        console.log('  - order.qrCode?.qrCodeUrl:', allOrders[0].qrCode?.qrCodeUrl);
-        console.log('  - order.orderResult?.qrCode:', allOrders[0].orderResult?.qrCode);
+        // Extract data from the actual airaloOrderData structure
+        const airaloData = orderData.airaloOrderData || {};
+        const esimData = orderData.esimData || {};
+        const simData = airaloData.sims?.[0] || {}; // First SIM in the array
+        
+        return {
+          id: orderDoc.id,
+          userId: orderData.userId,
+          
+          // Order details
+          orderId: orderData.orderId || airaloData.code,
+          airaloOrderId: orderData.airaloOrderId || airaloData.id,
+          planId: orderData.planId || orderData.package_id || airaloData.package_id,
+          planName: orderData.planName || airaloData.package || `${airaloData.data} - ${airaloData.validity || 30} Days`,
+          
+          // Pricing info
+          amount: orderData.amount || airaloData.price,
+          price: orderData.amount || airaloData.price,
+          currency: orderData.currency || airaloData.currency || 'USD',
+          
+          // Status and timing
+          status: orderData.status || esimData.status || 'active',
+          customerEmail: orderData.customerEmail,
+          createdAt: orderData.createdAt?.toDate() || null,
+          updatedAt: orderData.updatedAt?.toDate() || null,
+          purchaseDate: orderData.createdAt?.toDate() || null,
+          
+          // Plan details from airalo data
+          data: airaloData.data,
+          validity: airaloData.validity,
+          esimType: airaloData.esim_type,
+          
+          // Country info - extract from package name or other fields
+          countryCode: orderData.countryCode,
+          countryName: orderData.countryName || airaloData.package?.split('-')[0], // Extract from package name
+          
+          // QR code and activation data from nested structure
+          qrCode: {
+            qrCode: esimData.qrcode || simData.qrcode,
+            qrCodeUrl: esimData.qrcode_url || simData.qrcode_url,
+            directAppleInstallationUrl: esimData.direct_apple_installation_url || simData.direct_apple_installation_url,
+            iccid: esimData.iccid || simData.iccid,
+            lpa: esimData.lpa || simData.lpa,
+            matchingId: esimData.matching_id || simData.matching_id
+          },
+          
+          // Top-level ICCID for backward compatibility
+          iccid: esimData.iccid || simData.iccid,
+          
+          // Installation guides and instructions
+          installationGuides: airaloData.installation_guides,
+          manualInstallation: esimData.manual_installation || airaloData.manual_installation,
+          qrcodeInstallation: esimData.qrcode_installation || airaloData.qrcode_installation,
+          
+          // Keep original data for debugging
+          airaloOrderData: orderData.airaloOrderData,
+          esimData: orderData.esimData,
+          orderResult: orderData.airaloOrderData,
+        };
+      });
+      
+      // Update state
+      if (loadMore) {
+        setEsimOrders(prev => [...prev, ...newOrders]);
+        setCurrentPage(prev => prev + 1);
+      } else {
+        setEsimOrders(newOrders);
+        setCurrentPage(1);
+        // Get total count on first load
+        const totalQuery = query(collection(db, 'orders'));
+        const totalSnapshot = await getDocs(totalQuery);
+        setTotalOrders(totalSnapshot.docs.length);
+      }
+      
+      // Update pagination
+      setLastDoc(ordersSnapshot.docs[ordersSnapshot.docs.length - 1]);
+      setHasMore(ordersSnapshot.docs.length === ORDERS_PER_PAGE);
+      
+      console.log(`Loaded ${newOrders.length} eSIM orders from orders collection`);
+      
+      // Debug: Log first order to see data structure (only on initial load)
+      if (!loadMore && newOrders.length > 0) {
+        console.log('🔍 Sample processed order data:', newOrders[0]);
+        console.log('🔍 QR Code data:', newOrders[0].qrCode);
+        console.log('🔍 ICCID:', newOrders[0].iccid);
       }
       
     } catch (error) {
@@ -135,6 +187,7 @@ const AdminEsimManagement = () => {
       toast.error('Failed to load eSIM orders');
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   };
 
@@ -148,6 +201,7 @@ const AdminEsimManagement = () => {
         order.planName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         order.userEmail?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         order.userName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.userId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         order.orderId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         order.iccid?.toLowerCase().includes(searchTerm.toLowerCase())
       );
@@ -160,6 +214,14 @@ const AdminEsimManagement = () => {
 
     setFilteredOrders(filtered);
   };
+
+  // Load more orders
+  const loadMoreOrders = () => {
+    if (hasMore && !loadingMore) {
+      loadEsimOrders(true);
+    }
+  };
+
 
 
   // Helper function to remove undefined values from an object
@@ -244,13 +306,16 @@ const AdminEsimManagement = () => {
       setDeletingOrder(true);
       console.log('🗑️ Deleting eSIM order:', order.id);
       
-      // Delete from Firestore
-      const esimRef = doc(db, 'users', order.userId, 'esims', order.id);
-      await deleteDoc(esimRef);
+      // Delete from orders collection
+      const orderRef = doc(db, 'orders', order.id);
+      await deleteDoc(orderRef);
       
       // Remove from local state
       setEsimOrders(prev => prev.filter(o => o.id !== order.id));
       setFilteredOrders(prev => prev.filter(o => o.id !== order.id));
+      
+      // Update total count
+      setTotalOrders(prev => prev - 1);
       
       toast.success('eSIM order deleted successfully');
       setShowDeleteModal(false);
@@ -293,11 +358,12 @@ const AdminEsimManagement = () => {
 
   // Export orders to CSV
   const exportToCSV = () => {
-    const headers = ['Order ID', 'User Email', 'Plan Name', 'Status', 'Price', 'Country', 'Created At', 'ICCID'];
+    const headers = ['Order ID', 'User ID', 'User Email', 'Plan Name', 'Status', 'Price', 'Country', 'Created At', 'ICCID'];
     const csvContent = [
       headers.join(','),
       ...filteredOrders.map(order => [
         order.orderId || order.id || '',
+        order.userId || '',
         order.userEmail || '',
         order.planName || '',
         order.status || '',
@@ -351,62 +417,6 @@ const AdminEsimManagement = () => {
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white rounded-xl shadow-lg p-6">
-          <div className="flex items-center">
-            <div className="p-3 bg-blue-100 rounded-full">
-              <Globe className="w-6 h-6 text-blue-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total Orders</p>
-              <p className="text-2xl font-bold text-gray-900">{esimOrders.length}</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-white rounded-xl shadow-lg p-6">
-          <div className="flex items-center">
-            <div className="p-3 bg-green-100 rounded-full">
-              <CheckCircle className="w-6 h-6 text-green-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Active</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {esimOrders.filter(order => order.status === 'active').length}
-              </p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-white rounded-xl shadow-lg p-6">
-          <div className="flex items-center">
-            <div className="p-3 bg-yellow-100 rounded-full">
-              <Clock className="w-6 h-6 text-yellow-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Pending</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {esimOrders.filter(order => order.status === 'pending').length}
-              </p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-white rounded-xl shadow-lg p-6">
-          <div className="flex items-center">
-            <div className="p-3 bg-purple-100 rounded-full">
-              <DollarSign className="w-6 h-6 text-purple-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-              <p className="text-2xl font-bold text-gray-900">
-                ${esimOrders.reduce((sum, order) => sum + (order.price || 0), 0)}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* Filters */}
       <div className="bg-white rounded-xl shadow-lg p-6">
@@ -415,7 +425,7 @@ const AdminEsimManagement = () => {
             <Search className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
             <input
               type="text"
-              placeholder="Search orders by plan, user, email, order ID, or ICCID..."
+              placeholder="Search orders by plan, user ID, email, order ID, or ICCID..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -463,7 +473,7 @@ const AdminEsimManagement = () => {
                     Order Details
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    User
+                    User ID
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Plan & Country
@@ -498,13 +508,8 @@ const AdminEsimManagement = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">
-                          {order.userName === 'Unknown User' ? order.userEmail : order.userName}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          {order.userName === 'Unknown User' ? '' : order.userEmail}
-                        </div>
+                      <div className="text-sm font-medium text-gray-900 font-mono">
+                        {order.userId}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -513,6 +518,9 @@ const AdminEsimManagement = () => {
                           {order.planName || 'Unknown Plan'}
                         </div>
                         <div className="text-sm text-gray-500">
+                          {order.data && `${order.data}`}{order.validity && ` - ${order.validity} days`}
+                        </div>
+                        <div className="text-xs text-gray-400">
                           {order.countryName || order.countryCode || 'Unknown Country'}
                         </div>
                       </div>
@@ -598,6 +606,32 @@ const AdminEsimManagement = () => {
                 ))}
               </tbody>
             </table>
+            
+            {/* Load More Button */}
+            {hasMore && (
+              <div className="text-center py-6 border-t border-gray-200">
+                <button
+                  onClick={loadMoreOrders}
+                  disabled={loadingMore}
+                  className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loadingMore ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                      Loading More...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="w-4 h-4 mr-2" />
+                      Load More Orders
+                    </>
+                  )}
+                </button>
+                <p className="text-sm text-gray-500 mt-2">
+                  Showing {esimOrders.length} of {totalOrders} total orders
+                </p>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -629,6 +663,10 @@ const AdminEsimManagement = () => {
                   </span>
                 </div>
                 <div>
+                  <label className="block text-sm font-medium text-gray-700">User ID</label>
+                  <p className="mt-1 text-sm text-gray-900 font-mono">{selectedOrder.userId}</p>
+                </div>
+                <div>
                   <label className="block text-sm font-medium text-gray-700">User Name</label>
                   <p className="mt-1 text-sm text-gray-900">{selectedOrder.userName}</p>
                 </div>
@@ -641,12 +679,26 @@ const AdminEsimManagement = () => {
                   <p className="mt-1 text-sm text-gray-900">{selectedOrder.planName}</p>
                 </div>
                 <div>
+                  <label className="block text-sm font-medium text-gray-700">Data & Validity</label>
+                  <p className="mt-1 text-sm text-gray-900">
+                    {selectedOrder.data} - {selectedOrder.validity} days
+                  </p>
+                </div>
+                <div>
                   <label className="block text-sm font-medium text-gray-700">Country</label>
                   <p className="mt-1 text-sm text-gray-900">{selectedOrder.countryName || selectedOrder.countryCode}</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Price</label>
-                  <p className="mt-1 text-sm text-gray-900">${selectedOrder.price}</p>
+                  <p className="mt-1 text-sm text-gray-900">${selectedOrder.price} {selectedOrder.currency}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">eSIM Type</label>
+                  <p className="mt-1 text-sm text-gray-900">{selectedOrder.esimType || 'Prepaid'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Airalo Order ID</label>
+                  <p className="mt-1 text-sm text-gray-900">{selectedOrder.airaloOrderId}</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">ICCID</label>
