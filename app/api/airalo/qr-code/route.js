@@ -37,6 +37,29 @@ export async function POST(request) {
     const orderData = orderDoc.data();
     const airaloOrderId = orderData.airaloOrderId;
 
+    // Check if QR code already exists and return it (allow multiple retrievals)
+    if (orderData.qrCode && orderData.qrCodeRetrievedAt) {
+      console.log('✅ QR code already exists, returning cached data');
+      return NextResponse.json({
+        success: true,
+        qrCode: orderData.qrCode,
+        qrCodeUrl: orderData.qrCodeUrl,
+        activationCode: orderData.activationCode,
+        iccid: orderData.iccid,
+        lpa: orderData.lpa,
+        matchingId: orderData.matchingId,
+        orderStatus: orderData.orderStatus,
+        orderDetails: orderData.airaloOrderDetails,
+        simDetails: orderData.airaloSimDetails,
+        directAppleInstallationUrl: orderData.directAppleInstallationUrl,
+        smdpAddress: orderData.smdpAddress,
+        message: 'QR code retrieved from cache (previously processed)',
+        canRetry: false,
+        canRetrieveMultipleTimes: true,
+        fromCache: true
+      });
+    }
+
     if (!airaloOrderId) {
       return NextResponse.json({
         success: false,
@@ -218,32 +241,73 @@ export async function POST(request) {
     const finalQrCode = qrCode || directAppleInstallationUrl;
     const finalActivationCode = activationCode;
 
-    // Update order in Firestore with QR code data
-    await updateDoc(orderRef, {
+    // Save complete API response data to Firebase for future access
+    const completeQrData = {
       status: 'active',
       qrCode: finalQrCode,
+      qrCodeUrl: simData?.qrcode_url,
       activationCode: finalActivationCode,
       iccid: iccid,
+      lpa: simData?.lpa,
+      matchingId: simData?.matching_id,
       orderStatus: simData?.status,
       airaloOrderDetails: orderDetails.data,
       airaloSimDetails: simData,
       directAppleInstallationUrl: directAppleInstallationUrl,
+      smdpAddress: simData?.smdp_address,
+      // Save all SIM data for complete record
+      simDataComplete: {
+        ...simData,
+        // Ensure key fields are accessible
+        qrcode: finalQrCode,
+        qrcode_url: simData?.qrcode_url,
+        direct_apple_installation_url: directAppleInstallationUrl,
+        lpa: simData?.lpa,
+        iccid: iccid,
+        matching_id: simData?.matching_id,
+        smdp_address: simData?.smdp_address,
+        activation_code: finalActivationCode
+      },
+      // Update order result for compatibility
+      orderResult: {
+        qrCode: finalQrCode,
+        qrCodeUrl: simData?.qrcode_url,
+        activationCode: finalActivationCode,
+        iccid: iccid,
+        lpa: simData?.lpa,
+        matchingId: simData?.matching_id,
+        directAppleInstallationUrl: directAppleInstallationUrl,
+        smdpAddress: simData?.smdp_address,
+        status: 'active',
+        success: true,
+        provider: 'airalo',
+        updatedAt: new Date().toISOString()
+      },
+      qrCodeRetrievedAt: serverTimestamp(),
       updatedAt: serverTimestamp()
-    });
+    };
 
-    console.log('✅ QR code retrieved successfully');
+    await updateDoc(orderRef, completeQrData);
+
+    console.log('✅ QR code retrieved and saved successfully with complete data');
 
     return NextResponse.json({
       success: true,
       qrCode: finalQrCode,
+      qrCodeUrl: simData?.qrcode_url,
       activationCode: finalActivationCode,
       iccid: iccid,
+      lpa: simData?.lpa,
+      matchingId: simData?.matching_id,
       orderStatus: simData?.status,
       orderDetails: orderDetails.data,
       simDetails: simData,
       directAppleInstallationUrl: directAppleInstallationUrl,
+      smdpAddress: simData?.smdp_address,
       message: 'QR code retrieved successfully',
-      canRetry: false
+      canRetry: false,
+      // Allow multiple retrievals but indicate data is already saved
+      canRetrieveMultipleTimes: true
     });
 
   } catch (error) {

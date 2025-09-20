@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { collection, query, where, getDocs, doc, setDoc, getDoc, deleteDoc, serverTimestamp, addDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { motion } from 'framer-motion';
-import { User, Globe, Activity, Settings, QrCode, Eye, Download, Trash2, MoreVertical, Smartphone, Shield, AlertTriangle, Wallet, Flame, Gift } from 'lucide-react';
+import { User, Globe, Settings, QrCode, Eye, Download, Trash2, MoreVertical, Smartphone, Shield, AlertTriangle, Wallet, Flame, Gift } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 // Helper function to get flag emoji from country code
@@ -321,7 +321,6 @@ const Dashboard = () => {
   }
 
   const activeOrders = orders.filter(order => order && order.status === 'active');
-  const pendingOrders = orders.filter(order => order && order.status === 'pending');
 
 
   const handleViewQRCode = async (order) => {
@@ -329,24 +328,37 @@ const Dashboard = () => {
       setSelectedOrder(order);
       setShowQRModal(true);
       
-      // Check if we already have QR code data in the order
-      if (order.qrCode && (order.qrCode.qrCode || order.qrCode.qrCodeUrl || order.qrCode.directAppleInstallationUrl)) {
+      // Check if we already have QR code data in the order (multiple formats for compatibility)
+      const hasQrCode = order.qrCode && (
+        (typeof order.qrCode === 'string' && order.qrCode.length > 0) ||
+        (typeof order.qrCode === 'object' && (order.qrCode.qrCode || order.qrCode.qrCodeUrl || order.qrCode.directAppleInstallationUrl))
+      );
+      
+      const hasOtherQrData = order.directAppleInstallationUrl || order.qrCodeUrl || order.iccid;
+      
+      if (hasQrCode || hasOtherQrData) {
         console.log('✅ Using existing QR code data from order');
-        setSelectedOrder(prev => ({ 
-          ...prev, 
-          qrCode: {
-            qrCode: order.qrCode.qrCode,
-            qrCodeUrl: order.qrCode.qrCodeUrl,
-            directAppleInstallationUrl: order.qrCode.directAppleInstallationUrl,
-            iccid: order.qrCode.iccid,
-            lpa: order.qrCode.lpa,
-            matchingId: order.qrCode.matchingId,
+        let qrCodeData;
+        
+        if (typeof order.qrCode === 'object') {
+          qrCodeData = order.qrCode;
+        } else {
+          qrCodeData = {
+            qrCode: order.qrCode || order.directAppleInstallationUrl,
+            qrCodeUrl: order.qrCodeUrl,
+            directAppleInstallationUrl: order.directAppleInstallationUrl,
+            iccid: order.iccid,
+            lpa: order.lpa,
+            matchingId: order.matchingId,
+            activationCode: order.activationCode,
             isReal: true
-          }
-        }));
+          };
+        }
+        
+        setSelectedOrder(prev => ({ ...prev, qrCode: qrCodeData }));
       } else {
-        console.log('⚠️ No existing QR code data, trying to generate...');
-        // Only try to generate QR code if we don't have existing data
+        console.log('⚠️ No existing QR code data, retrieving from API...');
+        // Retrieve QR code from API (this will now allow multiple retrievals)
         const qrResult = await generateQRCode(order.orderId || order.id, order.planName);
         setSelectedOrder(prev => ({ ...prev, qrCode: qrResult }));
       }
@@ -366,9 +378,17 @@ const Dashboard = () => {
         console.log('✅ Real QR code received:', qrCodeResult);
         return {
           qrCode: qrCodeResult.qrCode,
-          qrCodeData: qrCodeResult.qrCodeData,
-          planDetails: qrCodeResult.planDetails,
-          esimData: qrCodeResult.esimData,
+          qrCodeUrl: qrCodeResult.qrCodeUrl,
+          directAppleInstallationUrl: qrCodeResult.directAppleInstallationUrl,
+          iccid: qrCodeResult.iccid,
+          lpa: qrCodeResult.lpa,
+          matchingId: qrCodeResult.matchingId,
+          activationCode: qrCodeResult.activationCode,
+          smdpAddress: qrCodeResult.smdpAddress,
+          orderDetails: qrCodeResult.orderDetails,
+          simDetails: qrCodeResult.simDetails,
+          fromCache: qrCodeResult.fromCache || false,
+          canRetrieveMultipleTimes: qrCodeResult.canRetrieveMultipleTimes || false,
           isReal: true
         };
       } else {
@@ -831,103 +851,6 @@ const Dashboard = () => {
     }
   };
 
-  // Handle order activation - generate QR code via API
-  const handleActivateOrder = async (order) => {
-    try {
-      console.log('🚀 Activating order:', order);
-      
-      // Show loading state
-      setSelectedOrder({ ...order, isActivating: true });
-      
-      // Make API request to generate QR code
-      const response = await fetch('/api/airalo/order', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          package_id: order.planId,
-          quantity: "1",
-          type: "sim",
-          description: `eSIM order for ${order.customerEmail || currentUser.email}`,
-          to_email: order.customerEmail || currentUser.email,
-          sharing_option: ["link"]
-        })
-      });
-      
-      if (!response.ok) {
-        throw new Error(`API request failed: ${response.status}`);
-      }
-      
-      const result = await response.json();
-      console.log('✅ Order activation result:', result);
-      
-      if (result.success && result.orderData) {
-        // Extract QR code data from response
-        const sims = result.orderData.sims;
-        if (sims && sims.length > 0) {
-          const simData = sims[0];
-          const qrCodeData = {
-            qrCode: simData.qrcode,
-            qrCodeUrl: simData.qrcode_url,
-            directAppleInstallationUrl: simData.direct_apple_installation_url,
-            iccid: simData.iccid,
-            lpa: simData.lpa,
-            matchingId: simData.matching_id,
-            isReal: true
-          };
-          
-          // Update order in Firebase
-          const orderRef = doc(db, 'users', currentUser.uid, 'esims', order.orderId || order.id);
-          await setDoc(orderRef, {
-            status: 'active',
-            qrCode: qrCodeData.qrCode,
-            qrCodeUrl: qrCodeData.qrCodeUrl,
-            directAppleInstallationUrl: qrCodeData.directAppleInstallationUrl,
-            iccid: qrCodeData.iccid,
-            lpa: qrCodeData.lpa,
-            matchingId: qrCodeData.matchingId,
-            orderResult: {
-              ...order.orderResult,
-              qrCode: qrCodeData.qrCode,
-              qrCodeUrl: qrCodeData.qrCodeUrl,
-              directAppleInstallationUrl: qrCodeData.directAppleInstallationUrl,
-              iccid: qrCodeData.iccid,
-              lpa: qrCodeData.lpa,
-              matchingId: qrCodeData.matchingId,
-              status: 'active',
-              updatedAt: new Date().toISOString()
-            },
-            updatedAt: serverTimestamp()
-          }, { merge: true });
-          
-          // Update local state
-          setOrders(prev => prev.map(o => 
-            o.id === order.id || o.orderId === order.orderId 
-              ? { ...o, status: 'active', qrCode: qrCodeData }
-              : o
-          ));
-          
-          // Show QR code modal
-          setSelectedOrder({ ...order, status: 'active', qrCode: qrCodeData });
-          setShowQRModal(true);
-          
-          console.log('✅ Order activated successfully with QR code');
-        } else {
-          throw new Error('No SIM data received from API');
-        }
-      } else {
-        throw new Error(result.error || 'Failed to activate order');
-      }
-      
-    } catch (error) {
-      console.error('❌ Error activating order:', error);
-      alert(`Failed to activate order: ${error.message}`);
-    } finally {
-      // Remove loading state
-      setSelectedOrder(prev => prev ? { ...prev, isActivating: false } : null);
-    }
-  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -1059,7 +982,7 @@ const Dashboard = () => {
                 <p className="text-3xl font-bold text-green-600">{activeOrders.length}</p>
               </div>
               <div className="bg-green-100 p-3 rounded-full">
-                <Activity className="w-6 h-6 text-green-600" />
+                <QrCode className="w-6 h-6 text-green-600" />
               </div>
             </div>
           </motion.div>
@@ -1135,38 +1058,13 @@ const Dashboard = () => {
                           <p className="text-sm text-gray-500 capitalize">{order.status || 'unknown'}</p>
                         </div>
                       </div>
-                      {order.status === 'active' && (
-                        <button
-                          onClick={() => handleViewQRCode(order)}
-                          className="flex items-center space-x-2 px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors duration-200"
-                        >
-                          <QrCode className="w-4 h-4" />
-                          <span className="text-sm">View QR</span>
-                        </button>
-                      )}
-                      {order.status === 'pending' && (
-                        <button
-                          onClick={() => handleActivateOrder(order)}
-                          disabled={order.isActivating}
-                          className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors duration-200 ${
-                            order.isActivating 
-                              ? 'bg-gray-100 text-gray-500 cursor-not-allowed' 
-                              : 'bg-green-100 text-green-700 hover:bg-green-200'
-                          }`}
-                        >
-                          {order.isActivating ? (
-                            <>
-                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-500"></div>
-                              <span className="text-sm">Activating...</span>
-                            </>
-                          ) : (
-                            <>
-                              <Activity className="w-4 h-4" />
-                              <span className="text-sm">Activate</span>
-                            </>
-                          )}
-                        </button>
-                      )}
+                      <button
+                        onClick={() => handleViewQRCode(order)}
+                        className="flex items-center space-x-2 px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors duration-200"
+                      >
+                        <QrCode className="w-4 h-4" />
+                        <span className="text-sm">View QR</span>
+                      </button>
                     </div>
                   </div>
                 )
@@ -1382,7 +1280,7 @@ const Dashboard = () => {
                             </>
                           ) : (
                             <>
-                              <Activity className="w-4 h-4 mr-3 text-purple-600" />
+                              <Eye className="w-4 h-4 mr-3 text-purple-600" />
                               <span className="text-gray-700">Check Usage & Status</span>
                             </>
                           )}
