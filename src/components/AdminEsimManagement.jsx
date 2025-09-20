@@ -48,7 +48,8 @@ const AdminEsimManagement = () => {
   const [hasMore, setHasMore] = useState(true);
   const [lastDoc, setLastDoc] = useState(null);
   const [loadingMore, setLoadingMore] = useState(false);
-  const ORDERS_PER_PAGE = 50;
+  const [totalPages, setTotalPages] = useState(0);
+  const ORDERS_PER_PAGE = 20; // Reduced for better pagination experience
 
   // Load eSIM orders from orders collection with pagination
   const loadEsimOrders = async (loadMore = false) => {
@@ -166,7 +167,9 @@ const AdminEsimManagement = () => {
         // Get total count on first load
         const totalQuery = query(collection(db, 'orders'));
         const totalSnapshot = await getDocs(totalQuery);
-        setTotalOrders(totalSnapshot.docs.length);
+        const totalCount = totalSnapshot.docs.length;
+        setTotalOrders(totalCount);
+        setTotalPages(Math.ceil(totalCount / ORDERS_PER_PAGE));
       }
       
       // Update pagination
@@ -219,6 +222,103 @@ const AdminEsimManagement = () => {
   const loadMoreOrders = () => {
     if (hasMore && !loadingMore) {
       loadEsimOrders(true);
+    }
+  };
+
+  // Go to specific page
+  const goToPage = async (page) => {
+    if (page < 1 || page > totalPages || page === currentPage) return;
+    
+    try {
+      setLoading(true);
+      setCurrentPage(page);
+      
+      // Calculate offset for the page
+      const offset = (page - 1) * ORDERS_PER_PAGE;
+      
+      // Create query for specific page
+      let ordersQuery = query(
+        collection(db, 'orders'),
+        orderBy('createdAt', 'desc'),
+        limit(ORDERS_PER_PAGE)
+      );
+
+      // For pages beyond the first, we need to use startAfter with the appropriate document
+      if (page > 1) {
+        // We need to get the document to start after
+        const skipQuery = query(
+          collection(db, 'orders'),
+          orderBy('createdAt', 'desc'),
+          limit(offset)
+        );
+        const skipSnapshot = await getDocs(skipQuery);
+        const lastSkipDoc = skipSnapshot.docs[skipSnapshot.docs.length - 1];
+        
+        if (lastSkipDoc) {
+          ordersQuery = query(
+            collection(db, 'orders'),
+            orderBy('createdAt', 'desc'),
+            startAfter(lastSkipDoc),
+            limit(ORDERS_PER_PAGE)
+          );
+        }
+      }
+      
+      const ordersSnapshot = await getDocs(ordersQuery);
+      
+      const newOrders = ordersSnapshot.docs.map(orderDoc => {
+        const orderData = orderDoc.data();
+        const airaloData = orderData.airaloOrderData || {};
+        const esimData = orderData.esimData || {};
+        const simData = airaloData.sims?.[0] || {};
+        
+        return {
+          id: orderDoc.id,
+          userId: orderData.userId,
+          orderId: orderData.orderId || airaloData.code,
+          airaloOrderId: orderData.airaloOrderId || airaloData.id,
+          planId: orderData.planId || orderData.package_id || airaloData.package_id,
+          planName: orderData.planName || airaloData.package || `${airaloData.data} - ${airaloData.validity || 30} Days`,
+          amount: orderData.amount || airaloData.price,
+          price: orderData.amount || airaloData.price,
+          currency: orderData.currency || airaloData.currency || 'USD',
+          status: orderData.status || esimData.status || 'active',
+          customerEmail: orderData.customerEmail,
+          createdAt: orderData.createdAt?.toDate() || null,
+          updatedAt: orderData.updatedAt?.toDate() || null,
+          purchaseDate: orderData.createdAt?.toDate() || null,
+          data: airaloData.data,
+          validity: airaloData.validity,
+          esimType: airaloData.esim_type,
+          countryCode: orderData.countryCode,
+          countryName: orderData.countryName || airaloData.package?.split('-')[0],
+          qrCode: {
+            qrCode: esimData.qrcode || simData.qrcode,
+            qrCodeUrl: esimData.qrcode_url || simData.qrcode_url,
+            directAppleInstallationUrl: esimData.direct_apple_installation_url || simData.direct_apple_installation_url,
+            iccid: esimData.iccid || simData.iccid,
+            lpa: esimData.lpa || simData.lpa,
+            matchingId: esimData.matching_id || simData.matching_id
+          },
+          iccid: esimData.iccid || simData.iccid,
+          installationGuides: airaloData.installation_guides,
+          manualInstallation: esimData.manual_installation || airaloData.manual_installation,
+          qrcodeInstallation: esimData.qrcode_installation || airaloData.qrcode_installation,
+          airaloOrderData: orderData.airaloOrderData,
+          esimData: orderData.esimData,
+          orderResult: orderData.airaloOrderData,
+        };
+      });
+      
+      setEsimOrders(newOrders);
+      setLastDoc(ordersSnapshot.docs[ordersSnapshot.docs.length - 1]);
+      setHasMore(page < totalPages);
+      
+    } catch (error) {
+      console.error('Error loading page:', error);
+      toast.error('Failed to load page');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -355,6 +455,7 @@ const AdminEsimManagement = () => {
         return 'bg-gray-100 text-gray-800';
     }
   };
+
 
   // Export orders to CSV
   const exportToCSV = () => {
@@ -508,9 +609,16 @@ const AdminEsimManagement = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900 font-mono">
+                      <button
+                        onClick={() => {
+                          // Navigate to user details page
+                          window.location.href = `/admin/user/${order.userId}`;
+                        }}
+                        className="text-sm font-medium text-blue-600 hover:text-blue-800 font-mono hover:underline transition-colors"
+                        title="Click to view user details"
+                      >
                         {order.userId}
-                      </div>
+                      </button>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
@@ -607,29 +715,61 @@ const AdminEsimManagement = () => {
               </tbody>
             </table>
             
-            {/* Load More Button */}
-            {hasMore && (
-              <div className="text-center py-6 border-t border-gray-200">
-                <button
-                  onClick={loadMoreOrders}
-                  disabled={loadingMore}
-                  className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loadingMore ? (
-                    <>
-                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                      Loading More...
-                    </>
-                  ) : (
-                    <>
-                      <Download className="w-4 h-4 mr-2" />
-                      Load More Orders
-                    </>
-                  )}
-                </button>
-                <p className="text-sm text-gray-500 mt-2">
-                  Showing {esimOrders.length} of {totalOrders} total orders
-                </p>
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between py-6 border-t border-gray-200 px-6">
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => goToPage(currentPage - 1)}
+                    disabled={currentPage === 1 || loading}
+                    className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Previous
+                  </button>
+                  
+                  {/* Page Numbers */}
+                  <div className="flex space-x-1">
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      let pageNum;
+                      if (totalPages <= 5) {
+                        pageNum = i + 1;
+                      } else if (currentPage <= 3) {
+                        pageNum = i + 1;
+                      } else if (currentPage >= totalPages - 2) {
+                        pageNum = totalPages - 4 + i;
+                      } else {
+                        pageNum = currentPage - 2 + i;
+                      }
+                      
+                      return (
+                        <button
+                          key={pageNum}
+                          onClick={() => goToPage(pageNum)}
+                          disabled={loading}
+                          className={`px-3 py-2 text-sm font-medium rounded-md ${
+                            currentPage === pageNum
+                              ? 'bg-blue-600 text-white'
+                              : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-50'
+                          } disabled:opacity-50 disabled:cursor-not-allowed`}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  
+                  <button
+                    onClick={() => goToPage(currentPage + 1)}
+                    disabled={currentPage === totalPages || loading}
+                    className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Next
+                  </button>
+                </div>
+                
+                <div className="text-sm text-gray-500">
+                  Page {currentPage} of {totalPages} • Showing {esimOrders.length} of {totalOrders} orders
+                </div>
               </div>
             )}
           </div>
@@ -852,6 +992,7 @@ const AdminEsimManagement = () => {
           </div>
         </div>
       )}
+
     </div>
   );
 };
