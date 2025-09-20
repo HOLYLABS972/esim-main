@@ -13,9 +13,13 @@ import {
   MessageSquare, 
   Search,
   RefreshCw,
-  Save
+  Save,
+  Upload,
+  X,
+  Image as ImageIcon
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { imageUploadService } from '../services/imageUploadService';
 
 // Helper function to get flag emoji from country code
 const getFlagEmoji = (countryCode) => {
@@ -58,6 +62,11 @@ const NotificationsManagement = () => {
   const [notificationErrors, setNotificationErrors] = useState({});
   const [loadingNotifications, setLoadingNotifications] = useState(false);
   const [notificationCountries, setNotificationCountries] = useState([]);
+  
+  // Image upload state
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   // Load data on component mount
   useEffect(() => {
@@ -125,6 +134,80 @@ const NotificationsManagement = () => {
     }
   };
 
+  // Handle image file selection
+  const handleImageSelect = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        toast.error('Please select a valid image file');
+        return;
+      }
+
+      // Validate file size (max 5MB)
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      if (file.size > maxSize) {
+        toast.error('Image size must be less than 5MB');
+        return;
+      }
+
+      setSelectedImage(file);
+      
+      // Create preview URL
+      const previewUrl = URL.createObjectURL(file);
+      setImagePreview(previewUrl);
+      
+      // Clear existing imageUrl when new file is selected
+      setNotificationFormData(prev => ({
+        ...prev,
+        imageUrl: ''
+      }));
+    }
+  };
+
+  // Upload image to Firebase Storage
+  const uploadImage = async () => {
+    if (!selectedImage) return null;
+
+    try {
+      setUploadingImage(true);
+      const result = await imageUploadService.uploadImage(selectedImage, 'notification-images');
+      
+      if (result.success) {
+        setNotificationFormData(prev => ({
+          ...prev,
+          imageUrl: result.url
+        }));
+        toast.success('Image uploaded successfully');
+        return result.url;
+      } else {
+        toast.error(`Upload failed: ${result.error}`);
+        return null;
+      }
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast.error('Failed to upload image');
+      return null;
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  // Remove selected image
+  const removeImage = () => {
+    setSelectedImage(null);
+    setImagePreview(null);
+    setNotificationFormData(prev => ({
+      ...prev,
+      imageUrl: ''
+    }));
+    
+    // Clean up preview URL
+    if (imagePreview) {
+      URL.revokeObjectURL(imagePreview);
+    }
+  };
+
   const saveNotification = async () => {
     try {
       setLoadingNotifications(true);
@@ -140,8 +223,19 @@ const NotificationsManagement = () => {
         return;
       }
 
+      // Upload image if one is selected
+      let imageUrl = notificationFormData.imageUrl;
+      if (selectedImage && !imageUrl) {
+        imageUrl = await uploadImage();
+        if (!imageUrl) {
+          toast.error('Failed to upload image. Please try again.');
+          return;
+        }
+      }
+
       const notificationData = {
         ...notificationFormData,
+        imageUrl: imageUrl, // Use uploaded image URL
         createdAt: editingNotification ? editingNotification.createdAt : serverTimestamp(),
         updatedAt: serverTimestamp(),
         createdBy: currentUser.email,
@@ -172,6 +266,13 @@ const NotificationsManagement = () => {
         name: '',
         imageUrl: ''
       });
+      
+      // Clear image state
+      setSelectedImage(null);
+      setImagePreview(null);
+      if (imagePreview) {
+        URL.revokeObjectURL(imagePreview);
+      }
       
       await loadNotifications();
     } catch (error) {
@@ -206,6 +307,14 @@ const NotificationsManagement = () => {
       name: notification.name || notification.body || '', // Use body as name if name doesn't exist
       imageUrl: notification.imageUrl || ''
     });
+    
+    // Clear image upload state when editing
+    setSelectedImage(null);
+    setImagePreview(null);
+    if (imagePreview) {
+      URL.revokeObjectURL(imagePreview);
+    }
+    
     setShowNotificationModal(true);
   };
 
@@ -217,6 +326,14 @@ const NotificationsManagement = () => {
       imageUrl: ''
     });
     setNotificationErrors({});
+    
+    // Clear image upload state
+    setSelectedImage(null);
+    setImagePreview(null);
+    if (imagePreview) {
+      URL.revokeObjectURL(imagePreview);
+    }
+    
     setShowNotificationModal(true);
   };
 
@@ -402,16 +519,63 @@ const NotificationsManagement = () => {
                   )}
                 </div>
 
-                {/* Image URL */}
+                {/* Image Upload */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Image URL (Optional)</label>
-                  <input
-                    type="url"
-                    value={notificationFormData.imageUrl}
-                    onChange={(e) => setNotificationFormData({...notificationFormData, imageUrl: e.target.value})}
-                    placeholder="https://example.com/image.jpg"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
-                  />
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Notification Image (Optional)</label>
+                  
+                  {/* Image Preview */}
+                  {(imagePreview || notificationFormData.imageUrl) && (
+                    <div className="mb-4">
+                      <div className="relative inline-block">
+                        <img
+                          src={imagePreview || notificationFormData.imageUrl}
+                          alt="Preview"
+                          className="w-32 h-32 object-cover rounded-lg border border-gray-300"
+                        />
+                        <button
+                          type="button"
+                          onClick={removeImage}
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 transition-colors"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                      {selectedImage && !notificationFormData.imageUrl && (
+                        <p className="text-sm text-gray-600 mt-2">
+                          Image will be uploaded when you save the notification
+                        </p>
+                      )}
+                    </div>
+                  )}
+                  
+                  {/* Upload Button */}
+                  {!imagePreview && !notificationFormData.imageUrl && (
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageSelect}
+                        className="hidden"
+                        id="image-upload"
+                      />
+                      <label
+                        htmlFor="image-upload"
+                        className="cursor-pointer flex flex-col items-center"
+                      >
+                        <Upload className="w-8 h-8 text-gray-400 mb-2" />
+                        <p className="text-sm text-gray-600 mb-1">Click to upload an image</p>
+                        <p className="text-xs text-gray-500">PNG, JPG up to 5MB</p>
+                      </label>
+                    </div>
+                  )}
+                  
+                  {/* Upload Progress */}
+                  {uploadingImage && (
+                    <div className="mt-2 flex items-center text-sm text-gray-600">
+                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                      Uploading image...
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
