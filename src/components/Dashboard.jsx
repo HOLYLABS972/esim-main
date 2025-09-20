@@ -707,43 +707,6 @@ const Dashboard = () => {
     }
   };
 
-  const handleCheckEsimDetails = async () => {
-    if (!selectedOrder || loadingEsimDetails) return;
-    
-    try {
-      setLoadingEsimDetails(true);
-      console.log('📱 Checking eSIM details for order:', selectedOrder);
-      
-      // Get ICCID from the order
-      const iccid = selectedOrder.qrCode?.iccid || selectedOrder.iccid;
-      
-      if (!iccid) {
-        console.log('❌ No ICCID found in order');
-        alert('No ICCID found in this order. Cannot check eSIM details.');
-        return;
-      }
-      
-      console.log('📱 Checking eSIM details for ICCID:', iccid);
-      const result = await esimService.getEsimDetailsByIccid(iccid);
-      
-      if (result.success) {
-        setEsimDetails(result.data);
-        console.log('✅ eSIM details retrieved:', result.data);
-        
-        // Update Firebase with correct country information if available
-        await updateOrderCountryInfo(selectedOrder, result.data);
-        
-      } else {
-        console.log('❌ Failed to get eSIM details:', result.error);
-        alert(`Failed to get eSIM details: ${result.error}`);
-      }
-    } catch (error) {
-      console.error('❌ Error checking eSIM details:', error);
-      alert(`Error checking eSIM details: ${error.message}`);
-    } finally {
-      setLoadingEsimDetails(false);
-    }
-  };
 
   const handleCheckEsimUsage = async () => {
     if (!selectedOrder || loadingEsimUsage) return;
@@ -1321,26 +1284,6 @@ const Dashboard = () => {
                   )}
                 </div>
                 
-                {/* Always show Delete button when no QR code is available */}
-                {(!selectedOrder.qrCode || !selectedOrder.qrCode.qrCode || selectedOrder.qrCode?.canRetry) && (
-                  <button
-                    onClick={handleDeleteOrder}
-                    disabled={isRetrying}
-                    className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isRetrying ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white inline mr-2"></div>
-                        Deleting...
-                      </>
-                    ) : (
-                      <>
-                        <Trash2 className="w-4 h-4 inline mr-2" />
-                        Delete eSIM
-                      </>
-                    )}
-                  </button>
-                )}
                 
               </div>
             </div>
@@ -1487,13 +1430,6 @@ const Dashboard = () => {
                 </div>
               )}
 
-              {/* Raw Data */}
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h4 className="font-semibold text-gray-900 mb-3">Raw API Response</h4>
-                <pre className="text-xs text-gray-700 bg-white p-3 rounded border overflow-x-auto">
-                  {JSON.stringify(esimDetails, null, 2)}
-                </pre>
-              </div>
             </div>
 
           </motion.div>
@@ -1637,13 +1573,6 @@ const Dashboard = () => {
                 </div>
               )}
 
-              {/* Raw Data */}
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h4 className="font-semibold text-gray-900 mb-3">Raw API Response</h4>
-                <pre className="text-xs text-gray-700 bg-white p-3 rounded border overflow-x-auto">
-                  {JSON.stringify(esimUsage, null, 2)}
-                </pre>
-              </div>
             </div>
 
           </motion.div>
