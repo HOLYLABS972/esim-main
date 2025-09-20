@@ -41,6 +41,9 @@ const AdminEsimManagement = () => {
   const [resubmittingOrder, setResubmittingOrder] = useState(null);
   const [openDropdown, setOpenDropdown] = useState(null);
   const [fetchingQrCode, setFetchingQrCode] = useState(null);
+  const [showEditFirebaseIdModal, setShowEditFirebaseIdModal] = useState(false);
+  const [editingFirebaseId, setEditingFirebaseId] = useState(false);
+  const [firebaseIdInput, setFirebaseIdInput] = useState('');
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -400,6 +403,47 @@ const AdminEsimManagement = () => {
     }
   };
 
+  // Edit Firebase ID for eSIM order
+  const handleEditFirebaseId = async (order) => {
+    try {
+      setEditingFirebaseId(true);
+      console.log('🆔 Editing Firebase ID for eSIM order:', order.id, 'New ID:', firebaseIdInput);
+      
+      if (!firebaseIdInput.trim()) {
+        toast.error('Please enter a valid Firebase ID');
+        return;
+      }
+
+      // Update the order in Firestore with the new Firebase ID
+      const orderRef = doc(db, 'orders', order.id);
+      await updateDoc(orderRef, {
+        userId: firebaseIdInput.trim(),
+        updatedAt: serverTimestamp()
+      });
+
+      // Update local state
+      const updatedOrder = {
+        ...order,
+        userId: firebaseIdInput.trim(),
+        updatedAt: new Date()
+      };
+
+      setEsimOrders(prev => prev.map(o => o.id === order.id ? updatedOrder : o));
+      setFilteredOrders(prev => prev.map(o => o.id === order.id ? updatedOrder : o));
+      
+      toast.success('Firebase ID updated successfully!');
+      setShowEditFirebaseIdModal(false);
+      setFirebaseIdInput('');
+      
+    } catch (error) {
+      console.error('Error editing Firebase ID:', error);
+      toast.error(`Failed to edit Firebase ID: ${error.message}`);
+    } finally {
+      setEditingFirebaseId(false);
+    }
+  };
+
+
   // Delete eSIM order
   const handleDeleteOrder = async (order) => {
     try {
@@ -571,13 +615,16 @@ const AdminEsimManagement = () => {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Order Details
+                    Order/ICCID
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    User ID
+                    QR Status
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Plan & Country
+                    UID/Activation Code
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Plan Details
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status
@@ -586,7 +633,7 @@ const AdminEsimManagement = () => {
                     Price
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Created
+                    Date/Time
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
@@ -596,18 +643,41 @@ const AdminEsimManagement = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredOrders.map((order) => (
                   <tr key={order.id} className="hover:bg-gray-50">
+                    {/* Order/ICCID Column */}
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
                         <div className="text-sm font-medium text-gray-900 font-mono">
                           {order.iccid || order.qrCode?.iccid || 'No ICCID'}
                         </div>
                         <div className="text-xs text-gray-400 mt-1">
-                          {order.qrCode?.qrCode ? '✅ QR Available' : 
-                           order.qrCode?.qrCodeUrl ? '🖼️ QR Image' : 
-                           '❌ No QR'}
+                          Order: {order.orderId || order.id}
                         </div>
                       </div>
                     </td>
+                    
+                    {/* QR Status Column */}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        {order.qrCode?.qrCode ? (
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            <CheckCircle className="w-3 h-3 mr-1" />
+                            QR Available
+                          </span>
+                        ) : order.qrCode?.qrCodeUrl ? (
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            <QrCode className="w-3 h-3 mr-1" />
+                            QR Image
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                            <XCircle className="w-3 h-3 mr-1" />
+                            No QR
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    
+                    {/* UID/Activation Code Column */}
                     <td className="px-6 py-4 whitespace-nowrap">
                       <button
                         onClick={() => {
@@ -620,6 +690,8 @@ const AdminEsimManagement = () => {
                         {order.userId}
                       </button>
                     </td>
+                    
+                    {/* Plan Details Column */}
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
                         <div className="text-sm font-medium text-gray-900">
@@ -633,14 +705,20 @@ const AdminEsimManagement = () => {
                         </div>
                       </div>
                     </td>
+                    
+                    {/* Status Column */}
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(order.status)}`}>
                         {order.status || 'Unknown'}
                       </span>
                     </td>
+                    
+                    {/* Price Column */}
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       ${order.price || 0}
                     </td>
+                    
+                    {/* Date/Time Column */}
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {formatDate(order.createdAt)}
                     </td>
@@ -693,6 +771,19 @@ const AdminEsimManagement = () => {
                                   )}
                                 </button>
                               )}
+                              
+                              <button
+                                onClick={() => {
+                                  setSelectedOrder(order);
+                                  setFirebaseIdInput(order.userId || '');
+                                  setShowEditFirebaseIdModal(true);
+                                  setOpenDropdown(null);
+                                }}
+                                className="flex items-center w-full px-4 py-2 text-sm text-orange-600 hover:bg-gray-100"
+                              >
+                                <User className="w-4 h-4 mr-3" />
+                                Edit Firebase ID
+                              </button>
                               
                               <button
                                 onClick={() => {
@@ -985,6 +1076,68 @@ const AdminEsimManagement = () => {
                   <>
                     <Trash2 className="w-4 h-4 mr-2" />
                     Delete Order
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+
+      {/* Edit Firebase ID Modal */}
+      {showEditFirebaseIdModal && selectedOrder && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <h3 className="text-xl font-bold text-gray-900">Edit Firebase ID</h3>
+              <button
+                onClick={() => setShowEditFirebaseIdModal(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <div className="p-6">
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Firebase User ID for Order: {selectedOrder.orderId || selectedOrder.id}
+                </label>
+                <input
+                  type="text"
+                  value={firebaseIdInput}
+                  onChange={(e) => setFirebaseIdInput(e.target.value)}
+                  placeholder="Enter Firebase User ID..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  autoFocus
+                />
+              </div>
+              
+            </div>
+            
+            <div className="flex justify-end space-x-3 p-6 border-t border-gray-200">
+              <button
+                onClick={() => setShowEditFirebaseIdModal(false)}
+                disabled={editingFirebaseId}
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleEditFirebaseId(selectedOrder)}
+                disabled={editingFirebaseId || !firebaseIdInput.trim()}
+                className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50 flex items-center"
+              >
+                {editingFirebaseId ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                    Updating...
+                  </>
+                ) : (
+                  <>
+                    <User className="w-4 h-4 mr-2" />
+                    Update Firebase ID
                   </>
                 )}
               </button>
