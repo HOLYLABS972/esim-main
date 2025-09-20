@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { collection, query, getDocs, doc, updateDoc, deleteDoc, orderBy, where, limit } from 'firebase/firestore';
+import { collection, query, getDocs, doc, updateDoc, deleteDoc, orderBy, where, limit, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { motion } from 'framer-motion';
 import { 
@@ -40,6 +40,7 @@ const AdminEsimManagement = () => {
   const [deletingOrder, setDeletingOrder] = useState(false);
   const [resubmittingOrder, setResubmittingOrder] = useState(null);
   const [openDropdown, setOpenDropdown] = useState(null);
+  const [fetchingQrCode, setFetchingQrCode] = useState(null);
 
   // Load all eSIM orders from all users
   const loadEsimOrders = async () => {
@@ -160,6 +161,82 @@ const AdminEsimManagement = () => {
     setFilteredOrders(filtered);
   };
 
+
+  // Helper function to remove undefined values from an object
+  const removeUndefinedValues = (obj) => {
+    return Object.fromEntries(
+      Object.entries(obj).filter(([_, v]) => v !== undefined && v !== null)
+    );
+  };
+
+  // Fetch QR code for order missing QR code data
+  const handleFetchQrCode = async (order) => {
+    try {
+      setFetchingQrCode(order.id);
+      console.log('🔄 Fetching QR code for order:', order.id, 'ICCID:', order.iccid);
+      
+      if (!order.iccid) {
+        toast.error('No ICCID found for this order');
+        return;
+      }
+
+      // Fetch eSIM details from Airalo API
+      const result = await esimService.getEsimDetailsByIccid(order.iccid);
+      
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
+      const qrCodeData = result.data;
+      console.log('✅ Fetched QR code data:', qrCodeData);
+
+      // Prepare update data with only defined values
+      const updateData = removeUndefinedValues({
+        qrCode: qrCodeData.qrCode,
+        qrCodeUrl: qrCodeData.qrCodeUrl,
+        directAppleInstallationUrl: qrCodeData.directAppleInstallationUrl,
+        lpa: qrCodeData.lpa,
+        matchingId: qrCodeData.matchingId,
+        activationCode: qrCodeData.activationCode,
+        updatedAt: serverTimestamp()
+      });
+
+      console.log('📝 Updating Firestore with data:', updateData);
+      
+      // Update the order in Firestore
+      const esimRef = doc(db, 'users', order.userId, 'esims', order.id);
+      await updateDoc(esimRef, updateData);
+
+      // Build updated qrCode object for local state
+      const qrCodeObject = removeUndefinedValues({
+        qrCode: qrCodeData.qrCode,
+        qrCodeUrl: qrCodeData.qrCodeUrl,
+        directAppleInstallationUrl: qrCodeData.directAppleInstallationUrl,
+        iccid: order.iccid,
+        lpa: qrCodeData.lpa,
+        matchingId: qrCodeData.matchingId
+      });
+
+      // Update local state
+      const updatedOrder = {
+        ...order,
+        qrCode: qrCodeObject,
+        ...removeUndefinedValues({ activationCode: qrCodeData.activationCode }),
+        updatedAt: new Date()
+      };
+
+      setEsimOrders(prev => prev.map(o => o.id === order.id ? updatedOrder : o));
+      setFilteredOrders(prev => prev.map(o => o.id === order.id ? updatedOrder : o));
+      
+      toast.success('QR code fetched and updated successfully!');
+      
+    } catch (error) {
+      console.error('Error fetching QR code:', error);
+      toast.error(`Failed to fetch QR code: ${error.message}`);
+    } finally {
+      setFetchingQrCode(null);
+    }
+  };
 
   // Delete eSIM order
   const handleDeleteOrder = async (order) => {
@@ -477,6 +554,29 @@ const AdminEsimManagement = () => {
                                 View Details
                               </button>
                               
+                              {/* Show Fetch QR Code button only if QR code is missing and ICCID exists */}
+                              {(!order.qrCode?.qrCode && !order.qrCode?.qrCodeUrl && order.iccid) && (
+                                <button
+                                  onClick={() => {
+                                    handleFetchQrCode(order);
+                                    setOpenDropdown(null);
+                                  }}
+                                  disabled={fetchingQrCode === order.id}
+                                  className="flex items-center w-full px-4 py-2 text-sm text-blue-600 hover:bg-gray-100 disabled:opacity-50"
+                                >
+                                  {fetchingQrCode === order.id ? (
+                                    <>
+                                      <RefreshCw className="w-4 h-4 mr-3 animate-spin" />
+                                      Fetching...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <QrCode className="w-4 h-4 mr-3" />
+                                      Fetch QR Code
+                                    </>
+                                  )}
+                                </button>
+                              )}
                               
                               <button
                                 onClick={() => {

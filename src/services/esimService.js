@@ -212,5 +212,29 @@ export const esimService = {
       console.error('Error getting usage data:', error);
       throw error;
     }
+  },
+
+  // Get eSIM details by ICCID (including QR code data)
+  async getEsimDetailsByIccid(iccid) {
+    try {
+      const response = await fetch('/api/airalo/sim-details', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ iccid })
+      });
+
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to get eSIM details');
+      }
+
+      return result;
+    } catch (error) {
+      console.error('Error getting eSIM details:', error);
+      throw error;
+    }
   }
 };
