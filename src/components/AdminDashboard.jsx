@@ -3082,9 +3082,6 @@ const AdminDashboard = () => {
                             Countries
                           </th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Original Price
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Retail Price
                           </th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -3146,14 +3143,6 @@ const AdminDashboard = () => {
                                       🌍
                                     </span>
                                   )}
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="flex items-center space-x-2">
-                                  <span className="text-xs text-gray-500">Original:</span>
-                                  <span className="text-sm text-gray-700">
-                                    {plan.original_price || Math.round((plan.price || 0) / (1 + markupPercentage / 100))} {plan.currency || 'USD'}
-                                  </span>
                                 </div>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
