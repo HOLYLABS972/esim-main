@@ -960,7 +960,17 @@ const Dashboard = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Your Performance</p>
-                <p className="text-3xl font-bold text-purple-600">${referralStats.totalEarnings.toFixed(2)}</p>
+                <div className="flex items-center space-x-4">
+                  <div>
+                    <p className="text-3xl font-bold text-purple-600">${referralStats.totalEarnings.toFixed(2)}</p>
+                    <p className="text-xs text-gray-500">Total Earnings</p>
+                  </div>
+                  {(referralStats.usageCount || 0) > 0 && (
+                    <div className="border-l border-gray-200 pl-4">
+                      <p className="text-3xl font-bold text-green-600">{Math.floor(referralStats.usageCount || 0)}</p>
+                    </div>
+                  )}
+                </div>
                 <p className="text-xs text-purple-600 mt-2 font-medium">Tap to join affiliate program →</p>
               </div>
               <div className="bg-purple-100 p-3 rounded-full">

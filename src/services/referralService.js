@@ -110,32 +110,54 @@ export const getReferralStats = async (userId) => {
     
     const referralData = referralDoc.data();
     
-    // Get recent earnings from transactions (subcollection like mobile app)
-    // Look for referral_commission transactions (real commissions) instead of referral (flat $1)
+    // Get ALL referral_commission transactions to calculate total earnings
     const earningsSnapshot = await getDocs(
       query(
         collection(db, 'users', userId, 'transactions'),
         where('type', '==', 'deposit'),
-        where('method', '==', 'referral_commission'),
-        orderBy('timestamp', 'desc'),
-        limit(10)
+        where('method', '==', 'referral_commission')
       )
     );
     
-    const recentUsages = earningsSnapshot.docs.map(doc => ({
+    // Calculate total earnings from all commission transactions
+    let totalEarnings = 0;
+    earningsSnapshot.docs.forEach(doc => {
+      const data = doc.data();
+      const amount = data.amount || 0;
+      totalEarnings += amount;
+    });
+    
+    // Get ALL withdrawal transactions (referral_balance usage)
+    const withdrawalsSnapshot = await getDocs(
+      query(
+        collection(db, 'users', userId, 'transactions'),
+        where('method', '==', 'referral_balance')
+      )
+    );
+    
+    // Calculate total withdrawals
+    let totalWithdrawals = 0;
+    withdrawalsSnapshot.docs.forEach(doc => {
+      const data = doc.data();
+      const amount = Math.abs(data.amount || 0); // Make sure it's positive for subtraction
+      totalWithdrawals += amount;
+    });
+    
+    // Available balance = Total earnings - Total withdrawals (like mobile app)
+    const availableBalance = totalEarnings - totalWithdrawals;
+    
+    // Get recent usages for display (limit to 10)
+    const recentUsages = earningsSnapshot.docs.slice(0, 10).map(doc => ({
       id: doc.id,
       ...doc.data(),
       createdAt: doc.data().createdAt?.toDate() || new Date()
     }));
     
-    // Calculate total earnings from transactions
-    const totalEarnings = recentUsages.reduce((sum, usage) => sum + (usage.amount || 0), 0);
-    
     return {
       referralCode: referralCode,
       usageCount: referralData.usageCount || 0,
       recentUsages: recentUsages,
-      totalEarnings: totalEarnings,
+      totalEarnings: availableBalance, // Use available balance (earnings - withdrawals) like mobile app
       expiryDate: referralData.expiryDate?.toDate() || null,
       isActive: referralData.isActive || false,
     };
