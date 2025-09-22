@@ -197,8 +197,8 @@ const ConfigurationManagement = () => {
       setLoading(true);
       setSyncStatus('Syncing countries from Airalo API...');
 
-      // Call the Next.js API endpoint for countries sync
-      const response = await fetch('/api/sync-countries', {
+      // Call the same API as plans but with countries_only parameter
+      const response = await fetch('/api/sync-airalo?countries_only=true', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -207,7 +207,7 @@ const ConfigurationManagement = () => {
       const result = await response.json();
       
       if (result.success) {
-        const count = result.countries_synced || 0;
+        const count = result.details?.countries_synced || 0;
         console.log(`✅ Successfully synced ${count} countries via Next.js API`);
         setSyncStatus(`Successfully synced ${count} countries from Airalo API`);
         toast.success(`Successfully synced ${count} countries from Airalo API`);

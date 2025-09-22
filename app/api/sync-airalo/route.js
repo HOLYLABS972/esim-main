@@ -2,9 +2,12 @@ import { NextResponse } from 'next/server';
 import { db } from '../../../src/firebase/config';
 import { collection, doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 
-export async function POST() {
+export async function POST(request) {
   try {
-    console.log('🔄 Starting Airalo sync...');
+    const { searchParams } = new URL(request.url);
+    const countriesOnly = searchParams.get('countries_only') === 'true';
+    
+    console.log(`🔄 Starting Airalo sync... ${countriesOnly ? '(Countries Only)' : '(Plans Only)'}`);
     
     // Get Airalo credentials from Firestore
     const airaloConfigRef = doc(db, 'config', 'airalo');
@@ -234,9 +237,59 @@ export async function POST() {
       }
       
       console.log(`📦 Extracted ${allPackages.length} packages`);
+      console.log(`🌍 Extracted ${countriesMap.size} countries from packages data`);
       
-      // Skip countries sync - keep existing countries
-      console.log(`🌍 Skipping countries sync - keeping existing countries (${countriesMap.size} countries found in API)`);
+      if (countriesOnly) {
+        // Countries-only sync: save countries and skip plans
+        const countriesBatch = [];
+        let totalSynced = 0;
+        
+        for (const [code, country] of countriesMap) {
+          const countryRef = doc(db, 'countries', code);
+          countriesBatch.push(setDoc(countryRef, {
+            name: country.name,
+            code: country.code,
+            flag: country.flag,
+            region_slug: country.region_slug,
+            is_roaming: country.is_roaming,
+            status: 'active',
+            updated_at: serverTimestamp(),
+            updated_by: 'airalo_sync',
+            provider: 'airalo'
+          }, { merge: true }));
+          totalSynced++;
+        }
+        
+        // Execute countries batch
+        await Promise.all(countriesBatch);
+        console.log(`✅ Synced ${totalSynced} countries`);
+        
+        // Create sync log
+        const logRef = doc(collection(db, 'sync_logs'));
+        await setDoc(logRef, {
+          timestamp: serverTimestamp(),
+          countries_synced: totalSynced,
+          plans_synced: 0,
+          status: 'completed',
+          source: 'admin_manual_sync',
+          sync_type: 'countries_only_sync',
+          provider: 'airalo'
+        });
+        
+        return NextResponse.json({
+          success: true,
+          message: 'Successfully synced countries from Airalo API',
+          total_synced: totalSynced,
+          countries: [], // Empty array since countries are saved directly to Firestore
+          details: {
+            countries_synced: totalSynced,
+            plans_synced: 0
+          }
+        });
+      } else {
+        // Plans-only sync: skip countries and save plans
+        console.log(`🌍 Skipping countries sync - keeping existing countries (${countriesMap.size} countries found in API)`);
+      }
       
       // Process plans (save as plans, not packages)
       const plansBatch = [];
