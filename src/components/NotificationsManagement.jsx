@@ -51,7 +51,6 @@ const NotificationsManagement = () => {
   const [notifications, setNotifications] = useState([]);
   const [filteredNotifications, setFilteredNotifications] = useState([]);
   const [notificationSearchTerm, setNotificationSearchTerm] = useState('');
-  const [notificationStatusFilter, setNotificationStatusFilter] = useState('all');
   const [showNotificationModal, setShowNotificationModal] = useState(false);
   const [editingNotification, setEditingNotification] = useState(null);
   const [notificationFormData, setNotificationFormData] = useState({
@@ -76,7 +75,7 @@ const NotificationsManagement = () => {
     }
   }, [currentUser]);
 
-  // Filter notifications based on search and status
+  // Filter notifications based on search only
   useEffect(() => {
     let filtered = notifications.filter(notification => 
       notification.title?.toLowerCase().includes(notificationSearchTerm.toLowerCase()) ||
@@ -84,14 +83,8 @@ const NotificationsManagement = () => {
       notification.type?.toLowerCase().includes(notificationSearchTerm.toLowerCase())
     );
     
-    if (notificationStatusFilter !== 'all') {
-      filtered = filtered.filter(notification => 
-        notificationStatusFilter === 'active' ? notification.isActive : !notification.isActive
-      );
-    }
-    
     setFilteredNotifications(filtered);
-  }, [notifications, notificationSearchTerm, notificationStatusFilter]);
+  }, [notifications, notificationSearchTerm]);
 
   // Load countries for notifications
   const loadCountriesForNotifications = async () => {
@@ -369,15 +362,6 @@ const NotificationsManagement = () => {
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
             />
           </div>
-          <select
-            value={notificationStatusFilter}
-            onChange={(e) => setNotificationStatusFilter(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
-          >
-            <option value="all">All Status</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-          </select>
         </div>
       </div>
 
@@ -408,25 +392,6 @@ const NotificationsManagement = () => {
                   <div className="flex-1">
                     <div className="flex items-center space-x-3 mb-2">
                       <h3 className="text-lg font-semibold text-gray-900">{notification.title}</h3>
-                      <span className={`px-2 py-1 text-xs rounded-full ${
-                        notification.type === 'promotion' ? 'bg-green-100 text-green-800' :
-                        notification.type === 'update' ? 'bg-blue-100 text-blue-800' :
-                        notification.type === 'alert' ? 'bg-red-100 text-red-800' :
-                        'hidden'
-                      }`}>
-                        {notification.type}
-                      </span>
-                      <span className={`px-2 py-1 text-xs rounded-full ${
-                        notification.priority === 'high' ? 'bg-red-100 text-red-800' :
-                        'hidden'
-                      }`}>
-                        {notification.priority}
-                      </span>
-                      <span className={`px-2 py-1 text-xs rounded-full ${
-                        notification.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                      }`}>
-                        {notification.isActive ? 'Active' : 'Inactive'}
-                      </span>
                     </div>
                     <p className="text-gray-600 mb-3">{notification.body}</p>
                     <div className="flex items-center space-x-4 text-sm text-gray-500">
