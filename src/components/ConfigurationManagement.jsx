@@ -39,11 +39,7 @@ const ConfigurationManagement = () => {
 
   // Version Configuration
   const [versionConfig, setVersionConfig] = useState({
-    min_required_version: '1.0.0',
-    latest_version: '1.0.0',
-    update_message: 'Please update to the latest version for the best experience.',
-    update_url: 'https://apps.apple.com/app/your-app',
-    force_update: false
+    min_required_version: '1.0.0'
   });
   const [savingVersion, setSavingVersion] = useState(false);
 
@@ -282,17 +278,12 @@ const ConfigurationManagement = () => {
       
       // Validate version format
       if (!isValidVersion(versionConfig.min_required_version)) {
-        toast.error('Invalid minimum required version format (use x.y.z)');
-        return;
-      }
-      
-      if (!isValidVersion(versionConfig.latest_version)) {
-        toast.error('Invalid latest version format (use x.y.z)');
+        toast.error('Invalid version format (use numbers like 1, 1.0, or 1.0.0)');
         return;
       }
 
       const configData = {
-        ...versionConfig,
+        min_required_version: versionConfig.min_required_version,
         last_updated: new Date(),
         last_updated_by: currentUser?.email || 'admin'
       };
@@ -309,9 +300,9 @@ const ConfigurationManagement = () => {
     }
   };
 
-  // Validate version format (x.y.z)
+  // Validate version format (allow simple numbers like "1" or "1.0" or "1.0.0")
   const isValidVersion = (version) => {
-    const versionRegex = /^\d+\.\d+\.\d+$/;
+    const versionRegex = /^\d+(\.\d+)*$/;
     return versionRegex.test(version);
   };
 
@@ -530,7 +521,7 @@ const ConfigurationManagement = () => {
           Control app version requirements and update notifications for the Flutter mobile app.
         </p>
         
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="max-w-md">
           {/* Minimum Required Version */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -541,82 +532,11 @@ const ConfigurationManagement = () => {
               type="text"
               value={versionConfig.min_required_version}
               onChange={(e) => handleVersionInputChange('min_required_version', e.target.value)}
-              placeholder="1.0.0"
+              placeholder="1"
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
             <p className="text-xs text-gray-500 mt-1">
-              Apps below this version will be blocked (format: x.y.z)
-            </p>
-          </div>
-
-          {/* Latest Version */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              <CheckCircle className="w-4 h-4 inline mr-1 text-green-500" />
-              Latest Version
-            </label>
-            <input
-              type="text"
-              value={versionConfig.latest_version}
-              onChange={(e) => handleVersionInputChange('latest_version', e.target.value)}
-              placeholder="1.1.0"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              Apps below this version will see update notification
-            </p>
-          </div>
-
-          {/* Update Message */}
-          <div className="lg:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              <Info className="w-4 h-4 inline mr-1 text-blue-500" />
-              Update Message
-            </label>
-            <textarea
-              value={versionConfig.update_message}
-              onChange={(e) => handleVersionInputChange('update_message', e.target.value)}
-              placeholder="Please update to the latest version for the best experience."
-              rows="3"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              Message shown to users when update is available
-            </p>
-          </div>
-
-          {/* Update URL */}
-          <div className="lg:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Update URL
-            </label>
-            <input
-              type="url"
-              value={versionConfig.update_url}
-              onChange={(e) => handleVersionInputChange('update_url', e.target.value)}
-              placeholder="https://apps.apple.com/app/your-app"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              URL where users can download the latest version
-            </p>
-          </div>
-
-          {/* Force Update Toggle */}
-          <div className="flex items-center">
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                checked={versionConfig.force_update}
-                onChange={(e) => handleVersionInputChange('force_update', e.target.checked)}
-                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-              />
-              <span className="ml-2 text-sm font-medium text-gray-700">
-                Force Update
-              </span>
-            </label>
-            <p className="text-xs text-gray-500 ml-2">
-              Block app usage until updated
+              Apps below this version will be blocked (format: 1, 1.0, or 1.0.0)
             </p>
           </div>
         </div>
@@ -633,27 +553,6 @@ const ConfigurationManagement = () => {
           </button>
         </div>
 
-        {/* Current Configuration Display */}
-        <div className="mt-6 bg-gray-50 rounded-lg p-4">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Current Version Configuration</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-white rounded-lg p-3">
-              <h4 className="font-medium text-gray-900 mb-2">Version Requirements</h4>
-              <p className="text-sm text-gray-600">
-                <strong>Min Required:</strong> {versionConfig.min_required_version}
-              </p>
-              <p className="text-sm text-gray-600">
-                <strong>Latest:</strong> {versionConfig.latest_version}
-              </p>
-            </div>
-            <div className="bg-white rounded-lg p-3">
-              <h4 className="font-medium text-gray-900 mb-2">Update Settings</h4>
-              <p className="text-sm text-gray-600">
-                <strong>Force Update:</strong> {versionConfig.force_update ? 'Yes' : 'No'}
-              </p>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );

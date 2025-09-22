@@ -412,14 +412,13 @@ const NotificationsManagement = () => {
                         notification.type === 'promotion' ? 'bg-green-100 text-green-800' :
                         notification.type === 'update' ? 'bg-blue-100 text-blue-800' :
                         notification.type === 'alert' ? 'bg-red-100 text-red-800' :
-                        'bg-gray-100 text-gray-800'
+                        'hidden'
                       }`}>
                         {notification.type}
                       </span>
                       <span className={`px-2 py-1 text-xs rounded-full ${
                         notification.priority === 'high' ? 'bg-red-100 text-red-800' :
-                        notification.priority === 'normal' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-green-100 text-green-800'
+                        'hidden'
                       }`}>
                         {notification.priority}
                       </span>
@@ -435,8 +434,6 @@ const NotificationsManagement = () => {
                       {notification.countries && notification.countries.length > 0 && (
                         <span>Countries: {notification.countries.length}</span>
                       )}
-                      <span>Sent: {notification.sentCount || 0}</span>
-                      <span>Read: {notification.readCount || 0}</span>
                       <span>Created: {notification.createdAt?.toDate?.()?.toLocaleDateString() || 'Unknown'}</span>
                     </div>
                   </div>
