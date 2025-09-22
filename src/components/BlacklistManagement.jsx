@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Shield, 
   Search, 
-  Filter, 
   MoreVertical, 
   Trash2, 
   Eye, 
@@ -15,7 +14,6 @@ import {
   User,
   Mail,
   Calendar,
-  RefreshCw,
   Download,
   Plus,
   X,
@@ -36,7 +34,6 @@ const BlacklistManagement = () => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [showDetails, setShowDetails] = useState(false);
   const [lastDoc, setLastDoc] = useState(null);
@@ -86,15 +83,6 @@ const BlacklistManagement = () => {
     }
   };
 
-  const handleFilter = () => {
-    if (filterStatus === 'all') {
-      loadData();
-      return;
-    }
-
-    const filtered = records.filter(record => record.status === filterStatus);
-    setRecords(filtered);
-  };
 
   const handleUnblock = async (recordId) => {
     try {
@@ -182,13 +170,6 @@ const BlacklistManagement = () => {
           <h2 className="text-2xl font-bold text-gray-900">Blacklist Management</h2>
           <p className="text-gray-600">Manage blocked users and review blacklist records</p>
         </div>
-        <button
-          onClick={loadData}
-          className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          <RefreshCw className="w-4 h-4 mr-2" />
-          Refresh
-        </button>
       </div>
 
       {/* Stats Cards */}
@@ -264,29 +245,11 @@ const BlacklistManagement = () => {
           </div>
           
           <div className="flex gap-2">
-            <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="all">All Status</option>
-              <option value="active">Active</option>
-              <option value="removed">Removed</option>
-              <option value="expired">Expired</option>
-            </select>
-            
             <button
               onClick={handleSearch}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               Search
-            </button>
-            
-            <button
-              onClick={handleFilter}
-              className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-            >
-              Filter
             </button>
           </div>
         </div>
