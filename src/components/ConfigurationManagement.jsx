@@ -192,10 +192,36 @@ const ConfigurationManagement = () => {
     }
   };
 
+  const syncCountriesFromAiralo = async () => {
+    try {
+      setLoading(true);
+      setSyncStatus('Syncing countries from Airalo API...');
+
+      // Call Firebase Cloud Function for countries sync
+      const syncCountriesFunction = httpsCallable(functions, 'sync_countries_from_airalo');
+      const result = await syncCountriesFunction();
+      
+      if (result.data.success) {
+        const count = result.data.countries_synced || 0;
+        console.log(`✅ Successfully synced ${count} countries via Firebase Functions`);
+        setSyncStatus(`Successfully synced ${count} countries from Airalo API`);
+        toast.success(`Successfully synced ${count} countries from Airalo API`);
+      } else {
+        throw new Error(result.data.error || 'Unknown error occurred');
+      }
+    } catch (error) {
+      console.error('❌ Error syncing countries from Airalo:', error);
+      setSyncStatus(`Error: ${error.message}`);
+      toast.error(`Error syncing countries: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const syncAllDataFromAiralo = async () => {
     try {
       setLoading(true);
-      setSyncStatus('Syncing all data from Airalo API...');
+      setSyncStatus('Syncing plans from Airalo API...');
 
       // Call the Next.js API endpoint instead of Firebase function
       const response = await fetch('/api/sync-airalo', {
@@ -207,9 +233,9 @@ const ConfigurationManagement = () => {
       const result = await response.json();
 
       if (result.success) {
-        console.log(`✅ Successfully synced all data via Next.js API`);
-        toast.success(`Successfully synced all data: ${result.total_synced} items`);
-        setSyncStatus(`Successfully synced ${result.total_synced} items from Airalo API`);
+        console.log(`✅ Successfully synced plans via Next.js API`);
+        toast.success(`Successfully synced plans: ${result.total_synced} items`);
+        setSyncStatus(`Successfully synced ${result.total_synced} plans from Airalo API`);
       } else {
         throw new Error(result.error || 'Unknown error occurred');
       }
@@ -330,14 +356,23 @@ const ConfigurationManagement = () => {
             </div>
           </div>
           <div className="space-y-4">
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <button
+                onClick={syncCountriesFromAiralo}
+                disabled={loading}
+                className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 disabled:from-gray-400 disabled:to-gray-500 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 flex items-center justify-center"
+              >
+                {loading ? <RefreshCw className="w-5 h-5 mr-2 animate-spin" /> : <Globe className="w-5 h-5 mr-2" />}
+                Sync Countries Only
+              </button>
+              
               <button
                 onClick={syncAllDataFromAiralo}
                 disabled={loading}
-                className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:from-gray-400 disabled:to-gray-500 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 flex items-center"
+                className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:from-gray-400 disabled:to-gray-500 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 flex items-center justify-center"
               >
                 {loading ? <RefreshCw className="w-5 h-5 mr-2 animate-spin" /> : <Download className="w-5 h-5 mr-2" />}
-                Sync All Data from Airalo API
+                Sync Plans Only
               </button>
             </div>
           </div>

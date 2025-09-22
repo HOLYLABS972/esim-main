@@ -107,7 +107,7 @@ export async function POST() {
     
     // Fetch and sync packages (which include country data) with pagination
     try {
-      console.log('📱 Fetching packages from Airalo API with pagination...');
+      console.log('📱 Fetching packages from Airalo API...');
       
       // Function to fetch all pages
       const fetchAllPages = async () => {
@@ -116,8 +116,6 @@ export async function POST() {
         let hasNextPage = true;
         
         while (hasNextPage) {
-          console.log(`📱 Fetching page ${currentPage}...`);
-          
           const packagesResponse = await fetch(`${baseUrl}/v2/packages?page=${currentPage}`, {
             headers
           });
@@ -127,8 +125,6 @@ export async function POST() {
           }
           
           const packagesData = await packagesResponse.json();
-          console.log(`📱 Page ${currentPage} - Data length:`, packagesData.data?.length);
-          console.log(`📱 Page ${currentPage} - Pagination links:`, packagesData.links);
           
           if (packagesData.data && Array.isArray(packagesData.data)) {
             allPlans = allPlans.concat(packagesData.data);
@@ -140,80 +136,32 @@ export async function POST() {
           
           // Safety check to prevent infinite loops
           if (currentPage > 50) {
-            console.log('⚠️ Reached maximum page limit (50), stopping pagination');
             break;
           }
         }
         
-        console.log(`📱 Total plans fetched from all pages: ${allPlans.length}`);
         return allPlans;
       };
       
       const packagesData = await fetchAllPages();
-      console.log('📱 Raw API response structure:', Object.keys(packagesData[0] || {}));
-      console.log('📱 Data type:', typeof packagesData);
-      console.log('📱 Total data length:', packagesData.length);
-      
-      // packagesData is now an array of all plans from all pages
       const plans = packagesData;
       
-      console.log('📱 Processed plans count:', plans.length);
-      
-      // Debug: Let's see what's actually in the response
-      console.log('📱 Full response structure:', JSON.stringify(packagesData, null, 2).substring(0, 1000) + '...');
-      
       console.log(`📊 Received ${plans.length} plans from API`);
-      
-      // Debug: Check the structure of the first plan
-      if (plans.length > 0) {
-        console.log('🔍 First plan structure:', JSON.stringify(plans[0], null, 2));
-        console.log('🔍 Plan keys:', Object.keys(plans[0]));
-        if (plans[0].packages) {
-          console.log('📦 First plan has packages:', plans[0].packages.length);
-        }
-        if (plans[0].countries) {
-          console.log('🌍 First plan has countries:', plans[0].countries.length);
-        }
-      }
       
       // Extract all packages and countries from all plans
       const allPackages = [];
       const countriesMap = new Map();
       
-      // First, let's check what we actually received
-      console.log(`🔍 Total plans received: ${plans.length}`);
-      console.log(`🔍 First few plan structures:`, plans.slice(0, 3).map(p => ({
-        title: p.title,
-        id: p.id,
-        hasPackages: !!p.packages,
-        hasCountries: !!p.countries,
-        keys: Object.keys(p)
-      })));
-      
-      // First, look for plans that have packages (these are the actual plans with pricing data)
+      // Look for plans that have packages (these are the actual plans with pricing data)
       const plansWithPackages = plans.filter(p => p.packages && Array.isArray(p.packages));
-      console.log(`🔍 Found ${plansWithPackages.length} plans with packages`);
       
       // Also look for plans that have operators with packages
       const plansWithOperators = plans.filter(p => p.operators && Array.isArray(p.operators));
-      console.log(`🔍 Found ${plansWithOperators.length} plans with operators`);
-      
-      // Debug: Let's see what the actual structure looks like
-      if (plans.length > 0) {
-        console.log('🔍 Sample plan structure:', JSON.stringify(plans[0], null, 2).substring(0, 500) + '...');
-        console.log('🔍 Plan has packages?', !!plans[0].packages);
-        console.log('🔍 Plan has countries?', !!plans[0].countries);
-        console.log('🔍 Plan has operators?', !!plans[0].operators);
-        console.log('🔍 Plan keys:', Object.keys(plans[0]));
-      }
       
       // Process plans with direct packages
       for (const plan of plansWithPackages) {
-        console.log(`📦 Processing plan with packages: "${plan.title}" has ${plan.packages.length} packages`);
-        
         // Extract packages from this plan
         for (const pkg of plan.packages) {
-          console.log(`📦 Package: ${pkg.title}, price: $${pkg.price}`);
           allPackages.push({
             ...pkg,
             plan_title: plan.title,
@@ -225,7 +173,6 @@ export async function POST() {
         
         // Extract countries from this plan
         if (plan.countries && Array.isArray(plan.countries)) {
-          console.log(`🌍 Plan "${plan.title}" has ${plan.countries.length} countries`);
           for (const country of plan.countries) {
             countriesMap.set(country.country_code, {
               code: country.country_code,
@@ -240,16 +187,10 @@ export async function POST() {
       
       // Process plans with operators (the actual structure we're getting)
       for (const plan of plansWithOperators) {
-        console.log(`📦 Processing plan with operators: "${plan.title}" has ${plan.operators.length} operators`);
-        
         for (const operator of plan.operators) {
-          console.log(`📦 Operator: "${operator.title}" has packages: ${!!operator.packages}`);
-          
           // Extract packages from this operator
           if (operator.packages && Array.isArray(operator.packages)) {
-            console.log(`📦 Operator "${operator.title}" has ${operator.packages.length} packages`);
             for (const pkg of operator.packages) {
-              console.log(`📦 Package: ${pkg.title}, price: $${pkg.price}`);
               allPackages.push({
                 ...pkg,
                 plan_title: operator.title,
@@ -262,7 +203,6 @@ export async function POST() {
           
           // Extract countries from this operator
           if (operator.countries && Array.isArray(operator.countries)) {
-            console.log(`🌍 Operator "${operator.title}" has ${operator.countries.length} countries`);
             for (const country of operator.countries) {
               countriesMap.set(country.country_code, {
                 code: country.country_code,
@@ -278,12 +218,8 @@ export async function POST() {
       
       // Also process individual country entries (these are just country listings)
       for (const plan of plans) {
-        console.log(`🔍 Processing plan: ${plan.title || plan.id}, keys:`, Object.keys(plan));
-        
         // Handle individual country entries (like "United States", "France", etc.)
         if (plan.country_code && plan.title && !plan.packages && !plan.countries) {
-          console.log(`🌍 Individual country entry "${plan.title}" for country ${plan.country_code}`);
-          
           // Add to countries map if not already present
           if (!countriesMap.has(plan.country_code)) {
             countriesMap.set(plan.country_code, {
@@ -297,8 +233,7 @@ export async function POST() {
         }
       }
       
-      console.log(`📦 Total packages extracted: ${allPackages.length}`);
-      console.log(`🌍 Total countries extracted: ${countriesMap.size}`);
+      console.log(`📦 Extracted ${allPackages.length} packages`);
       
       // Skip countries sync - keep existing countries
       console.log(`🌍 Skipping countries sync - keeping existing countries (${countriesMap.size} countries found in API)`);
@@ -423,6 +358,8 @@ export async function POST() {
       success: true,
       message: 'Successfully synced plans from Airalo API (countries preserved)',
       total_synced: totalItems,
+      plans: [], // Empty array since plans are saved directly to Firestore
+      countries: [], // Empty array since countries sync is disabled
       details: {
         plans_synced: totalSynced.packages,
         countries_synced: 0,
