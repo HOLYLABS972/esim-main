@@ -17,14 +17,12 @@ import {
   Download,
   Plus,
   X,
-  CheckCircle,
   XCircle
 } from 'lucide-react';
 import { 
   getBlacklistRecords, 
   getBlacklistStats, 
   searchBlacklistRecords,
-  removeFromBlacklist,
   deleteBlacklistRecord,
   updateBlacklistRecord
 } from '../services/blacklistService';
@@ -84,18 +82,6 @@ const BlacklistManagement = () => {
   };
 
 
-  const handleUnblock = async (recordId) => {
-    try {
-      setActionLoading(true);
-      await removeFromBlacklist(recordId, 'admin_unblock');
-      await loadData(); // Reload data
-      setShowDetails(false);
-    } catch (error) {
-      console.error('Error unblocking user:', error);
-    } finally {
-      setActionLoading(false);
-    }
-  };
 
   const handleDelete = async (recordId) => {
     if (!confirm('Are you sure you want to permanently delete this blacklist record?')) {
@@ -318,15 +304,6 @@ const BlacklistManagement = () => {
                       >
                         <Eye className="w-4 h-4" />
                       </button>
-                      {record.status === 'active' && (
-                        <button
-                          onClick={() => handleUnblock(record.id)}
-                          disabled={actionLoading}
-                          className="text-green-600 hover:text-green-900 disabled:opacity-50"
-                        >
-                          <CheckCircle className="w-4 h-4" />
-                        </button>
-                      )}
                       <button
                         onClick={() => handleDelete(record.id)}
                         disabled={actionLoading}
