@@ -11,7 +11,8 @@ import PlanSelectionBottomSheet from './PlanSelectionBottomSheet';
 import { getCountriesWithPricing, getPricingStats } from '../services/plansService';
 import { getRegularSettings } from '../services/settingsService';
 import { useI18n } from '../contexts/I18nContext';
-import { detectPlatform, shouldRedirectToDownload } from '../utils/platformDetection';
+import { detectPlatform, shouldRedirectToDownload, isMobileIOS } from '../utils/platformDetection';
+import { getMobileCountries } from '../data/mobileCountries';
 
 // Helper function to get flag emoji from country code
 const getFlagEmoji = (countryCode) => {
@@ -85,10 +86,26 @@ const EsimPlans = () => {
     fetchDiscountSettings();
   }, []);
 
-  // Fetch countries with real pricing from Firebase
+  // Fetch countries with real pricing from Firebase or use hardcoded fallback for iOS mobile
   const { data: countriesData, isLoading: countriesLoading, error: countriesError } = useQuery({
-    queryKey: ['countries-with-pricing'],
+    queryKey: ['countries-with-pricing', isMobileIOS()],
     queryFn: async () => {
+      // Use hardcoded countries for iOS mobile users
+      if (isMobileIOS()) {
+        console.log('📱 iOS Mobile detected - Using hardcoded countries fallback');
+        const mobileCountries = getMobileCountries();
+        
+        // Sort by minimum price (cheapest first)
+        mobileCountries.sort((a, b) => a.minPrice - b.minPrice);
+        
+        console.log('✅ USING HARDCODED COUNTRIES FOR iOS MOBILE');
+        console.log('Mobile countries sample:', mobileCountries.slice(0, 5).map(c => ({ 
+          name: c.name, 
+          minPrice: c.minPrice 
+        })));
+        return mobileCountries;
+      }
+      
       try {
         console.log('Fetching countries with real pricing from Firebase...');
         const countriesWithPricing = await getCountriesWithPricing();
@@ -111,7 +128,10 @@ const EsimPlans = () => {
         return countriesWithRealPricing;
       } catch (error) {
         console.error('❌ FIREBASE ERROR:', error);
-        return []; // Return empty array instead of fallback data
+        console.log('🔄 Firebase failed - Using hardcoded countries fallback');
+        const mobileCountries = getMobileCountries();
+        mobileCountries.sort((a, b) => a.minPrice - b.minPrice);
+        return mobileCountries;
       }
     },
     retry: 1,

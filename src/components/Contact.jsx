@@ -19,7 +19,6 @@ import {
   Settings
 } from 'lucide-react';
 import { createContactRequest } from '../services/contactService';
-import { getSettings } from '../services/settingsService';
 import toast from 'react-hot-toast';
 
 const Contact = () => {
@@ -30,29 +29,25 @@ const Contact = () => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [openFaq, setOpenFaq] = useState(null);
-  const [contactInfo, setContactInfo] = useState({});
-  const [businessHours, setBusinessHours] = useState({});
-  const [loading, setLoading] = useState(true);
-
-  // Load settings data
-  useEffect(() => {
-    const loadSettings = async () => {
-      try {
-        const settings = await getSettings();
-        console.log('Loaded settings:', settings);
-        console.log('Contact info:', settings.contact);
-        console.log('Business hours:', settings.businessHours);
-        setContactInfo(settings.contact || {});
-        setBusinessHours(settings.businessHours || {});
-      } catch (error) {
-        console.error('Error loading settings:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadSettings();
-  }, []);
+  // Hardcoded contact information
+  const contactInfo = {
+    email: 'support@roamjet.net',
+    phone: '+447366891452',
+    address: '275 New North Road Islington # 1432, London, N1 7AA, United Kingdom',
+    companyName: 'Holylabs Ltd'
+  };
+  
+  const businessHours = {
+    monday: { open: '9:00 AM', close: '6:00 PM', closed: false },
+    tuesday: { open: '9:00 AM', close: '6:00 PM', closed: false },
+    wednesday: { open: '9:00 AM', close: '6:00 PM', closed: false },
+    thursday: { open: '9:00 AM', close: '6:00 PM', closed: false },
+    friday: { open: '9:00 AM', close: '5:00 PM', closed: false },
+    saturday: { open: '10:00 AM', close: '4:00 PM', closed: false },
+    sunday: { open: '10:00 AM', close: '4:00 PM', closed: false }
+  };
+  
+  const loading = false;
 
   const handleInputChange = (e) => {
     setFormData({
@@ -104,10 +99,10 @@ const Contact = () => {
       console.log('Adding phone:', contactInfo.phone);
       info.push({
         icon: Phone,
-        title: "WhatsApp Us",
+        title: "Telegram Us",
         content: contactInfo.phone,
-        description: "Contact us via WhatsApp",
-        link: `https://wa.me/${contactInfo.phone.replace(/[^\d]/g, '')}`
+        description: "Contact us via Telegram",
+        link: `https://t.me/${contactInfo.phone.replace(/[^\d]/g, '')}`
       });
     }
     
@@ -363,7 +358,7 @@ const Contact = () => {
                               {office.phone && office.phone.trim() !== '' && (
                                 <p className="flex items-center">
                                   <Phone className="w-5 h-5 mr-2 text-tufts-blue" />
-                                  <a href={`https://wa.me/${office.phone.replace(/[^\d]/g, '')}`} className="text-tufts-blue hover:text-cobalt-blue transition-colors duration-200">
+                                  <a href={`https://t.me/${office.phone.replace(/[^\d]/g, '')}`} className="text-tufts-blue hover:text-cobalt-blue transition-colors duration-200">
                                     {office.phone}
                                   </a>
                                 </p>

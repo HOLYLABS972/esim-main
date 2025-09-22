@@ -5,7 +5,7 @@
 
 export const detectPlatform = () => {
   if (typeof window === 'undefined') {
-    return { platform: 'unknown', isMobile: false };
+    return { platform: 'unknown', isMobile: false, isMobileIOS: false };
   }
 
   const userAgent = window.navigator.userAgent.toLowerCase();
@@ -15,7 +15,8 @@ export const detectPlatform = () => {
     return {
       platform: 'android',
       isMobile: true,
-      downloadUrl: 'https://play.google.com/store/apps/details?id=your.app.package',
+      isMobileIOS: false,
+      downloadUrl: 'https://play.google.com/store/apps/details?id=com.theholylabs.esim',
       downloadText: 'Download for Android'
     };
   }
@@ -25,7 +26,8 @@ export const detectPlatform = () => {
     return {
       platform: 'ios',
       isMobile: true,
-      downloadUrl: 'https://apps.apple.com/app/your-app-name/id123456789',
+      isMobileIOS: true,
+      downloadUrl: 'https://apps.apple.com/us/app/roamjet/id6751737433',
       downloadText: 'Download for iOS'
     };
   }
@@ -35,6 +37,7 @@ export const detectPlatform = () => {
     return {
       platform: 'windows',
       isMobile: false,
+      isMobileIOS: false,
       downloadUrl: null,
       downloadText: 'Desktop User - Can buy eSIM directly'
     };
@@ -45,6 +48,7 @@ export const detectPlatform = () => {
     return {
       platform: 'macos',
       isMobile: false,
+      isMobileIOS: false,
       downloadUrl: null,
       downloadText: 'Desktop User - Can buy eSIM directly'
     };
@@ -55,6 +59,7 @@ export const detectPlatform = () => {
     return {
       platform: 'linux',
       isMobile: false,
+      isMobileIOS: false,
       downloadUrl: null,
       downloadText: 'Desktop User - Can buy eSIM directly'
     };
@@ -64,6 +69,7 @@ export const detectPlatform = () => {
   return {
     platform: 'unknown',
     isMobile: false,
+    isMobileIOS: false,
     downloadUrl: null,
     downloadText: 'Download App'
   };
@@ -83,4 +89,13 @@ export const shouldRedirectToDownload = () => {
  */
 export const getPlatformRedirectInfo = () => {
   return detectPlatform();
+};
+
+/**
+ * Check if user is on mobile iOS device (iPhone/iPad)
+ * This is used to determine if we should use hardcoded countries fallback
+ */
+export const isMobileIOS = () => {
+  const { isMobileIOS } = detectPlatform();
+  return isMobileIOS;
 };

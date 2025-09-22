@@ -1,29 +1,18 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { useI18n } from '../../contexts/I18nContext';
 import Image from 'next/image';
-import { getAppStoreLinks } from '../../services/settingsService';
+import { appStoreLinks } from '../../utils/appStoreLinks';
 
 export default function ActivationSection() {
   const { t, isLoading: translationsLoading } = useI18n();
-  const [appStoreLinks, setAppStoreLinks] = useState({ iosUrl: '', androidUrl: '' });
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchAppStoreLinks = async () => {
-      try {
-        const links = await getAppStoreLinks();
-        setAppStoreLinks(links);
-      } catch (error) {
-        console.error('Error fetching app store links:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchAppStoreLinks();
-  }, []);
+  
+  // Use hardcoded app store links
+  const appStoreLinksData = {
+    iosUrl: appStoreLinks.ios,
+    androidUrl: appStoreLinks.android
+  };
+  const loading = false;
 
 
   if (translationsLoading) {
@@ -139,9 +128,9 @@ export default function ActivationSection() {
                       <div className="text-white">{t('activation.loadingAppLinks')}</div>
                     ) : (
                       <>
-                        {appStoreLinks.iosUrl && (
+                        {appStoreLinksData.iosUrl && (
                           <a
-                            href={appStoreLinks.iosUrl}
+                            href={appStoreLinksData.iosUrl}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="btn-primary inline-flex items-center justify-center px-6 py-3"
@@ -156,9 +145,9 @@ export default function ActivationSection() {
                             {t('activation.downloadForIOS')}
                           </a>
                         )}
-                        {appStoreLinks.androidUrl && (
+                        {appStoreLinksData.androidUrl && (
                           <a
-                            href={appStoreLinks.androidUrl}
+                            href={appStoreLinksData.androidUrl}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="btn-secondary inline-flex items-center justify-center px-6 py-3"
@@ -173,7 +162,7 @@ export default function ActivationSection() {
                             {t('activation.downloadForAndroid')}
                           </a>
                         )}
-                        {!appStoreLinks.iosUrl && !appStoreLinks.androidUrl && (
+                        {!appStoreLinksData.iosUrl && !appStoreLinksData.androidUrl && (
                           <div className="text-white/80">{t('activation.appLinksSoon')}</div>
                         )}
                       </>

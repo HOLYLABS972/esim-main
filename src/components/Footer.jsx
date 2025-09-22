@@ -7,15 +7,27 @@ import { motion } from 'framer-motion';
 import { MapPin, Mail, Phone, Facebook, Twitter, Instagram, Linkedin, Youtube } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { useI18n } from '../contexts/I18nContext';
-import { getSocialMediaLinks, getContactInfo } from '../services/settingsService';
 
 const Footer = () => {
   const pathname = usePathname();
   const { t } = useI18n();
   const currentYear = new Date().getFullYear();
-  const [socialMedia, setSocialMedia] = useState({});
-  const [contactInfo, setContactInfo] = useState({});
-  const [loading, setLoading] = useState(true);
+  // Hardcoded contact information
+  const contactInfo = {
+    email: 'support@roamjet.net',
+    phone: '+447366891452',
+    address: 'Holylabs Ltd, 275 New North Road Islington # 1432, London, N1 7AA, United Kingdom'
+  };
+  
+  // Hardcoded social media links
+  const socialMedia = {
+    instagram: 'https://www.instagram.com/roam.jet',
+    facebook: 'https://www.facebook.com/profile.php?id=61581184673040',
+    linkedin: 'https://www.linkedin.com/showcase/roamjet/'
+  };
+  
+  
+  const loading = false;
 
   // Check if we're on a language-specific page
   const isLanguagePage = ['/hebrew', '/arabic', '/russian', '/german', '/french', '/spanish'].includes(pathname);
@@ -38,26 +50,6 @@ const Footer = () => {
     { name: getText('footer.cookiePolicy', 'Cookie Policy'), path: '/cookie-policy' },
     { name: getText('footer.affiliateProgram', 'Affiliate Program'), path: '/affiliate' }
   ];
-
-  // Load settings data
-  useEffect(() => {
-    const loadSettings = async () => {
-      try {
-        const [socialData, contactData] = await Promise.all([
-          getSocialMediaLinks(),
-          getContactInfo()
-        ]);
-        setSocialMedia(socialData);
-        setContactInfo(contactData);
-      } catch (error) {
-        console.error('Error loading settings:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadSettings();
-  }, []);
 
   // Create social links array with only non-empty URLs
   const socialLinks = [
@@ -217,7 +209,7 @@ const Footer = () => {
                     <div className="footer-contact-menu__item-content">
                       <a 
                         className="footer-contact__desc text-eerie-black hover:text-cobalt-blue transition-colors duration-200" 
-                        href={`https://wa.me/${contactInfo.phone.replace(/[^\d]/g, '')}`}
+                        href={`https://t.me/${contactInfo.phone.replace(/[^\d]/g, '')}`}
                       >
                         {contactInfo.phone}
                       </a>

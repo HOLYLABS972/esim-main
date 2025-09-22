@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, Lock, Eye, Database, UserCheck, Mail } from 'lucide-react';
+import { Shield, Lock, Eye, Database, UserCheck } from 'lucide-react';
 
 const PrivacyPolicy = () => {
   const sections = [
@@ -164,29 +164,6 @@ const PrivacyPolicy = () => {
             <div className="pointer-events-none absolute inset-px rounded-xl shadow-sm ring-1 ring-black/5"></div>
           </div>
 
-          {/* Contact Information */}
-          <div className="relative">
-            <div className="absolute inset-px rounded-xl bg-eerie-black"></div>
-            <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
-              <div className="px-8 pt-8 pb-8">
-                <div className="flex items-center mb-6">
-                  <Mail className="w-8 h-8 text-alice-blue mr-3" />
-                  <h2 className="text-2xl font-medium tracking-tight text-white">Contact Us</h2>
-                </div>
-                <p className="text-alice-blue leading-relaxed mb-4">
-                  If you have any questions about this Privacy Policy or our data practices, please contact us:
-                </p>
-                <div className="space-y-2 text-alice-blue">
-                  <p><strong className="text-white">Holylabs Ltd</strong></p>
-                  <p>275 New North Road Islington # 1432</p>
-                  <p>London, N1 7AA, United Kingdom</p>
-                  <p>Email: <a href="mailto:support@theholylabs.com" className="text-jordy-blue hover:text-white transition-colors duration-200">support@theholylabs.com</a></p>
-                  <p>Phone: <a href="https://wa.me/972515473526" className="text-jordy-blue hover:text-white transition-colors duration-200">+972 51 547 3526</a></p>
-                </div>
-              </div>
-            </div>
-            <div className="pointer-events-none absolute inset-px rounded-xl shadow-sm ring-1 ring-white/10"></div>
-          </div>
         </div>
       </section>
     </div>

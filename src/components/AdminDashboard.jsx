@@ -941,7 +941,7 @@ const AdminDashboard = () => {
               <button
                 onClick={() => setShowAdminDropdown(!showAdminDropdown)}
                 className={`w-full flex items-center justify-between px-4 py-3 rounded-lg font-medium transition-all duration-200 text-left ${
-                  ['settings', 'requests', 'newsletter', 'jobs', 'blog'].includes(activeTab)
+                  ['requests', 'newsletter', 'jobs', 'blog'].includes(activeTab)
                     ? 'bg-black text-white shadow-lg'
                     : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                 }`}
@@ -961,7 +961,6 @@ const AdminDashboard = () => {
               {showAdminDropdown && (
                 <div className="ml-4 mt-2 space-y-1">
                   {[
-                    { id: 'settings', label: 'Contact Forms', icon: Link, permission: canManageConfig },
                     { id: 'requests', label: 'Contact Requests', icon: MessageSquare, permission: canManageContactRequests },
                     { id: 'newsletter', label: 'Newsletter', icon: Mail, permission: canManageNewsletter },
                     { id: 'jobs', label: 'Job Applications', icon: Briefcase, permission: canManageContactRequests },
@@ -1033,7 +1032,6 @@ const AdminDashboard = () => {
             <h2 className="text-xl font-semibold text-gray-900">
               {[
                 { id: 'config', label: 'API Configuration' },
-                { id: 'settings', label: 'Contact Forms' },
                 { id: 'countries', label: 'Countries' },
                 { id: 'plans', label: 'Plans Management' },
                 { id: 'esim', label: 'eSIM Management' },
@@ -1134,11 +1132,6 @@ const AdminDashboard = () => {
             {/* Configuration Tab */}
             {activeTab === 'config' && canManageConfig && (
               <ConfigurationManagement />
-            )}
-
-            {/* Settings Tab */}
-            {activeTab === 'settings' && canManageConfig && (
-              <LinksManagement />
             )}
 
             {/* Countries Tab */}
