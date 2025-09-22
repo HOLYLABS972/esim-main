@@ -99,3 +99,12 @@ export const isMobileIOS = () => {
   const { isMobileIOS } = detectPlatform();
   return isMobileIOS;
 };
+
+/**
+ * Check if user is on mobile device (iOS or Android)
+ * This is used to determine if we should use hardcoded countries fallback
+ */
+export const isMobileDevice = () => {
+  const { isMobile } = detectPlatform();
+  return isMobile;
+};

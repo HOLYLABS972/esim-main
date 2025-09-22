@@ -11,7 +11,7 @@ import PlanSelectionBottomSheet from './PlanSelectionBottomSheet';
 import { getCountriesWithPricing, getPricingStats } from '../services/plansService';
 import { getRegularSettings } from '../services/settingsService';
 import { useI18n } from '../contexts/I18nContext';
-import { detectPlatform, shouldRedirectToDownload, isMobileIOS } from '../utils/platformDetection';
+import { detectPlatform, shouldRedirectToDownload, isMobileDevice } from '../utils/platformDetection';
 import { getMobileCountries } from '../data/mobileCountries';
 
 // Helper function to get flag emoji from country code
@@ -86,19 +86,19 @@ const EsimPlans = () => {
     fetchDiscountSettings();
   }, []);
 
-  // Fetch countries with real pricing from Firebase or use hardcoded fallback for iOS mobile
+  // Fetch countries with real pricing from Firebase or use hardcoded fallback for mobile users
   const { data: countriesData, isLoading: countriesLoading, error: countriesError } = useQuery({
-    queryKey: ['countries-with-pricing', isMobileIOS()],
+    queryKey: ['countries-with-pricing', isMobileDevice()],
     queryFn: async () => {
-      // Use hardcoded countries for iOS mobile users
-      if (isMobileIOS()) {
-        console.log('📱 iOS Mobile detected - Using hardcoded countries fallback');
+      // Use hardcoded countries for all mobile users (iOS and Android)
+      if (isMobileDevice()) {
+        console.log('📱 Mobile device detected - Using hardcoded countries fallback');
         const mobileCountries = getMobileCountries();
         
         // Sort by minimum price (cheapest first)
         mobileCountries.sort((a, b) => a.minPrice - b.minPrice);
         
-        console.log('✅ USING HARDCODED COUNTRIES FOR iOS MOBILE');
+        console.log('✅ USING HARDCODED COUNTRIES FOR MOBILE USERS');
         console.log('Mobile countries sample:', mobileCountries.slice(0, 5).map(c => ({ 
           name: c.name, 
           minPrice: c.minPrice 
