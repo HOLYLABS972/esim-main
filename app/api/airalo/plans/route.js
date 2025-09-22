@@ -11,7 +11,7 @@ export async function GET(request) {
     console.log('📱 Fetching plans from Firestore...');
 
     let plansQuery = query(
-      collection(db, 'plans'),
+      collection(db, 'dataplans'),
       where('status', '==', 'active'),
       orderBy('price', 'asc')
     );
@@ -19,7 +19,7 @@ export async function GET(request) {
     // If country filter is provided
     if (countryCode) {
       plansQuery = query(
-        collection(db, 'plans'),
+        collection(db, 'dataplans'),
         where('status', '==', 'active'),
         where('country_codes', 'array-contains', countryCode.toUpperCase()),
         orderBy('price', 'asc')
