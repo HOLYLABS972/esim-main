@@ -263,6 +263,12 @@ const EsimPlans = () => {
   const calculateDiscountedPrice = (originalPrice) => {
     if (!originalPrice || originalPrice <= 0) return originalPrice;
     
+    // For mobile users, the price is already discounted in hardcoded data
+    if (isMobileDevice()) {
+      return originalPrice; // Return the already discounted price
+    }
+    
+    // For desktop users, apply discount from settings
     const discountPercentage = regularSettings.discountPercentage || 10;
     const minimumPrice = regularSettings.minimumPrice || 0.5;
     
