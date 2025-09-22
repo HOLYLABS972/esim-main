@@ -319,7 +319,7 @@ const AdminDashboard = () => {
   const loadAllPlans = async () => {
     try {
       setLoading(true);
-      const plansSnapshot = await getDocs(collection(db, 'plans'));
+      const plansSnapshot = await getDocs(collection(db, 'dataplans'));
       const plans = plansSnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
@@ -491,7 +491,7 @@ const AdminDashboard = () => {
       
       // Now load plans to calculate real minPrice for each country
       console.log('🔄 Loading plans to calculate country minPrice...');
-      const plansSnapshot = await getDocs(collection(db, 'plans'));
+      const plansSnapshot = await getDocs(collection(db, 'dataplans'));
       const allPlans = plansSnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
@@ -682,7 +682,7 @@ const AdminDashboard = () => {
             
             console.log(`💰 Plan: ${plan.name} - ${rawPrice} ${rawCurrency} → $${usdPrice.toFixed(2)} USD`);
             
-            const planRef = doc(db, 'plans', plan.slug);
+            const planRef = doc(db, 'dataplans', plan.slug);
             const countryData = plan.countries || [];
             const countryCodes = countryData.map(c => c.countryCode || c.code || c).filter(Boolean);
             
@@ -758,11 +758,11 @@ const AdminDashboard = () => {
       // Load plans from the plans collection for this country (mobile app compatible)
       // Try both mobile app format (country_codes) and web app format (country_ids)
       const mobilePlansQuery = query(
-        collection(db, 'plans'), 
+        collection(db, 'dataplans'), 
         where('country_codes', 'array-contains', countryCode)
       );
       const webPlansQuery = query(
-        collection(db, 'plans'), 
+        collection(db, 'dataplans'), 
         where('status', '==', 'active'),
         where('country_ids', 'array-contains', countryCode)
       );
@@ -830,7 +830,7 @@ const AdminDashboard = () => {
       console.log(`Found ${countriesSnapshot.docs.length} countries to delete`);
       
       // Get all plans 
-      const plansSnapshot = await getDocs(collection(db, 'plans'));
+      const plansSnapshot = await getDocs(collection(db, 'dataplans'));
       console.log(`Found ${plansSnapshot.docs.length} plans to delete`);
       
       // Create batch operations
@@ -880,7 +880,7 @@ const AdminDashboard = () => {
     try {
       setLoading(true);
       console.log('🗑️ Deleting document from Firestore:', planId);
-      await deleteDoc(doc(db, 'plans', planId));
+      await deleteDoc(doc(db, 'dataplans', planId));
       console.log('✅ Document deleted successfully');
       toast.success(`${planName} plan detached successfully!`);
       
@@ -910,7 +910,7 @@ const AdminDashboard = () => {
       console.log('🔧 Updating plan price:', { planId, newPrice, selectedCountryForAttach });
       
       console.log('🔧 Updating document in Firestore:', planId);
-      await updateDoc(doc(db, 'plans', planId), {
+      await updateDoc(doc(db, 'dataplans', planId), {
         price: Math.round(newPrice), // Store as whole number
         updatedAt: new Date(),
         priceUpdatedVia: 'admin_panel'
@@ -942,7 +942,7 @@ const AdminDashboard = () => {
       
       // Load plans from Firebase directly (normal display)
       console.log('📱 Loading plans from Firebase...');
-      const plansSnapshot = await getDocs(collection(db, 'plans'));
+      const plansSnapshot = await getDocs(collection(db, 'dataplans'));
       const allPlans = plansSnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
@@ -1588,7 +1588,7 @@ const AdminDashboard = () => {
       
       // Load plans from Firebase directly (normal display)
       console.log('📱 Loading plans from Firebase...');
-      const plansSnapshot = await getDocs(collection(db, 'plans'));
+      const plansSnapshot = await getDocs(collection(db, 'dataplans'));
       const allPlans = plansSnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
@@ -1726,7 +1726,7 @@ const AdminDashboard = () => {
       
       // Check if plan already exists for this country
       const existingPlanQuery = query(
-        collection(db, 'plans'),
+        collection(db, 'dataplans'),
         where('name', '==', plan.name),
         where('country_codes', 'array-contains', selectedCountryForAttach.code)
       );
@@ -1762,7 +1762,7 @@ const AdminDashboard = () => {
         planData.period = plan.period;
       }
       
-      await addDoc(collection(db, 'plans'), planData);
+      await addDoc(collection(db, 'dataplans'), planData);
       
       toast.success(`Plan "${plan.name}" attached to ${selectedCountryForAttach.name}!`);
       setShowAttachCountryPlanModal(false);
@@ -1790,7 +1790,7 @@ const AdminDashboard = () => {
   const togglePlanStatus = async (planId, currentStatus) => {
     try {
       setLoading(true);
-      const planRef = doc(db, 'plans', planId);
+      const planRef = doc(db, 'dataplans', planId);
       await updateDoc(planRef, {
         enabled: !currentStatus
       });
@@ -1812,7 +1812,7 @@ const AdminDashboard = () => {
   const updatePlanPrice = async (planId, newPrice) => {
     try {
       setLoading(true);
-      const planRef = doc(db, 'plans', planId);
+      const planRef = doc(db, 'dataplans', planId);
       await updateDoc(planRef, {
         price: parseFloat(newPrice)
       });
