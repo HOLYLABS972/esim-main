@@ -271,7 +271,15 @@ const EsimPlans = () => {
   }, [searchTerm, countries, searchResults]);
 
   const handleCountrySelect = async (country) => {
-    // Check if user is logged in
+    const platform = detectPlatform();
+    
+    // For mobile users, open platform-specific app store link
+    if (platform.isMobile && platform.downloadUrl) {
+      window.open(platform.downloadUrl, '_blank');
+      return;
+    }
+    
+    // For desktop users, check if user is logged in
     if (!currentUser) {
       // Scroll to download app section instead of redirecting
       const downloadSection = document.getElementById('how-it-works');
@@ -284,6 +292,7 @@ const EsimPlans = () => {
       return;
     }
     
+    // Desktop users: open bottom sheet with plans
     setShowCheckoutModal(true);
     await loadAvailablePlansForCountry(country.code);
   };
