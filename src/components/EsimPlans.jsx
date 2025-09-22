@@ -171,7 +171,7 @@ const EsimPlans = () => {
     }
   }, [countriesData, countriesError, countriesLoading]);
 
-  // Search function that only searches Firebase data
+  // Search function - uses hardcoded countries on mobile, Firebase on desktop
   const searchCountries = async (term) => {
     if (!term || term.length < 2) {
       setSearchResults([]);
@@ -181,9 +181,22 @@ const EsimPlans = () => {
 
     setIsSearching(true);
     try {
-      console.log('Searching for countries in Firebase:', term);
+      // Use hardcoded countries for mobile users
+      if (isMobileDevice()) {
+        console.log('📱 Mobile search - Using hardcoded countries:', term);
+        const mobileCountries = getMobileCountries();
+        const searchResults = mobileCountries.filter(country => 
+          country.name.toLowerCase().includes(term.toLowerCase()) ||
+          country.code.toLowerCase().includes(term.toLowerCase())
+        );
+        setSearchResults(searchResults);
+        setIsSearching(false);
+        return;
+      }
       
-      // Search only in Firebase
+      console.log('🖥️ Desktop search - Using Firebase:', term);
+      
+      // Search only in Firebase for desktop users
       const querySnapshot = await getDocs(collection(db, 'countries'));
       const firebaseResults = [];
       
