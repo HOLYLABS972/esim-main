@@ -402,13 +402,11 @@ const EsimPlans = () => {
               <div className="text-center mt-2 text-sm text-gray-500">
                 {isSearching ? (
                   t('search.searching', 'Searching...')
-                ) : searchResults.length > 0 ? (
-                  t('search.foundDestinations', `Found ${searchResults.length} ${searchResults.length === 1 ? 'destination' : 'destinations'}`, { count: searchResults.length })
-                ) : searchTerm.length >= 2 ? (
+                ) : searchTerm.length >= 2 && searchResults.length === 0 ? (
                   t('search.noDestinationsFound', `No destinations found for "${searchTerm}"`, { searchTerm })
-                ) : (
+                ) : searchTerm.length < 2 ? (
                   t('search.typeToSearch', 'Type at least 2 characters to search')
-                )}
+                ) : null}
               </div>
             )}
           </div>
