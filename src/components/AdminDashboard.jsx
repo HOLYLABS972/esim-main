@@ -1166,6 +1166,11 @@ const AdminDashboard = () => {
               <NotificationsManagement />
             )}
 
+            {/* Blacklist Tab */}
+            {activeTab === 'blacklist' && canManageContactRequests && (
+              <BlacklistManagement />
+            )}
+
             {/* Contact Requests Tab */}
             {activeTab === 'requests' && canManageContactRequests && (
               <ContactRequestsManagement />
@@ -1179,11 +1184,6 @@ const AdminDashboard = () => {
             {/* Jobs Tab */}
             {activeTab === 'jobs' && canManageContactRequests && (
               <JobApplicationsManagement />
-            )}
-
-            {/* Blacklist Tab */}
-            {activeTab === 'blacklist' && canManageContactRequests && (
-              <BlacklistManagement />
             )}
 
 
