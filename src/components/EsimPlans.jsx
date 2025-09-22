@@ -176,7 +176,7 @@ const EsimPlans = () => {
         // Check if country name matches search term
         if (countryData.name.toLowerCase().includes(term.toLowerCase())) {
           // Get plans for this country using country_codes array
-          const plansQuery = query(collection(db, 'plans'), where('country_codes', 'array-contains', countryData.code));
+          const plansQuery = query(collection(db, 'dataplans'), where('country_codes', 'array-contains', countryData.code));
           const plansSnapshot = await getDocs(plansQuery);
           const plans = plansSnapshot.docs.map(planDoc => planDoc.data());
           
@@ -277,7 +277,7 @@ const EsimPlans = () => {
     try {
       // Query for plans that include this country
       const plansQuery = query(
-        collection(db, 'plans'),
+        collection(db, 'dataplans'),
         where('country_codes', 'array-contains', countryCode)
       );
       const querySnapshot = await getDocs(plansQuery);

@@ -186,7 +186,7 @@ const AdminDashboard = () => {
   const loadAllPlans = async () => {
     try {
       setLoading(true);
-      const plansSnapshot = await getDocs(collection(db, 'plans'));
+      const plansSnapshot = await getDocs(collection(db, 'dataplans'));
       const plans = plansSnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
@@ -372,7 +372,7 @@ const AdminDashboard = () => {
             
             console.log(`💰 Plan: ${plan.name} - ${rawPrice} ${rawCurrency} → $${usdPrice.toFixed(2)} USD`);
             
-            const planRef = doc(db, 'plans', plan.slug);
+            const planRef = doc(db, 'dataplans', plan.slug);
             const countryData = plan.countries || [];
             const countryCodes = countryData.map(c => c.countryCode || c.code || c).filter(Boolean);
             
@@ -435,7 +435,7 @@ const AdminDashboard = () => {
       
       // Load plans from Firebase directly (normal display)
       console.log('📱 Loading plans from Firebase...');
-      const plansSnapshot = await getDocs(collection(db, 'plans'));
+      const plansSnapshot = await getDocs(collection(db, 'dataplans'));
       const allPlans = plansSnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
@@ -761,7 +761,7 @@ const AdminDashboard = () => {
   const togglePlanStatus = async (planId, currentStatus) => {
     try {
       setLoading(true);
-      const planRef = doc(db, 'plans', planId);
+      const planRef = doc(db, 'dataplans', planId);
       await updateDoc(planRef, {
         enabled: !currentStatus
       });
@@ -783,7 +783,7 @@ const AdminDashboard = () => {
   const updatePlanPrice = async (planId, newPrice) => {
     try {
       setLoading(true);
-      const planRef = doc(db, 'plans', planId);
+      const planRef = doc(db, 'dataplans', planId);
       await updateDoc(planRef, {
         price: parseFloat(newPrice)
       });

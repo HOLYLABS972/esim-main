@@ -77,7 +77,7 @@ const CountriesManagement = () => {
       
       // Now load plans to calculate real minPrice for each country
       console.log('🔄 Loading plans to calculate country minPrice...');
-      const plansSnapshot = await getDocs(collection(db, 'plans'));
+      const plansSnapshot = await getDocs(collection(db, 'dataplans'));
       const allPlans = plansSnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
@@ -167,7 +167,7 @@ const CountriesManagement = () => {
       setLoading(true);
       // Delete country and its plans
       const countrySnapshot = await getDocs(query(collection(db, 'countries'), where('code', '==', countryCode)));
-      const plansSnapshot = await getDocs(query(collection(db, 'plans'), where('country_codes', 'array-contains', countryCode)));
+      const plansSnapshot = await getDocs(query(collection(db, 'dataplans'), where('country_codes', 'array-contains', countryCode)));
       
       const batch = writeBatch(db);
       countrySnapshot.forEach(doc => batch.delete(doc.ref));

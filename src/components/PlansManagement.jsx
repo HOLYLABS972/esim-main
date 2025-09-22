@@ -88,7 +88,7 @@ const PlansManagement = () => {
   const loadAllPlans = async () => {
     try {
       setLoading(true);
-      const plansSnapshot = await getDocs(collection(db, 'plans'));
+      const plansSnapshot = await getDocs(collection(db, 'dataplans'));
       const plansData = plansSnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
@@ -125,7 +125,7 @@ const PlansManagement = () => {
   const updatePlanPrice = async (planId, newPrice) => {
     try {
       setLoading(true);
-      const planRef = doc(db, 'plans', planId);
+      const planRef = doc(db, 'dataplans', planId);
       await updateDoc(planRef, {
         price: parseFloat(newPrice)
       });
@@ -176,7 +176,7 @@ const PlansManagement = () => {
 
     try {
       setLoading(true);
-      await deleteDoc(doc(db, 'plans', planId));
+      await deleteDoc(doc(db, 'dataplans', planId));
       toast.success(`Plan "${planName}" deleted successfully!`);
       await loadAllPlans();
     } catch (error) {

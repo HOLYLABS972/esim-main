@@ -29,7 +29,7 @@ const getFlagEmoji = (countryCode) => {
 // Get all plans from Firebase (only enabled plans)
 export const getAllPlans = async () => {
   try {
-    const plansSnapshot = await getDocs(collection(db, 'plans'));
+    const plansSnapshot = await getDocs(collection(db, 'dataplans'));
     const allPlans = plansSnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
@@ -48,7 +48,7 @@ export const getAllPlans = async () => {
 // Get plans count
 export const getPlansCount = async () => {
   try {
-    const plansSnapshot = await getDocs(collection(db, 'plans'));
+    const plansSnapshot = await getDocs(collection(db, 'dataplans'));
     return plansSnapshot.size;
   } catch (error) {
     console.error('Error getting plans count:', error);

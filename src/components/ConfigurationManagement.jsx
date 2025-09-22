@@ -237,7 +237,7 @@ const ConfigurationManagement = () => {
       await batch.commit();
 
       // Delete all plans
-      const plansSnapshot = await getDocs(collection(db, 'plans'));
+      const plansSnapshot = await getDocs(collection(db, 'dataplans'));
       const plansBatch = writeBatch(db);
       plansSnapshot.forEach(doc => plansBatch.delete(doc.ref));
       await plansBatch.commit();
