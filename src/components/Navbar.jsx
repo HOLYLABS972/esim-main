@@ -104,11 +104,6 @@ const Navbar = ({ hideLanguageSelector = false }) => {
         </div>
         
         <div className="hidden lg:flex lg:gap-x-12">
-          {currentUser && (
-            <Link href="/esim-plans" className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
-              Plans
-            </Link>
-          )}
           <button 
             onClick={handleDownloadApp}
             className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors bg-transparent border-none cursor-pointer"
@@ -190,13 +185,6 @@ const Navbar = ({ hideLanguageSelector = false }) => {
                 
                 {/* Main Navigation Group */}
                 <div className="p-4 w-full max-w-xs">
-                  <Link
-                    href="/esim-plans"
-                    className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Plans
-                  </Link>
                   <button
                     onClick={() => {
                       handleDownloadApp();

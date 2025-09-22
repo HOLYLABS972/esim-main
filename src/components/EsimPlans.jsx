@@ -402,8 +402,6 @@ const EsimPlans = () => {
               <div className="text-center mt-2 text-sm text-gray-500">
                 {isSearching ? (
                   t('search.searching', 'Searching...')
-                ) : searchTerm.length >= 2 && searchResults.length === 0 ? (
-                  t('search.noDestinationsFound', `No destinations found for "${searchTerm}"`, { searchTerm })
                 ) : searchTerm.length < 2 ? (
                   t('search.typeToSearch', 'Type at least 2 characters to search')
                 ) : null}
@@ -559,13 +557,6 @@ const EsimPlans = () => {
 
 
         {/* Empty State */}
-        {filteredCountries.length === 0 && !countriesLoading && searchTerm && (
-          <div className="text-center py-12">
-            <p className="text-gray-500 text-lg">
-              {t('search.noDestinationsFound', `No destinations found for "${searchTerm}"`, { searchTerm })}
-            </p>
-          </div>
-        )}
       </div>
     </section>
 

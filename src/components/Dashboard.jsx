@@ -869,50 +869,6 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Hot Deals Banner - Only for users who used referral code */}
-        {userProfile?.referralCodeUsed && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="bg-white rounded-xl shadow-lg p-6 text-gray-900 cursor-pointer hover:shadow-xl transition-shadow duration-200 border border-gray-200"
-            onClick={() => router.push('/esim-plans')}
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <div className="bg-blue-100 p-3 rounded-full">
-                  <Flame className="w-8 h-8 text-blue-600" />
-                </div>
-                <div>
-                  <h2 className="text-2xl font-bold">Hot Deals!</h2>
-                  <p className="text-gray-600">
-                    Get up to 50% off on all eSIM plans
-                  </p>
-                </div>
-              </div>
-              <div className="text-right">
-                <div className="text-3xl font-bold text-blue-600">$2.50</div>
-                <div className="text-sm text-gray-500">Starting from</div>
-              </div>
-            </div>
-            <div className="mt-4 flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm font-medium">
-                  Limited Time
-                </span>
-                <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-sm font-medium">
-                  Premium Plans
-                </span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <span className="text-sm text-gray-600">View Deals</span>
-                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </div>
-            </div>
-          </motion.div>
-        )}
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
