@@ -5,9 +5,13 @@ import { useQuery } from '@tanstack/react-query';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { Search } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '../contexts/AuthContext';
 import PlanSelectionBottomSheet from './PlanSelectionBottomSheet';
 import { getCountriesWithPricing, getPricingStats } from '../services/plansService';
+import { getRegularSettings } from '../services/settingsService';
 import { useI18n } from '../contexts/I18nContext';
+import { detectPlatform, shouldRedirectToDownload } from '../utils/platformDetection';
 
 // Helper function to get flag emoji from country code
 const getFlagEmoji = (countryCode) => {
@@ -35,10 +39,13 @@ const getFlagEmoji = (countryCode) => {
 
 const EsimPlans = () => {
   const { t } = useI18n();
+  const { currentUser } = useAuth();
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
   const [countries, setCountries] = useState([]);
   const [filteredCountries, setFilteredCountries] = useState([]);
   const [showAllCountries, setShowAllCountries] = useState(false);
+  const [platformInfo, setPlatformInfo] = useState(null);
   
   // Plan selection and checkout state
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
@@ -47,8 +54,36 @@ const EsimPlans = () => {
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   
+  // Discount settings state
+  const [regularSettings, setRegularSettings] = useState({ discountPercentage: 10, minimumPrice: 0.5 });
+  
   // Simplified state - no sorting or grouping
   const [groupByDays, setGroupByDays] = useState(false); // Disable grouping by days
+
+  // Platform detection and authentication check
+  useEffect(() => {
+    const detectedPlatform = detectPlatform();
+    setPlatformInfo(detectedPlatform);
+    
+    // No automatic redirect - users can browse freely
+    // They will be prompted to download app when they tap on countries
+  }, [currentUser, router]);
+
+  // Fetch regular discount settings
+  useEffect(() => {
+    const fetchDiscountSettings = async () => {
+      try {
+        const settings = await getRegularSettings();
+        console.log('💰 Regular discount settings loaded:', settings);
+        setRegularSettings(settings);
+      } catch (error) {
+        console.error('Error fetching regular discount settings:', error);
+        // Keep default settings
+      }
+    };
+    
+    fetchDiscountSettings();
+  }, []);
 
   // Fetch countries with real pricing from Firebase
   const { data: countriesData, isLoading: countriesLoading, error: countriesError } = useQuery({
@@ -194,6 +229,17 @@ const EsimPlans = () => {
     return () => clearTimeout(timeoutId);
   }, [searchTerm]);
 
+  // Helper function to calculate discounted price
+  const calculateDiscountedPrice = (originalPrice) => {
+    if (!originalPrice || originalPrice <= 0) return originalPrice;
+    
+    const discountPercentage = regularSettings.discountPercentage || 10;
+    const minimumPrice = regularSettings.minimumPrice || 0.5;
+    
+    const discountedPrice = Math.max(minimumPrice, originalPrice * (100 - discountPercentage) / 100);
+    return discountedPrice;
+  };
+
   // Simple filter function - no sorting or grouping
   const filterCountries = (countriesList) => {
     return [...countriesList]; // Return countries as-is, already sorted by price from Firebase
@@ -208,6 +254,19 @@ const EsimPlans = () => {
   }, [searchTerm, countries, searchResults]);
 
   const handleCountrySelect = async (country) => {
+    // Check if user is logged in
+    if (!currentUser) {
+      // Scroll to download app section instead of redirecting
+      const downloadSection = document.getElementById('how-it-works');
+      if (downloadSection) {
+        downloadSection.scrollIntoView({ behavior: 'smooth' });
+      } else {
+        // Fallback to router push if element not found
+        router.push('/#how-it-works');
+      }
+      return;
+    }
+    
     setShowCheckoutModal(true);
     await loadAvailablePlansForCountry(country.code);
   };
@@ -243,6 +302,7 @@ const EsimPlans = () => {
 
   // No fallback timeout - only show real Firebase data
 
+
   return (
     <>
       <section className="destination py-0">
@@ -263,11 +323,11 @@ const EsimPlans = () => {
                       <div className="text-sm text-gray-600">{t('plans.countries', 'Countries')}</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-3xl font-bold text-tufts-blue">${pricingStats.minPrice}</div>
+                      <div className="text-3xl font-bold text-tufts-blue">${calculateDiscountedPrice(parseFloat(pricingStats.minPrice)).toFixed(2)}</div>
                       <div className="text-sm text-gray-600">{t('plans.startingFrom', 'Starting From')}</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-3xl font-bold text-tufts-blue">${pricingStats.averagePrice}</div>
+                      <div className="text-3xl font-bold text-tufts-blue">${calculateDiscountedPrice(parseFloat(pricingStats.averagePrice)).toFixed(2)}</div>
                       <div className="text-sm text-gray-600">{t('plans.averagePrice', 'Average Price')}</div>
                     </div>
                   </div>
@@ -318,7 +378,7 @@ const EsimPlans = () => {
               {countriesLoading && countries.length === 0 ? (
                 <div className="flex justify-center items-center min-h-64">
                   <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-tufts-blue"></div>
-                  <p className="ml-4 text-gray-600">Loading countries...</p>
+                  <p className="ml-4 text-gray-600">{t('plans.loadingPlans', 'Loading countries...')}</p>
                 </div>
               ) : (
                 <>
@@ -329,36 +389,62 @@ const EsimPlans = () => {
                         key={country.id}
                         className="col-span-1"
                       >
-                        <button
-                          className="esim-plan-card w-full bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 text-left border border-gray-100 hover:border-blue-200"
-                          onClick={() => handleCountrySelect(country)}
-                        >
-                          <div className="country-flag-display text-center mb-4">
-                            {country.flagEmoji ? (
-                              <span className="country-flag-emoji text-5xl">
-                                {country.flagEmoji}
-                              </span>
-                            ) : (
-                              <div className="country-code-avatar w-16 h-16 mx-auto bg-tufts-blue rounded-full flex items-center justify-center">
-                                <span className="text-blue-600 font-bold text-lg">
-                                  {country.code || '??'}
+                        <div className="relative">
+                          <button
+                            className="esim-plan-card w-full bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 text-left border border-gray-100 hover:border-blue-200"
+                            onClick={() => handleCountrySelect(country)}
+                          >
+                            <div className="country-flag-display text-center mb-4">
+                              {country.flagEmoji ? (
+                                <span className="country-flag-emoji text-5xl">
+                                  {country.flagEmoji}
                                 </span>
-                              </div>
-                            )}
-                          </div>
+                              ) : (
+                                <div className="country-code-avatar w-16 h-16 mx-auto bg-tufts-blue rounded-full flex items-center justify-center">
+                                  <span className="text-blue-600 font-bold text-lg">
+                                    {country.code || '??'}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
 
-                          <div className="esim-plan-card__content text-center">
-                            <h5 className="esim-plan-card__title text-lg font-semibold text-gray-900 mb-2">
-                              {country.name}
-                            </h5>
-                            <span className="esim-plan-card__price text-tufts-blue font-medium">
-                              {country.minPrice ? t('plans.fromPrice', `From $${country.minPrice.toFixed(2)}`).replace('${price}', `$${country.minPrice.toFixed(2)}`) : t('plans.noPlansAvailable', 'No plans available')}
-                            </span>
-                          </div>
-                        </button>
+                            <div className="esim-plan-card__content text-center">
+                              <h5 className="esim-plan-card__title text-lg font-semibold text-gray-900 mb-2">
+                                {country.name}
+                              </h5>
+                              <span className="esim-plan-card__price text-tufts-blue font-medium">
+                                {country.minPrice ? (() => {
+                                  const discountedPrice = calculateDiscountedPrice(country.minPrice);
+                                  const hasDiscount = discountedPrice < country.minPrice;
+                                  return hasDiscount ? (
+                                    <div className="text-center">
+                                      <span className="text-lg font-semibold text-green-600">${discountedPrice.toFixed(2)}</span>
+                                      <span className="text-sm text-gray-500 line-through ml-2">${country.minPrice.toFixed(2)}</span>
+                                    </div>
+                                  ) : (
+                                    t('plans.fromPrice', `From $${country.minPrice.toFixed(2)}`).replace('${price}', `$${country.minPrice.toFixed(2)}`)
+                                  );
+                                })() : t('plans.noPlansAvailable', 'No plans available')}
+                              </span>
+                            </div>
+                          </button>
+                        
+                        </div>
                       </div>
                     ))}
                   </div>
+                  
+                  {/* Show All Button for Desktop */}
+                  {!searchTerm && filteredCountries.length > 8 && (
+                    <div className="hidden sm:block text-center mt-8">
+                      <button
+                        onClick={() => setShowAllCountries(!showAllCountries)}
+                        className="btn-primary px-8 py-3 text-white font-semibold rounded-full hover:bg-tufts-blue transition-all duration-200 shadow-lg"
+                      >
+                        {showAllCountries ? 'Show Less' : 'Show All'}
+                      </button>
+                    </div>
+                  )}
                   
                   {/* Mobile List Layout */}
                   <div className="sm:hidden space-y-3">
@@ -387,7 +473,18 @@ const EsimPlans = () => {
                             {country.name}
                           </h5>
                           <span className="esim-plan-card__price text-tufts-blue font-medium text-sm">
-                            {country.minPrice ? t('plans.fromPrice', `From $${country.minPrice.toFixed(2)}`).replace('${price}', `$${country.minPrice.toFixed(2)}`) : t('plans.noPlansAvailable', 'No plans available')}
+                            {country.minPrice ? (() => {
+                              const discountedPrice = calculateDiscountedPrice(country.minPrice);
+                              const hasDiscount = discountedPrice < country.minPrice;
+                              return hasDiscount ? (
+                                <div className="text-left">
+                                  <span className="text-sm font-semibold text-green-600">${discountedPrice.toFixed(2)}</span>
+                                  <span className="text-xs text-gray-500 line-through ml-2">${country.minPrice.toFixed(2)}</span>
+                                </div>
+                              ) : (
+                                t('plans.fromPrice', `From $${country.minPrice.toFixed(2)}`).replace('${price}', `$${country.minPrice.toFixed(2)}`)
+                              );
+                            })() : t('plans.noPlansAvailable', 'No plans available')}
                           </span>
                         </div>
                         
@@ -400,14 +497,14 @@ const EsimPlans = () => {
                     ))}
                   </div>
                   
-                  {/* Show All Button for Countries */}
+                  {/* Show All Button for Mobile */}
                   {!searchTerm && filteredCountries.length > 8 && (
-                    <div className="text-center mt-8">
+                    <div className="sm:hidden text-center mt-8">
                       <button
                         onClick={() => setShowAllCountries(!showAllCountries)}
                         className="btn-primary px-8 py-3 text-white font-semibold rounded-full hover:bg-tufts-blue transition-all duration-200 shadow-lg"
                       >
-                        {showAllCountries ? t('plans.showLess', 'Show Less') : t('plans.showAll', 'Show All')}
+                        {showAllCountries ? 'Show Less' : 'Show All'}
                       </button>
                     </div>
                   )}
@@ -422,7 +519,7 @@ const EsimPlans = () => {
         {filteredCountries.length === 0 && !countriesLoading && searchTerm && (
           <div className="text-center py-12">
             <p className="text-gray-500 text-lg">
-              No countries found matching "{searchTerm}"
+              {t('search.noDestinationsFound', `No destinations found for "${searchTerm}"`, { searchTerm })}
             </p>
           </div>
         )}

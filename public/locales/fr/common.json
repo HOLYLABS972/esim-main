@@ -44,12 +44,6 @@
       "operatingSystem": "Android 12+, iOS 15+"
     }
   },
-  "plans": {
-    "title": "Système de tarification portable",
-    "subtitle": "Choisissez votre plan eSIM parfait",
-    "description": "Sélectionnez parmi notre large gamme de plans de données conçus pour chaque type de voyageur. Des courts séjours aux séjours prolongés, nous vous couvrons.",
-    "loadingPlans": "Chargement des plans..."
-  },
   "activation": {
     "downloads": "Téléchargements",
     "appAvailable": "Notre application est disponible pour les appareils iOS et Android.",
@@ -104,6 +98,18 @@
     "typeToSearch": "Tapez au moins 2 caractères pour rechercher",
     "allCategories": "Toutes les catégories",
     "filters": "Filtres"
+  },
+  "plans": {
+    "title": "Plans eSIM",
+    "subtitle": "Choisissez votre plan eSIM parfait",
+    "description": "Parcourez notre sélection de plans eSIM du monde entier. Activation instantanée, couverture mondiale et prix compétitifs.",
+    "loadingPlans": "Chargement des plans...",
+    "totalPlans": "Total des plans",
+    "countries": "Pays",
+    "startingFrom": "À partir de",
+    "averagePrice": "Prix moyen",
+    "fromPrice": "À partir de ${price}",
+    "noPlansAvailable": "Aucun plan disponible"
   },
   "language": {
     "select": "Sélectionner la langue",

@@ -113,6 +113,18 @@
     "allCategories": "All Categories",
     "filters": "Filters"
   },
+  "plans": {
+    "title": "eSIM Plans",
+    "subtitle": "Choose Your Perfect eSIM Plan",
+    "description": "Browse our selection of eSIM plans from around the world. Instant activation, global coverage, and competitive pricing.",
+    "loadingPlans": "Loading plans...",
+    "totalPlans": "Total Plans",
+    "countries": "Countries",
+    "startingFrom": "Starting From",
+    "averagePrice": "Average Price",
+    "fromPrice": "From ${price}",
+    "noPlansAvailable": "No plans available"
+  },
   "language": {
     "select": "Select Language",
     "english": "English",

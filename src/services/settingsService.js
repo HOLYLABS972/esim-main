@@ -77,6 +77,17 @@ const defaultSettings = {
     androidUrl: ''
   },
   
+  // Discount Settings
+  referral: {
+    discountPercentage: 17,
+    minimumPrice: 0.5
+  },
+  
+  regular: {
+    discountPercentage: 10,
+    minimumPrice: 0.5
+  },
+  
   // Metadata
   updatedAt: serverTimestamp(),
   updatedBy: ''
@@ -100,7 +111,9 @@ export const getSettings = async () => {
         businessHours: { ...defaultSettings.businessHours, ...data.businessHours },
         seo: { ...defaultSettings.seo, ...data.seo },
         app: { ...defaultSettings.app, ...data.app },
-        appStore: { ...defaultSettings.appStore, ...data.appStore }
+        appStore: { ...defaultSettings.appStore, ...data.appStore },
+        referral: { ...defaultSettings.referral, ...data.referral },
+        regular: { ...defaultSettings.regular, ...data.regular }
       };
     } else {
       // Return defaults if no settings exist

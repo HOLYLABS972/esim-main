@@ -4,12 +4,11 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft } from 'lucide-react';
 import { useI18n } from '../contexts/I18nContext';
 import { useAuth } from '../contexts/AuthContext';
 import LanguageSelector from './LanguageSelector';
 
-const Navbar = ({ hideLanguageSelector = false, hideBackButton = false }) => {
+const Navbar = ({ hideLanguageSelector = false }) => {
   const { t } = useI18n();
   const { currentUser, logout } = useAuth();
   const router = useRouter();
@@ -89,17 +88,11 @@ const Navbar = ({ hideLanguageSelector = false, hideBackButton = false }) => {
         </div>
         
         <div className="hidden lg:flex lg:gap-x-12">
-          {!hideBackButton && (
-            <button
-              onClick={() => router.back()}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5 text-gray-600" />
-            </button>
+          {currentUser && (
+            <Link href="/esim-plans" className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
+              Plans
+            </Link>
           )}
-          <Link href="/esim-plans" className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
-            Plans
-          </Link>
           <Link href="/#how-it-works" className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
             {t('navbar.downloadApp', 'Download App')}
           </Link>
@@ -206,7 +199,7 @@ const Navbar = ({ hideLanguageSelector = false, hideBackButton = false }) => {
                   >
                     {t('navbar.blog', 'Blog')}
                   </Link>
-                  {currentUser ? (
+                  {currentUser && (
                     <>
                       <Link
                         href="/dashboard"
@@ -225,14 +218,6 @@ const Navbar = ({ hideLanguageSelector = false, hideBackButton = false }) => {
                         {t('navbar.logout', 'Logout')}
                       </button>
                     </>
-                  ) : (
-                    <Link
-                      href="/login"
-                      className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      {t('navbar.login', 'Login')}
-                    </Link>
                   )}
                 </div>
               </div>

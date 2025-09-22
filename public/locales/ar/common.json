@@ -44,20 +44,6 @@
       "operatingSystem": "Android 12+, iOS 15+"
     }
   },
-  "plans": {
-    "title": "نظام التسعير المحمول",
-    "subtitle": "اختر خطة eSIM المثالية لك",
-    "description": "اختر من مجموعة واسعة من خطط البيانات المصممة لكل نوع من المسافرين. من الرحلات القصيرة إلى الإقامات الممتدة، نحن نغطيك.",
-    "loadingPlans": "جاري تحميل الخطط...",
-    "fromPrice": "من ${price}",
-    "noPlansAvailable": "لا توجد خطط متاحة",
-    "totalPlans": "إجمالي الخطط",
-    "countries": "الدول",
-    "startingFrom": "بدءاً من",
-    "averagePrice": "متوسط السعر",
-    "showAll": "عرض الكل",
-    "showLess": "عرض أقل"
-  },
   "activation": {
     "downloads": "التحميلات",
     "appAvailable": "تطبيقنا متاح لأجهزة iOS و Android.",
@@ -111,6 +97,18 @@
     "typeToSearch": "اكتب حرفين على الأقل للبحث",
     "allCategories": "جميع الفئات",
     "filters": "المرشحات"
+  },
+  "plans": {
+    "title": "خطط eSIM",
+    "subtitle": "اختر خطة eSIM المثالية الخاصة بك",
+    "description": "تصفح مجموعة خطط eSIM الخاصة بنا من جميع أنحاء العالم. تفعيل فوري، تغطية عالمية، وأسعار تنافسية.",
+    "loadingPlans": "جاري تحميل الخطط...",
+    "totalPlans": "إجمالي الخطط",
+    "countries": "البلدان",
+    "startingFrom": "بدءاً من",
+    "averagePrice": "متوسط السعر",
+    "fromPrice": "بدءاً من ${price}",
+    "noPlansAvailable": "لا توجد خطط متاحة"
   },
   "language": {
     "select": "اختر اللغة",
