@@ -300,27 +300,8 @@ export async function POST() {
       console.log(`📦 Total packages extracted: ${allPackages.length}`);
       console.log(`🌍 Total countries extracted: ${countriesMap.size}`);
       
-      // Process countries
-      const countriesBatch = [];
-      for (const [code, country] of countriesMap) {
-        const countryRef = doc(db, 'countries', code);
-        countriesBatch.push(setDoc(countryRef, {
-          name: country.name,
-          code: country.code,
-          flag: country.flag,
-          region_slug: country.region_slug,
-          is_roaming: country.is_roaming,
-          status: 'active',
-          updated_at: serverTimestamp(),
-          updated_by: 'airalo_sync',
-          provider: 'airalo'
-        }, { merge: true }));
-        totalSynced.countries++;
-      }
-      
-      // Execute countries batch
-      await Promise.all(countriesBatch);
-      console.log(`✅ Synced ${totalSynced.countries} countries`);
+      // Skip countries sync - keep existing countries
+      console.log(`🌍 Skipping countries sync - keeping existing countries (${countriesMap.size} countries found in API)`);
       
       // Process plans (save as plans, not packages)
       const plansBatch = [];
@@ -329,7 +310,7 @@ export async function POST() {
       if (allPackages.length > 0) {
         for (const pkg of allPackages) {
           if (pkg.id && pkg.title) {
-            const planRef = doc(db, 'plans', pkg.id);
+            const planRef = doc(db, 'dataplans', pkg.id);
             
             // Use country codes from the package (already extracted)
             const countryCodes = pkg.country_codes || [];
@@ -370,7 +351,7 @@ export async function POST() {
         // Fallback: process original plans structure
         for (const plan of plans) {
           if (plan.id && plan.title) {
-            const planRef = doc(db, 'plans', plan.id);
+            const planRef = doc(db, 'dataplans', plan.id);
             
             // Extract country codes from plan countries
             const countryCodes = plan.countries ? plan.countries.map(c => c.country_code).filter(Boolean) : [];
@@ -426,22 +407,27 @@ export async function POST() {
     const logRef = doc(collection(db, 'sync_logs'));
     await setDoc(logRef, {
       timestamp: serverTimestamp(),
-      countries_synced: totalSynced.countries,
+      countries_synced: 0, // Countries sync disabled
       plans_synced: totalSynced.packages,
       status: 'completed',
       source: 'admin_manual_sync',
-      sync_type: 'complete_sync',
-      provider: 'airalo'
+      sync_type: 'plans_only_sync',
+      provider: 'airalo',
+      note: 'Countries sync disabled - keeping existing countries'
     });
     
-    const totalItems = totalSynced.countries + totalSynced.packages;
-    console.log(`🎉 Successfully synced all data: ${totalItems} total items`);
+    const totalItems = totalSynced.packages; // Only count plans since countries are skipped
+    console.log(`🎉 Successfully synced plans: ${totalItems} plans (countries skipped)`);
     
     return NextResponse.json({
       success: true,
-      message: 'Successfully synced all data from Airalo API',
+      message: 'Successfully synced plans from Airalo API (countries preserved)',
       total_synced: totalItems,
-      details: totalSynced
+      details: {
+        plans_synced: totalSynced.packages,
+        countries_synced: 0,
+        note: 'Countries sync disabled - existing countries preserved'
+      }
     });
     
   } catch (error) {
