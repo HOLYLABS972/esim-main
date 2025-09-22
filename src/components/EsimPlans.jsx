@@ -128,10 +128,7 @@ const EsimPlans = () => {
         return countriesWithRealPricing;
       } catch (error) {
         console.error('❌ FIREBASE ERROR:', error);
-        console.log('🔄 Firebase failed - Using hardcoded countries fallback');
-        const mobileCountries = getMobileCountries();
-        mobileCountries.sort((a, b) => a.minPrice - b.minPrice);
-        return mobileCountries;
+        return []; // Return empty array for desktop users when Firebase fails
       }
     },
     retry: 1,
