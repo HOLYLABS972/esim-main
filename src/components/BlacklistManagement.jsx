@@ -6,23 +6,16 @@ import {
   Shield, 
   Search, 
   Trash2, 
-  AlertTriangle,
-  User,
-  Mail,
-  Calendar,
-  XCircle
+  User
 } from 'lucide-react';
 import { 
   getBlacklistRecords, 
-  getBlacklistStats, 
   searchBlacklistRecords,
-  deleteBlacklistRecord,
-  updateBlacklistRecord
+  deleteBlacklistRecord
 } from '../services/blacklistService';
 
 const BlacklistManagement = () => {
   const [records, setRecords] = useState([]);
-  const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [lastDoc, setLastDoc] = useState(null);
@@ -37,15 +30,11 @@ const BlacklistManagement = () => {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [recordsData, statsData] = await Promise.all([
-        getBlacklistRecords(),
-        getBlacklistStats()
-      ]);
+      const recordsData = await getBlacklistRecords();
       
       setRecords(recordsData.records);
       setLastDoc(recordsData.lastDoc);
       setHasMore(recordsData.hasMore);
-      setStats(statsData);
     } catch (error) {
       console.error('Error loading blacklist data:', error);
     } finally {
@@ -137,58 +126,6 @@ const BlacklistManagement = () => {
         </div>
       </div>
 
-      {/* Stats Cards */}
-      {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-white p-6 rounded-lg shadow-sm border">
-            <div className="flex items-center">
-              <div className="p-2 bg-red-100 rounded-lg">
-                <Shield className="w-6 h-6 text-red-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Records</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white p-6 rounded-lg shadow-sm border">
-            <div className="flex items-center">
-              <div className="p-2 bg-red-100 rounded-lg">
-                <XCircle className="w-6 h-6 text-red-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Active Blocks</p>
-                <p className="text-2xl font-bold text-red-600">{stats.active}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white p-6 rounded-lg shadow-sm border">
-            <div className="flex items-center">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <AlertTriangle className="w-6 h-6 text-green-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Removed</p>
-                <p className="text-2xl font-bold text-green-600">{stats.removed}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white p-6 rounded-lg shadow-sm border">
-            <div className="flex items-center">
-              <div className="p-2 bg-gray-100 rounded-lg">
-                <Calendar className="w-6 h-6 text-gray-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">This Week</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.thisWeek}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Search */}
       <div className="bg-white p-4 rounded-lg shadow-sm border">
