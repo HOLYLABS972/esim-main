@@ -2,6 +2,8 @@
 
 import { useI18n } from '../../contexts/I18nContext';
 import Image from 'next/image';
+import Link from 'next/link';
+import { detectPlatform } from '../../utils/platformDetection';
 
 export default function HeroSection() {
   const { t, isLoading } = useI18n();
@@ -24,10 +26,18 @@ export default function HeroSection() {
       </div>
     );
   }
-  const scrollToAppLinks = () => {
-    const appLinksSection = document.querySelector('[id="AppLinksSection"]');
-    if (appLinksSection) {
-      appLinksSection.scrollIntoView({ behavior: 'smooth' });
+  const handleDownloadApp = () => {
+    const platform = detectPlatform();
+    
+    // For mobile users, open platform-specific app store link
+    if (platform.isMobile && platform.downloadUrl) {
+      window.open(platform.downloadUrl, '_blank');
+    } else {
+      // For desktop users, scroll to download section
+      const appLinksSection = document.querySelector('[id="AppLinksSection"]');
+      if (appLinksSection) {
+        appLinksSection.scrollIntoView({ behavior: 'smooth' });
+      }
     }
   };
 
@@ -104,14 +114,14 @@ export default function HeroSection() {
             </p>
             <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-x-6 px-4 sm:px-0">
               <button
-                onClick={scrollToAppLinks}
+                onClick={handleDownloadApp}
                 className="btn-primary w-full sm:w-auto"
               >
                 {t('hero.downloadApp')}
               </button>
-              <a href="#how-it-works" className="text-sm sm:text-sm/6 font-semibold text-gray-600 hover:text-tufts-blue transition-colors">
+              <Link href="/blog" className="text-sm sm:text-sm/6 font-semibold text-gray-600 hover:text-tufts-blue transition-colors">
                 {t('hero.learnMore')}
-              </a>
+              </Link>
             </div>
           </div>
 

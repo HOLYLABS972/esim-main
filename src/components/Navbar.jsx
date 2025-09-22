@@ -7,12 +7,28 @@ import { useRouter } from 'next/navigation';
 import { useI18n } from '../contexts/I18nContext';
 import { useAuth } from '../contexts/AuthContext';
 import LanguageSelector from './LanguageSelector';
+import { detectPlatform } from '../utils/platformDetection';
 
 const Navbar = ({ hideLanguageSelector = false }) => {
   const { t } = useI18n();
   const { currentUser, logout } = useAuth();
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const handleDownloadApp = () => {
+    const platform = detectPlatform();
+    
+    // For mobile users, open platform-specific app store link
+    if (platform.isMobile && platform.downloadUrl) {
+      window.open(platform.downloadUrl, '_blank');
+    } else {
+      // For desktop users, scroll to download section
+      const appLinksSection = document.querySelector('[id="AppLinksSection"]');
+      if (appLinksSection) {
+        appLinksSection.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  };
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [mounted, setMounted] = useState(false);
@@ -93,9 +109,12 @@ const Navbar = ({ hideLanguageSelector = false }) => {
               Plans
             </Link>
           )}
-          <Link href="/#how-it-works" className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
+          <button 
+            onClick={handleDownloadApp}
+            className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors bg-transparent border-none cursor-pointer"
+          >
             {t('navbar.downloadApp', 'Download App')}
-          </Link>
+          </button>
           <Link href="/contact" className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
             {t('navbar.contactUs', 'Contact Us')}
           </Link>
@@ -178,13 +197,15 @@ const Navbar = ({ hideLanguageSelector = false }) => {
                   >
                     Plans
                   </Link>
-                  <Link
-                    href="/#how-it-works"
-                    className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2"
-                    onClick={() => setIsMenuOpen(false)}
+                  <button
+                    onClick={() => {
+                      handleDownloadApp();
+                      setIsMenuOpen(false);
+                    }}
+                    className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2 w-full bg-transparent border-none cursor-pointer"
                   >
                     {t('navbar.downloadApp', 'Download App')}
-                  </Link>
+                  </button>
                   <Link
                     href="/contact"
                     className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2"
