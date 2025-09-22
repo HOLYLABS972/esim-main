@@ -197,17 +197,22 @@ const ConfigurationManagement = () => {
       setLoading(true);
       setSyncStatus('Syncing countries from Airalo API...');
 
-      // Call Firebase Cloud Function for countries sync
-      const syncCountriesFunction = httpsCallable(functions, 'sync_countries_from_airalo');
-      const result = await syncCountriesFunction();
+      // Call the Next.js API endpoint for countries sync
+      const response = await fetch('/api/sync-countries', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      const result = await response.json();
       
-      if (result.data.success) {
-        const count = result.data.countries_synced || 0;
-        console.log(`✅ Successfully synced ${count} countries via Firebase Functions`);
+      if (result.success) {
+        const count = result.countries_synced || 0;
+        console.log(`✅ Successfully synced ${count} countries via Next.js API`);
         setSyncStatus(`Successfully synced ${count} countries from Airalo API`);
         toast.success(`Successfully synced ${count} countries from Airalo API`);
       } else {
-        throw new Error(result.data.error || 'Unknown error occurred');
+        throw new Error(result.error || 'Unknown error occurred');
       }
     } catch (error) {
       console.error('❌ Error syncing countries from Airalo:', error);
