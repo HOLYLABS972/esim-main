@@ -173,7 +173,7 @@ const Blog = () => {
       </section>
 
       {/* Blog Posts Grid */}
-      <section className="bg-white">
+      <section className="bg-white pb-16">
         <div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8">
           {loading ? (
             <div className="text-center py-12">
