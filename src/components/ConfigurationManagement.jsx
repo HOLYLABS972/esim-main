@@ -29,6 +29,8 @@ const ConfigurationManagement = () => {
   const [currentEnvironment, setCurrentEnvironment] = useState('production');
   const [airaloClientId, setAiraloClientId] = useState('');
   const [loading, setLoading] = useState(false);
+  const [countriesLoading, setCountriesLoading] = useState(false);
+  const [plansLoading, setPlansLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [syncStatus, setSyncStatus] = useState('Ready to sync data from Airalo API');
   
@@ -194,7 +196,7 @@ const ConfigurationManagement = () => {
 
   const syncCountriesFromAiralo = async () => {
     try {
-      setLoading(true);
+      setCountriesLoading(true);
       setSyncStatus('Syncing countries from Airalo API...');
 
       // Call the same API as plans but with countries_only parameter
@@ -219,13 +221,13 @@ const ConfigurationManagement = () => {
       setSyncStatus(`Error: ${error.message}`);
       toast.error(`Error syncing countries: ${error.message}`);
     } finally {
-      setLoading(false);
+      setCountriesLoading(false);
     }
   };
 
   const syncAllDataFromAiralo = async () => {
     try {
-      setLoading(true);
+      setPlansLoading(true);
       setSyncStatus('Syncing plans from Airalo API...');
 
       // Call the Next.js API endpoint instead of Firebase function
@@ -249,7 +251,7 @@ const ConfigurationManagement = () => {
       setSyncStatus(`Error: ${error.message}`);
       toast.error(`Error syncing data: ${error.message}`);
     } finally {
-      setLoading(false);
+      setPlansLoading(false);
     }
   };
 
@@ -364,19 +366,19 @@ const ConfigurationManagement = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <button
                 onClick={syncCountriesFromAiralo}
-                disabled={loading}
+                disabled={countriesLoading || plansLoading}
                 className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 disabled:from-gray-400 disabled:to-gray-500 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 flex items-center justify-center"
               >
-                {loading ? <RefreshCw className="w-5 h-5 mr-2 animate-spin" /> : <Globe className="w-5 h-5 mr-2" />}
+                {countriesLoading ? <RefreshCw className="w-5 h-5 mr-2 animate-spin" /> : <Globe className="w-5 h-5 mr-2" />}
                 Sync Countries Only
               </button>
               
               <button
                 onClick={syncAllDataFromAiralo}
-                disabled={loading}
+                disabled={countriesLoading || plansLoading}
                 className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:from-gray-400 disabled:to-gray-500 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 flex items-center justify-center"
               >
-                {loading ? <RefreshCw className="w-5 h-5 mr-2 animate-spin" /> : <Download className="w-5 h-5 mr-2" />}
+                {plansLoading ? <RefreshCw className="w-5 h-5 mr-2 animate-spin" /> : <Download className="w-5 h-5 mr-2" />}
                 Sync Plans Only
               </button>
             </div>

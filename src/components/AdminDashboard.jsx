@@ -48,7 +48,8 @@ import {
   ChevronDown,
   ChevronRight,
   Gift,
-  CreditCard
+  CreditCard,
+  Shield
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import BlogManagement from './BlogManagement';
@@ -61,6 +62,7 @@ import LinksManagement from './LinksManagement';
 import ContactRequestsManagement from './ContactRequestsManagement';
 import NewsletterManagement from './NewsletterManagement';
 import JobApplicationsManagement from './JobApplicationsManagement';
+import BlacklistManagement from './BlacklistManagement';
 
 // Helper function to get flag emoji from country code
 const getFlagEmoji = (countryCode) => {
@@ -938,7 +940,7 @@ const AdminDashboard = () => {
               <button
                 onClick={() => setShowAdminDropdown(!showAdminDropdown)}
                 className={`w-full flex items-center justify-between px-4 py-3 rounded-lg font-medium transition-all duration-200 text-left ${
-                  ['settings', 'requests', 'newsletter', 'jobs', 'blog'].includes(activeTab)
+                  ['settings', 'requests', 'newsletter', 'jobs', 'blog', 'blacklist'].includes(activeTab)
                     ? 'bg-black text-white shadow-lg'
                     : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                 }`}
@@ -963,6 +965,7 @@ const AdminDashboard = () => {
                     { id: 'newsletter', label: 'Newsletter', icon: Mail, permission: canManageNewsletter },
                     { id: 'jobs', label: 'Job Applications', icon: Briefcase, permission: canManageContactRequests },
                     { id: 'blog', label: 'Blog Management', icon: FileText, permission: canManageBlog },
+                    { id: 'blacklist', label: 'Blacklist Management', icon: Shield, permission: canManageContactRequests },
                   ].filter(tab => tab.permission).map((tab) => {
                     const Icon = tab.icon;
                     return (
@@ -1038,6 +1041,7 @@ const AdminDashboard = () => {
                 { id: 'newsletter', label: 'Newsletter' },
                 { id: 'jobs', label: 'Job Applications' },
                 { id: 'blog', label: 'Blog Management' },
+                { id: 'blacklist', label: 'Blacklist Management' },
               ].find(tab => tab.id === activeTab)?.label || 'Dashboard'}
             </h2>
           </div>
@@ -1175,6 +1179,11 @@ const AdminDashboard = () => {
             {/* Jobs Tab */}
             {activeTab === 'jobs' && canManageContactRequests && (
               <JobApplicationsManagement />
+            )}
+
+            {/* Blacklist Tab */}
+            {activeTab === 'blacklist' && canManageContactRequests && (
+              <BlacklistManagement />
             )}
 
 
