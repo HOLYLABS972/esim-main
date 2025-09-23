@@ -49,7 +49,9 @@ import {
   ChevronRight,
   Gift,
   Shield,
-  CreditCard
+  CreditCard,
+  Menu,
+  X
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import BlogManagement from './BlogManagement';
@@ -96,6 +98,7 @@ const AdminDashboard = () => {
   const [showAdminDropdown, setShowAdminDropdown] = useState(false);
   const [loading, setLoading] = useState(false);
   const [rawApiData, setRawApiData] = useState(null);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   
   // Plans Management
@@ -889,22 +892,39 @@ const AdminDashboard = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <div className="flex h-screen">
+        {/* Mobile Menu Overlay */}
+        {isMobileMenuOpen && (
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+        )}
+        
         {/* Sidebar */}
-        <div className="w-64 bg-white shadow-lg border-r border-gray-200 flex flex-col">
+        <div className={`${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white shadow-lg border-r border-gray-200 flex flex-col transition-transform duration-300 ease-in-out`}>
           {/* Sidebar Header */}
           <div className="p-6 border-b border-gray-200">
-            <div className="flex items-center space-x-3">
-              <div className="flex items-center justify-center w-10 h-10 bg-gray-100 rounded-xl">
-                <Settings className="w-6 h-6 text-gray-600" />
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="flex items-center justify-center w-10 h-10 bg-gray-100 rounded-xl">
+                  <Settings className="w-6 h-6 text-gray-600" />
+                </div>
+                <div>
+                  <h1 className="text-lg font-bold text-gray-900">
+                    Admin Panel
+                  </h1>
+                  <p className="text-gray-500 text-xs">
+                    eSIM Management
+                  </p>
+                </div>
               </div>
-              <div>
-                <h1 className="text-lg font-bold text-gray-900">
-                  Admin Panel
-                </h1>
-                <p className="text-gray-500 text-xs">
-                  eSIM Management
-                </p>
-              </div>
+              {/* Mobile Close Button */}
+              <button
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-600" />
+              </button>
             </div>
           </div>
 
@@ -923,7 +943,10 @@ const AdminDashboard = () => {
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() => {
+                    setActiveTab(tab.id);
+                    setIsMobileMenuOpen(false);
+                  }}
                   className={`w-full flex items-center px-4 py-3 rounded-lg font-medium transition-all duration-200 text-left ${
                     activeTab === tab.id
                       ? 'bg-black text-white shadow-lg'
@@ -970,7 +993,10 @@ const AdminDashboard = () => {
                     return (
                       <button
                         key={tab.id}
-                        onClick={() => setActiveTab(tab.id)}
+                        onClick={() => {
+                          setActiveTab(tab.id);
+                          setIsMobileMenuOpen(false);
+                        }}
                         className={`w-full flex items-center px-4 py-2 rounded-lg font-medium transition-all duration-200 text-left text-sm ${
                           activeTab === tab.id
                             ? 'bg-gray-800 text-white shadow-lg'
@@ -1027,6 +1053,18 @@ const AdminDashboard = () => {
 
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Mobile Header */}
+          <div className="lg:hidden bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
+            <button
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+            >
+              <Menu className="w-6 h-6 text-gray-600" />
+            </button>
+            <h1 className="text-lg font-semibold text-gray-900">Admin Panel</h1>
+            <div className="w-10"></div> {/* Spacer for centering */}
+          </div>
+          
           {/* Content Header */}
           <div className="bg-white border-b border-gray-200 px-6 py-4">
             <h2 className="text-xl font-semibold text-gray-900">
@@ -1046,7 +1084,7 @@ const AdminDashboard = () => {
 
           {/* Scrollable Content */}
           <div className="flex-1 overflow-y-auto">
-            <div className="p-6">
+            <div className="p-4 lg:p-6">
 
         {/* Tab Content */}
         <AnimatePresence mode="wait">
@@ -1061,7 +1099,7 @@ const AdminDashboard = () => {
             {activeTab === 'overview' && (
               <div className="space-y-8">
                 {/* Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
                   {statsData.map((stat, index) => {
                     const Icon = stat.icon;
                     return (
@@ -1104,7 +1142,7 @@ const AdminDashboard = () => {
                     <Activity className="text-blue-600 mr-2" />
                     Quick Actions
                   </h2>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     <button
                       onClick={() => setActiveTab('config')}
                       className="p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-all duration-200"
