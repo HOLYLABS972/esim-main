@@ -94,18 +94,6 @@ const ContactRequestsManagement = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="bg-white rounded-xl shadow-lg p-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h2 className="text-xl font-semibold">Contact Requests</h2>
-            <p className="text-gray-600">Manage customer support requests and inquiries</p>
-          </div>
-          <div className="text-sm text-gray-600">
-            {filteredContactRequests.length} request{filteredContactRequests.length !== 1 ? 's' : ''} found
-          </div>
-        </div>
-      </div>
 
       {/* Search and Filter */}
       <div className="bg-white rounded-xl shadow-lg p-6">

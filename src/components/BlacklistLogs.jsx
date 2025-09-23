@@ -104,8 +104,6 @@ const BlacklistLogs = () => {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Blacklist Logs</h2>
-            <p className="text-gray-600">View and manage blacklist activity logs</p>
           </div>
         </div>
         
@@ -121,8 +119,6 @@ const BlacklistLogs = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Blacklist Logs</h2>
-          <p className="text-gray-600">View and manage blacklist activity logs</p>
         </div>
       </div>
 

@@ -96,38 +96,6 @@ const NewsletterManagement = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header with Stats */}
-      <div className="bg-white rounded-xl shadow-lg p-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h2 className="text-xl font-semibold">Newsletter Subscriptions</h2>
-            <p className="text-gray-600">Manage newsletter subscribers and their status</p>
-          </div>
-          <div className="text-sm text-gray-600">
-            {filteredNewsletterSubscriptions.length} subscription{filteredNewsletterSubscriptions.length !== 1 ? 's' : ''} found
-          </div>
-        </div>
-        
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-          <div className="bg-blue-50 rounded-lg p-4">
-            <div className="text-2xl font-bold text-blue-600">{newsletterStats.total}</div>
-            <div className="text-sm text-blue-800">Total Subscribers</div>
-          </div>
-          <div className="bg-green-50 rounded-lg p-4">
-            <div className="text-2xl font-bold text-green-600">{newsletterStats.active}</div>
-            <div className="text-sm text-green-800">Active</div>
-          </div>
-          <div className="bg-gray-50 rounded-lg p-4">
-            <div className="text-2xl font-bold text-gray-600">{newsletterStats.unsubscribed}</div>
-            <div className="text-sm text-gray-800">Unsubscribed</div>
-          </div>
-          <div className="bg-red-50 rounded-lg p-4">
-            <div className="text-2xl font-bold text-red-600">{newsletterStats.bounced}</div>
-            <div className="text-sm text-red-800">Bounced</div>
-          </div>
-        </div>
-      </div>
 
       {/* Search and Filter */}
       <div className="bg-white rounded-xl shadow-lg p-6">

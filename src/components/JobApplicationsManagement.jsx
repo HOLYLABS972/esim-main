@@ -100,46 +100,6 @@ const JobApplicationsManagement = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header with Stats */}
-      <div className="bg-white rounded-xl shadow-lg p-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h2 className="text-xl font-semibold">Job Applications</h2>
-            <p className="text-gray-600">Manage job applications and candidate status</p>
-          </div>
-          <div className="text-sm text-gray-600">
-            {filteredJobApplications.length} application{filteredJobApplications.length !== 1 ? 's' : ''} found
-          </div>
-        </div>
-        
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mt-6">
-          <div className="bg-blue-50 rounded-lg p-4">
-            <div className="text-2xl font-bold text-blue-600">{jobStats.total}</div>
-            <div className="text-sm text-blue-800">Total Applications</div>
-          </div>
-          <div className="bg-yellow-50 rounded-lg p-4">
-            <div className="text-2xl font-bold text-yellow-600">{jobStats.pending}</div>
-            <div className="text-sm text-yellow-800">Pending</div>
-          </div>
-          <div className="bg-purple-50 rounded-lg p-4">
-            <div className="text-2xl font-bold text-purple-600">{jobStats.reviewed}</div>
-            <div className="text-sm text-purple-800">Reviewed</div>
-          </div>
-          <div className="bg-green-50 rounded-lg p-4">
-            <div className="text-2xl font-bold text-green-600">{jobStats.contacted}</div>
-            <div className="text-sm text-green-800">Contacted</div>
-          </div>
-          <div className="bg-red-50 rounded-lg p-4">
-            <div className="text-2xl font-bold text-red-600">{jobStats.rejected}</div>
-            <div className="text-sm text-red-800">Rejected</div>
-          </div>
-          <div className="bg-emerald-50 rounded-lg p-4">
-            <div className="text-2xl font-bold text-emerald-600">{jobStats.hired}</div>
-            <div className="text-sm text-emerald-800">Hired</div>
-          </div>
-        </div>
-      </div>
 
       {/* Search and Filter */}
       <div className="bg-white rounded-xl shadow-lg p-6">

@@ -1077,7 +1077,6 @@ const AdminDashboard = () => {
                 { id: 'newsletter', label: 'Newsletter' },
                 { id: 'jobs', label: 'Job Applications' },
                 { id: 'blog', label: 'Blog Management' },
-                { id: 'blacklist', label: 'Blacklist Logs' },
               ].find(tab => tab.id === activeTab)?.label || 'Dashboard'}
             </h2>
           </div>
