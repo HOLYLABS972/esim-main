@@ -255,6 +255,9 @@ const PlansManagement = () => {
                   Plan
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Slug
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Data & Duration
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -289,6 +292,11 @@ const PlansManagement = () => {
                             </div>
                           )}
                         </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900 font-mono bg-gray-100 px-2 py-1 rounded">
+                        {plan.slug || 'No slug'}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -375,7 +383,7 @@ const PlansManagement = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="5" className="px-6 py-12 text-center">
+                  <td colSpan="6" className="px-6 py-12 text-center">
                     <div className="text-gray-500">
                       <Smartphone className="w-12 h-12 mx-auto mb-4 text-gray-300" />
                       <p className="text-lg font-medium">No plans found</p>
