@@ -102,7 +102,7 @@ const Contact = () => {
         title: "Telegram Us",
         content: contactInfo.phone,
         description: "Contact us via Telegram",
-        link: `https://t.me/${contactInfo.phone.replace(/[^\d]/g, '')}`
+        link: `https://t.me/447366891452`
       });
     }
     
@@ -358,7 +358,7 @@ const Contact = () => {
                               {office.phone && office.phone.trim() !== '' && (
                                 <p className="flex items-center">
                                   <Phone className="w-5 h-5 mr-2 text-tufts-blue" />
-                                  <a href={`https://t.me/${office.phone.replace(/[^\d]/g, '')}`} className="text-tufts-blue hover:text-cobalt-blue transition-colors duration-200">
+                                  <a href="https://t.me/447366891452" className="text-tufts-blue hover:text-cobalt-blue transition-colors duration-200">
                                     {office.phone}
                                   </a>
                                 </p>
