@@ -209,7 +209,7 @@ const Footer = () => {
                     <div className="footer-contact-menu__item-content">
                       <a 
                         className="footer-contact__desc text-eerie-black hover:text-cobalt-blue transition-colors duration-200" 
-                        href="https://t.me/447366891452"
+                        href="https://t.me/theholylabs"
                       >
                         {contactInfo.phone}
                       </a>
