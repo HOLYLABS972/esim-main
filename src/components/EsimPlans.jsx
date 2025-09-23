@@ -456,11 +456,12 @@ const EsimPlans = () => {
                               <span className="esim-plan-card__price text-tufts-blue font-medium">
                                 {country.minPrice ? (() => {
                                   const discountedPrice = calculateDiscountedPrice(country.minPrice);
-                                  const hasDiscount = discountedPrice < country.minPrice;
+                                  const originalPrice = country.originalPrice || country.minPrice;
+                                  const hasDiscount = discountedPrice < originalPrice;
                                   return hasDiscount ? (
                                     <div className="text-center">
                                       <span className="text-lg font-semibold text-green-600">${discountedPrice.toFixed(2)}</span>
-                                      <span className="text-sm text-gray-500 line-through ml-2">${country.minPrice.toFixed(2)}</span>
+                                      <span className="text-sm text-gray-500 line-through ml-2">${originalPrice.toFixed(2)}</span>
                                     </div>
                                   ) : (
                                     t('plans.fromPrice', `From $${country.minPrice.toFixed(2)}`).replace('${price}', `$${country.minPrice.toFixed(2)}`)
@@ -516,11 +517,12 @@ const EsimPlans = () => {
                           <span className="esim-plan-card__price text-tufts-blue font-medium text-sm">
                             {country.minPrice ? (() => {
                               const discountedPrice = calculateDiscountedPrice(country.minPrice);
-                              const hasDiscount = discountedPrice < country.minPrice;
+                              const originalPrice = country.originalPrice || country.minPrice;
+                              const hasDiscount = discountedPrice < originalPrice;
                               return hasDiscount ? (
                                 <div className="text-left">
                                   <span className="text-sm font-semibold text-green-600">${discountedPrice.toFixed(2)}</span>
-                                  <span className="text-xs text-gray-500 line-through ml-2">${country.minPrice.toFixed(2)}</span>
+                                  <span className="text-xs text-gray-500 line-through ml-2">${originalPrice.toFixed(2)}</span>
                                 </div>
                               ) : (
                                 t('plans.fromPrice', `From $${country.minPrice.toFixed(2)}`).replace('${price}', `$${country.minPrice.toFixed(2)}`)

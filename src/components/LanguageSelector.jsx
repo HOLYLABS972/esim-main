@@ -44,7 +44,7 @@ const LanguageSelector = () => {
         className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-gray-700 hover:text-tufts-blue transition-colors rounded-md hover:bg-gray-100"
         aria-label="Select Language"
       >
-        <span className="hidden sm:inline">{currentLanguage.flag}</span>
+        <span>{currentLanguage.flag}</span>
         <span className="hidden lg:inline text-xs">{currentLanguage.code.toUpperCase()}</span>
         <svg 
           className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} 
