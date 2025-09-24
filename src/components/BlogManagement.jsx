@@ -32,7 +32,6 @@ const BlogManagement = () => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
   const [filterCategory, setFilterCategory] = useState('all');
   const [categories, setCategories] = useState([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -55,8 +54,7 @@ const BlogManagement = () => {
     category: 'General',
     tags: [],
     featuredImage: '',
-    status: 'draft',
-    scheduledAt: '',
+    status: 'published',
     seoTitle: '',
     seoDescription: '',
     seoKeywords: []
@@ -71,14 +69,14 @@ const BlogManagement = () => {
   // Load posts based on filters
   useEffect(() => {
     loadPosts();
-  }, [filterStatus, filterCategory, searchTerm]);
+  }, [filterCategory, searchTerm]);
 
   const loadPosts = async () => {
     try {
       setLoading(true);
       let postsData;
       
-      console.log('Loading posts...', { searchTerm, filterStatus, filterCategory });
+      console.log('Loading posts...', { searchTerm, filterCategory });
       
       if (searchTerm) {
         postsData = await blogService.searchPosts(searchTerm);
@@ -91,11 +89,6 @@ const BlogManagement = () => {
 
       // Apply filters
       let filteredPosts = postsData;
-      
-      if (filterStatus !== 'all') {
-        filteredPosts = filteredPosts.filter(post => post.status === filterStatus);
-        console.log('After status filter:', filteredPosts.length, 'posts');
-      }
       
       if (filterCategory !== 'all') {
         filteredPosts = filteredPosts.filter(post => post.category === filterCategory);
@@ -216,8 +209,7 @@ const BlogManagement = () => {
       category: 'General',
       tags: [],
       featuredImage: '',
-      status: 'draft',
-      scheduledAt: '',
+      status: 'published',
       seoTitle: '',
       seoDescription: '',
       seoKeywords: []
@@ -236,8 +228,7 @@ const BlogManagement = () => {
       category: post.category || 'General',
       tags: post.tags || [],
       featuredImage: post.featuredImage || '',
-      status: post.status || 'draft',
-      scheduledAt: post.scheduledAt ? new Date(post.scheduledAt).toISOString().slice(0, 16) : '',
+      status: 'published',
       seoTitle: post.seoTitle || post.title || '',
       seoDescription: post.seoDescription || post.excerpt || '',
       seoKeywords: post.seoKeywords || []
@@ -258,41 +249,14 @@ const BlogManagement = () => {
 
       console.log('Saving post with data:', postData);
 
-      // Handle scheduling
-      if (formData.scheduledAt && formData.status === 'draft') {
-        const scheduledDate = new Date(formData.scheduledAt);
-        const now = new Date();
-        
-        if (scheduledDate > now) {
-          postData.status = 'scheduled';
-          postData.scheduledAt = scheduledDate;
-        } else {
-          toast.error('Scheduled date must be in the future');
-          return;
-        }
-      }
-
       if (showCreateModal) {
         console.log('Creating new post...');
         const postId = await blogService.createPost(postData);
         console.log('Post created with ID:', postId);
-        
-        // If scheduled, update the post with scheduling info
-        if (postData.status === 'scheduled') {
-          await blogService.schedulePost(postId, postData.scheduledAt);
-          console.log('Post scheduled for:', postData.scheduledAt);
-        }
-        
         toast.success('Blog post created successfully!');
       } else {
         console.log('Updating existing post:', selectedPost.id);
         await blogService.updatePost(selectedPost.id, postData);
-        
-        // If scheduled, update the post with scheduling info
-        if (postData.status === 'scheduled') {
-          await blogService.schedulePost(selectedPost.id, postData.scheduledAt);
-        }
-        
         toast.success('Blog post updated successfully!');
       }
       
@@ -326,64 +290,7 @@ const BlogManagement = () => {
     }
   };
 
-  const handlePublishPost = async (post) => {
-    try {
-      setLoading(true);
-      await blogService.publishPost(post.id);
-      toast.success('Blog post published successfully!');
-      loadPosts();
-    } catch (error) {
-      console.error('Error publishing post:', error);
-      toast.error('Error publishing blog post');
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  const handleUnpublishPost = async (post) => {
-    try {
-      setLoading(true);
-      await blogService.unpublishPost(post.id);
-      toast.success('Blog post unpublished successfully!');
-      loadPosts();
-    } catch (error) {
-      console.error('Error unpublishing post:', error);
-      toast.error('Error unpublishing blog post');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handlePublishScheduledPost = async (post) => {
-    try {
-      setLoading(true);
-      await blogService.publishScheduledPost(post.id);
-      toast.success('Scheduled post published successfully!');
-      loadPosts();
-    } catch (error) {
-      console.error('Error publishing scheduled post:', error);
-      toast.error('Error publishing scheduled post');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleUnschedulePost = async (post) => {
-    try {
-      setLoading(true);
-      await blogService.updatePost(post.id, {
-        status: 'draft',
-        scheduledAt: null
-      });
-      toast.success('Post unscheduled successfully!');
-      loadPosts();
-    } catch (error) {
-      console.error('Error unscheduling post:', error);
-      toast.error('Error unscheduling post');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const formatDate = (date) => {
     if (!date) return 'Not published';
@@ -394,20 +301,6 @@ const BlogManagement = () => {
     });
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'published':
-        return 'bg-green-100 text-green-800';
-      case 'draft':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'scheduled':
-        return 'bg-blue-100 text-blue-800';
-      case 'archived':
-        return 'bg-gray-100 text-gray-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
 
   if (!canManageBlog) {
     return (
@@ -442,7 +335,7 @@ const BlogManagement = () => {
 
         {/* Filters */}
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Search</label>
               <div className="relative">
@@ -457,19 +350,6 @@ const BlogManagement = () => {
               </div>
             </div>
             
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-              <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="all">All Status</option>
-                <option value="published">Published</option>
-                <option value="draft">Draft</option>
-                <option value="archived">Archived</option>
-              </select>
-            </div>
             
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
@@ -517,9 +397,6 @@ const BlogManagement = () => {
                       Post
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Category
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -558,11 +435,6 @@ const BlogManagement = () => {
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(post.status)}`}>
-                          {post.status}
-                        </span>
-                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {post.category}
                       </td>
@@ -570,27 +442,22 @@ const BlogManagement = () => {
                         {post.author}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {post.status === 'scheduled' && post.scheduledAt 
-                          ? `Scheduled: ${formatDate(post.scheduledAt)}`
-                          : formatDate(post.publishedAt)
-                        }
+                        {formatDate(post.publishedAt)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {post.views || 0}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex items-center justify-end space-x-2">
-                          {post.status === 'published' && (
-                            <a
-                              href={`/blog/${post.slug}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-600 hover:text-blue-900"
-                              title="View Post"
-                            >
-                              <ExternalLink className="w-4 h-4" />
-                            </a>
-                          )}
+                          <a
+                            href={`/blog/${post.slug}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-900"
+                            title="View Post"
+                          >
+                            <ExternalLink className="w-4 h-4" />
+                          </a>
                           
                           <button
                             onClick={() => handleEditPost(post)}
@@ -599,43 +466,6 @@ const BlogManagement = () => {
                           >
                             <Edit className="w-4 h-4" />
                           </button>
-                          
-                          {post.status === 'published' ? (
-                            <button
-                              onClick={() => handleUnpublishPost(post)}
-                              className="text-yellow-600 hover:text-yellow-900"
-                              title="Unpublish Post"
-                            >
-                              <EyeOff className="w-4 h-4" />
-                            </button>
-                          ) : post.status === 'scheduled' ? (
-                            <div className="flex space-x-1">
-                              <button
-                                onClick={() => handlePublishScheduledPost(post)}
-                                className="text-green-600 hover:text-green-900"
-                                title="Publish Now"
-                              >
-                                <Eye className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={() => handleUnschedulePost(post)}
-                                className="text-yellow-600 hover:text-yellow-900"
-                                title="Unschedule"
-                              >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                              </button>
-                            </div>
-                          ) : (
-                            <button
-                              onClick={() => handlePublishPost(post)}
-                              className="text-green-600 hover:text-green-900"
-                              title="Publish Post"
-                            >
-                              <Eye className="w-4 h-4" />
-                            </button>
-                          )}
                           
                           <button
                             onClick={() => {
@@ -954,57 +784,6 @@ const BlogPostModal = ({ isOpen, onClose, onSave, formData, setFormData, loading
                 </p>
               </div>
               
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Status
-                </label>
-                <select
-                  value={formData.status}
-                  onChange={(e) => handleInputChange('status', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="draft">Draft</option>
-                  <option value="published">Published</option>
-                  <option value="archived">Archived</option>
-                </select>
-              </div>
-
-              {/* Scheduling Fields - Only show when status is draft */}
-              {formData.status === 'draft' && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Schedule for Publication
-                    <span className="text-xs text-gray-500 ml-1">(optional)</span>
-                  </label>
-                  <input
-                    type="datetime-local"
-                    value={formData.scheduledAt}
-                    onChange={(e) => handleInputChange('scheduledAt', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    min={new Date().toISOString().slice(0, 16)}
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Leave empty to keep as draft. Set a future date to schedule publication.
-                  </p>
-                </div>
-              )}
-
-              {/* Show scheduled info if post is scheduled */}
-              {formData.status === 'scheduled' && formData.scheduledAt && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                  <div className="flex items-center">
-                    <svg className="w-5 h-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <div>
-                      <p className="text-sm font-medium text-blue-800">Scheduled for Publication</p>
-                      <p className="text-xs text-blue-600">
-                        {new Date(formData.scheduledAt).toLocaleString()}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
           

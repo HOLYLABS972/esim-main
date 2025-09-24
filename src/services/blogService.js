@@ -205,7 +205,8 @@ export const blogService = {
       const postRef = doc(db, 'blog_posts', id);
       const updateData = {
         ...postData,
-        updatedAt: serverTimestamp()
+        updatedAt: serverTimestamp(),
+        publishedAt: serverTimestamp() // Update published date when post is updated
       };
 
       // Generate slug if title changed and no custom slug provided
