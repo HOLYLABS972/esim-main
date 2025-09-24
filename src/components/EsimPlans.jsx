@@ -314,26 +314,26 @@ const EsimPlans = () => {
     
     // Plans page: Handle actual plan selection
     
-    // For mobile users, open platform-specific app store link
-    if (platform.isMobile && platform.downloadUrl) {
-      window.open(platform.downloadUrl, '_blank');
-      return;
-    }
-    
-    // For desktop users, check if user is logged in
+    // Check if user is logged in first
     if (!currentUser) {
-      // Scroll to download app section instead of redirecting
+      // Non-logged users: redirect to app download regardless of platform
+      if (platform.isMobile && platform.downloadUrl) {
+        window.open(platform.downloadUrl, '_blank');
+        return;
+      }
+      
+      // Desktop non-logged users: scroll to download section
       const downloadSection = document.getElementById('how-it-works');
       if (downloadSection) {
         downloadSection.scrollIntoView({ behavior: 'smooth' });
       } else {
-        // Fallback to router push if element not found
         router.push('/#how-it-works');
       }
       return;
     }
     
-    // Desktop users: open bottom sheet with plans
+    // Logged-in users (both mobile and desktop): open bottom sheet with plans
+    console.log('🛒 Logged-in user making purchase:', { platform: platform.isMobile ? 'mobile' : 'desktop', country: country.name });
     setShowCheckoutModal(true);
     await loadAvailablePlansForCountry(country.code);
   };
