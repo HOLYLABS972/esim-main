@@ -289,15 +289,30 @@ const EsimPlans = () => {
   }, [searchTerm, countries, searchResults]);
 
   const handleCountrySelect = async (country) => {
-    // Landing pages: Redirect to plans page for actual purchasing
+    const platform = detectPlatform();
+    
+    // Landing pages: Force users to download app
     if (!isPlansPage) {
-      console.log('🚀 Redirecting to plans page for purchases:', country.name);
-      router.push('/esim-plans');
+      // For mobile users, open platform-specific app store link
+      if (platform.isMobile && platform.downloadUrl) {
+        console.log('📱 Mobile user on landing - Opening app store:', platform.downloadUrl);
+        window.open(platform.downloadUrl, '_blank');
+        return;
+      }
+      
+      // For desktop users, scroll to download app section
+      console.log('🖥️ Desktop user on landing - Scrolling to download section');
+      const downloadSection = document.getElementById('how-it-works');
+      if (downloadSection) {
+        downloadSection.scrollIntoView({ behavior: 'smooth' });
+      } else {
+        // Fallback to router push if element not found
+        router.push('/#how-it-works');
+      }
       return;
     }
     
     // Plans page: Handle actual plan selection
-    const platform = detectPlatform();
     
     // For mobile users, open platform-specific app store link
     if (platform.isMobile && platform.downloadUrl) {
