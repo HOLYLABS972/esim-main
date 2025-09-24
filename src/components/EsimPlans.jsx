@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { Search } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '../contexts/AuthContext';
 import PlanSelectionBottomSheet from './PlanSelectionBottomSheet';
 import { getCountriesWithPricing, getPricingStats } from '../services/plansService';
@@ -42,6 +42,10 @@ const EsimPlans = () => {
   const { t } = useI18n();
   const { currentUser } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
+  
+  // Determine if this is the dedicated plans page or landing page
+  const isPlansPage = pathname === '/esim-plans';
   const [searchTerm, setSearchTerm] = useState('');
   const [countries, setCountries] = useState([]);
   const [filteredCountries, setFilteredCountries] = useState([]);
@@ -86,28 +90,25 @@ const EsimPlans = () => {
     fetchDiscountSettings();
   }, []);
 
-  // Fetch countries with real pricing from Firebase or use hardcoded fallback for mobile users
+  // Fetch countries - use hardcoded for landing pages, Firebase for dedicated plans page
   const { data: countriesData, isLoading: countriesLoading, error: countriesError } = useQuery({
-    queryKey: ['countries-with-pricing', isMobileDevice()],
+    queryKey: ['countries-with-pricing', isPlansPage],
     queryFn: async () => {
-      // Use hardcoded countries for all mobile users (iOS and Android)
-      if (isMobileDevice()) {
-        console.log('📱 Mobile device detected - Using hardcoded countries fallback');
+      // Landing pages: Always use hardcoded countries
+      if (!isPlansPage) {
+        console.log('🏠 Landing page - Using hardcoded countries');
         const mobileCountries = getMobileCountries();
         
         // Sort by minimum price (cheapest first)
         mobileCountries.sort((a, b) => a.minPrice - b.minPrice);
         
-        console.log('✅ USING HARDCODED COUNTRIES FOR MOBILE USERS');
-        console.log('Mobile countries sample:', mobileCountries.slice(0, 5).map(c => ({ 
-          name: c.name, 
-          minPrice: c.minPrice 
-        })));
+        console.log('✅ USING HARDCODED COUNTRIES FOR LANDING');
         return mobileCountries;
       }
       
+      // Plans page: Always use Firebase data
       try {
-        console.log('Fetching countries with real pricing from Firebase...');
+        console.log('📊 Plans page - Fetching real Firebase data...');
         const countriesWithPricing = await getCountriesWithPricing();
         
         // Filter to show only countries with plans (minPrice < 999 indicates real data)
@@ -118,9 +119,7 @@ const EsimPlans = () => {
         // Sort by minimum price (cheapest first)
         countriesWithRealPricing.sort((a, b) => a.minPrice - b.minPrice);
         
-        console.log('Fetched countries with real pricing:', countriesWithRealPricing.length);
-        
-        console.log('✅ USING REAL FIREBASE DATA');
+        console.log('✅ USING REAL FIREBASE DATA FOR PLANS PAGE');
         console.log('Real data sample prices:', countriesWithRealPricing.slice(0, 5).map(c => ({ 
           name: c.name, 
           minPrice: c.minPrice 
@@ -128,7 +127,7 @@ const EsimPlans = () => {
         return countriesWithRealPricing;
       } catch (error) {
         console.error('❌ FIREBASE ERROR:', error);
-        return []; // Return empty array for desktop users when Firebase fails
+        return []; // Return empty array when Firebase fails
       }
     },
     retry: 1,
@@ -171,7 +170,7 @@ const EsimPlans = () => {
     }
   }, [countriesData, countriesError, countriesLoading]);
 
-  // Search function - uses hardcoded countries on mobile, Firebase on desktop
+  // Search function - uses hardcoded countries for landing, Firebase for plans page
   const searchCountries = async (term) => {
     if (!term || term.length < 2) {
       setSearchResults([]);
@@ -181,9 +180,9 @@ const EsimPlans = () => {
 
     setIsSearching(true);
     try {
-      // Use hardcoded countries for mobile users
-      if (isMobileDevice()) {
-        console.log('📱 Mobile search - Using hardcoded countries:', term);
+      // Landing pages: Use hardcoded countries
+      if (!isPlansPage) {
+        console.log('🏠 Landing search - Using hardcoded countries:', term);
         const mobileCountries = getMobileCountries();
         const searchResults = mobileCountries.filter(country => 
           country.name.toLowerCase().includes(term.toLowerCase()) ||
@@ -194,9 +193,9 @@ const EsimPlans = () => {
         return;
       }
       
-      console.log('🖥️ Desktop search - Using Firebase:', term);
+      console.log('📊 Plans page search - Using Firebase:', term);
       
-      // Search only in Firebase for desktop users
+      // Plans page: Search in Firebase
       const querySnapshot = await getDocs(collection(db, 'countries'));
       const firebaseResults = [];
       
@@ -263,12 +262,12 @@ const EsimPlans = () => {
   const calculateDiscountedPrice = (originalPrice) => {
     if (!originalPrice || originalPrice <= 0) return originalPrice;
     
-    // For mobile users, the price is already discounted in hardcoded data
-    if (isMobileDevice()) {
+    // For landing pages, the price is already discounted in hardcoded data
+    if (!isPlansPage) {
       return originalPrice; // Return the already discounted price
     }
     
-    // For desktop users, apply discount from settings
+    // For plans page, apply discount from settings
     const discountPercentage = regularSettings.discountPercentage || 10;
     const minimumPrice = regularSettings.minimumPrice || 0.5;
     
@@ -290,6 +289,14 @@ const EsimPlans = () => {
   }, [searchTerm, countries, searchResults]);
 
   const handleCountrySelect = async (country) => {
+    // Landing pages: Redirect to plans page for actual purchasing
+    if (!isPlansPage) {
+      console.log('🚀 Redirecting to plans page for purchases:', country.name);
+      router.push('/esim-plans');
+      return;
+    }
+    
+    // Plans page: Handle actual plan selection
     const platform = detectPlatform();
     
     // For mobile users, open platform-specific app store link

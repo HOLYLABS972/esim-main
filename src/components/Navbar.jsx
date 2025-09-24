@@ -118,6 +118,9 @@ const Navbar = ({ hideLanguageSelector = false }) => {
           </Link>
           {currentUser ? (
             <>
+              <Link href="/esim-plans" className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
+                {t('navbar.plans', 'Plans')}
+              </Link>
               <Link href="/dashboard" className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
                 {t('navbar.dashboard', 'Dashboard')}
               </Link>
@@ -210,6 +213,13 @@ const Navbar = ({ hideLanguageSelector = false }) => {
                   </Link>
                   {currentUser && (
                     <>
+                      <Link
+                        href="/esim-plans"
+                        className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        {t('navbar.plans', 'Plans')}
+                      </Link>
                       <Link
                         href="/dashboard"
                         className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2"
