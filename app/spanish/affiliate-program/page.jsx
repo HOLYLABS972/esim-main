@@ -313,7 +313,7 @@ const AffiliateProgramPage = () => {
             </button>
             <div>
               <h1 className="text-xl font-bold text-gray-900">Programa de Afiliados</h1>
-              <p className="text-sm text-gray-600">Gana dinero refiriendo amigos</p>
+              <p className="text-sm text-gray-600">Gana hasta 25% por compra</p>
             </div>
           </div>
         </div>
@@ -485,8 +485,8 @@ const AffiliateProgramPage = () => {
               <div className="bg-purple-100 p-4 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
                 <span className="text-2xl font-bold text-purple-600">3</span>
               </div>
-              <h4 className="font-semibold text-gray-900 mb-2">Gana $1</h4>
-              <p className="text-sm text-gray-600">Ganas instantáneamente $1 por cada referido exitoso</p>
+              <h4 className="font-semibold text-gray-900 mb-2">Gana hasta 25%</h4>
+              <p className="text-sm text-gray-600">Ganas hasta 25% de cada compra exitosa</p>
             </div>
           </div>
         </motion.div>

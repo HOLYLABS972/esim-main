@@ -313,7 +313,7 @@ const AffiliateProgramPage = () => {
             </button>
             <div>
               <h1 className="text-xl font-bold text-gray-900">Партнерская программа</h1>
-              <p className="text-sm text-gray-600">Зарабатывайте деньги, приглашая друзей</p>
+              <p className="text-sm text-gray-600">Зарабатывайте до 25% с каждой покупки</p>
             </div>
           </div>
         </div>
@@ -485,8 +485,8 @@ const AffiliateProgramPage = () => {
               <div className="bg-purple-100 p-4 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
                 <span className="text-2xl font-bold text-purple-600">3</span>
               </div>
-              <h4 className="font-semibold text-gray-900 mb-2">Заработайте $1</h4>
-              <p className="text-sm text-gray-600">Вы мгновенно зарабатываете $1 за каждую успешную реферал</p>
+              <h4 className="font-semibold text-gray-900 mb-2">Заработайте до 25%</h4>
+              <p className="text-sm text-gray-600">Вы зарабатываете до 25% с каждой успешной покупки</p>
             </div>
           </div>
         </motion.div>

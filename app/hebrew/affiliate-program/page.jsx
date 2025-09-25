@@ -10,56 +10,6 @@ import { doc, getDoc, collection, query, where, getDocs, writeBatch, setDoc } fr
 import { db } from '../../../src/firebase/config';
 import toast from 'react-hot-toast';
 
-export const metadata = {
-  title: 'תוכנית השותפים - הרוויחו $1 לכל הפניה | Roam Jet Plans',
-  description: 'הצטרפו לתוכנית השותפים שלנו והרוויחו $1 עבור כל חבר שמפנים ל-Roam Jet Plans. שתפו את קוד ההפניה שלכם והתחילו להרוויח כסף היום. ללא עמלות, תשלומים מיידיים.',
-  keywords: [
-    'תוכנית שותפים', 'תוכנית הפניות', 'הרווח כסף', 'עמלת הפניה', 
-    'eSIM שותף', 'שותף נסיעות', 'בונוס הפניה', 'הרווח מהפניות',
-    'שיווק שותפים', 'פרסי הפניה', 'תוכנית עמלה', 'הכנסת הפניה'
-  ],
-  authors: [{ name: 'צוות Roam Jet Plans' }],
-  creator: 'Roam Jet Plans',
-  publisher: 'Roam Jet Plans',
-  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://esimplans.com'),
-  alternates: {
-    canonical: '/hebrew/affiliate-program',
-  },
-  openGraph: {
-    type: 'website',
-    locale: 'he_IL',
-    url: '/hebrew/affiliate-program',
-    title: 'תוכנית השותפים - הרוויחו $1 לכל הפניה | Roam Jet Plans',
-    description: 'הצטרפו לתוכנית השותפים שלנו והרוויחו $1 עבור כל חבר שמפנים ל-Roam Jet Plans. שתפו את קוד ההפניה שלכם והתחילו להרוויח כסף היום.',
-    siteName: 'Roam Jet Plans',
-    images: [
-      {
-        url: '/images/affiliate-og-image.jpg',
-        width: 1200,
-        height: 630,
-        alt: 'תוכנית השותפים של Roam Jet Plans - הרוויחו $1 לכל הפניה',
-      },
-    ],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'תוכנית השותפים - הרוויחו $1 לכל הפניה | Roam Jet Plans',
-    description: 'הצטרפו לתוכנית השותפים שלנו והרוויחו $1 עבור כל חבר שמפנים ל-Roam Jet Plans.',
-    images: ['/images/affiliate-twitter-image.jpg'],
-    creator: '@roamjetplans',
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      'max-video-preview': -1,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
-    },
-  },
-};
 
 const AffiliateProgramPage = () => {
   const router = useRouter();
@@ -313,7 +263,7 @@ const AffiliateProgramPage = () => {
             </button>
             <div>
               <h1 className="text-xl font-bold text-gray-900">תוכנית השותפים</h1>
-              <p className="text-sm text-gray-600">הרוויחו כסף על ידי הפניית חברים</p>
+              <p className="text-sm text-gray-600">הרוויחו עד 25% מכל רכישה</p>
             </div>
           </div>
         </div>
@@ -485,8 +435,8 @@ const AffiliateProgramPage = () => {
               <div className="bg-purple-100 p-4 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
                 <span className="text-2xl font-bold text-purple-600">3</span>
               </div>
-              <h4 className="font-semibold text-gray-900 mb-2">הרוויחו $1</h4>
-              <p className="text-sm text-gray-600">אתם מרוויחים מיידית $1 עבור כל הפניה מוצלחת</p>
+              <h4 className="font-semibold text-gray-900 mb-2">הרוויחו עד 25%</h4>
+              <p className="text-sm text-gray-600">אתם מרוויחים עד 25% מכל רכישה מוצלחת</p>
             </div>
           </div>
         </motion.div>

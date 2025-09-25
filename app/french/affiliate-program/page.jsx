@@ -10,56 +10,6 @@ import { doc, getDoc, collection, query, where, getDocs, writeBatch, setDoc } fr
 import { db } from '../../../src/firebase/config';
 import toast from 'react-hot-toast';
 
-export const metadata = {
-  title: 'Programme d\'affiliation - Gagnez $1 par parrainage | Roam Jet Plans',
-  description: 'Rejoignez notre programme d\'affiliation et gagnez $1 pour chaque ami que vous parrainez chez Roam Jet Plans. Partagez votre code de parrainage et commencez à gagner de l\'argent dès aujourd\'hui. Aucuns frais, paiements instantanés.',
-  keywords: [
-    'programme d\'affiliation', 'programme de parrainage', 'gagner de l\'argent', 'commission de parrainage', 
-    'partenaire eSIM', 'partenaire voyage', 'bonus de parrainage', 'gagner grâce aux parrainages',
-    'marketing d\'affiliation', 'récompenses de parrainage', 'programme de commission', 'revenus de parrainage'
-  ],
-  authors: [{ name: 'Équipe Roam Jet Plans' }],
-  creator: 'Roam Jet Plans',
-  publisher: 'Roam Jet Plans',
-  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://esimplans.com'),
-  alternates: {
-    canonical: '/french/affiliate-program',
-  },
-  openGraph: {
-    type: 'website',
-    locale: 'fr_FR',
-    url: '/french/affiliate-program',
-    title: 'Programme d\'affiliation - Gagnez $1 par parrainage | Roam Jet Plans',
-    description: 'Rejoignez notre programme d\'affiliation et gagnez $1 pour chaque ami que vous parrainez chez Roam Jet Plans. Partagez votre code de parrainage et commencez à gagner de l\'argent dès aujourd\'hui.',
-    siteName: 'Roam Jet Plans',
-    images: [
-      {
-        url: '/images/affiliate-og-image.jpg',
-        width: 1200,
-        height: 630,
-        alt: 'Programme d\'affiliation Roam Jet Plans - Gagnez $1 par parrainage',
-      },
-    ],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Programme d\'affiliation - Gagnez $1 par parrainage | Roam Jet Plans',
-    description: 'Rejoignez notre programme d\'affiliation et gagnez $1 pour chaque ami que vous parrainez chez Roam Jet Plans.',
-    images: ['/images/affiliate-twitter-image.jpg'],
-    creator: '@roamjetplans',
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      'max-video-preview': -1,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
-    },
-  },
-};
 
 const AffiliateProgramPage = () => {
   const router = useRouter();
@@ -313,7 +263,7 @@ const AffiliateProgramPage = () => {
             </button>
             <div>
               <h1 className="text-xl font-bold text-gray-900">Programme d'affiliation</h1>
-              <p className="text-sm text-gray-600">Gagnez de l'argent en parrainant des amis</p>
+              <p className="text-sm text-gray-600">Gagnez jusqu'à 25% par achat</p>
             </div>
           </div>
         </div>
@@ -485,8 +435,8 @@ const AffiliateProgramPage = () => {
               <div className="bg-purple-100 p-4 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
                 <span className="text-2xl font-bold text-purple-600">3</span>
               </div>
-              <h4 className="font-semibold text-gray-900 mb-2">Gagnez $1</h4>
-              <p className="text-sm text-gray-600">Vous gagnez instantanément $1 pour chaque parrainage réussi</p>
+              <h4 className="font-semibold text-gray-900 mb-2">Gagnez jusqu'à 25%</h4>
+              <p className="text-sm text-gray-600">Vous gagnez jusqu'à 25% de chaque achat réussi</p>
             </div>
           </div>
         </motion.div>

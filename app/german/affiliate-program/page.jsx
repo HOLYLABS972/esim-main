@@ -10,56 +10,6 @@ import { doc, getDoc, collection, query, where, getDocs, writeBatch, setDoc } fr
 import { db } from '../../../src/firebase/config';
 import toast from 'react-hot-toast';
 
-export const metadata = {
-  title: 'Partnerprogramm - Verdienen Sie $1 pro Empfehlung | Roam Jet Plans',
-  description: 'Treten Sie unserem Partnerprogramm bei und verdienen Sie $1 für jeden Freund, den Sie an Roam Jet Plans weiterleiten. Teilen Sie Ihren Empfehlungscode und verdienen Sie noch heute Geld. Keine Gebühren, sofortige Auszahlungen.',
-  keywords: [
-    'Partnerprogramm', 'Empfehlungsprogramm', 'Geld verdienen', 'Empfehlungsprovision', 
-    'eSIM Partner', 'Reise Partner', 'Empfehlungsbonus', 'Verdienen durch Empfehlungen',
-    'Affiliate Marketing', 'Empfehlungsbelohnungen', 'Provisionprogramm', 'Empfehlungseinkommen'
-  ],
-  authors: [{ name: 'Roam Jet Plans Team' }],
-  creator: 'Roam Jet Plans',
-  publisher: 'Roam Jet Plans',
-  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://esimplans.com'),
-  alternates: {
-    canonical: '/german/affiliate-program',
-  },
-  openGraph: {
-    type: 'website',
-    locale: 'de_DE',
-    url: '/german/affiliate-program',
-    title: 'Partnerprogramm - Verdienen Sie $1 pro Empfehlung | Roam Jet Plans',
-    description: 'Treten Sie unserem Partnerprogramm bei und verdienen Sie $1 für jeden Freund, den Sie an Roam Jet Plans weiterleiten. Teilen Sie Ihren Empfehlungscode und verdienen Sie noch heute Geld.',
-    siteName: 'Roam Jet Plans',
-    images: [
-      {
-        url: '/images/affiliate-og-image.jpg',
-        width: 1200,
-        height: 630,
-        alt: 'Roam Jet Plans Partnerprogramm - Verdienen Sie $1 pro Empfehlung',
-      },
-    ],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Partnerprogramm - Verdienen Sie $1 pro Empfehlung | Roam Jet Plans',
-    description: 'Treten Sie unserem Partnerprogramm bei und verdienen Sie $1 für jeden Freund, den Sie an Roam Jet Plans weiterleiten.',
-    images: ['/images/affiliate-twitter-image.jpg'],
-    creator: '@roamjetplans',
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      'max-video-preview': -1,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
-    },
-  },
-};
 
 const AffiliateProgramPage = () => {
   const router = useRouter();
@@ -313,7 +263,7 @@ const AffiliateProgramPage = () => {
             </button>
             <div>
               <h1 className="text-xl font-bold text-gray-900">Partnerprogramm</h1>
-              <p className="text-sm text-gray-600">Verdienen Sie Geld durch Empfehlungen von Freunden</p>
+              <p className="text-sm text-gray-600">Verdienen Sie bis zu 25% pro Kauf</p>
             </div>
           </div>
         </div>
@@ -485,8 +435,8 @@ const AffiliateProgramPage = () => {
               <div className="bg-purple-100 p-4 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
                 <span className="text-2xl font-bold text-purple-600">3</span>
               </div>
-              <h4 className="font-semibold text-gray-900 mb-2">Verdienen Sie $1</h4>
-              <p className="text-sm text-gray-600">Sie verdienen sofort $1 für jede erfolgreiche Empfehlung</p>
+              <h4 className="font-semibold text-gray-900 mb-2">Verdienen Sie bis zu 25%</h4>
+              <p className="text-sm text-gray-600">Sie verdienen bis zu 25% von jedem erfolgreichen Kauf</p>
             </div>
           </div>
         </motion.div>

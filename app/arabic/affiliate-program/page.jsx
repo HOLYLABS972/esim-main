@@ -10,56 +10,6 @@ import { doc, getDoc, collection, query, where, getDocs, writeBatch, setDoc } fr
 import { db } from '../../../src/firebase/config';
 import toast from 'react-hot-toast';
 
-export const metadata = {
-  title: 'برنامج الشراكة - اربح $1 لكل إحالة | Roam Jet Plans',
-  description: 'انضم إلى برنامج الشراكة الخاص بنا واربح $1 لكل صديق تحيله إلى Roam Jet Plans. شارك رمز الإحالة الخاص بك وابدأ في كسب المال اليوم. بدون رسوم، دفعات فورية.',
-  keywords: [
-    'برنامج الشراكة', 'برنامج الإحالة', 'كسب المال', 'عمولة الإحالة', 
-    'شريك eSIM', 'شريك السفر', 'مكافأة الإحالة', 'كسب من الإحالات',
-    'التسويق بالشراكة', 'مكافآت الإحالة', 'برنامج العمولة', 'دخل الإحالة'
-  ],
-  authors: [{ name: 'فريق Roam Jet Plans' }],
-  creator: 'Roam Jet Plans',
-  publisher: 'Roam Jet Plans',
-  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://esimplans.com'),
-  alternates: {
-    canonical: '/arabic/affiliate-program',
-  },
-  openGraph: {
-    type: 'website',
-    locale: 'ar_SA',
-    url: '/arabic/affiliate-program',
-    title: 'برنامج الشراكة - اربح $1 لكل إحالة | Roam Jet Plans',
-    description: 'انضم إلى برنامج الشراكة الخاص بنا واربح $1 لكل صديق تحيله إلى Roam Jet Plans. شارك رمز الإحالة الخاص بك وابدأ في كسب المال اليوم.',
-    siteName: 'Roam Jet Plans',
-    images: [
-      {
-        url: '/images/affiliate-og-image.jpg',
-        width: 1200,
-        height: 630,
-        alt: 'برنامج الشراكة Roam Jet Plans - اربح $1 لكل إحالة',
-      },
-    ],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'برنامج الشراكة - اربح $1 لكل إحالة | Roam Jet Plans',
-    description: 'انضم إلى برنامج الشراكة الخاص بنا واربح $1 لكل صديق تحيله إلى Roam Jet Plans.',
-    images: ['/images/affiliate-twitter-image.jpg'],
-    creator: '@roamjetplans',
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      'max-video-preview': -1,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
-    },
-  },
-};
 
 const AffiliateProgramPage = () => {
   const router = useRouter();
@@ -313,7 +263,7 @@ const AffiliateProgramPage = () => {
             </button>
             <div>
               <h1 className="text-xl font-bold text-gray-900">برنامج الشراكة</h1>
-              <p className="text-sm text-gray-600">اربح المال من خلال إحالة الأصدقاء</p>
+              <p className="text-sm text-gray-600">اربحوا حتى 25% من كل عملية شراء</p>
             </div>
           </div>
         </div>
@@ -485,8 +435,8 @@ const AffiliateProgramPage = () => {
               <div className="bg-purple-100 p-4 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
                 <span className="text-2xl font-bold text-purple-600">3</span>
               </div>
-              <h4 className="font-semibold text-gray-900 mb-2">اربح $1</h4>
-              <p className="text-sm text-gray-600">تربح فوراً $1 لكل إحالة ناجحة</p>
+              <h4 className="font-semibold text-gray-900 mb-2">اربحوا حتى 25%</h4>
+              <p className="text-sm text-gray-600">تربحون حتى 25% من كل عملية شراء ناجحة</p>
             </div>
           </div>
         </motion.div>
