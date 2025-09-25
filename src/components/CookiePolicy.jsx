@@ -1,57 +1,189 @@
 import React from 'react';
 import { Cookie, Settings, BarChart, Shield, Globe, Trash2 } from 'lucide-react';
 
-const CookiePolicy = () => {
-  const cookieTypes = [
-    {
-      icon: Shield,
-      title: "Essential Cookies",
-      description: "Required for basic website functionality",
-      examples: [
-        "Authentication and login sessions",
-        "Security and fraud prevention",
-        "Shopping cart and checkout process",
-        "Language and region preferences"
+const CookiePolicy = ({ language = 'en' }) => {
+  // Language-specific content
+  const languageContent = {
+    en: {
+      title: "Cookie Policy",
+      subtitle: "We use cookies to enhance your experience and provide personalized services. Learn about our cookie practices and manage your preferences.",
+      lastUpdated: "Last updated: December 2024",
+      cookieTypes: [
+        {
+          icon: Shield,
+          title: "Essential Cookies",
+          description: "Required for basic website functionality",
+          examples: [
+            "Authentication and login sessions",
+            "Security and fraud prevention",
+            "Shopping cart and checkout process",
+            "Language and region preferences"
+          ],
+          canDisable: false
+        },
+        {
+          icon: BarChart,
+          title: "Analytics Cookies",
+          description: "Help us understand how visitors use our website",
+          examples: [
+            "Google Analytics for traffic analysis",
+            "Page views and user behavior tracking",
+            "Performance monitoring and optimization",
+            "A/B testing and feature improvements"
+          ],
+          canDisable: true
+        },
+        {
+          icon: Settings,
+          title: "Functional Cookies",
+          description: "Enhance your experience with personalized features",
+          examples: [
+            "Remember your preferences and settings",
+            "Personalized content recommendations",
+            "Chat widget and customer support",
+            "Social media integration features"
+          ],
+          canDisable: true
+        },
+        {
+          icon: Globe,
+          title: "Marketing Cookies",
+          description: "Used to deliver relevant advertisements",
+          examples: [
+            "Targeted advertising campaigns",
+            "Social media advertising pixels",
+            "Retargeting and remarketing",
+            "Conversion tracking and attribution"
+          ],
+          canDisable: true
+        }
       ],
-      canDisable: false
+      manageTitle: "Manage Your Cookie Preferences",
+      manageDescription: "You can control which cookies we use through your browser settings or our cookie management tool.",
+      contactTitle: "Contact Us",
+      contactText: "If you have questions about our cookie policy, contact us at privacy@esimplans.com"
     },
-    {
-      icon: BarChart,
-      title: "Analytics Cookies",
-      description: "Help us understand how visitors use our website",
-      examples: [
-        "Google Analytics for traffic analysis",
-        "Page views and user behavior tracking",
-        "Performance monitoring and optimization",
-        "A/B testing and feature improvements"
+    he: {
+      title: "מדיניות עוגיות",
+      subtitle: "אנו משתמשים בעוגיות כדי לשפר את החוויה שלכם ולספק שירותים מותאמים אישית. למדו על פרקטיקות העוגיות שלנו ונהלו את ההעדפות שלכם.",
+      lastUpdated: "עודכן לאחרונה: דצמבר 2024",
+      cookieTypes: [
+        {
+          icon: Shield,
+          title: "עוגיות הכרחיות",
+          description: "נדרשות לפונקציונליות בסיסית של האתר",
+          examples: [
+            "אימות וסשנים של התחברות",
+            "אבטחה ומניעת הונאה",
+            "עגלת קניות ותהליך תשלום",
+            "העדפות שפה ואזור"
+          ],
+          canDisable: false
+        },
+        {
+          icon: BarChart,
+          title: "עוגיות אנליטיקה",
+          description: "עוזרות לנו להבין איך מבקרים משתמשים באתר שלנו",
+          examples: [
+            "Google Analytics לניתוח תנועה",
+            "מעקב צפיות בדפים והתנהגות משתמשים",
+            "ניטור ביצועים ואופטימיזציה",
+            "בדיקות A/B ושיפורי תכונות"
+          ],
+          canDisable: true
+        },
+        {
+          icon: Settings,
+          title: "עוגיות פונקציונליות",
+          description: "משפרות את החוויה שלכם עם תכונות מותאמות אישית",
+          examples: [
+            "זכירת ההעדפות וההגדרות שלכם",
+            "המלצות תוכן מותאמות אישית",
+            "וידג'ט צ'אט ותמיכת לקוחות",
+            "תכונות אינטגרציה של רשתות חברתיות"
+          ],
+          canDisable: true
+        },
+        {
+          icon: Globe,
+          title: "עוגיות שיווק",
+          description: "משמשות להעברת פרסומות רלוונטיות",
+          examples: [
+            "קמפיינים פרסומיים ממוקדים",
+            "פיקסלים פרסומיים של רשתות חברתיות",
+            "מעקב מחדש ושיווק מחדש",
+            "מעקב המרות וייחוס"
+          ],
+          canDisable: true
+        }
       ],
-      canDisable: true
+      manageTitle: "נהלו את העדפות העוגיות שלכם",
+      manageDescription: "אתם יכולים לשלוט באיזה עוגיות אנו משתמשים דרך הגדרות הדפדפן שלכם או כלי ניהול העוגיות שלנו.",
+      contactTitle: "צרו קשר",
+      contactText: "אם יש לכם שאלות לגבי מדיניות העוגיות שלנו, צרו איתנו קשר בכתובת privacy@esimplans.com"
     },
-    {
-      icon: Settings,
-      title: "Functional Cookies",
-      description: "Enhance your experience with personalized features",
-      examples: [
-        "Remember your preferences and settings",
-        "Personalized content recommendations",
-        "Chat widget and customer support",
-        "Social media integration features"
+    ar: {
+      title: "سياسة ملفات تعريف الارتباط",
+      subtitle: "نستخدم ملفات تعريف الارتباط لتحسين تجربتك وتقديم خدمات مخصصة. تعرف على ممارسات ملفات تعريف الارتباط الخاصة بنا وأدر تفضيلاتك.",
+      lastUpdated: "آخر تحديث: ديسمبر 2024",
+      cookieTypes: [
+        {
+          icon: Shield,
+          title: "ملفات تعريف الارتباط الضرورية",
+          description: "مطلوبة للوظائف الأساسية للموقع",
+          examples: [
+            "جلسات المصادقة وتسجيل الدخول",
+            "الأمان ومنع الاحتيال",
+            "عربة التسوق وعملية الدفع",
+            "تفضيلات اللغة والمنطقة"
+          ],
+          canDisable: false
+        },
+        {
+          icon: BarChart,
+          title: "ملفات تعريف الارتباط التحليلية",
+          description: "تساعدنا على فهم كيفية استخدام الزوار لموقعنا",
+          examples: [
+            "Google Analytics لتحليل حركة المرور",
+            "تتبع مشاهدات الصفحات وسلوك المستخدم",
+            "مراقبة الأداء والتحسين",
+            "اختبارات A/B وتحسينات الميزات"
+          ],
+          canDisable: true
+        },
+        {
+          icon: Settings,
+          title: "ملفات تعريف الارتباط الوظيفية",
+          description: "تحسن تجربتك بالميزات المخصصة",
+          examples: [
+            "تذكر تفضيلاتك وإعداداتك",
+            "توصيات المحتوى المخصصة",
+            "أداة الدردشة ودعم العملاء",
+            "ميزات تكامل وسائل التواصل الاجتماعي"
+          ],
+          canDisable: true
+        },
+        {
+          icon: Globe,
+          title: "ملفات تعريف الارتباط التسويقية",
+          description: "تستخدم لتقديم الإعلانات ذات الصلة",
+          examples: [
+            "حملات إعلانية مستهدفة",
+            "بكسل إعلانات وسائل التواصل الاجتماعي",
+            "إعادة الاستهداف والتسويق مرة أخرى",
+            "تتبع التحويلات والتنسب"
+          ],
+          canDisable: true
+        }
       ],
-      canDisable: true
-    },
-    {
-      icon: Globe,
-      title: "Marketing Cookies",
-      description: "Used to deliver relevant advertisements",
-      examples: [
-        "Targeted advertising campaigns",
-        "Social media advertising pixels",
-        "Retargeting and remarketing",
-        "Conversion tracking and attribution"
-      ],
-      canDisable: true
+      manageTitle: "أدر تفضيلات ملفات تعريف الارتباط الخاصة بك",
+      manageDescription: "يمكنك التحكم في ملفات تعريف الارتباط التي نستخدمها من خلال إعدادات المتصفح أو أداة إدارة ملفات تعريف الارتباط الخاصة بنا.",
+      contactTitle: "اتصل بنا",
+      contactText: "إذا كان لديك أسئلة حول سياسة ملفات تعريف الارتباط الخاصة بنا، اتصل بنا على privacy@esimplans.com"
     }
-  ];
+  };
+
+  const content = languageContent[language] || languageContent.en;
 
   return (
     <div className="min-h-screen bg-white py-24">
@@ -65,16 +197,15 @@ const CookiePolicy = () => {
               <span>{' }'}</span>
             </h2>
             <p className="mx-auto mt-12 max-w-4xl text-center text-4xl font-semibold tracking-tight text-eerie-black sm:text-5xl">
-              Understanding our cookie usage
+              {content.title}
             </p>
             <p className="mx-auto mt-6 max-w-2xl text-center text-lg text-cool-black">
-              Learn about how we use cookies to improve your browsing experience 
-              and enhance our services.
+              {content.subtitle}
             </p>
             <div className="flex items-center justify-center mt-8">
               <Cookie className="w-8 h-8 text-tufts-blue mr-2" />
               <p className="text-sm text-cool-black">
-                Last updated: December 15, 2024
+                {content.lastUpdated}
               </p>
             </div>
           </div>
@@ -108,7 +239,7 @@ const CookiePolicy = () => {
 
           {/* Cookie Types */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            {cookieTypes.map((type, index) => {
+            {content.cookieTypes.map((type, index) => {
               const IconComponent = type.icon;
               return (
                 <div
@@ -197,14 +328,14 @@ const CookiePolicy = () => {
               <div className="px-8 pt-8 pb-8">
                 <div className="flex items-center mb-6">
                   <Trash2 className="w-8 h-8 text-tufts-blue mr-3" />
-                  <h2 className="text-2xl font-medium tracking-tight text-eerie-black">Managing Your Cookie Preferences</h2>
+                  <h2 className="text-2xl font-medium tracking-tight text-eerie-black">{content.manageTitle}</h2>
                 </div>
                 
                 <div className="space-y-6">
                   <div>
                     <h4 className="font-medium text-eerie-black mb-2">Browser Settings</h4>
                     <p className="text-cool-black mb-3">
-                      You can control cookies through your browser settings. Here's how to manage cookies in popular browsers:
+                      {content.manageDescription}
                     </p>
                     <ul className="space-y-2 text-cool-black">
                       <li>• <strong>Chrome:</strong> Settings → Privacy and Security → Cookies and other site data</li>
@@ -223,6 +354,22 @@ const CookiePolicy = () => {
                     </p>
                   </div>
                 </div>
+              </div>
+            </div>
+            <div className="pointer-events-none absolute inset-px rounded-xl shadow-sm ring-1 ring-black/5"></div>
+          </div>
+
+          {/* Contact Section */}
+          <div className="relative mb-8">
+            <div className="absolute inset-px rounded-xl bg-white"></div>
+            <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
+              <div className="px-8 pt-8 pb-8">
+                <h2 className="text-2xl font-medium tracking-tight text-eerie-black mb-4">
+                  {content.contactTitle}
+                </h2>
+                <p className="text-cool-black leading-relaxed">
+                  {content.contactText}
+                </p>
               </div>
             </div>
             <div className="pointer-events-none absolute inset-px rounded-xl shadow-sm ring-1 ring-black/5"></div>

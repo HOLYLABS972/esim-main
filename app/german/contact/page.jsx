@@ -1,9 +1,9 @@
-
+'use client';
 
 import dynamic from 'next/dynamic';
-import RTLWrapper from '../../src/components/RTLWrapper';
+import RTLWrapper from '../../../src/components/RTLWrapper';
 
-const PrivacyPolicy = dynamic(() => import('../../src/components/PrivacyPolicy'), {
+const Contact = dynamic(() => import('../../../src/components/Contact'), {
   ssr: false,
   loading: () => (
     <div className="flex justify-center items-center h-screen">
@@ -12,10 +12,10 @@ const PrivacyPolicy = dynamic(() => import('../../src/components/PrivacyPolicy')
   )
 });
 
-export default function PrivacyPolicyPage() {
+export default function ContactPage() {
   return (
     <RTLWrapper>
-      <PrivacyPolicy />
+      <Contact />
     </RTLWrapper>
   );
 }

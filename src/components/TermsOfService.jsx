@@ -1,52 +1,168 @@
 import React from 'react';
 import { FileText, Users, CreditCard, Shield, AlertTriangle, Scale } from 'lucide-react';
 
-const TermsOfService = () => {
-  const sections = [
-    {
-      icon: Users,
-      title: "Acceptance of Terms",
-      content: [
-        "By accessing and using our eSIM services, you accept and agree to be bound by these Terms of Service",
-        "If you do not agree to these terms, you may not use our services",
-        "We reserve the right to modify these terms at any time with notice to users",
-        "Continued use of our services after changes constitutes acceptance of new terms"
-      ]
+const TermsOfService = ({ language = 'en' }) => {
+  // Language-specific content
+  const languageContent = {
+    en: {
+      title: "Terms of Service",
+      subtitle: "Please read these terms carefully before using our eSIM services. By using our services, you agree to be bound by these terms.",
+      lastUpdated: "Last updated: December 2024",
+      sections: [
+        {
+          icon: Users,
+          title: "Acceptance of Terms",
+          content: [
+            "By accessing and using our eSIM services, you accept and agree to be bound by these Terms of Service",
+            "If you do not agree to these terms, you may not use our services",
+            "We reserve the right to modify these terms at any time with notice to users",
+            "Continued use of our services after changes constitutes acceptance of new terms"
+          ]
+        },
+        {
+          icon: CreditCard,
+          title: "Service Description & Payments",
+          content: [
+            "We provide eSIM data plans for mobile connectivity in various countries and regions",
+            "All prices are displayed in the applicable currency and include applicable taxes",
+            "Payment is required before service activation and is processed securely",
+            "Refunds may be available according to our refund policy within specified timeframes",
+            "We reserve the right to modify pricing with advance notice to customers"
+          ]
+        },
+        {
+          icon: Shield,
+          title: "User Responsibilities",
+          content: [
+            "You must provide accurate and complete information when creating an account",
+            "You are responsible for maintaining the confidentiality of your account credentials",
+            "You agree to use our services only for lawful purposes and in compliance with local laws",
+            "You must not attempt to circumvent security measures or access unauthorized areas",
+            "Any misuse of our services may result in account suspension or termination"
+          ]
+        },
+        {
+          icon: AlertTriangle,
+          title: "Service Limitations & Disclaimers",
+          content: [
+            "Service availability depends on network coverage and may vary by location",
+            "Data speeds and quality may be affected by network conditions and device compatibility",
+            "We do not guarantee uninterrupted or error-free service at all times",
+            "Emergency services may not be available through our eSIM services",
+            "You acknowledge that mobile services have inherent technical limitations"
+          ]
+        }
+      ],
+      contactTitle: "Contact Us",
+      contactText: "If you have any questions about these Terms of Service, please contact us at legal@esimplans.com"
     },
-    {
-      icon: CreditCard,
-      title: "Service Description & Payments",
-      content: [
-        "We provide eSIM data plans for mobile connectivity in various countries and regions",
-        "All prices are displayed in the applicable currency and include applicable taxes",
-        "Payment is required before service activation and is processed securely",
-        "Refunds may be available according to our refund policy within specified timeframes",
-        "We reserve the right to modify pricing with advance notice to customers"
-      ]
+    he: {
+      title: "תנאי שירות",
+      subtitle: "אנא קראו את התנאים האלה בקפידה לפני השימוש בשירותי ה-eSIM שלנו. בשימוש בשירותים שלנו, אתם מסכימים להיות מחויבים לתנאים אלה.",
+      lastUpdated: "עודכן לאחרונה: דצמבר 2024",
+      sections: [
+        {
+          icon: Users,
+          title: "קבלת התנאים",
+          content: [
+            "בגישה לשימוש בשירותי ה-eSIM שלנו, אתם מקבלים ומסכימים להיות מחויבים לתנאי השירות האלה",
+            "אם אתם לא מסכימים לתנאים אלה, אתם לא יכולים להשתמש בשירותים שלנו",
+            "אנו שומרים לעצמנו את הזכות לשנות את התנאים האלה בכל עת עם הודעה למשתמשים",
+            "המשך השימוש בשירותים שלנו לאחר השינויים מהווה קבלה של התנאים החדשים"
+          ]
+        },
+        {
+          icon: CreditCard,
+          title: "תיאור השירות ותשלומים",
+          content: [
+            "אנו מספקים תוכניות נתונים eSIM לחיבור נייד במדינות ואזורים שונים",
+            "כל המחירים מוצגים במטבע הרלוונטי וכוללים מיסים חלים",
+            "תשלום נדרש לפני הפעלת השירות ומעובד בצורה מאובטחת",
+            "החזרים עשויים להיות זמינים לפי מדיניות ההחזר שלנו בתוך מסגרות זמן מוגדרות",
+            "אנו שומרים לעצמנו את הזכות לשנות תמחור עם הודעה מוקדמת ללקוחות"
+          ]
+        },
+        {
+          icon: Shield,
+          title: "אחריות המשתמש",
+          content: [
+            "עליכם לספק מידע מדויק ומלא בעת יצירת חשבון",
+            "אתם אחראים לשמירה על הסודיות של פרטי החשבון שלכם",
+            "אתם מסכימים להשתמש בשירותים שלנו רק למטרות חוקיות ובהתאם לחוקים מקומיים",
+            "אתם לא חייבים לנסות לעקוף אמצעי אבטחה או לגשת לאזורים לא מורשים",
+            "כל שימוש לרעה בשירותים שלנו עלול לגרום להשעיה או סיום החשבון"
+          ]
+        },
+        {
+          icon: AlertTriangle,
+          title: "הגבלות שירות והסתייגויות",
+          content: [
+            "זמינות השירות תלויה בכיסוי הרשת ועשויה להשתנות לפי מיקום",
+            "מהירויות נתונים ואיכות עשויות להיות מושפעות מתנאי רשת ותאימות מכשירים",
+            "אנו לא מבטיחים שירות ללא הפרעה או ללא שגיאות בכל עת",
+            "שירותי חירום עשויים לא להיות זמינים דרך שירותי ה-eSIM שלנו",
+            "אתם מכירים בכך שלשירותים ניידים יש הגבלות טכניות מובנות"
+          ]
+        }
+      ],
+      contactTitle: "צרו קשר",
+      contactText: "אם יש לכם שאלות כלשהן לגבי תנאי השירות האלה, אנא צרו איתנו קשר בכתובת legal@esimplans.com"
     },
-    {
-      icon: Shield,
-      title: "User Responsibilities",
-      content: [
-        "You must provide accurate and complete information when creating an account",
-        "You are responsible for maintaining the confidentiality of your account credentials",
-        "You agree to use our services only for lawful purposes and in compliance with local laws",
-        "You must not attempt to circumvent security measures or access unauthorized areas",
-        "Any misuse of our services may result in account suspension or termination"
-      ]
-    },
-    {
-      icon: AlertTriangle,
-      title: "Service Limitations & Disclaimers",
-      content: [
-        "Service availability depends on network coverage and may vary by location",
-        "Data speeds and quality may be affected by network conditions and device compatibility",
-        "We do not guarantee uninterrupted or error-free service at all times",
-        "Emergency services may not be available through our eSIM services",
-        "You acknowledge that mobile services have inherent technical limitations"
-      ]
+    ar: {
+      title: "شروط الخدمة",
+      subtitle: "يرجى قراءة هذه الشروط بعناية قبل استخدام خدمات eSIM الخاصة بنا. باستخدام خدماتنا، توافق على الالتزام بهذه الشروط.",
+      lastUpdated: "آخر تحديث: ديسمبر 2024",
+      sections: [
+        {
+          icon: Users,
+          title: "قبول الشروط",
+          content: [
+            "بالوصول إلى استخدام خدمات eSIM الخاصة بنا، تقبل وتوافق على الالتزام بشروط الخدمة هذه",
+            "إذا كنت لا توافق على هذه الشروط، فلا يجوز لك استخدام خدماتنا",
+            "نحتفظ بالحق في تعديل هذه الشروط في أي وقت مع إشعار المستخدمين",
+            "الاستمرار في استخدام خدماتنا بعد التغييرات يشكل قبولاً للشروط الجديدة"
+          ]
+        },
+        {
+          icon: CreditCard,
+          title: "وصف الخدمة والمدفوعات",
+          content: [
+            "نوفر خطط بيانات eSIM للاتصال المحمول في دول ومناطق مختلفة",
+            "جميع الأسعار معروضة بالعملة المناسبة وتشمل الضرائب المطبقة",
+            "الدفع مطلوب قبل تفعيل الخدمة ويتم معالجته بأمان",
+            "قد تكون المبالغ المستردة متاحة وفقاً لسياسة الاسترداد الخاصة بنا ضمن الإطارات الزمنية المحددة",
+            "نحتفظ بالحق في تعديل التسعير مع إشعار مسبق للعملاء"
+          ]
+        },
+        {
+          icon: Shield,
+          title: "مسؤوليات المستخدم",
+          content: [
+            "يجب عليك تقديم معلومات دقيقة وكاملة عند إنشاء حساب",
+            "أنت مسؤول عن الحفاظ على سرية بيانات اعتماد حسابك",
+            "توافق على استخدام خدماتنا فقط للأغراض القانونية ووفقاً للقوانين المحلية",
+            "يجب ألا تحاول تجاوز إجراءات الأمان أو الوصول إلى مناطق غير مصرح بها",
+            "أي إساءة استخدام لخدماتنا قد تؤدي إلى تعليق أو إنهاء الحساب"
+          ]
+        },
+        {
+          icon: AlertTriangle,
+          title: "قيود الخدمة والإخلاءات",
+          content: [
+            "توفر الخدمة يعتمد على تغطية الشبكة وقد يختلف حسب الموقع",
+            "سرعات البيانات والجودة قد تتأثر بظروف الشبكة وتوافق الجهاز",
+            "نحن لا نضمن خدمة غير منقطعة أو خالية من الأخطاء في جميع الأوقات",
+            "قد لا تكون خدمات الطوارئ متاحة من خلال خدمات eSIM الخاصة بنا",
+            "تقر بأن الخدمات المحمولة لها قيود تقنية متأصلة"
+          ]
+        }
+      ],
+      contactTitle: "اتصل بنا",
+      contactText: "إذا كان لديك أي أسئلة حول شروط الخدمة هذه، يرجى الاتصال بنا على legal@esimplans.com"
     }
-  ];
+  };
+
+  const content = languageContent[language] || languageContent.en;
 
   return (
     <div className="min-h-screen bg-white py-24">
@@ -60,16 +176,15 @@ const TermsOfService = () => {
               <span>{' }'}</span>
             </h2>
             <p className="mx-auto mt-12 max-w-4xl text-center text-4xl font-semibold tracking-tight text-eerie-black sm:text-5xl">
-              Terms of Service Agreement
+              {content.title}
             </p>
             <p className="mx-auto mt-6 max-w-2xl text-center text-lg text-cool-black">
-              Please read these terms carefully before using our eSIM services. 
-              These terms govern your use of our platform and services.
+              {content.subtitle}
             </p>
             <div className="flex items-center justify-center mt-8">
               <FileText className="w-8 h-8 text-tufts-blue mr-2" />
               <p className="text-sm text-cool-black">
-                Last updated: December 15, 2024
+                {content.lastUpdated}
               </p>
             </div>
           </div>
@@ -102,7 +217,7 @@ const TermsOfService = () => {
 
           {/* Main Sections */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            {sections.map((section, index) => {
+            {content.sections.map((section, index) => {
               const IconComponent = section.icon;
               return (
                 <div
@@ -201,6 +316,22 @@ const TermsOfService = () => {
                     team before pursuing formal legal action.
                   </p>
                 </div>
+              </div>
+            </div>
+            <div className="pointer-events-none absolute inset-px rounded-xl shadow-sm ring-1 ring-black/5"></div>
+          </div>
+
+          {/* Contact Section */}
+          <div className="relative mb-8">
+            <div className="absolute inset-px rounded-xl bg-white"></div>
+            <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
+              <div className="px-8 pt-8 pb-8">
+                <h2 className="text-2xl font-medium tracking-tight text-eerie-black mb-4">
+                  {content.contactTitle}
+                </h2>
+                <p className="text-cool-black leading-relaxed">
+                  {content.contactText}
+                </p>
               </div>
             </div>
             <div className="pointer-events-none absolute inset-px rounded-xl shadow-sm ring-1 ring-black/5"></div>
