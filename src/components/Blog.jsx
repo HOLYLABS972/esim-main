@@ -5,7 +5,6 @@ import { Calendar, User, ArrowRight, Clock, Search, Mail, Globe } from 'lucide-r
 import Link from 'next/link';
 import Image from 'next/image';
 import blogService from '../services/blogService';
-import translationService from '../services/translationService';
 import { subscribeToNewsletter } from '../services/newsletterService';
 import toast from 'react-hot-toast';
 
@@ -148,14 +147,8 @@ const Blog = ({ language = 'en' }) => {
       setLoading(true);
       const result = await blogService.getPublishedPosts(20);
       
-      if (language === 'en') {
-        // For English, show original posts
-        setBlogPosts(result.posts);
-      } else {
-        // For other languages, translate the posts
-        const translatedPosts = await translationService.translateMultiplePosts(result.posts, language);
-        setBlogPosts(translatedPosts);
-      }
+      // Show posts as-is (no translation for now)
+      setBlogPosts(result.posts);
     } catch (error) {
       console.error('Error loading blog posts:', error);
       // Fallback to empty array if there's an error

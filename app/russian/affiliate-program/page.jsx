@@ -10,56 +10,6 @@ import { doc, getDoc, collection, query, where, getDocs, writeBatch, setDoc } fr
 import { db } from '../../../src/firebase/config';
 import toast from 'react-hot-toast';
 
-export const metadata = {
-  title: 'Партнерская программа - Зарабатывайте $1 за реферал | Roam Jet Plans',
-  description: 'Присоединяйтесь к нашей партнерской программе и зарабатывайте $1 за каждого друга, которого вы пригласите в Roam Jet Plans. Поделитесь своим реферальным кодом и начните зарабатывать деньги уже сегодня. Без комиссий, мгновенные выплаты.',
-  keywords: [
-    'партнерская программа', 'реферальная программа', 'зарабатывать деньги', 'реферальная комиссия', 
-    'eSIM партнер', 'туристический партнер', 'реферальный бонус', 'зарабатывать на рефералах',
-    'партнерский маркетинг', 'реферальные награды', 'программа комиссий', 'реферальный доход'
-  ],
-  authors: [{ name: 'Команда Roam Jet Plans' }],
-  creator: 'Roam Jet Plans',
-  publisher: 'Roam Jet Plans',
-  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://esimplans.com'),
-  alternates: {
-    canonical: '/russian/affiliate-program',
-  },
-  openGraph: {
-    type: 'website',
-    locale: 'ru_RU',
-    url: '/russian/affiliate-program',
-    title: 'Партнерская программа - Зарабатывайте $1 за реферал | Roam Jet Plans',
-    description: 'Присоединяйтесь к нашей партнерской программе и зарабатывайте $1 за каждого друга, которого вы пригласите в Roam Jet Plans. Поделитесь своим реферальным кодом и начните зарабатывать деньги уже сегодня.',
-    siteName: 'Roam Jet Plans',
-    images: [
-      {
-        url: '/images/affiliate-og-image.jpg',
-        width: 1200,
-        height: 630,
-        alt: 'Партнерская программа Roam Jet Plans - Зарабатывайте $1 за реферал',
-      },
-    ],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Партнерская программа - Зарабатывайте $1 за реферал | Roam Jet Plans',
-    description: 'Присоединяйтесь к нашей партнерской программе и зарабатывайте $1 за каждого друга, которого вы пригласите в Roam Jet Plans.',
-    images: ['/images/affiliate-twitter-image.jpg'],
-    creator: '@roamjetplans',
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      'max-video-preview': -1,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
-    },
-  },
-};
 
 const AffiliateProgramPage = () => {
   const router = useRouter();

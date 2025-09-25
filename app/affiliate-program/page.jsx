@@ -10,56 +10,6 @@ import { doc, getDoc, collection, query, where, getDocs, writeBatch, setDoc } fr
 import { db } from '../../src/firebase/config';
 import toast from 'react-hot-toast';
 
-export const metadata = {
-  title: 'Affiliate Program - Earn $1 Per Referral | Roam Jet Plans',
-  description: 'Join our affiliate program and earn $1 for every friend you refer to Roam Jet Plans. Share your referral code and start earning money today. No fees, instant payouts.',
-  keywords: [
-    'affiliate program', 'referral program', 'earn money', 'referral commission', 
-    'eSIM affiliate', 'travel affiliate', 'referral bonus', 'earn from referrals',
-    'affiliate marketing', 'referral rewards', 'commission program', 'referral income'
-  ],
-  authors: [{ name: 'Roam Jet Plans Team' }],
-  creator: 'Roam Jet Plans',
-  publisher: 'Roam Jet Plans',
-  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://esimplans.com'),
-  alternates: {
-    canonical: '/affiliate-program',
-  },
-  openGraph: {
-    type: 'website',
-    locale: 'en_US',
-    url: '/affiliate-program',
-    title: 'Affiliate Program - Earn $1 Per Referral | Roam Jet Plans',
-    description: 'Join our affiliate program and earn $1 for every friend you refer to Roam Jet Plans. Share your referral code and start earning money today.',
-    siteName: 'Roam Jet Plans',
-    images: [
-      {
-        url: '/images/affiliate-og-image.jpg',
-        width: 1200,
-        height: 630,
-        alt: 'Roam Jet Plans Affiliate Program - Earn $1 Per Referral',
-      },
-    ],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Affiliate Program - Earn $1 Per Referral | Roam Jet Plans',
-    description: 'Join our affiliate program and earn $1 for every friend you refer to Roam Jet Plans.',
-    images: ['/images/affiliate-twitter-image.jpg'],
-    creator: '@roamjetplans',
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      'max-video-preview': -1,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
-    },
-  },
-};
 
 const AffiliateProgramPage = () => {
   const router = useRouter();

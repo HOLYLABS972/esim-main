@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
-import BlogPost from '../../../src/components/BlogPost'
-import Loading from '../../../src/components/Loading'
+import BlogPost from '../../../../src/components/BlogPost'
+import Loading from '../../../../src/components/Loading'
 
 export async function generateMetadata({ params }) {
   const { id } = params;

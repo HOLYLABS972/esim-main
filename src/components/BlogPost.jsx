@@ -5,7 +5,6 @@ import Link from 'next/link';
 import Head from 'next/head';
 import { Calendar, User, Clock, ArrowLeft, Share2, Globe } from 'lucide-react';
 import blogService from '../services/blogService';
-import translationService from '../services/translationService';
 
 const BlogPost = ({ postId, language = 'en' }) => {
   const [post, setPost] = useState(null);
@@ -40,14 +39,7 @@ const BlogPost = ({ postId, language = 'en' }) => {
       console.log('Blog post data:', postData);
       
       if (postData) {
-        // If the post is not in the requested language, translate it
-        if (postData.language && postData.language !== language) {
-          console.log(`Translating post from ${postData.language} to ${language}`);
-          const translatedPost = await translationService.translateBlogPost(postData, language);
-          setPost(translatedPost);
-        } else {
-          setPost(postData);
-        }
+        setPost(postData);
         
         // Increment view count
         await blogService.incrementViews(postData.id);

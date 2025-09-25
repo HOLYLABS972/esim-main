@@ -10,56 +10,6 @@ import { doc, getDoc, collection, query, where, getDocs, writeBatch, setDoc } fr
 import { db } from '../../../src/firebase/config';
 import toast from 'react-hot-toast';
 
-export const metadata = {
-  title: 'Programa de Afiliados - Gana $1 por Referido | Roam Jet Plans',
-  description: 'Únete a nuestro programa de afiliados y gana $1 por cada amigo que refieras a Roam Jet Plans. Comparte tu código de referido y comienza a ganar dinero hoy. Sin comisiones, pagos instantáneos.',
-  keywords: [
-    'programa de afiliados', 'programa de referidos', 'ganar dinero', 'comisión de referido', 
-    'afiliado eSIM', 'afiliado de viajes', 'bonificación de referido', 'ganar con referidos',
-    'marketing de afiliados', 'recompensas de referidos', 'programa de comisiones', 'ingresos por referidos'
-  ],
-  authors: [{ name: 'Equipo Roam Jet Plans' }],
-  creator: 'Roam Jet Plans',
-  publisher: 'Roam Jet Plans',
-  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://esimplans.com'),
-  alternates: {
-    canonical: '/spanish/affiliate-program',
-  },
-  openGraph: {
-    type: 'website',
-    locale: 'es_ES',
-    url: '/spanish/affiliate-program',
-    title: 'Programa de Afiliados - Gana $1 por Referido | Roam Jet Plans',
-    description: 'Únete a nuestro programa de afiliados y gana $1 por cada amigo que refieras a Roam Jet Plans. Comparte tu código de referido y comienza a ganar dinero hoy.',
-    siteName: 'Roam Jet Plans',
-    images: [
-      {
-        url: '/images/affiliate-og-image.jpg',
-        width: 1200,
-        height: 630,
-        alt: 'Programa de Afiliados Roam Jet Plans - Gana $1 por Referido',
-      },
-    ],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Programa de Afiliados - Gana $1 por Referido | Roam Jet Plans',
-    description: 'Únete a nuestro programa de afiliados y gana $1 por cada amigo que refieras a Roam Jet Plans.',
-    images: ['/images/affiliate-twitter-image.jpg'],
-    creator: '@roamjetplans',
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      'max-video-preview': -1,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
-    },
-  },
-};
 
 const AffiliateProgramPage = () => {
   const router = useRouter();

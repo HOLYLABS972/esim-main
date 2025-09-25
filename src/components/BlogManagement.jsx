@@ -5,7 +5,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { useAdmin } from '../contexts/AdminContext';
 import blogService, { generateSlug } from '../services/blogService';
 import imageUploadService from '../services/imageUploadService';
-import translationService from '../services/translationService';
 import RichTextEditor from './RichTextEditor';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -296,6 +295,8 @@ const BlogManagement = () => {
         console.log('Post created with ID:', postId);
         
         // Auto-translate to other languages if enabled
+        // TODO: Implement server-side translation API
+        /*
         if (formData.autoTranslate && formData.targetLanguages.length > 0) {
           console.log('Auto-translating post to languages:', formData.targetLanguages);
           try {
@@ -326,6 +327,8 @@ const BlogManagement = () => {
         } else {
           toast.success('Blog post created successfully!');
         }
+        */
+        toast.success('Blog post created successfully!');
       } else {
         console.log('Updating existing post:', selectedPost.id);
         await blogService.updatePost(selectedPost.id, postData);
