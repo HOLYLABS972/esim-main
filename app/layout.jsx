@@ -81,6 +81,17 @@ export default function RootLayout({ children }) {
             `,
           }}
         />
+        
+        {/* Hreflang tags for international SEO */}
+        <link rel="alternate" hrefLang="en" href={`${process.env.NEXT_PUBLIC_BASE_URL || 'https://esimplans.com'}/`} />
+        <link rel="alternate" hrefLang="ar" href={`${process.env.NEXT_PUBLIC_BASE_URL || 'https://esimplans.com'}/arabic`} />
+        <link rel="alternate" hrefLang="fr" href={`${process.env.NEXT_PUBLIC_BASE_URL || 'https://esimplans.com'}/french`} />
+        <link rel="alternate" hrefLang="de" href={`${process.env.NEXT_PUBLIC_BASE_URL || 'https://esimplans.com'}/german`} />
+        <link rel="alternate" hrefLang="es" href={`${process.env.NEXT_PUBLIC_BASE_URL || 'https://esimplans.com'}/spanish`} />
+        <link rel="alternate" hrefLang="he" href={`${process.env.NEXT_PUBLIC_BASE_URL || 'https://esimplans.com'}/hebrew`} />
+        <link rel="alternate" hrefLang="ru" href={`${process.env.NEXT_PUBLIC_BASE_URL || 'https://esimplans.com'}/russian`} />
+        <link rel="alternate" hrefLang="x-default" href={`${process.env.NEXT_PUBLIC_BASE_URL || 'https://esimplans.com'}/`} />
+        
         <link rel="manifest" href="/manifest.json" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />

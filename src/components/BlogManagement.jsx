@@ -5,6 +5,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { useAdmin } from '../contexts/AdminContext';
 import blogService, { generateSlug } from '../services/blogService';
 import imageUploadService from '../services/imageUploadService';
+import translationService from '../services/translationService';
+import RichTextEditor from './RichTextEditor';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Plus, 
@@ -20,7 +22,11 @@ import {
   MoreVertical,
   ExternalLink,
   Clock,
-  TrendingUp
+  TrendingUp,
+  Globe,
+  Hash,
+  FileText,
+  Target
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -57,7 +63,20 @@ const BlogManagement = () => {
     status: 'published',
     seoTitle: '',
     seoDescription: '',
-    seoKeywords: []
+    seoKeywords: [],
+    metaTitle: '',
+    metaDescription: '',
+    metaKeywords: [],
+    canonicalUrl: '',
+    ogTitle: '',
+    ogDescription: '',
+    ogImage: '',
+    twitterTitle: '',
+    twitterDescription: '',
+    twitterImage: '',
+    structuredData: {},
+    autoTranslate: true, // New field for auto-translation
+    targetLanguages: ['ar', 'fr', 'de', 'es', 'he', 'ru'] // Languages to translate to
   });
 
   // Load posts on component mount
@@ -212,7 +231,18 @@ const BlogManagement = () => {
       status: 'published',
       seoTitle: '',
       seoDescription: '',
-      seoKeywords: []
+      seoKeywords: [],
+      metaTitle: '',
+      metaDescription: '',
+      metaKeywords: [],
+      canonicalUrl: '',
+      ogTitle: '',
+      ogDescription: '',
+      ogImage: '',
+      twitterTitle: '',
+      twitterDescription: '',
+      twitterImage: '',
+      structuredData: {}
     });
     setImagePreview(null);
     setShowCreateModal(true);
@@ -231,7 +261,18 @@ const BlogManagement = () => {
       status: 'published',
       seoTitle: post.seoTitle || post.title || '',
       seoDescription: post.seoDescription || post.excerpt || '',
-      seoKeywords: post.seoKeywords || []
+      seoKeywords: post.seoKeywords || [],
+      metaTitle: post.metaTitle || post.title || '',
+      metaDescription: post.metaDescription || post.excerpt || '',
+      metaKeywords: post.metaKeywords || [],
+      canonicalUrl: post.canonicalUrl || '',
+      ogTitle: post.ogTitle || post.title || '',
+      ogDescription: post.ogDescription || post.excerpt || '',
+      ogImage: post.ogImage || post.featuredImage || '',
+      twitterTitle: post.twitterTitle || post.title || '',
+      twitterDescription: post.twitterDescription || post.excerpt || '',
+      twitterImage: post.twitterImage || post.featuredImage || '',
+      structuredData: post.structuredData || {}
     });
     setImagePreview(post.featuredImage || null);
     setSelectedPost(post);
@@ -253,7 +294,38 @@ const BlogManagement = () => {
         console.log('Creating new post...');
         const postId = await blogService.createPost(postData);
         console.log('Post created with ID:', postId);
-        toast.success('Blog post created successfully!');
+        
+        // Auto-translate to other languages if enabled
+        if (formData.autoTranslate && formData.targetLanguages.length > 0) {
+          console.log('Auto-translating post to languages:', formData.targetLanguages);
+          try {
+            const originalPost = { ...postData, id: postId };
+            
+            for (const targetLanguage of formData.targetLanguages) {
+              console.log(`Translating to ${targetLanguage}...`);
+              const translatedPost = await translationService.translateBlogPost(originalPost, targetLanguage);
+              
+              // Create translated post with unique slug
+              const translatedPostData = {
+                ...translatedPost,
+                slug: `${translatedPost.slug}-${targetLanguage}`,
+                language: targetLanguage,
+                originalPostId: postId,
+                authorId: currentUser?.uid
+              };
+              
+              await blogService.createPost(translatedPostData);
+              console.log(`Post translated to ${targetLanguage} successfully`);
+            }
+            
+            toast.success(`Blog post created and translated to ${formData.targetLanguages.length} languages!`);
+          } catch (translationError) {
+            console.error('Translation error:', translationError);
+            toast.success('Blog post created successfully! (Translation failed)');
+          }
+        } else {
+          toast.success('Blog post created successfully!');
+        }
       } else {
         console.log('Updating existing post:', selectedPost.id);
         await blogService.updatePost(selectedPost.id, postData);
@@ -792,16 +864,260 @@ const BlogPostModal = ({ isOpen, onClose, onSave, formData, setFormData, loading
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Content *
             </label>
-            <textarea
-              value={formData.content}
-              onChange={(e) => handleInputChange('content', e.target.value)}
-              rows="10"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Write your blog post content here. You can use HTML tags for formatting."
+            <RichTextEditor
+              content={formData.content}
+              onChange={(content) => handleInputChange('content', content)}
+              placeholder="Write your blog post content here..."
+              className="border border-gray-300 rounded-lg"
+              minHeight="400px"
             />
-            <p className="text-sm text-gray-500 mt-1">
-              You can use HTML tags for formatting. For example: &lt;h2&gt;Heading&lt;/h2&gt;, &lt;p&gt;Paragraph&lt;/p&gt;, &lt;ul&gt;&lt;li&gt;List item&lt;/li&gt;&lt;/ul&gt;
+            <p className="text-sm text-gray-500 mt-2">
+              Use the toolbar above to format your text, add links, images, and emojis.
             </p>
+          </div>
+
+          {/* SEO Section */}
+          <div className="mt-8 border-t border-gray-200 pt-6">
+            <div className="flex items-center mb-4">
+              <Target className="w-5 h-5 text-blue-600 mr-2" />
+              <h3 className="text-lg font-medium text-gray-900">SEO Settings</h3>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Meta Title */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Meta Title
+                </label>
+                <input
+                  type="text"
+                  value={formData.metaTitle}
+                  onChange={(e) => handleInputChange('metaTitle', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="SEO title for search engines"
+                  maxLength={60}
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  {formData.metaTitle.length}/60 characters
+                </p>
+              </div>
+
+              {/* Meta Description */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Meta Description
+                </label>
+                <textarea
+                  value={formData.metaDescription}
+                  onChange={(e) => handleInputChange('metaDescription', e.target.value)}
+                  rows="3"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="SEO description for search engines"
+                  maxLength={160}
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  {formData.metaDescription.length}/160 characters
+                </p>
+              </div>
+
+              {/* Meta Keywords */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Meta Keywords
+                </label>
+                <input
+                  type="text"
+                  value={formData.metaKeywords.join(', ')}
+                  onChange={(e) => {
+                    const keywords = e.target.value.split(',').map(k => k.trim()).filter(k => k);
+                    handleInputChange('metaKeywords', keywords);
+                  }}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="keyword1, keyword2, keyword3"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Separate keywords with commas
+                </p>
+              </div>
+
+              {/* Canonical URL */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Canonical URL
+                </label>
+                <input
+                  type="url"
+                  value={formData.canonicalUrl}
+                  onChange={(e) => handleInputChange('canonicalUrl', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="https://example.com/canonical-url"
+                />
+              </div>
+            </div>
+
+            {/* Social Media SEO */}
+            <div className="mt-6">
+              <h4 className="text-md font-medium text-gray-900 mb-4">Social Media</h4>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Open Graph */}
+                <div className="space-y-4">
+                  <h5 className="text-sm font-medium text-gray-700 flex items-center">
+                    <Globe className="w-4 h-4 mr-1" />
+                    Open Graph (Facebook)
+                  </h5>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">
+                      OG Title
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.ogTitle}
+                      onChange={(e) => handleInputChange('ogTitle', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Title for Facebook sharing"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">
+                      OG Description
+                    </label>
+                    <textarea
+                      value={formData.ogDescription}
+                      onChange={(e) => handleInputChange('ogDescription', e.target.value)}
+                      rows="2"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Description for Facebook sharing"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">
+                      OG Image URL
+                    </label>
+                    <input
+                      type="url"
+                      value={formData.ogImage}
+                      onChange={(e) => handleInputChange('ogImage', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Image URL for Facebook sharing"
+                    />
+                  </div>
+                </div>
+
+                {/* Twitter */}
+                <div className="space-y-4">
+                  <h5 className="text-sm font-medium text-gray-700 flex items-center">
+                    <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
+                    </svg>
+                    Twitter
+                  </h5>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">
+                      Twitter Title
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.twitterTitle}
+                      onChange={(e) => handleInputChange('twitterTitle', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Title for Twitter sharing"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">
+                      Twitter Description
+                    </label>
+                    <textarea
+                      value={formData.twitterDescription}
+                      onChange={(e) => handleInputChange('twitterDescription', e.target.value)}
+                      rows="2"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Description for Twitter sharing"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">
+                      Twitter Image URL
+                    </label>
+                    <input
+                      type="url"
+                      value={formData.twitterImage}
+                      onChange={(e) => handleInputChange('twitterImage', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Image URL for Twitter sharing"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Translation Settings */}
+          <div className="border-t border-gray-200 pt-6">
+            <div className="flex items-center mb-4">
+              <Globe className="w-5 h-5 text-blue-600 mr-2" />
+              <h3 className="text-lg font-medium text-gray-900">Translation Settings</h3>
+            </div>
+            
+            <div className="space-y-4">
+              {/* Auto-translate toggle */}
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="autoTranslate"
+                  checked={formData.autoTranslate}
+                  onChange={(e) => handleInputChange('autoTranslate', e.target.checked)}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <label htmlFor="autoTranslate" className="ml-2 text-sm font-medium text-gray-700">
+                  Automatically translate to other languages
+                </label>
+              </div>
+              
+              {/* Target languages */}
+              {formData.autoTranslate && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Target Languages
+                  </label>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                    {[
+                      { code: 'ar', name: 'Arabic' },
+                      { code: 'fr', name: 'French' },
+                      { code: 'de', name: 'German' },
+                      { code: 'es', name: 'Spanish' },
+                      { code: 'he', name: 'Hebrew' },
+                      { code: 'ru', name: 'Russian' }
+                    ].map((lang) => (
+                      <label key={lang.code} className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={formData.targetLanguages.includes(lang.code)}
+                          onChange={(e) => {
+                            const newLanguages = e.target.checked
+                              ? [...formData.targetLanguages, lang.code]
+                              : formData.targetLanguages.filter(l => l !== lang.code);
+                            handleInputChange('targetLanguages', newLanguages);
+                          }}
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        />
+                        <span className="ml-2 text-sm text-gray-700">{lang.name}</span>
+                      </label>
+                    ))}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2">
+                    Selected languages: {formData.targetLanguages.length} languages
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
           
         </div>
