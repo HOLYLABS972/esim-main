@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { detectPlatform } from '../../utils/platformDetection';
 
 export default function HeroSection() {
-  const { t, isLoading } = useI18n();
+  const { t, isLoading, locale } = useI18n();
   
   if (isLoading) {
     return (
@@ -39,6 +39,19 @@ export default function HeroSection() {
         appLinksSection.scrollIntoView({ behavior: 'smooth' });
       }
     }
+  };
+
+  const getLocalizedBlogUrl = () => {
+    const languageMap = {
+      'en': '/blog',
+      'ar': '/arabic/blog',
+      'fr': '/french/blog',
+      'de': '/german/blog',
+      'es': '/spanish/blog',
+      'he': '/hebrew/blog',
+      'ru': '/russian/blog'
+    };
+    return languageMap[locale] || '/blog';
   };
 
   return (
@@ -119,7 +132,7 @@ export default function HeroSection() {
               >
                 {t('hero.downloadApp')}
               </button>
-              <Link href="/blog" className="text-sm sm:text-sm/6 font-semibold text-gray-600 hover:text-tufts-blue transition-colors">
+              <Link href={getLocalizedBlogUrl()} className="text-sm sm:text-sm/6 font-semibold text-gray-600 hover:text-tufts-blue transition-colors">
                 {t('hero.learnMore')}
               </Link>
             </div>
