@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '../../../../src/contexts/AuthContext';
 import { useAdmin } from '../../../../src/contexts/AdminContext';
-import { collection, query, where, getDocs, getDoc, doc, updateDoc, orderBy, deleteDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, getDoc, doc, updateDoc, orderBy, deleteDoc, setDoc } from 'firebase/firestore';
 import { db } from '../../../../src/firebase/config';
 import { getAllReferralCodes, createReferralCode } from '../../../../src/services/referralService';
 // import { motion } from 'framer-motion'; // Temporarily disabled to fix build error
@@ -488,15 +488,44 @@ const UserDetailsPage = () => {
     }
 
     try {
-      // Remove eSIM from current user
+      // Remove eSIM from current user's esims subcollection
       await deleteDoc(doc(db, 'users', userId, 'esims', selectedEsimForReassign.id));
       
-      // Add eSIM to new user
-      await updateDoc(doc(db, 'users', selectedReassignUser.id), {
-        esims: {
-          [selectedEsimForReassign.id]: selectedEsimForReassign
-        }
-      });
+      // Add eSIM to new user's esims subcollection (not as a field in main document)
+      // Preserve only the essential fields and convert timestamps properly
+      const esimData = {
+        // Core eSIM data
+        id: selectedEsimForReassign.id,
+        planId: selectedEsimForReassign.planId,
+        planName: selectedEsimForReassign.planName,
+        countryCode: selectedEsimForReassign.countryCode,
+        countryName: selectedEsimForReassign.countryName,
+        capacity: selectedEsimForReassign.capacity,
+        period: selectedEsimForReassign.period,
+        price: selectedEsimForReassign.price,
+        currency: selectedEsimForReassign.currency,
+        operator: selectedEsimForReassign.operator,
+        status: selectedEsimForReassign.status || 'active', // Ensure status is preserved
+        iccid: selectedEsimForReassign.iccid,
+        qrCode: selectedEsimForReassign.qrCode,
+        
+        // Preserve original timestamps
+        createdAt: selectedEsimForReassign.createdAt,
+        updatedAt: selectedEsimForReassign.updatedAt,
+        purchaseDate: selectedEsimForReassign.purchaseDate,
+        expiryDate: selectedEsimForReassign.expiryDate,
+        
+        // Preserve order data
+        orderResult: selectedEsimForReassign.orderResult,
+        orderData: selectedEsimForReassign.orderData,
+        
+        // Add reassignment tracking
+        reassignedAt: new Date(),
+        reassignedFrom: userId,
+        reassignedTo: selectedReassignUser.id
+      };
+      
+      await setDoc(doc(db, 'users', selectedReassignUser.id, 'esims', selectedEsimForReassign.id), esimData);
 
       toast.success(`eSIM reassigned to ${selectedReassignUser.email} successfully`);
       setShowReassignModal(false);
