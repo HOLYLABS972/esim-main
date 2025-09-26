@@ -15,39 +15,60 @@
     "stayConnected": "Stay connected",
     "noMatterWhere": "no matter where you are",
     "with": "with",
-    "description": "Get instant mobile data in 200+ countries. No physical SIM needed. Activate anywhere, anytime with our reliable global eSIM network.",
+    "description": "Perfect eSIM data plans for backpackers and hostel travelers. Get instant mobile data in 200+ countries. Better than Airalo - no roaming fees, instant QR activation, budget-friendly rates.",
     "downloadApp": "Download App",
-    "learnMore": "Learn more"
+    "learnMore": "Learn more",
+    "backpackerFocused": "Designed for Backpackers & Hostel Travelers",
+    "hostelWifiAlternative": "Reliable backup when hostel WiFi fails",
+    "instantActivation": "Instant QR activation - no waiting",
+    "budgetFriendly": "Budget-friendly rates for long-term travelers"
   },
   "features": {
-    "title": "Connect globally",
-    "subtitle": "Everything you need for global connectivity",
+    "title": "Perfect for Backpackers & Hostel Travelers",
+    "subtitle": "Everything you need for budget-friendly global connectivity",
     "globalCoverage": {
       "title": "Global Coverage",
-      "description": "Stay connected in 200+ countries with our extensive eSIM network coverage worldwide.",
+      "description": "Stay connected in 200+ countries with our extensive eSIM network coverage worldwide. Perfect for backpackers exploring multiple destinations.",
       "countries": "200+ Countries",
-      "worldwide": "Worldwide Coverage"
+      "worldwide": "Worldwide Coverage",
+      "backpackerFriendly": "Backpacker-friendly destinations"
     },
     "instantActivation": {
       "title": "Instant Activation",
-      "description": "Get connected immediately with our QR code activation. No waiting, no delays.",
-      "readyInSeconds": "✓ Ready in seconds"
+      "description": "Get connected immediately with our QR code activation. No waiting, no delays - perfect when hostel WiFi is unreliable.",
+      "readyInSeconds": "✓ Ready in seconds",
+      "hostelWifiBackup": "Perfect hostel WiFi backup"
     },
     "securePayment": {
-      "title": "Secure Payment",
-      "description": "256-bit SSL encryption and multiple payment options for your security."
+      "title": "Budget-Friendly Pricing",
+      "description": "Affordable rates designed for backpackers and long-term travelers. No hidden fees or roaming charges.",
+      "backpackerRates": "Backpacker-friendly rates",
+      "noRoamingFees": "No roaming fees"
     },
     "deviceCompatibility": {
       "title": "Device Compatibility",
-      "description": "Works with all modern smartphones and tablets that support eSIM technology.",
+      "description": "Works with all modern smartphones and tablets that support eSIM technology. Perfect for travelers on any device.",
       "esimCompatible": "eSIM Compatible",
-      "operatingSystem": "Android 12+, iOS 15+"
+      "operatingSystem": "Android 12+, iOS 15+",
+      "travelerReady": "Traveler-ready devices"
+    },
+    "roamjetVsCompetitors": {
+      "title": "Why Choose RoamJet Over Competitors",
+      "description": "Better pricing, instant activation, and 24/7 support designed specifically for backpackers and hostel travelers.",
+      "betterPricing": "Better pricing than Airalo, Roamless, Saily, and eSIMo",
+      "instantSupport": "24/7 live chat support",
+      "backpackerFocused": "Designed for backpackers",
+      "vsAiralo": "Better than Airalo",
+      "vsRoamless": "Better than Roamless",
+      "vsSaily": "Better than Saily", 
+      "vsEsimo": "Better than eSIMo",
+      "competitorAdvantage": "Superior to all major eSIM providers"
     }
   },
   "plans": {
-    "title": "Portable Pricing System",
-    "subtitle": "Choose Your Perfect eSIM Plan",
-    "description": "Select from our wide range of data plans designed for every type of traveler. From short trips to extended stays, we have you covered.",
+    "title": "Backpacker-Friendly eSIM Plans",
+    "subtitle": "Choose Your Perfect eSIM Plan for Hostel Travel",
+    "description": "Select from our wide range of budget-friendly data plans designed for backpackers and hostel travelers. From short trips to extended stays, we have affordable options for every budget.",
     "loadingPlans": "Loading plans...",
     "fromPrice": "From ${price}",
     "noPlansAvailable": "No plans available",
@@ -56,7 +77,16 @@
     "startingFrom": "Starting From",
     "averagePrice": "Average Price",
     "showAll": "Show All",
-    "showLess": "Show Less"
+    "showLess": "Show Less",
+    "backpackerSpecial": "Backpacker Special",
+    "hostelWifiBackup": "Perfect hostel WiFi backup",
+    "budgetFriendly": "Budget-friendly rates",
+    "longTermTravel": "Long-term travel plans",
+    "betterThanCompetitors": "Better pricing than Airalo, Roamless, Saily, and eSIMo",
+    "vsAiralo": "vs Airalo",
+    "vsRoamless": "vs Roamless", 
+    "vsSaily": "vs Saily",
+    "vsEsimo": "vs eSIMo"
   },
   "activation": {
     "downloads": "Downloads",
@@ -89,17 +119,26 @@
   "footer": {
     "logoAlt": "RoamJet Logo",
     "brandName": "RoamJet",
-    "companyDescription": "RoamJet - Your trusted partner for global eSIM solutions. Instant activation, worldwide coverage, and secure connectivity for travelers and businesses.",
+    "companyDescription": "RoamJet - The best eSIM solution for backpackers and hostel travelers. Better than Airalo, Roamless, Saily, and eSIMo with instant activation, budget-friendly rates, and 24/7 support.",
     "quickLinks": "Quick Links",
     "home": "Home",
     "blog": "Blog",
     "contactUs": "Contact Us",
+    "roamjetVsCompetitors": "RoamJet vs Competitors",
+    "vsAiralo": "vs Airalo",
+    "vsRoamless": "vs Roamless",
+    "vsSaily": "vs Saily", 
+    "vsEsimo": "vs eSIMo",
+    "esimPlans": "eSIM Plans",
     "usefulLinks": "Useful Links",
     "privacyPolicy": "Privacy Policy",
     "termsOfService": "Terms of Service",
     "cookiePolicy": "Cookie Policy",
     "contactInfoNotAvailable": "Contact information not available",
-    "allRightsReserved": "All Rights Reserved"
+    "allRightsReserved": "All Rights Reserved",
+    "backpackerFocused": "Designed for Backpackers",
+    "hostelWifiAlternative": "Hostel WiFi Alternative",
+    "betterThanCompetitors": "Better than Airalo, Roamless, Saily, and eSIMo"
   },
   "search": {
     "destinationPlaceholder": "Search your destination (e.g., France, Germany, United States)",
@@ -125,14 +164,20 @@
     "fromPrice": "From ${price}",
     "noPlansAvailable": "No plans available"
   },
-  "language": {
-    "select": "Select Language",
-    "english": "English",
-    "hebrew": "עברית",
-    "russian": "Русский",
-    "arabic": "العربية",
-    "german": "Deutsch",
-    "french": "Français",
-    "spanish": "Español"
-  }
+  "seo": {
+    "backpackerKeywords": "eSIM for backpackers, hostel wifi alternative, travel data plans, budget travel internet",
+    "hostelKeywords": "hostel internet solution, backpacker mobile data, travel eSIM plans, hostel wifi backup",
+    "comparisonKeywords": "RoamJet vs Airalo, RoamJet vs Roamless, RoamJet vs Saily, RoamJet vs eSIMo, better than Airalo, better than Roamless, better than Saily, better than eSIMo, eSIM comparison, travel data comparison",
+    "metaDescription": "Perfect eSIM data plans for backpackers and hostel travelers. Better than Airalo, Roamless, Saily, and eSIMo with instant activation, budget-friendly rates, and 24/7 support.",
+    "metaTitle": "RoamJet eSIM Plans - Best Travel Data for Hostels & Backpackers",
+    "ogTitle": "RoamJet eSIM Plans - Best Travel Data for Hostels & Backpackers",
+    "ogDescription": "Perfect eSIM data plans for backpackers and hostel travelers. Better than Airalo, Roamless, Saily, and eSIMo with instant activation and budget-friendly rates.",
+    "twitterTitle": "RoamJet eSIM Plans - Best Travel Data for Hostels & Backpackers",
+    "twitterDescription": "Perfect eSIM data plans for backpackers and hostel travelers. Better than Airalo, Roamless, Saily, and eSIMo with instant activation.",
+    "competitorComparison": "Better than Airalo, Roamless, Saily, and eSIMo",
+    "vsAiralo": "RoamJet vs Airalo",
+    "vsRoamless": "RoamJet vs Roamless", 
+    "vsSaily": "RoamJet vs Saily",
+    "vsEsimo": "RoamJet vs eSIMo"
+  },
 }
