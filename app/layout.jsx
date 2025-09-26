@@ -8,14 +8,33 @@ import './rtl.css'
 
 export const metadata = {
   title: {
-    default: 'Roam Jet Plans - Global Data Connectivity',
-    template: '%s | Roam Jet Plans'
+    default: 'Best eSIM Plans for Backpackers, Travelers & Digital Nomads | RoamJet',
+    template: '%s | RoamJet'
   },
-  description: 'Get affordable eSIM data plans for 200+ countries. Instant activation, no physical SIM needed. Perfect for travelers and international connectivity.',
-  keywords: ['eSIM', 'data plans', 'international roaming', 'travel internet', 'global connectivity', 'mobile data'],
-  authors: [{ name: 'Roam Jet Plans Team' }],
-  creator: 'eSIM Plans',
-  publisher: 'eSIM Plans',
+  description: 'Perfect eSIM plans for backpackers, travelers, and digital nomads. Compare Airalo vs RoamJet vs eSIMo. Global data connectivity in 200+ countries with instant activation.',
+  keywords: [
+    'eSIM plans backpackers',
+    'eSIM travelers',
+    'digital nomads eSIM',
+    'Airalo vs RoamJet',
+    'RoamJet vs eSIMo',
+    'best eSIM for travelers',
+    'backpacker mobile data',
+    'nomad internet plans',
+    'travel eSIM comparison',
+    'global eSIM plans',
+    'instant eSIM activation',
+    'worldwide mobile data',
+    'eSIM',
+    'data plans',
+    'international roaming',
+    'travel internet',
+    'global connectivity',
+    'mobile data'
+  ],
+  authors: [{ name: 'RoamJet Team' }],
+  creator: 'RoamJet',
+  publisher: 'RoamJet',
   formatDetection: {
     email: false,
     address: false,
@@ -29,22 +48,22 @@ export const metadata = {
     type: 'website',
     locale: 'en_US',
     url: '/',
-    title: 'Roam Jet Plans - Global Data Connectivity',
-    description: 'Get affordable eSIM data plans for 200+ countries. Instant activation, no physical SIM needed.',
-    siteName: 'eSIM Plans',
+    title: 'Best eSIM Plans for Backpackers, Travelers & Digital Nomads | RoamJet',
+    description: 'Perfect eSIM plans for backpackers, travelers, and digital nomads. Compare Airalo vs RoamJet vs eSIMo. Global data connectivity in 200+ countries.',
+    siteName: 'RoamJet',
     images: [
       {
         url: '/images/og-image.jpg',
         width: 1200,
         height: 630,
-        alt: 'eSIM Plans - Global Data Connectivity',
+        alt: 'RoamJet - Best eSIM Plans for Travelers',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Roam Jet Plans - Global Data Connectivity',
-    description: 'Get affordable eSIM data plans for 200+ countries. Instant activation, no physical SIM needed.',
+    title: 'Best eSIM Plans for Backpackers, Travelers & Digital Nomads | RoamJet',
+    description: 'Perfect eSIM plans for backpackers, travelers, and digital nomads. Compare Airalo vs RoamJet vs eSIMo. Global data connectivity in 200+ countries.',
     images: ['/images/twitter-image.jpg'],
   },
   robots: {
