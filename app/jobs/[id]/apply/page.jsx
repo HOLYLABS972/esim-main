@@ -16,26 +16,10 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { createJobApplication } from '../../../../src/services/jobsService';
 import toast from 'react-hot-toast';
-import { useI18n } from '../../../../src/contexts/I18nContext';
 
 const JobApplicationPage = () => {
   const params = useParams();
   const jobId = params.id;
-  const { locale } = useI18n();
-  
-  const getLocalizedUrl = (path) => {
-    const languageMap = {
-      'en': '',
-      'ar': '/arabic',
-      'fr': '/french',
-      'de': '/german',
-      'es': '/spanish',
-      'he': '/hebrew',
-      'ru': '/russian'
-    };
-    const prefix = languageMap[locale] || '';
-    return `${prefix}${path}`;
-  };
   
   const [formData, setFormData] = useState({
     name: '',
@@ -137,7 +121,7 @@ const JobApplicationPage = () => {
       });
       
       // Redirect to success page
-      window.location.href = getLocalizedUrl('/jobs/success');
+      window.location.href = '/jobs/success';
     } catch (error) {
       console.error('Error submitting application:', error);
       toast.error('Failed to submit application. Please try again.');
@@ -157,7 +141,7 @@ const JobApplicationPage = () => {
           className="mb-8"
         >
           <Link 
-            href={getLocalizedUrl(`/jobs/${jobId}`)}
+            href={`/jobs/${jobId}`}
             className="inline-flex items-center text-blue-600 hover:text-blue-700 transition-colors duration-200"
           >
             <ArrowLeft className="w-5 h-5 mr-2" />

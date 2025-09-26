@@ -10,7 +10,6 @@ import { doc, getDoc, collection, query, where, getDocs, writeBatch, setDoc } fr
 import { db } from '../../src/firebase/config';
 import toast from 'react-hot-toast';
 
-
 const AffiliateProgramPage = () => {
   const router = useRouter();
   const { currentUser } = useAuth();
@@ -198,59 +197,8 @@ const AffiliateProgramPage = () => {
   };
 
 
-  const structuredData = {
-    "@context": "https://schema.org",
-    "@type": "WebPage",
-    "name": "Affiliate Program - Roam Jet Plans",
-    "description": "Join our affiliate program and earn $1 for every friend you refer to Roam Jet Plans",
-    "url": `${process.env.NEXT_PUBLIC_BASE_URL || "https://esimplans.com"}/affiliate-program`,
-    "mainEntity": {
-      "@type": "ProgramMembership",
-      "name": "Roam Jet Plans Affiliate Program",
-      "description": "Earn $1 commission for every successful referral",
-      "programName": "Roam Jet Plans Affiliate Program",
-      "member": {
-        "@type": "Person",
-        "name": "Affiliate Member"
-      },
-      "offers": {
-        "@type": "Offer",
-        "name": "Referral Commission",
-        "description": "$1 commission per successful referral",
-        "price": "1.00",
-        "priceCurrency": "USD"
-      }
-    },
-    "breadcrumb": {
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        {
-          "@type": "ListItem",
-          "position": 1,
-          "name": "Home",
-          "item": process.env.NEXT_PUBLIC_BASE_URL || "https://esimplans.com"
-        },
-        {
-          "@type": "ListItem",
-          "position": 2,
-          "name": "Affiliate Program",
-          "item": `${process.env.NEXT_PUBLIC_BASE_URL || "https://esimplans.com"}/affiliate-program`
-        }
-      ]
-    }
-  };
-
   return (
-    <>
-      {/* Structured Data */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(structuredData)
-        }}
-      />
-      
-      <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-6xl mx-auto px-4 py-4">
@@ -442,8 +390,7 @@ const AffiliateProgramPage = () => {
         </motion.div>
 
       </div>
-      </div>
-    </>
+    </div>
   );
 };
 

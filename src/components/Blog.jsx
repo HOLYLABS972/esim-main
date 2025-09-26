@@ -1,14 +1,14 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Calendar, User, ArrowRight, Clock, Search, Mail, Globe } from 'lucide-react';
+import { Calendar, User, ArrowRight, Clock, Search, Mail } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import blogService from '../services/blogService';
 import { subscribeToNewsletter } from '../services/newsletterService';
 import toast from 'react-hot-toast';
 
-const Blog = ({ language = 'en' }) => {
+const Blog = () => {
   const [blogPosts, setBlogPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -19,117 +19,6 @@ const Blog = ({ language = 'en' }) => {
   // Newsletter state
   const [newsletterEmail, setNewsletterEmail] = useState('');
   const [isNewsletterSubmitting, setIsNewsletterSubmitting] = useState(false);
-
-  // Language-specific content
-  const languageContent = {
-    en: {
-      title: 'Stay updated with eSIM technology',
-      subtitle: 'Discover the latest trends, guides, and insights in eSIM technology and global connectivity solutions.',
-      searchPlaceholder: 'Search blog posts...',
-      allCategories: 'All Categories',
-      noPostsFound: 'No blog posts found matching your criteria',
-      noPostsAvailable: 'No blog posts available yet',
-      readMore: 'Read More',
-      newsletterTitle: 'Stay Updated with eSIM News',
-      newsletterSubtitle: 'Get the latest eSIM insights, travel tips, and technology updates delivered to your inbox',
-      newsletterPlaceholder: 'Enter your email',
-      subscribe: 'Subscribe',
-      subscribing: 'Subscribing...',
-      loadingText: 'Loading blog posts...'
-    },
-    ar: {
-      title: 'ابق محدثًا مع تقنية eSIM',
-      subtitle: 'اكتشف أحدث الاتجاهات والأدلة والرؤى في تقنية eSIM وحلول الاتصال العالمي.',
-      searchPlaceholder: 'البحث في منشورات المدونة...',
-      allCategories: 'جميع الفئات',
-      noPostsFound: 'لم يتم العثور على منشورات مدونة تطابق معاييرك',
-      noPostsAvailable: 'لا توجد منشورات مدونة متاحة بعد',
-      readMore: 'اقرأ المزيد',
-      newsletterTitle: 'ابق محدثًا مع أخبار eSIM',
-      newsletterSubtitle: 'احصل على أحدث رؤى eSIM ونصائح السفر وتحديثات التكنولوجيا في صندوق الوارد الخاص بك',
-      newsletterPlaceholder: 'أدخل بريدك الإلكتروني',
-      subscribe: 'اشترك',
-      subscribing: 'جاري الاشتراك...',
-      loadingText: 'جاري تحميل منشورات المدونة...'
-    },
-    fr: {
-      title: 'Restez informé de la technologie eSIM',
-      subtitle: 'Découvrez les dernières tendances, guides et insights en technologie eSIM et solutions de connectivité mondiale.',
-      searchPlaceholder: 'Rechercher des articles de blog...',
-      allCategories: 'Toutes les catégories',
-      noPostsFound: 'Aucun article de blog trouvé correspondant à vos critères',
-      noPostsAvailable: 'Aucun article de blog disponible pour le moment',
-      readMore: 'Lire la suite',
-      newsletterTitle: 'Restez informé des actualités eSIM',
-      newsletterSubtitle: 'Recevez les derniers insights eSIM, conseils de voyage et mises à jour technologiques dans votre boîte de réception',
-      newsletterPlaceholder: 'Entrez votre email',
-      subscribe: 'S\'abonner',
-      subscribing: 'Abonnement en cours...',
-      loadingText: 'Chargement des articles de blog...'
-    },
-    de: {
-      title: 'Bleiben Sie über eSIM-Technologie informiert',
-      subtitle: 'Entdecken Sie die neuesten Trends, Anleitungen und Einblicke in eSIM-Technologie und globale Konnektivitätslösungen.',
-      searchPlaceholder: 'Blog-Beiträge suchen...',
-      allCategories: 'Alle Kategorien',
-      noPostsFound: 'Keine Blog-Beiträge gefunden, die Ihren Kriterien entsprechen',
-      noPostsAvailable: 'Noch keine Blog-Beiträge verfügbar',
-      readMore: 'Weiterlesen',
-      newsletterTitle: 'Bleiben Sie über eSIM-Nachrichten informiert',
-      newsletterSubtitle: 'Erhalten Sie die neuesten eSIM-Insights, Reisetipps und Technologie-Updates in Ihrem Posteingang',
-      newsletterPlaceholder: 'E-Mail eingeben',
-      subscribe: 'Abonnieren',
-      subscribing: 'Abonnement läuft...',
-      loadingText: 'Blog-Beiträge werden geladen...'
-    },
-    es: {
-      title: 'Mantente actualizado con la tecnología eSIM',
-      subtitle: 'Descubre las últimas tendencias, guías e insights en tecnología eSIM y soluciones de conectividad global.',
-      searchPlaceholder: 'Buscar publicaciones del blog...',
-      allCategories: 'Todas las categorías',
-      noPostsFound: 'No se encontraron publicaciones del blog que coincidan con tus criterios',
-      noPostsAvailable: 'Aún no hay publicaciones del blog disponibles',
-      readMore: 'Leer más',
-      newsletterTitle: 'Mantente actualizado con las noticias eSIM',
-      newsletterSubtitle: 'Recibe los últimos insights eSIM, consejos de viaje y actualizaciones tecnológicas en tu bandeja de entrada',
-      newsletterPlaceholder: 'Ingresa tu email',
-      subscribe: 'Suscribirse',
-      subscribing: 'Suscribiendo...',
-      loadingText: 'Cargando publicaciones del blog...'
-    },
-    he: {
-      title: 'הישאר מעודכן עם טכנולוגיית eSIM',
-      subtitle: 'גלה את המגמות, המדריכים והתובנות האחרונות בטכנולוגיית eSIM ובפתרונות חיבור גלובליים.',
-      searchPlaceholder: 'חיפוש פוסטים בבלוג...',
-      allCategories: 'כל הקטגוריות',
-      noPostsFound: 'לא נמצאו פוסטים בבלוג התואמים לקריטריונים שלך',
-      noPostsAvailable: 'אין עדיין פוסטים בבלוג זמינים',
-      readMore: 'קרא עוד',
-      newsletterTitle: 'הישאר מעודכן עם חדשות eSIM',
-      newsletterSubtitle: 'קבל את התובנות, טיפי הנסיעות ועדכוני הטכנולוגיה האחרונים של eSIM בתיבת הדואר שלך',
-      newsletterPlaceholder: 'הזן את האימייל שלך',
-      subscribe: 'הירשם',
-      subscribing: 'נרשם...',
-      loadingText: 'טוען פוסטים בבלוג...'
-    },
-    ru: {
-      title: 'Оставайтесь в курсе технологий eSIM',
-      subtitle: 'Откройте для себя последние тенденции, руководства и инсайты в области технологий eSIM и глобальных решений подключения.',
-      searchPlaceholder: 'Поиск постов блога...',
-      allCategories: 'Все категории',
-      noPostsFound: 'Не найдено постов блога, соответствующих вашим критериям',
-      noPostsAvailable: 'Пока нет доступных постов блога',
-      readMore: 'Читать далее',
-      newsletterTitle: 'Оставайтесь в курсе новостей eSIM',
-      newsletterSubtitle: 'Получайте последние инсайты eSIM, советы путешественникам и обновления технологий в свой почтовый ящик',
-      newsletterPlaceholder: 'Введите ваш email',
-      subscribe: 'Подписаться',
-      subscribing: 'Подписка...',
-      loadingText: 'Загрузка постов блога...'
-    }
-  };
-
-  const content = languageContent[language] || languageContent.en;
 
   // Load blog posts on component mount
   useEffect(() => {
@@ -146,8 +35,6 @@ const Blog = ({ language = 'en' }) => {
     try {
       setLoading(true);
       const result = await blogService.getPublishedPosts(20);
-      
-      // Show posts as-is (no translation for now)
       setBlogPosts(result.posts);
     } catch (error) {
       console.error('Error loading blog posts:', error);
@@ -245,10 +132,11 @@ const Blog = ({ language = 'en' }) => {
               <span>{' }'}</span>
             </h2>
             <p className="mx-auto mt-12 max-w-4xl text-center text-4xl font-semibold tracking-tight text-eerie-black sm:text-5xl">
-              {content.title}
+              Stay updated with eSIM technology
             </p>
             <p className="mx-auto mt-6 max-w-2xl text-center text-lg text-cool-black">
-              {content.subtitle}
+              Discover the latest trends, guides, and insights in eSIM technology 
+              and global connectivity solutions.
             </p>
           </div>
         </div>
@@ -262,7 +150,7 @@ const Blog = ({ language = 'en' }) => {
               <Search className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
               <input
                 type="text"
-                placeholder={content.searchPlaceholder}
+                placeholder="Search blog posts..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -274,7 +162,7 @@ const Blog = ({ language = 'en' }) => {
                 onChange={(e) => setSelectedCategory(e.target.value)}
                 className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
-                <option value="all">{content.allCategories}</option>
+                <option value="all">All Categories</option>
                 {categories.map(category => (
                   <option key={category} value={category}>{category}</option>
                 ))}
@@ -290,14 +178,14 @@ const Blog = ({ language = 'en' }) => {
           {loading ? (
             <div className="text-center py-12">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-              <p className="mt-4 text-gray-600">{content.loadingText}</p>
+              <p className="mt-4 text-gray-600">Loading blog posts...</p>
             </div>
           ) : filteredPosts.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-gray-500 text-lg">
                 {searchTerm || selectedCategory !== 'all' 
-                  ? content.noPostsFound 
-                  : content.noPostsAvailable
+                  ? 'No blog posts found matching your criteria' 
+                  : 'No blog posts available yet'
                 }
               </p>
             </div>
@@ -374,10 +262,10 @@ const Blog = ({ language = 'en' }) => {
                       </div>
                       
                       <Link
-                        href={`/${language}/blog/${post.slug}`}
+                        href={`/blog/${post.slug}`}
                         className="inline-flex items-center space-x-1 text-tufts-blue hover:text-cobalt-blue font-medium transition-colors duration-200"
                       >
-                        <span>{content.readMore}</span>
+                        <span>Read More</span>
                         <ArrowRight className="w-4 h-4" />
                       </Link>
                     </div>
@@ -395,15 +283,15 @@ const Blog = ({ language = 'en' }) => {
       <section className="bg-eerie-black text-white py-16">
         <div className="mx-auto max-w-4xl px-6 text-center">
           <h2 className="text-3xl md:text-4xl font-medium tracking-tight text-white mb-6">
-            {content.newsletterTitle}
+            Stay Updated with eSIM News
           </h2>
           <p className="text-xl text-alice-blue mb-8">
-            {content.newsletterSubtitle}
+            Get the latest eSIM insights, travel tips, and technology updates delivered to your inbox
           </p>
           <form onSubmit={handleNewsletterSubmit} className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
             <input
               type="email"
-              placeholder={content.newsletterPlaceholder}
+              placeholder="Enter your email"
               value={newsletterEmail}
               onChange={(e) => setNewsletterEmail(e.target.value)}
               required
@@ -417,12 +305,12 @@ const Blog = ({ language = 'en' }) => {
               {isNewsletterSubmitting ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  {content.subscribing}
+                  Subscribing...
                 </>
               ) : (
                 <>
                   <Mail className="w-4 h-4 mr-2" />
-                  {content.subscribe}
+                  Subscribe
                 </>
               )}
             </button>

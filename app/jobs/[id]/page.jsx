@@ -10,26 +10,10 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { useI18n } from '../../../src/contexts/I18nContext';
 
 const JobDetailsPage = () => {
   const params = useParams();
   const jobId = params.id;
-  const { locale } = useI18n();
-
-  const getLocalizedUrl = (path) => {
-    const languageMap = {
-      'en': '',
-      'ar': '/arabic',
-      'fr': '/french',
-      'de': '/german',
-      'es': '/spanish',
-      'he': '/hebrew',
-      'ru': '/russian'
-    };
-    const prefix = languageMap[locale] || '';
-    return `${prefix}${path}`;
-  };
 
   // Job position data (same as in jobs page)
   const jobPosition = {
@@ -58,7 +42,7 @@ const JobDetailsPage = () => {
           className="mb-8"
         >
           <Link 
-            href={getLocalizedUrl('/jobs')}
+            href="/jobs"
             className="inline-flex items-center text-blue-600 hover:text-blue-700 transition-colors duration-200"
           >
             <ArrowLeft className="w-5 h-5 mr-2" />
@@ -111,13 +95,13 @@ const JobDetailsPage = () => {
           <div className="mt-8 pt-8 border-t border-gray-200">
             <div className="flex space-x-4">
               <Link
-                href={getLocalizedUrl('/jobs')}
+                href="/jobs"
                 className="flex-1 bg-gray-200 text-gray-700 py-3 px-6 rounded-lg font-medium hover:bg-gray-300 transition-colors duration-200 text-center"
               >
                 Back to Jobs
               </Link>
               <Link
-                href={getLocalizedUrl(`/jobs/${jobId}/apply`)}
+                href={`/jobs/${jobId}/apply`}
                 className="flex-1 bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-700 transition-colors duration-200 text-center"
               >
                 Apply for this Position

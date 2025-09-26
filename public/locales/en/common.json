@@ -134,33 +134,5 @@
     "german": "Deutsch",
     "french": "Français",
     "spanish": "Español"
-  },
-  "jobs": {
-    "title": "Join Our Team",
-    "subtitle": "We're looking for talented individuals to join our growing team. Explore our open positions and find the perfect role for you.",
-    "positions": {
-      "sdr": {
-        "title": "Sales Development Representative",
-        "location": "Remote",
-        "type": "Part-time",
-        "description": "We are looking for a motivated Sales Development Representative to join our team and help us expand our global reach. Earn 17% commission on every transaction based on your skills. Be your own boss with a 1-year contract.",
-        "requirements": [
-          "1 year sales experience",
-          "17% revenue commission structure",
-          "1 year contract commitment",
-          "Excellent communication skills",
-          "Self-motivated and results-driven"
-        ]
-      }
-    },
-    "readMore": "Read More",
-    "applyNow": "Apply Now",
-    "whatHappensNext": "What happens next?",
-    "nextSteps": [
-      "We'll review your application within 2-3 business days",
-      "If selected, we'll contact you to schedule an interview",
-      "The interview process typically takes 1-2 weeks",
-      "We'll notify you of our decision via email"
-    ]
   }
 }

@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { useI18n } from '../contexts/I18nContext';
 import { collection, query, where, getDocs, doc, setDoc, getDoc, deleteDoc, serverTimestamp, addDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { motion } from 'framer-motion';
@@ -116,21 +115,6 @@ const LPAQRCodeDisplay = ({ lpaData }) => {
 
 const Dashboard = () => {
   const { currentUser, userProfile, loadUserProfile, loading: authLoading } = useAuth();
-  const { locale } = useI18n();
-  
-  const getLocalizedUrl = (path) => {
-    const languageMap = {
-      'en': '',
-      'ar': '/arabic',
-      'fr': '/french',
-      'de': '/german',
-      'es': '/spanish',
-      'he': '/hebrew',
-      'ru': '/russian'
-    };
-    const prefix = languageMap[locale] || '';
-    return `${prefix}${path}`;
-  };
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -927,7 +911,7 @@ const Dashboard = () => {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.3 }}
             className="bg-white rounded-xl shadow-lg p-6 cursor-pointer hover:shadow-xl transition-shadow duration-200"
-            onClick={() => router.push(getLocalizedUrl('/affiliate-program'))}
+            onClick={() => router.push('/affiliate-program')}
           >
             <div className="flex items-center justify-between">
               <div>

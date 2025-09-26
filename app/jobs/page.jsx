@@ -8,7 +8,6 @@ import {
   ArrowRight
 } from 'lucide-react';
 import Link from 'next/link';
-import { useI18n } from '../../src/contexts/I18nContext';
 
   // Available job positions
   const jobPositions = [
@@ -29,21 +28,6 @@ import { useI18n } from '../../src/contexts/I18nContext';
   ];
 
 const JobsPage = () => {
-  const { locale } = useI18n();
-
-  const getLocalizedUrl = (path) => {
-    const languageMap = {
-      'en': '',
-      'ar': '/arabic',
-      'fr': '/french',
-      'de': '/german',
-      'es': '/spanish',
-      'he': '/hebrew',
-      'ru': '/russian'
-    };
-    const prefix = languageMap[locale] || '';
-    return `${prefix}${path}`;
-  };
 
   return (
     <div className="min-h-screen bg-white py-12">
@@ -96,13 +80,13 @@ const JobsPage = () => {
               
               <div className="flex space-x-3">
                 <Link
-                  href={getLocalizedUrl(`/jobs/${position.id}`)}
+                  href={`/jobs/${position.id}`}
                   className="flex-1 bg-gray-100 text-gray-700 py-2 px-4 rounded-lg font-medium hover:bg-gray-200 transition-colors duration-200 text-center"
                 >
                   Read More
                 </Link>
                 <Link
-                  href={getLocalizedUrl(`/jobs/${position.id}/apply`)}
+                  href={`/jobs/${position.id}/apply`}
                   className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-blue-700 transition-colors duration-200 flex items-center justify-center"
                 >
                   Apply Now

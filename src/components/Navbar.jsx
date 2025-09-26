@@ -10,7 +10,7 @@ import LanguageSelector from './LanguageSelector';
 import { detectPlatform } from '../utils/platformDetection';
 
 const Navbar = ({ hideLanguageSelector = false }) => {
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
   const { currentUser, logout } = useAuth();
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -28,20 +28,6 @@ const Navbar = ({ hideLanguageSelector = false }) => {
         appLinksSection.scrollIntoView({ behavior: 'smooth' });
       }
     }
-  };
-
-  const getLocalizedUrl = (path) => {
-    const languageMap = {
-      'en': '',
-      'ar': '/arabic',
-      'fr': '/french',
-      'de': '/german',
-      'es': '/spanish',
-      'he': '/hebrew',
-      'ru': '/russian'
-    };
-    const prefix = languageMap[locale] || '';
-    return `${prefix}${path}`;
   };
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
@@ -92,7 +78,7 @@ const Navbar = ({ hideLanguageSelector = false }) => {
       <div className="bg-white/80 shadow-sm shadow-white/30 backdrop-blur-sm w-full">
       <nav aria-label="Global" className="mx-auto flex max-w-7xl items-center justify-between p-2 lg:px-8">
         <div className="flex lg:flex-1">
-          <Link href={getLocalizedUrl("/")} className="-m-1.5 p-1.5 flex items-center">
+          <Link href="/" className="-m-1.5 p-1.5 flex items-center">
             <span className="sr-only">RoamJet Plans</span>
             <img
               src="/images/logo_icon/logo.png"
@@ -124,18 +110,18 @@ const Navbar = ({ hideLanguageSelector = false }) => {
           >
             {t('navbar.downloadApp', 'Download App')}
           </button>
-          <Link href={getLocalizedUrl("/contact")} className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
+          <Link href="/contact" className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
             {t('navbar.contactUs', 'Contact Us')}
           </Link>
-          <Link href={getLocalizedUrl("/blog")} className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
+          <Link href="/blog" className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
             {t('navbar.blog', 'Blog')}
           </Link>
           {currentUser ? (
             <>
-              <Link href={getLocalizedUrl("/esim-plans")} className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
+              <Link href="/esim-plans" className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
                 {t('navbar.plans', 'Plans')}
               </Link>
-              <Link href={getLocalizedUrl("/dashboard")} className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
+              <Link href="/dashboard" className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
                 {t('navbar.dashboard', 'Dashboard')}
               </Link>
               <button
@@ -146,7 +132,7 @@ const Navbar = ({ hideLanguageSelector = false }) => {
               </button>
             </>
           ) : (
-            <Link href={getLocalizedUrl("/login")} className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
+            <Link href="/login" className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
               {t('navbar.login', 'Login')}
             </Link>
           )}
@@ -168,7 +154,7 @@ const Navbar = ({ hideLanguageSelector = false }) => {
           >
             {/* Header with logo and close button */}
             <div className="flex items-center justify-between p-6">
-              <Link href={getLocalizedUrl("/")} className="
+              <Link href="/" className="
                flex items-center" onClick={() => setIsMenuOpen(false)}>
                 <span className="sr-only">RoamJet Plans</span>
                 <img
@@ -212,14 +198,14 @@ const Navbar = ({ hideLanguageSelector = false }) => {
                     {t('navbar.downloadApp', 'Download App')}
                   </button>
                   <Link
-                    href={getLocalizedUrl("/contact")}
+                    href="/contact"
                     className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     {t('navbar.contactUs', 'Contact Us')}
                   </Link>
                   <Link
-                    href={getLocalizedUrl("/blog")}
+                    href="/blog"
                     className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2"
                     onClick={() => setIsMenuOpen(false)}
                   >
@@ -228,14 +214,14 @@ const Navbar = ({ hideLanguageSelector = false }) => {
                   {currentUser && (
                     <>
                       <Link
-                        href={getLocalizedUrl("/esim-plans")}
+                        href="/esim-plans"
                         className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2"
                         onClick={() => setIsMenuOpen(false)}
                       >
                         {t('navbar.plans', 'Plans')}
                       </Link>
                       <Link
-                        href={getLocalizedUrl("/dashboard")}
+                        href="/dashboard"
                         className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2"
                         onClick={() => setIsMenuOpen(false)}
                       >

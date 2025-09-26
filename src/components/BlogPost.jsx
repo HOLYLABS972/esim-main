@@ -2,11 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Head from 'next/head';
-import { Calendar, User, Clock, ArrowLeft, Share2, Globe } from 'lucide-react';
+import { Calendar, User, Clock, ArrowLeft, Share2 } from 'lucide-react';
 import blogService from '../services/blogService';
 
-const BlogPost = ({ postId, language = 'en' }) => {
+const BlogPost = ({ slug }) => {
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -14,33 +13,25 @@ const BlogPost = ({ postId, language = 'en' }) => {
 
   useEffect(() => {
     loadBlogPost();
-  }, [postId, language]);
+  }, [slug]);
 
   const loadBlogPost = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      console.log('Loading blog post with ID:', postId, 'Language:', language);
+      console.log('Loading blog post with slug:', slug);
       
-      if (!postId) {
+      if (!slug) {
         setError('No blog post specified');
         return;
       }
 
-      // First try to get the post by ID
-      let postData = await blogService.getPostById(postId);
-      
-      // If not found, try to get by slug (for backward compatibility)
-      if (!postData) {
-        postData = await blogService.getPostBySlug(postId);
-      }
-      
+      const postData = await blogService.getPostBySlug(slug);
       console.log('Blog post data:', postData);
       
       if (postData) {
         setPost(postData);
-        
         // Increment view count
         await blogService.incrementViews(postData.id);
       } else {
@@ -54,30 +45,13 @@ const BlogPost = ({ postId, language = 'en' }) => {
     }
   };
 
-  const getLanguageBackUrl = () => {
-    const languageMap = {
-      'en': '/english/blog',
-      'ar': '/arabic/blog',
-      'fr': '/french/blog',
-      'de': '/german/blog',
-      'es': '/spanish/blog',
-      'he': '/hebrew/blog',
-      'ru': '/russian/blog'
-    };
-    return languageMap[language] || '/blog';
-  };
-
-  const getLanguageName = () => {
-    const languageMap = {
-      'en': 'English',
-      'ar': 'العربية',
-      'fr': 'Français',
-      'de': 'Deutsch',
-      'es': 'Español',
-      'he': 'עברית',
-      'ru': 'Русский'
-    };
-    return languageMap[language] || 'English';
+  const formatDate = (date) => {
+    if (!date) return '';
+    return new Date(date).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
   };
 
   const handleShare = () => {
@@ -152,10 +126,10 @@ const BlogPost = ({ postId, language = 'en' }) => {
           <h1 className="text-4xl font-medium tracking-tight text-eerie-black mb-4">Post Not Found</h1>
           <p className="text-cool-black mb-8">{error || 'The blog post you\'re looking for doesn\'t exist.'}</p>
           <Link 
-              href={getLanguageBackUrl()}
+            href="/blog" 
             className="btn-primary px-6 py-3"
           >
-              Back to {getLanguageName()} Blog
+            Back to Blog
           </Link>
         </div>
       </div>
@@ -163,82 +137,8 @@ const BlogPost = ({ postId, language = 'en' }) => {
   }
 
 
-  // Generate structured data for SEO
-  const generateStructuredData = () => {
-    if (!post) return null;
-    
-    return {
-      "@context": "https://schema.org",
-      "@type": "BlogPosting",
-      "headline": post.metaTitle || post.title,
-      "description": post.metaDescription || post.excerpt,
-      "image": post.ogImage || post.featuredImage || `${process.env.NEXT_PUBLIC_BASE_URL || 'https://esimplans.com'}/images/og-image.jpg`,
-      "author": {
-        "@type": "Person",
-        "name": post.author
-      },
-      "publisher": {
-        "@type": "Organization",
-        "name": "eSIM Plans",
-        "logo": {
-          "@type": "ImageObject",
-          "url": `${process.env.NEXT_PUBLIC_BASE_URL || 'https://esimplans.com'}/images/logo.png`
-        }
-      },
-      "datePublished": post.publishedAt,
-      "dateModified": post.updatedAt || post.publishedAt,
-      "mainEntityOfPage": {
-        "@type": "WebPage",
-        "@id": `${process.env.NEXT_PUBLIC_BASE_URL || 'https://esimplans.com'}/blog/${post.slug}`
-      },
-      "keywords": post.metaKeywords?.join(', ') || post.tags?.join(', ') || '',
-      "articleSection": post.category,
-      "wordCount": post.content?.replace(/<[^>]*>/g, '').split(' ').length || 0
-    };
-  };
-
   return (
-    <>
-      {/* SEO Meta Tags */}
-      <Head>
-        <title>{post?.metaTitle || post?.title || 'Blog Post - eSIM Plans'}</title>
-        <meta name="description" content={post?.metaDescription || post?.excerpt || 'Read our latest insights about eSIM technology and global connectivity.'} />
-        <meta name="keywords" content={post?.metaKeywords?.join(', ') || post?.tags?.join(', ') || 'eSIM blog post, connectivity insights, travel tips'} />
-        <meta name="author" content={post?.author || 'eSIM Plans Team'} />
-        <meta name="robots" content="index, follow" />
-        
-        {/* Canonical URL */}
-        {post?.canonicalUrl && <link rel="canonical" href={post.canonicalUrl} />}
-        
-        {/* Open Graph */}
-        <meta property="og:type" content="article" />
-        <meta property="og:title" content={post?.ogTitle || post?.metaTitle || post?.title || 'Blog Post - eSIM Plans'} />
-        <meta property="og:description" content={post?.ogDescription || post?.metaDescription || post?.excerpt || 'Read our latest insights about eSIM technology and global connectivity.'} />
-        <meta property="og:image" content={post?.ogImage || post?.featuredImage || `${process.env.NEXT_PUBLIC_BASE_URL || 'https://esimplans.com'}/images/og-image.jpg`} />
-        <meta property="og:url" content={`${process.env.NEXT_PUBLIC_BASE_URL || 'https://esimplans.com'}/blog/${post?.slug}`} />
-        <meta property="og:site_name" content="eSIM Plans" />
-        <meta property="article:author" content={post?.author || 'eSIM Plans Team'} />
-        <meta property="article:published_time" content={post?.publishedAt} />
-        {post?.tags && post.tags.map(tag => (
-          <meta key={tag} property="article:tag" content={tag} />
-        ))}
-        
-        {/* Twitter Card */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={post?.twitterTitle || post?.ogTitle || post?.metaTitle || post?.title || 'Blog Post - eSIM Plans'} />
-        <meta name="twitter:description" content={post?.twitterDescription || post?.ogDescription || post?.metaDescription || post?.excerpt || 'Read our latest insights about eSIM technology and global connectivity.'} />
-        <meta name="twitter:image" content={post?.twitterImage || post?.ogImage || post?.featuredImage || `${process.env.NEXT_PUBLIC_BASE_URL || 'https://esimplans.com'}/images/og-image.jpg`} />
-        
-        {/* Structured Data */}
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify(generateStructuredData())
-          }}
-        />
-      </Head>
-
-      <div className="min-h-screen bg-white py-24">
+    <div className="min-h-screen bg-white py-24">
       {/* Header */}
       <section className="bg-white">
         <div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8">
@@ -247,11 +147,11 @@ const BlogPost = ({ postId, language = 'en' }) => {
             <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
               <div className="px-8 pt-8 pb-8">
           <Link 
-              href={getLanguageBackUrl()}
+            href="/blog" 
                   className="inline-flex items-center text-tufts-blue hover:text-cobalt-blue mb-6 font-medium transition-colors duration-200"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to {getLanguageName()} Blog
+            Back to Blog
           </Link>
           
                 <div className="mb-4 flex flex-wrap gap-2 items-center">
@@ -438,8 +338,7 @@ const BlogPost = ({ postId, language = 'en' }) => {
         </div>
       )}
 
-      </div>
-    </>
+    </div>
   );
 };
 
