@@ -14,6 +14,7 @@ import {
   serverTimestamp 
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
+import { enhancePostWithAutoSEO } from '../utils/autoSEOGenerator';
 
 // Blog post data structure
 export const createBlogPost = (postData) => {
@@ -178,7 +179,10 @@ export const blogService = {
   // Create new blog post
   async createPost(postData) {
     try {
-      const post = createBlogPost(postData);
+      // Auto-generate SEO data
+      const enhancedPostData = enhancePostWithAutoSEO(postData);
+      
+      const post = createBlogPost(enhancedPostData);
       
       // Generate slug if not provided
       if (!post.slug) {
@@ -202,16 +206,19 @@ export const blogService = {
   // Update blog post
   async updatePost(id, postData) {
     try {
+      // Auto-generate SEO data for updates
+      const enhancedPostData = enhancePostWithAutoSEO(postData);
+      
       const postRef = doc(db, 'blog_posts', id);
       const updateData = {
-        ...postData,
+        ...enhancedPostData,
         updatedAt: serverTimestamp(),
         publishedAt: serverTimestamp() // Update published date when post is updated
       };
 
       // Generate slug if title changed and no custom slug provided
-      if (postData.title && !postData.slug) {
-        updateData.slug = generateSlug(postData.title);
+      if (enhancedPostData.title && !enhancedPostData.slug) {
+        updateData.slug = generateSlug(enhancedPostData.title);
       }
 
       // Check for slug uniqueness if slug is being updated

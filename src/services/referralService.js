@@ -240,10 +240,24 @@ export const generateUniqueReferralCode = async () => {
 };
 
 // Create a new referral code for a user
-export const createReferralCode = async (userId, userEmail) => {
+export const createReferralCode = async (userId, userEmail, customCode = null) => {
   try {
-    // Generate new referral code
-    const referralCode = await generateUniqueReferralCode();
+    let referralCode;
+    
+    if (customCode) {
+      // Use custom code if provided
+      referralCode = customCode.toUpperCase().replace(/[^A-Z0-9]/g, ''); // Clean and uppercase
+      
+      // Check if custom code already exists
+      const existing = await getDoc(doc(db, 'referralCodes', referralCode));
+      if (existing.exists()) {
+        return { success: false, error: 'Referral code already exists. Please choose a different name.' };
+      }
+    } else {
+      // Generate random code if no custom code provided
+      referralCode = await generateUniqueReferralCode();
+    }
+    
     const expiryDate = new Date();
     expiryDate.setMonth(expiryDate.getMonth() + 2); // Exactly 2 months
     

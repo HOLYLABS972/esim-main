@@ -6,8 +6,8 @@ import { useAuth } from '../../../../src/contexts/AuthContext';
 import { useAdmin } from '../../../../src/contexts/AdminContext';
 import { collection, query, where, getDocs, getDoc, doc, updateDoc, orderBy, deleteDoc } from 'firebase/firestore';
 import { db } from '../../../../src/firebase/config';
-import { getAllReferralCodes } from '../../../../src/services/referralService';
-import { motion } from 'framer-motion';
+import { getAllReferralCodes, createReferralCode } from '../../../../src/services/referralService';
+// import { motion } from 'framer-motion'; // Temporarily disabled to fix build error
 import { 
   ArrowLeft, 
   User, 
@@ -17,7 +17,10 @@ import {
   CreditCard,
   RefreshCw,
   TrendingUp,
-  Trash2
+  Trash2,
+  Plus,
+  Copy,
+  Eye
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -34,6 +37,8 @@ const UserDetailsPage = () => {
   const [bankAccount, setBankAccount] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('referral-codes');
+  const [showReferralCodeModal, setShowReferralCodeModal] = useState(false);
+  const [customReferralName, setCustomReferralName] = useState('');
   
   // Redirect if not admin
   useEffect(() => {
@@ -133,6 +138,76 @@ const UserDetailsPage = () => {
       console.error('Error deleting transaction:', error);
       toast.error(`Error deleting transaction: ${error.message}`);
     }
+  };
+
+  // Referral code management functions
+  const handleGenerateReferralCode = () => {
+    if (!userId) {
+      toast.error('User ID not available');
+      return;
+    }
+    setCustomReferralName('');
+    setShowReferralCodeModal(true);
+  };
+
+  const handleConfirmGenerateReferralCode = async () => {
+    if (!customReferralName.trim()) {
+      toast.error('Please enter a name for the referral code');
+      return;
+    }
+
+    try {
+      // Use custom name as the referral code
+      const result = await createReferralCode(userId, userId, customReferralName.trim());
+      if (result.success) {
+        toast.success(`Generated new referral code: ${result.referralCode}`);
+        await loadUserData(); // Reload to show new referral code
+        setShowReferralCodeModal(false);
+        setCustomReferralName('');
+      } else {
+        toast.error(`Failed to generate referral code: ${result.error}`);
+      }
+    } catch (error) {
+      console.error('Error generating referral code:', error);
+      toast.error('Failed to generate referral code');
+    }
+  };
+
+  const handleRegenerateReferralCode = () => {
+    if (!userId) {
+      toast.error('User ID not available');
+      return;
+    }
+    setCustomReferralName('');
+    setShowReferralCodeModal(true);
+  };
+
+  const handleConfirmRegenerateReferralCode = async () => {
+    if (!customReferralName.trim()) {
+      toast.error('Please enter a name for the referral code');
+      return;
+    }
+
+    try {
+      // Use custom name as the referral code
+      const result = await createReferralCode(userId, userId, customReferralName.trim());
+      if (result.success) {
+        toast.success(`Regenerated referral code: ${result.referralCode}`);
+        await loadUserData();
+        setShowReferralCodeModal(false);
+        setCustomReferralName('');
+      } else {
+        toast.error(`Failed to regenerate referral code: ${result.error}`);
+      }
+    } catch (error) {
+      console.error('Error regenerating referral code:', error);
+      toast.error('Failed to regenerate referral code');
+    }
+  };
+
+  const copyReferralCode = (code) => {
+    navigator.clipboard.writeText(code);
+    toast.success('Referral code copied to clipboard');
   };
 
   if (!isAdmin && !canManageAdmins) {
@@ -300,43 +375,117 @@ const UserDetailsPage = () => {
           <div className="p-6">
             {/* Referral Codes Tab */}
             {activeTab === 'referral-codes' && (
-              <div className="space-y-4">
-                {referralCodes.length > 0 ? (
-                  referralCodes.map((code, index) => (
-                    <motion.div
-                      key={code.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.05 }}
-                      className="bg-gray-50 rounded-lg p-4 border border-gray-200"
-                    >
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <span className="font-mono text-sm font-medium text-blue-600 bg-white px-3 py-1 rounded-lg border border-gray-200">
-                              {code.code}
-                            </span>
-                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                              code.isActive 
-                                ? 'bg-green-100 text-green-800' 
-                                : 'bg-gray-100 text-gray-800'
-                            }`}>
-                              {code.isActive ? 'Active' : 'Inactive'}
-                            </span>
-                          </div>
+              <div className="space-y-6">
+                {/* Action Buttons */}
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-semibold text-gray-900">Referral Code Management</h3>
+                  <div className="flex space-x-3">
+                    {referralCodes.length === 0 ? (
+                      <button
+                        onClick={handleGenerateReferralCode}
+                        className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center transition-colors"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Generate Referral Code
+                      </button>
+                    ) : (
+                      <button
+                        onClick={handleRegenerateReferralCode}
+                        className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center transition-colors"
+                      >
+                        <RefreshCw className="w-4 h-4 mr-2" />
+                        Edit/Regenerate Code
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Current Referral Code */}
+                {user && user.referralCode ? (
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <h4 className="text-md font-medium text-gray-900 mb-3">Current Referral Code</h4>
+                        <div className="flex items-center gap-3 mb-2">
+                          <span className="font-mono text-xl font-bold text-blue-600 bg-white px-4 py-2 rounded-lg border border-blue-200 shadow-sm">
+                            {user.referralCode}
+                          </span>
+                          <span className="inline-flex px-3 py-1 text-sm font-semibold rounded-full bg-green-100 text-green-800">
+                            Active
+                          </span>
                         </div>
-                        <div className="text-right text-sm text-gray-500">
-                          <div>Created: {code.createdAt ? new Date(code.createdAt).toLocaleDateString() : 'N/A'}</div>
-                          <div>Expires: {code.expiryDate ? new Date(code.expiryDate).toLocaleDateString() : 'Never'}</div>
+                        <p className="text-sm text-gray-600">
+                          Expires: {user.referralCodeExpiryDate ? 
+                            (typeof user.referralCodeExpiryDate.toDate === 'function' ? 
+                              user.referralCodeExpiryDate.toDate().toLocaleDateString() : 
+                              new Date(user.referralCodeExpiryDate).toLocaleDateString()) : 
+                            'Never'}
+                        </p>
+                      </div>
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => copyReferralCode(user.referralCode)}
+                          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center transition-colors"
+                        >
+                          <Copy className="w-4 h-4 mr-2" />
+                          Copy
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6">
+                    <div className="text-center">
+                      <Gift className="w-12 h-12 text-yellow-600 mx-auto mb-3" />
+                      <h4 className="text-lg font-medium text-yellow-800 mb-2">No Referral Code</h4>
+                      <p className="text-yellow-700 mb-4">This user doesn't have a referral code yet.</p>
+                      <button
+                        onClick={handleGenerateReferralCode}
+                        className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium flex items-center mx-auto transition-colors"
+                      >
+                        <Plus className="w-5 h-5 mr-2" />
+                        Generate Referral Code
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Referral Statistics */}
+                {user && referralCodes.length > 0 && (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="bg-blue-50 rounded-lg p-4">
+                      <div className="flex items-center">
+                        <Gift className="w-5 h-5 text-blue-600" />
+                        <div className="ml-3">
+                          <p className="text-sm font-medium text-blue-900">Total Usage</p>
+                          <p className="text-lg font-bold text-blue-900">
+                            {referralCodes[0]?.usageCount || 0}
+                          </p>
                         </div>
                       </div>
-                    </motion.div>
-                  ))
-                ) : (
-                  <div className="text-center py-12">
-                    <Gift className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No Referral Codes</h3>
-                    <p className="text-gray-600">This user has not created any referral codes.</p>
+                    </div>
+                    <div className="bg-green-50 rounded-lg p-4">
+                      <div className="flex items-center">
+                        <Eye className="w-5 h-5 text-green-600" />
+                        <div className="ml-3">
+                          <p className="text-sm font-medium text-green-900">Status</p>
+                          <p className="text-lg font-bold text-green-900">
+                            {user.referralCode ? 'Active' : 'Inactive'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="bg-purple-50 rounded-lg p-4">
+                      <div className="flex items-center">
+                        <RefreshCw className="w-5 h-5 text-purple-600" />
+                        <div className="ml-3">
+                          <p className="text-sm font-medium text-purple-900">Created</p>
+                          <p className="text-lg font-bold text-purple-900">
+                            {referralCodes[0]?.createdAt?.toLocaleDateString() || 'Unknown'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
@@ -347,11 +496,8 @@ const UserDetailsPage = () => {
               <div className="space-y-4">
                 {transactions.filter(t => t.type !== 'withdrawal' && t.method !== 'withdrawal').length > 0 ? (
                   transactions.filter(t => t.type !== 'withdrawal' && t.method !== 'withdrawal').map((transaction, index) => (
-                    <motion.div
+                    <div
                       key={transaction.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.05 }}
                       className="bg-gray-50 rounded-lg p-4 border border-gray-200"
                     >
                       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -398,7 +544,7 @@ const UserDetailsPage = () => {
                           </button>
                         </div>
                       </div>
-                    </motion.div>
+                    </div>
                   ))
                 ) : (
                   <div className="text-center py-12">
@@ -415,11 +561,8 @@ const UserDetailsPage = () => {
               <div className="space-y-4">
                 {withdrawalRequests.length > 0 ? (
                   withdrawalRequests.map((request, index) => (
-                    <motion.div
+                    <div
                       key={request.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.05 }}
                       className="bg-gray-50 rounded-lg p-4 border border-gray-200"
                     >
                       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -479,7 +622,7 @@ const UserDetailsPage = () => {
                           )}
                         </div>
                       </div>
-                    </motion.div>
+                    </div>
                   ))
                 ) : (
                   <div className="text-center py-12">
@@ -547,6 +690,69 @@ const UserDetailsPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Referral Code Name Input Modal */}
+      {showReferralCodeModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-lg font-medium text-gray-900">
+                  Enter Referral Code Name
+                </h3>
+                <button
+                  onClick={() => {
+                    setShowReferralCodeModal(false);
+                    setCustomReferralName('');
+                  }}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <span className="sr-only">Close</span>
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="mb-6">
+                <label htmlFor="referralName" className="block text-sm font-medium text-gray-700 mb-2">
+                  Referral Code Name
+                </label>
+                <input
+                  type="text"
+                  id="referralName"
+                  value={customReferralName}
+                  onChange={(e) => setCustomReferralName(e.target.value)}
+                  placeholder="Enter a name for this referral code"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  autoFocus
+                />
+                <p className="text-sm text-gray-500 mt-1">
+                  This name will be associated with the referral code for identification purposes.
+                </p>
+              </div>
+
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={() => {
+                    setShowReferralCodeModal(false);
+                    setCustomReferralName('');
+                  }}
+                  className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={user && user.referralCode ? handleConfirmRegenerateReferralCode : handleConfirmGenerateReferralCode}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm font-medium"
+                >
+                  {user && user.referralCode ? 'Regenerate Code' : 'Generate Code'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
