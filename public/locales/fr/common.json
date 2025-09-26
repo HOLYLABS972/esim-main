@@ -15,31 +15,31 @@
     "stayConnected": "Restez connecté",
     "noMatterWhere": "peu importe où vous êtes",
     "with": "avec",
-    "description": "Obtenez des données mobiles instantanées dans plus de 200 pays. Aucune SIM physique nécessaire. Activez n'importe où, n'importe quand avec notre réseau eSIM mondial fiable.",
+    "description": "Plans eSIM parfaits pour randonneurs, voyageurs et nomades numériques. Comparez Airalo vs RoamJet vs eSIMo. Obtenez des données mobiles instantanées dans plus de 200 pays. Aucune SIM physique nécessaire. Activez n'importe où, n'importe quand avec notre réseau eSIM mondial fiable.",
     "downloadApp": "Télécharger l'application",
     "learnMore": "En savoir plus"
   },
   "features": {
     "title": "Connectez-vous globalement",
-    "subtitle": "Tout ce dont vous avez besoin pour la connectivité mondiale",
+    "subtitle": "Solution eSIM parfaite pour randonneurs, voyageurs et nomades numériques dans le monde entier",
     "globalCoverage": {
       "title": "Couverture mondiale",
-      "description": "Restez connecté dans plus de 200 pays avec notre vaste couverture réseau eSIM dans le monde entier.",
+      "description": "Restez connecté dans plus de 200 pays avec notre vaste couverture réseau eSIM dans le monde entier. Parfait pour les randonneurs explorant plusieurs destinations et les nomades numériques travaillant à distance.",
       "countries": "200+ pays",
       "worldwide": "Couverture mondiale"
     },
     "instantActivation": {
       "title": "Activation instantanée",
-      "description": "Connectez-vous immédiatement avec notre activation de code QR. Pas d'attente, pas de délais.",
+      "description": "Connectez-vous immédiatement avec notre activation de code QR. Pas d'attente, pas de délais. Parfait pour les voyageurs qui ont besoin d'un accès Internet instantané à l'arrivée.",
       "readyInSeconds": "✓ Prêt en quelques secondes"
     },
     "securePayment": {
       "title": "Paiement sécurisé",
-      "description": "Chiffrement SSL 256 bits et plusieurs options de paiement pour votre sécurité."
+      "description": "Chiffrement SSL 256 bits et plusieurs options de paiement pour votre sécurité. Fait confiance par des milliers de voyageurs et nomades numériques dans le monde entier."
     },
     "deviceCompatibility": {
       "title": "Compatibilité des appareils",
-      "description": "Fonctionne avec tous les smartphones et tablettes modernes qui prennent en charge la technologie eSIM.",
+      "description": "Fonctionne avec tous les smartphones et tablettes modernes qui prennent en charge la technologie eSIM. Compatible avec les appareils utilisés par les randonneurs et nomades numériques dans le monde entier.",
       "esimCompatible": "Compatible eSIM",
       "operatingSystem": "Android 12+, iOS 15+"
     }

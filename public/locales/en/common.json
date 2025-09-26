@@ -15,39 +15,39 @@
     "stayConnected": "Stay connected",
     "noMatterWhere": "no matter where you are",
     "with": "with",
-    "description": "Get instant mobile data in 200+ countries. No physical SIM needed. Activate anywhere, anytime with our reliable global eSIM network.",
+    "description": "Perfect eSIM plans for backpackers, travelers, and digital nomads. Compare Airalo vs RoamJet vs eSIMo. Get instant mobile data in 200+ countries. No physical SIM needed. Activate anywhere, anytime with our reliable global eSIM network.",
     "downloadApp": "Download App",
     "learnMore": "Learn more"
   },
   "features": {
     "title": "Connect globally",
-    "subtitle": "Everything you need for global connectivity",
+    "subtitle": "Perfect eSIM solution for backpackers, travelers, and digital nomads worldwide",
     "globalCoverage": {
       "title": "Global Coverage",
-      "description": "Stay connected in 200+ countries with our extensive eSIM network coverage worldwide.",
+      "description": "Stay connected in 200+ countries with our extensive eSIM network coverage worldwide. Perfect for backpackers exploring multiple destinations and digital nomads working remotely.",
       "countries": "200+ Countries",
       "worldwide": "Worldwide Coverage"
     },
     "instantActivation": {
       "title": "Instant Activation",
-      "description": "Get connected immediately with our QR code activation. No waiting, no delays.",
+      "description": "Get connected immediately with our QR code activation. No waiting, no delays. Perfect for travelers who need instant internet access upon arrival.",
       "readyInSeconds": "✓ Ready in seconds"
     },
     "securePayment": {
       "title": "Secure Payment",
-      "description": "256-bit SSL encryption and multiple payment options for your security."
+      "description": "256-bit SSL encryption and multiple payment options for your security. Trusted by thousands of travelers and digital nomads worldwide."
     },
     "deviceCompatibility": {
       "title": "Device Compatibility",
-      "description": "Works with all modern smartphones and tablets that support eSIM technology.",
+      "description": "Works with all modern smartphones and tablets that support eSIM technology. Compatible with devices used by backpackers and digital nomads globally.",
       "esimCompatible": "eSIM Compatible",
       "operatingSystem": "Android 12+, iOS 15+"
     }
   },
   "plans": {
     "title": "Portable Pricing System",
-    "subtitle": "Choose Your Perfect eSIM Plan",
-    "description": "Select from our wide range of data plans designed for every type of traveler. From short trips to extended stays, we have you covered.",
+    "subtitle": "Best eSIM Plans for Backpackers, Travelers & Digital Nomads",
+    "description": "Select from our wide range of data plans designed for every type of traveler. Perfect for backpackers exploring multiple countries, business travelers, and digital nomads working remotely. Compare our competitive rates with Airalo and eSIMo.",
     "loadingPlans": "Loading plans...",
     "fromPrice": "From ${price}",
     "noPlansAvailable": "No plans available",
@@ -89,7 +89,7 @@
   "footer": {
     "logoAlt": "RoamJet Logo",
     "brandName": "RoamJet",
-    "companyDescription": "RoamJet - Your trusted partner for global eSIM solutions. Instant activation, worldwide coverage, and secure connectivity for travelers and businesses.",
+    "companyDescription": "RoamJet - Your trusted partner for global eSIM solutions. Perfect for backpackers, travelers, and digital nomads. Compare Airalo vs RoamJet vs eSIMo. Instant activation, worldwide coverage, and secure connectivity for travelers and businesses worldwide.",
     "quickLinks": "Quick Links",
     "home": "Home",
     "blog": "Blog",
