@@ -9,7 +9,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Smartphone,
   Trash2,
-  Search
+  Search,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -50,6 +52,10 @@ const PlansManagement = () => {
   // Price editing state
   const [editingPrices, setEditingPrices] = useState({});
   const [pendingPriceChanges, setPendingPriceChanges] = useState({});
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [plansPerPage] = useState(15);
 
   // Load plans on component mount
   useEffect(() => {
@@ -82,6 +88,8 @@ const PlansManagement = () => {
     }
 
     setFilteredPlans(filtered);
+    // Reset to page 1 when filters change
+    setCurrentPage(1);
   }, [allPlans, searchTerm, selectedCountry]);
 
   // Plans Management Functions
@@ -167,6 +175,29 @@ const PlansManagement = () => {
 
   const stopEditingPrice = (planId) => {
     setEditingPrices(prev => ({ ...prev, [planId]: false }));
+  };
+
+  // Pagination calculations
+  const indexOfLastPlan = currentPage * plansPerPage;
+  const indexOfFirstPlan = indexOfLastPlan - plansPerPage;
+  const currentPlans = filteredPlans.slice(indexOfFirstPlan, indexOfLastPlan);
+  const totalPages = Math.ceil(filteredPlans.length / plansPerPage);
+
+  // Pagination handlers
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
   };
 
   const deletePlan = async (planId, planName) => {
@@ -262,8 +293,8 @@ const PlansManagement = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {filteredPlans.length > 0 ? (
-                filteredPlans.map((plan) => (
+              {currentPlans.length > 0 ? (
+                currentPlans.map((plan) => (
                   <tr key={plan.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
@@ -386,6 +417,102 @@ const PlansManagement = () => {
           </table>
         </div>
       </div>
+
+      {/* Pagination */}
+      {filteredPlans.length > plansPerPage && (
+        <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6 rounded-lg shadow-sm">
+          <div className="flex-1 flex justify-between sm:hidden">
+            <button
+              onClick={handlePreviousPage}
+              disabled={currentPage === 1}
+              className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Previous
+            </button>
+            <button
+              onClick={handleNextPage}
+              disabled={currentPage === totalPages}
+              className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
+          </div>
+          <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm text-gray-700">
+                Showing <span className="font-medium">{indexOfFirstPlan + 1}</span> to{' '}
+                <span className="font-medium">
+                  {Math.min(indexOfLastPlan, filteredPlans.length)}
+                </span>{' '}
+                of <span className="font-medium">{filteredPlans.length}</span> results
+              </p>
+            </div>
+            <div>
+              <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                <button
+                  onClick={handlePreviousPage}
+                  disabled={currentPage === 1}
+                  className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <span className="sr-only">Previous</span>
+                  <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+                </button>
+                
+                {/* Page numbers */}
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNumber) => {
+                  // Show first page, last page, current page, and pages around current page
+                  const shouldShow = 
+                    pageNumber === 1 || 
+                    pageNumber === totalPages || 
+                    Math.abs(pageNumber - currentPage) <= 1;
+                  
+                  if (!shouldShow) {
+                    // Show ellipsis for gaps
+                    if (pageNumber === 2 && currentPage > 3) {
+                      return (
+                        <span key={`ellipsis-${pageNumber}`} className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                          ...
+                        </span>
+                      );
+                    }
+                    if (pageNumber === totalPages - 1 && currentPage < totalPages - 2) {
+                      return (
+                        <span key={`ellipsis-${pageNumber}`} className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                          ...
+                        </span>
+                      );
+                    }
+                    return null;
+                  }
+                  
+                  return (
+                    <button
+                      key={pageNumber}
+                      onClick={() => handlePageChange(pageNumber)}
+                      className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                        pageNumber === currentPage
+                          ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
+                          : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                      }`}
+                    >
+                      {pageNumber}
+                    </button>
+                  );
+                })}
+                
+                <button
+                  onClick={handleNextPage}
+                  disabled={currentPage === totalPages}
+                  className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <span className="sr-only">Next</span>
+                  <ChevronRight className="h-5 w-5" aria-hidden="true" />
+                </button>
+              </nav>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
