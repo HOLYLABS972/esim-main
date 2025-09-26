@@ -10,7 +10,7 @@ import { useI18n } from '../contexts/I18nContext';
 
 const Footer = () => {
   const pathname = usePathname();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const currentYear = new Date().getFullYear();
   // Hardcoded contact information
   const contactInfo = {
@@ -37,18 +37,32 @@ const Footer = () => {
     return isLanguagePage ? t(key, englishText) : englishText;
   };
 
+  const getLocalizedUrl = (path) => {
+    const languageMap = {
+      'en': '',
+      'ar': '/arabic',
+      'fr': '/french',
+      'de': '/german',
+      'es': '/spanish',
+      'he': '/hebrew',
+      'ru': '/russian'
+    };
+    const prefix = languageMap[locale] || '';
+    return `${prefix}${path}`;
+  };
+
   const quickLinks = [
-    { name: getText('footer.home', 'Home'), path: '/' },
-    { name: getText('footer.blog', 'Blog'), path: '/blog' },
-    { name: getText('footer.jobs', 'Jobs'), path: '/jobs' },
-    { name: getText('footer.contactUs', 'Contact Us'), path: '/contact' }
+    { name: getText('footer.home', 'Home'), path: getLocalizedUrl('/') },
+    { name: getText('footer.blog', 'Blog'), path: getLocalizedUrl('/blog') },
+    { name: getText('footer.jobs', 'Jobs'), path: getLocalizedUrl('/jobs') },
+    { name: getText('footer.contactUs', 'Contact Us'), path: getLocalizedUrl('/contact') }
   ];
 
   const usefulLinks = [
-    { name: getText('footer.privacyPolicy', 'Privacy Policy'), path: '/privacy-policy' },
-    { name: getText('footer.termsOfService', 'Terms of Service'), path: '/terms-of-service' },
-    { name: getText('footer.cookiePolicy', 'Cookie Policy'), path: '/cookie-policy' },
-    { name: getText('footer.affiliateProgram', 'Affiliate Program'), path: '/affiliate' }
+    { name: getText('footer.privacyPolicy', 'Privacy Policy'), path: getLocalizedUrl('/privacy-policy') },
+    { name: getText('footer.termsOfService', 'Terms of Service'), path: getLocalizedUrl('/terms-of-service') },
+    { name: getText('footer.cookiePolicy', 'Cookie Policy'), path: getLocalizedUrl('/cookie-policy') },
+    { name: getText('footer.affiliateProgram', 'Affiliate Program'), path: getLocalizedUrl('/affiliate-program') }
   ];
 
   // Create social links array with only non-empty URLs
@@ -81,7 +95,7 @@ const Footer = () => {
               transition={{ duration: 0.6, delay: 0.1 }}
               className="footer-item"
             >
-              <Link href="/" className="footer-item__logo inline-block mb-4 flex items-center">
+              <Link href={getLocalizedUrl('/')} className="footer-item__logo inline-block mb-4 flex items-center">
                 <Image 
                   src="/images/logo_icon/logo.png" 
                   alt="RoamJet Logo" 
@@ -236,7 +250,7 @@ const Footer = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <div className="bottom-footer-text text-eerie-black">
-              &copy; {currentYear} <Link href="/" className="text-cobalt-blue hover:text-cobalt-blue transition-colors duration-200">{getText('footer.brandName', 'RoamJet')}</Link>. 
+              &copy; {currentYear} <Link href={getLocalizedUrl('/')} className="text-cobalt-blue hover:text-cobalt-blue transition-colors duration-200">{getText('footer.brandName', 'RoamJet')}</Link>. 
               {getText('footer.allRightsReserved', 'All rights reserved.')}
             </div>
           </div>
