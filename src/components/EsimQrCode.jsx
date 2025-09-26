@@ -6,7 +6,20 @@ import toast from 'react-hot-toast';
 
 const EsimQrCode = ({ qrCodeData, orderDetails }) => {
   const handleDownload = () => {
-    // Create a canvas element to convert QR code to image
+    const qrCodeUrl = qrCodeData.qr_code_url || qrCodeData.qr_code;
+    
+    // Check if it's an LPA URL
+    if (qrCodeUrl && qrCodeUrl.startsWith('lpa:')) {
+      // For LPA URLs, we can't download as image, so just copy the URL
+      navigator.clipboard.writeText(qrCodeUrl).then(() => {
+        toast.success('LPA URL copied to clipboard');
+      }).catch(() => {
+        toast.error('Failed to copy LPA URL');
+      });
+      return;
+    }
+    
+    // For regular QR code images
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     const img = new Image();
@@ -16,14 +29,22 @@ const EsimQrCode = ({ qrCodeData, orderDetails }) => {
       canvas.height = img.height;
       ctx.drawImage(img, 0, 0);
       
-      // Download the image
       const link = document.createElement('a');
       link.download = `esim-qr-${orderDetails?.orderId || 'code'}.png`;
       link.href = canvas.toDataURL();
       link.click();
     };
     
-    img.src = qrCodeData.qr_code_url || qrCodeData.qr_code;
+    img.onerror = () => {
+      // If image fails to load, copy the URL instead
+      navigator.clipboard.writeText(qrCodeUrl).then(() => {
+        toast.success('QR code URL copied to clipboard');
+      }).catch(() => {
+        toast.error('Failed to copy QR code URL');
+      });
+    };
+    
+    img.src = qrCodeUrl;
   };
 
   const handleShare = async () => {
@@ -123,7 +144,7 @@ const EsimQrCode = ({ qrCodeData, orderDetails }) => {
           className="flex-1 flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
         >
           <Download className="w-4 h-4 mr-2" />
-          Download
+          {(qrCodeData.qr_code_url || qrCodeData.qr_code)?.startsWith('lpa:') ? 'Copy LPA URL' : 'Download'}
         </button>
         <button
           onClick={handleShare}

@@ -94,7 +94,7 @@ const AdminDashboard = () => {
   const functions = getFunctions();
 
   // State Management - ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
-  const [activeTab, setActiveTab] = useState('countries');
+  const [activeTab, setActiveTab] = useState('esim');
   const [showAdminDropdown, setShowAdminDropdown] = useState(false);
   const [loading, setLoading] = useState(false);
   const [rawApiData, setRawApiData] = useState(null);
