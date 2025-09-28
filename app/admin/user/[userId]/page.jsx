@@ -673,9 +673,9 @@ const UserDetailsPage = () => {
   // Sum all positive transactions (deposits and referral commissions)
   const totalEarnings = transactions
     .filter(t => t.type === 'deposit' || t.method === 'referral_commission')
-    .reduce((sum, transaction) => sum + (transaction.amount || 0), 0);
+    .reduce((sum, transaction) => sum + Math.abs(transaction.amount || 0), 0);
   const withdrawalRequests = transactions.filter(t => t.type === 'withdrawal' || t.method === 'withdrawal');
-  const totalWithdrawals = withdrawalRequests.reduce((sum, request) => sum + (request.amount || 0), 0);
+  const totalWithdrawals = withdrawalRequests.reduce((sum, request) => sum + Math.abs(request.amount || 0), 0);
   const referralTransactions = transactions.filter(t => t.method === 'referral');
 
   return (
@@ -1276,7 +1276,7 @@ const UserDetailsPage = () => {
                               <p className={`text-lg font-semibold ${
                                 transaction.type === 'deposit' ? 'text-green-600' : 'text-red-600'
                               }`}>
-                                {transaction.type === 'deposit' ? '+' : '-'}${transaction.amount?.toFixed(2) || '0.00'}
+                                {transaction.type === 'deposit' ? '+' : '-'}${Math.abs(transaction.amount || 0).toFixed(2)}
                               </p>
                             </div>
                           </div>
@@ -1340,7 +1340,7 @@ const UserDetailsPage = () => {
                           <div className="flex items-center justify-between">
                             <div>
                               <p className="text-sm text-gray-600">Withdrawal Amount</p>
-                              <p className="text-lg font-semibold text-gray-900">${request.amount?.toFixed(2) || '0.00'}</p>
+                              <p className="text-lg font-semibold text-gray-900">${Math.abs(request.amount || 0).toFixed(2)}</p>
                             </div>
                           </div>
 
