@@ -67,6 +67,7 @@ const AdminEsimManagement = () => {
           esims: esims,
           esimCount: esims.length,
           activeEsims: esims.filter(esim => esim.status === 'active').length,
+          deactivatedEsims: esims.filter(esim => esim.status === 'deactivated').length,
           totalSpent: esims.reduce((sum, esim) => sum + (esim.price || 0), 0),
         });
       }
@@ -250,9 +251,17 @@ Actions
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <Smartphone className="w-4 h-4 text-blue-500 mr-2" />
-                          <span className="text-sm font-medium text-gray-900">
-                            {user.esimCount}
-                          </span>
+                          <div className="flex flex-col">
+                            <span className="text-sm font-medium text-gray-900">
+                              {user.esimCount} total
+                            </span>
+                            <div className="flex gap-2 text-xs">
+                              <span className="text-green-600">{user.activeEsims} active</span>
+                              {user.deactivatedEsims > 0 && (
+                                <span className="text-orange-600">{user.deactivatedEsims} deactivated</span>
+                              )}
+                            </div>
+                          </div>
                         </div>
                       </td>
                       

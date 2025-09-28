@@ -25,7 +25,8 @@ import {
   Edit,
   Users,
   Search,
-  ChevronDown
+  ChevronDown,
+  Power
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import QRCode from 'qrcode';
@@ -546,6 +547,23 @@ const UserDetailsPage = () => {
     }
   };
 
+  // Handle eSIM activation
+  const handleActivateEsim = async (esimId) => {
+    try {
+      await setDoc(doc(db, 'users', userId, 'esims', esimId), {
+        status: 'active',
+        activatedAt: new Date(),
+        activatedBy: currentUser.email
+      }, { merge: true });
+      
+      toast.success('eSIM activated successfully');
+      await loadEsimOrders(); // Reload the list
+    } catch (error) {
+      console.error('Error activating eSIM:', error);
+      toast.error(`Error activating eSIM: ${error.message}`);
+    }
+  };
+
   if (!isAdmin && !canManageAdmins) {
     return null;
   }
@@ -949,9 +967,10 @@ const UserDetailsPage = () => {
                                 order.status === 'active' ? 'bg-green-100 text-green-800' :
                                 order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
                                 order.status === 'expired' ? 'bg-red-100 text-red-800' :
+                                order.status === 'deactivated' ? 'bg-orange-100 text-orange-800' :
                                 'bg-gray-100 text-gray-800'
                               }`}>
-                                {order.status || 'Unknown'}
+                                {order.status === 'deactivated' ? 'Deactivated' : (order.status || 'Unknown')}
                               </span>
                             </div>
                             
@@ -1117,6 +1136,15 @@ const UserDetailsPage = () => {
                           </div>
                           
                           <div className="flex flex-col space-y-2 ml-4">
+                            {order.status === 'deactivated' && (
+                              <button
+                                onClick={() => handleActivateEsim(order.id)}
+                                className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm font-medium flex items-center transition-colors"
+                              >
+                                <Power className="w-4 h-4 mr-2" />
+                                Activate
+                              </button>
+                            )}
                             <button
                               onClick={() => handleReassignEsim(order)}
                               className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium flex items-center transition-colors"
