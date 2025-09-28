@@ -26,7 +26,8 @@ import {
   Users,
   Search,
   ChevronDown,
-  Power
+  Power,
+  Calendar
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import QRCode from 'qrcode';
@@ -136,6 +137,9 @@ const UserDetailsPage = () => {
   const [reassignUserSearch, setReassignUserSearch] = useState('');
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [selectedReassignUser, setSelectedReassignUser] = useState(null);
+  const [showActivateModal, setShowActivateModal] = useState(false);
+  const [selectedEsimForActivation, setSelectedEsimForActivation] = useState(null);
+  const [customExpiryDate, setCustomExpiryDate] = useState('');
   
   // Redirect if not admin
   useEffect(() => {
@@ -547,16 +551,68 @@ const UserDetailsPage = () => {
     }
   };
 
-  // Handle eSIM activation
-  const handleActivateEsim = async (esimId) => {
+  // Handle eSIM activation (simple version)
+  const handleActivateEsim = async (esimId, esimData) => {
     try {
+      // Calculate new expiry date - extend by the original period or default to 7 days
+      const now = new Date();
+      const originalPeriod = esimData.period || esimData.periodDays || 7; // Default to 7 days if no period
+      const newExpiryDate = new Date(now.getTime() + (originalPeriod * 24 * 60 * 60 * 1000));
+      
       await setDoc(doc(db, 'users', userId, 'esims', esimId), {
         status: 'active',
         activatedAt: new Date(),
-        activatedBy: currentUser.email
+        activatedBy: currentUser.email,
+        expiryDate: newExpiryDate,
+        renewedAt: new Date(),
+        renewedBy: currentUser.email
       }, { merge: true });
       
-      toast.success('eSIM activated successfully');
+      toast.success(`eSIM activated successfully and expiry extended to ${newExpiryDate.toLocaleDateString()}`);
+      await loadEsimOrders(); // Reload the list
+    } catch (error) {
+      console.error('Error activating eSIM:', error);
+      toast.error(`Error activating eSIM: ${error.message}`);
+    }
+  };
+
+  // Handle advanced eSIM activation with custom expiry
+  const handleAdvancedActivation = (esim) => {
+    setSelectedEsimForActivation(esim);
+    setCustomExpiryDate('');
+    setShowActivateModal(true);
+  };
+
+  // Confirm advanced activation
+  const handleConfirmActivation = async () => {
+    if (!selectedEsimForActivation) return;
+
+    try {
+      let newExpiryDate;
+      
+      if (customExpiryDate) {
+        // Use custom expiry date
+        newExpiryDate = new Date(customExpiryDate);
+      } else {
+        // Calculate default expiry based on original period
+        const now = new Date();
+        const originalPeriod = selectedEsimForActivation.period || selectedEsimForActivation.periodDays || 7;
+        newExpiryDate = new Date(now.getTime() + (originalPeriod * 24 * 60 * 60 * 1000));
+      }
+      
+      await setDoc(doc(db, 'users', userId, 'esims', selectedEsimForActivation.id), {
+        status: 'active',
+        activatedAt: new Date(),
+        activatedBy: currentUser.email,
+        expiryDate: newExpiryDate,
+        renewedAt: new Date(),
+        renewedBy: currentUser.email
+      }, { merge: true });
+      
+      toast.success(`eSIM activated successfully and expiry set to ${newExpiryDate.toLocaleDateString()}`);
+      setShowActivateModal(false);
+      setSelectedEsimForActivation(null);
+      setCustomExpiryDate('');
       await loadEsimOrders(); // Reload the list
     } catch (error) {
       console.error('Error activating eSIM:', error);
@@ -964,13 +1020,15 @@ const UserDetailsPage = () => {
                                 {order.countryName || order.country || 'Unknown Country'}
                               </h4>
                               <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                order.status === 'active' ? 'bg-green-100 text-green-800' :
+                                order.status === 'active' && (!order.expiryDate || new Date(order.expiryDate) > new Date()) ? 'bg-green-100 text-green-800' :
                                 order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                order.status === 'expired' ? 'bg-red-100 text-red-800' :
+                                order.status === 'expired' || (order.status === 'active' && order.expiryDate && new Date(order.expiryDate) <= new Date()) ? 'bg-red-100 text-red-800' :
                                 order.status === 'deactivated' ? 'bg-orange-100 text-orange-800' :
                                 'bg-gray-100 text-gray-800'
                               }`}>
-                                {order.status === 'deactivated' ? 'Deactivated' : (order.status || 'Unknown')}
+                                {order.status === 'deactivated' ? 'Deactivated' : 
+                                 (order.status === 'active' && order.expiryDate && new Date(order.expiryDate) <= new Date()) ? 'Expired' :
+                                 (order.status || 'Unknown')}
                               </span>
                             </div>
                             
@@ -1017,12 +1075,17 @@ const UserDetailsPage = () => {
                               </div>
                               <div>
                                 <p className="text-sm text-gray-600 mb-1">Expires</p>
-                                <p className="text-sm text-gray-900">
+                                <p className={`text-sm ${
+                                  order.expiryDate && new Date(order.expiryDate) <= new Date() ? 'text-red-600 font-medium' : 'text-gray-900'
+                                }`}>
                                   {order.expiryDate ? 
                                     (typeof order.expiryDate.toDate === 'function' ? 
                                       order.expiryDate.toDate().toLocaleDateString() : 
                                       order.expiryDate.toLocaleDateString()) : 
                                     'Unknown'}
+                                  {order.expiryDate && new Date(order.expiryDate) <= new Date() && (
+                                    <span className="ml-1 text-xs text-red-500">(Expired)</span>
+                                  )}
                                 </p>
                               </div>
                             </div>
@@ -1136,13 +1199,13 @@ const UserDetailsPage = () => {
                           </div>
                           
                           <div className="flex flex-col space-y-2 ml-4">
-                            {order.status === 'deactivated' && (
+                            {(order.status === 'deactivated' || (order.status === 'active' && order.expiryDate && new Date(order.expiryDate) < new Date())) && (
                               <button
-                                onClick={() => handleActivateEsim(order.id)}
+                                onClick={() => handleAdvancedActivation(order)}
                                 className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm font-medium flex items-center transition-colors"
                               >
                                 <Power className="w-4 h-4 mr-2" />
-                                Activate
+                                {order.status === 'deactivated' ? 'Activate & Extend' : 'Extend Expiry'}
                               </button>
                             )}
                             <button
@@ -1543,6 +1606,88 @@ const UserDetailsPage = () => {
                   className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm font-medium"
                 >
                   {user && user.referralCode ? 'Edit Code' : 'Generate Code'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* eSIM Activation Modal */}
+      {showActivateModal && selectedEsimForActivation && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-lg font-medium text-gray-900">
+                  {selectedEsimForActivation.status === 'deactivated' ? 'Activate eSIM' : 'Extend eSIM Expiry'}
+                </h3>
+                <button
+                  onClick={() => {
+                    setShowActivateModal(false);
+                    setSelectedEsimForActivation(null);
+                    setCustomExpiryDate('');
+                  }}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <span className="sr-only">Close</span>
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="mb-6">
+                <div className="bg-gray-50 p-4 rounded-lg mb-4">
+                  <h4 className="text-sm font-medium text-gray-700 mb-2">eSIM Details</h4>
+                  <p className="text-sm text-gray-900">
+                    <strong>Country:</strong> {selectedEsimForActivation.countryName || selectedEsimForActivation.country || 'Unknown'}
+                  </p>
+                  <p className="text-sm text-gray-900">
+                    <strong>Plan:</strong> {selectedEsimForActivation.planName || 'Unknown Plan'}
+                  </p>
+                  <p className="text-sm text-gray-900">
+                    <strong>Current Expiry:</strong> {selectedEsimForActivation.expiryDate ? new Date(selectedEsimForActivation.expiryDate).toLocaleDateString() : 'Unknown'}
+                  </p>
+                  <p className="text-sm text-gray-900">
+                    <strong>Status:</strong> {selectedEsimForActivation.status}
+                  </p>
+                </div>
+
+                <div>
+                  <label htmlFor="expiryDate" className="block text-sm font-medium text-gray-700 mb-2">
+                    New Expiry Date (Optional)
+                  </label>
+                  <input
+                    type="date"
+                    id="expiryDate"
+                    value={customExpiryDate}
+                    onChange={(e) => setCustomExpiryDate(e.target.value)}
+                    min={new Date().toISOString().split('T')[0]}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                  <p className="text-sm text-gray-500 mt-1">
+                    Leave empty to extend by the original plan period ({selectedEsimForActivation.period || selectedEsimForActivation.periodDays || 7} days)
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={() => {
+                    setShowActivateModal(false);
+                    setSelectedEsimForActivation(null);
+                    setCustomExpiryDate('');
+                  }}
+                  className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmActivation}
+                  className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md text-sm font-medium"
+                >
+                  {selectedEsimForActivation.status === 'deactivated' ? 'Activate eSIM' : 'Extend Expiry'}
                 </button>
               </div>
             </div>
