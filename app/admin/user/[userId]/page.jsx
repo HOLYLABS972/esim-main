@@ -488,8 +488,14 @@ const UserDetailsPage = () => {
     }
 
     try {
-      // Remove eSIM from current user's esims subcollection
-      await deleteDoc(doc(db, 'users', userId, 'esims', selectedEsimForReassign.id));
+      // Deactivate eSIM from current user instead of deleting it
+      await setDoc(doc(db, 'users', userId, 'esims', selectedEsimForReassign.id), {
+        status: 'deactivated',
+        deactivatedAt: new Date(),
+        deactivatedReason: 'reassigned',
+        reassignedTo: selectedReassignUser.id,
+        reassignedAt: new Date()
+      }, { merge: true });
       
       // Add eSIM to new user's esims subcollection (not as a field in main document)
       // Preserve only the essential fields and convert timestamps properly
@@ -505,7 +511,7 @@ const UserDetailsPage = () => {
         ...(selectedEsimForReassign.price && { price: selectedEsimForReassign.price }),
         ...(selectedEsimForReassign.currency && { currency: selectedEsimForReassign.currency }),
         ...(selectedEsimForReassign.operator && { operator: selectedEsimForReassign.operator }),
-        status: selectedEsimForReassign.status || 'active', // Ensure status is preserved
+        status: 'active', // Reactivate for new user
         ...(selectedEsimForReassign.iccid && { iccid: selectedEsimForReassign.iccid }),
         ...(selectedEsimForReassign.qrCode && { qrCode: selectedEsimForReassign.qrCode }),
         
@@ -522,12 +528,13 @@ const UserDetailsPage = () => {
         // Add reassignment tracking
         reassignedAt: new Date(),
         reassignedFrom: userId,
-        reassignedTo: selectedReassignUser.id
+        reassignedTo: selectedReassignUser.id,
+        reactivatedAt: new Date()
       };
       
       await setDoc(doc(db, 'users', selectedReassignUser.id, 'esims', selectedEsimForReassign.id), esimData);
 
-      toast.success(`eSIM reassigned to ${selectedReassignUser.email} successfully`);
+      toast.success(`eSIM deactivated from current user and reassigned to ${selectedReassignUser.email} successfully`);
       setShowReassignModal(false);
       setSelectedEsimForReassign(null);
       setSelectedReassignUser(null);
