@@ -496,28 +496,28 @@ const UserDetailsPage = () => {
       const esimData = {
         // Core eSIM data
         id: selectedEsimForReassign.id,
-        planId: selectedEsimForReassign.planId,
-        planName: selectedEsimForReassign.planName,
-        countryCode: selectedEsimForReassign.countryCode,
-        countryName: selectedEsimForReassign.countryName,
-        capacity: selectedEsimForReassign.capacity,
-        period: selectedEsimForReassign.period,
-        price: selectedEsimForReassign.price,
-        currency: selectedEsimForReassign.currency,
-        operator: selectedEsimForReassign.operator,
+        ...(selectedEsimForReassign.planId && { planId: selectedEsimForReassign.planId }),
+        ...(selectedEsimForReassign.planName && { planName: selectedEsimForReassign.planName }),
+        ...(selectedEsimForReassign.countryCode && { countryCode: selectedEsimForReassign.countryCode }),
+        ...(selectedEsimForReassign.countryName && { countryName: selectedEsimForReassign.countryName }),
+        ...(selectedEsimForReassign.capacity && { capacity: selectedEsimForReassign.capacity }),
+        ...(selectedEsimForReassign.period && { period: selectedEsimForReassign.period }),
+        ...(selectedEsimForReassign.price && { price: selectedEsimForReassign.price }),
+        ...(selectedEsimForReassign.currency && { currency: selectedEsimForReassign.currency }),
+        ...(selectedEsimForReassign.operator && { operator: selectedEsimForReassign.operator }),
         status: selectedEsimForReassign.status || 'active', // Ensure status is preserved
-        iccid: selectedEsimForReassign.iccid,
-        qrCode: selectedEsimForReassign.qrCode,
+        ...(selectedEsimForReassign.iccid && { iccid: selectedEsimForReassign.iccid }),
+        ...(selectedEsimForReassign.qrCode && { qrCode: selectedEsimForReassign.qrCode }),
         
-        // Preserve original timestamps
-        createdAt: selectedEsimForReassign.createdAt,
-        updatedAt: selectedEsimForReassign.updatedAt,
-        purchaseDate: selectedEsimForReassign.purchaseDate,
-        expiryDate: selectedEsimForReassign.expiryDate,
+        // Preserve original timestamps (only if not undefined)
+        ...(selectedEsimForReassign.createdAt && { createdAt: selectedEsimForReassign.createdAt }),
+        ...(selectedEsimForReassign.updatedAt && { updatedAt: selectedEsimForReassign.updatedAt }),
+        ...(selectedEsimForReassign.purchaseDate && { purchaseDate: selectedEsimForReassign.purchaseDate }),
+        ...(selectedEsimForReassign.expiryDate && { expiryDate: selectedEsimForReassign.expiryDate }),
         
-        // Preserve order data
-        orderResult: selectedEsimForReassign.orderResult,
-        orderData: selectedEsimForReassign.orderData,
+        // Preserve order data (only if not undefined)
+        ...(selectedEsimForReassign.orderResult && { orderResult: selectedEsimForReassign.orderResult }),
+        ...(selectedEsimForReassign.orderData && { orderData: selectedEsimForReassign.orderData }),
         
         // Add reassignment tracking
         reassignedAt: new Date(),
