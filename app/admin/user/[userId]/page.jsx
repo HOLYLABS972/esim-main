@@ -256,8 +256,9 @@ const UserDetailsPage = () => {
                      (data.createdAt ? new Date(data.createdAt) : null),
           updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate() : 
                      (data.updatedAt ? new Date(data.updatedAt) : null),
-          expiryDate: data.expiryDate?.toDate ? data.expiryDate.toDate() : 
-                      (data.expiryDate ? new Date(data.expiryDate) : null),
+          expiryDate: data.expiryTimestamp?.toDate ? data.expiryTimestamp.toDate() : 
+                      (data.expiryDate ? new Date(data.expiryDate) : 
+                       (data.expiry_date ? new Date(data.expiry_date) : null)),
         };
       });
       
@@ -600,15 +601,20 @@ const UserDetailsPage = () => {
         newExpiryDate = new Date(now.getTime() + (originalPeriod * 24 * 60 * 60 * 1000));
       }
       
-      // Prepare update data
+      // Prepare update data - ensure mobile app compatibility
       const updateData = {
-        expiryDate: newExpiryDate, // Firestore will convert this to a Timestamp
+        // Store expiry date in BOTH formats to ensure compatibility
+        expiryDate: newExpiryDate.toISOString(), // ISO string for DateTime.tryParse() compatibility
+        expiry_date: newExpiryDate.toISOString(), // Fallback field as ISO string
+        expiryTimestamp: newExpiryDate, // Firestore Timestamp for admin panel
         renewedAt: new Date(),
         renewedBy: currentUser.email,
-        updatedAt: new Date(), // Ensure updatedAt is also set
-        lastModified: new Date(), // Additional field to ensure mobile app picks up changes
-        // Also ensure status is explicitly set to active for mobile app compatibility
-        status: 'active'
+        updatedAt: new Date(),
+        lastModified: new Date(),
+        status: 'active', // Explicitly set status to active
+        // Additional fields to ensure mobile app picks up the change
+        period: selectedEsimForActivation.period || selectedEsimForActivation.periodDays || 7,
+        periodDays: selectedEsimForActivation.period || selectedEsimForActivation.periodDays || 7
       };
 
       // If eSIM is deactivated, also record activation details
@@ -620,7 +626,7 @@ const UserDetailsPage = () => {
       await setDoc(doc(db, 'users', userId, 'esims', selectedEsimForActivation.id), updateData, { merge: true });
       
       const action = selectedEsimForActivation.status === 'deactivated' ? 'activated and extended' : 'extended';
-      toast.success(`eSIM ${action} successfully. New expiry: ${newExpiryDate.toLocaleDateString()}. The mobile app will show the updated status when refreshed.`);
+      toast.success(`eSIM ${action} successfully! Status: ACTIVE, Expiry: ${newExpiryDate.toLocaleDateString()} (${newExpiryDate.toISOString()}). Mobile app will show in Active tab after refresh.`);
       setShowActivateModal(false);
       setSelectedEsimForActivation(null);
       setCustomExpiryDate('');
@@ -1680,7 +1686,7 @@ const UserDetailsPage = () => {
                   </p>
                   <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-md">
                     <p className="text-sm text-green-800">
-                      <strong>After extension:</strong> This eSIM will be moved to the Active tab in the mobile app with the new expiry date.
+                      <strong>After extension:</strong> eSIM status will be set to "ACTIVE" with a future expiry date stored in mobile-compatible format. The eSIM will move from Expired tab to Active tab. User should refresh/pull-to-refresh the mobile app to see the change.
                     </p>
                   </div>
                 </div>
