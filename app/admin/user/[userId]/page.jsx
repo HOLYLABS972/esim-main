@@ -583,7 +583,7 @@ const UserDetailsPage = () => {
     setShowActivateModal(true);
   };
 
-  // Confirm advanced activation
+  // Confirm eSIM extension
   const handleConfirmActivation = async () => {
     if (!selectedEsimForActivation) return;
 
@@ -600,23 +600,34 @@ const UserDetailsPage = () => {
         newExpiryDate = new Date(now.getTime() + (originalPeriod * 24 * 60 * 60 * 1000));
       }
       
-      await setDoc(doc(db, 'users', userId, 'esims', selectedEsimForActivation.id), {
-        status: 'active',
-        activatedAt: new Date(),
-        activatedBy: currentUser.email,
-        expiryDate: newExpiryDate,
+      // Prepare update data
+      const updateData = {
+        expiryDate: newExpiryDate, // Firestore will convert this to a Timestamp
         renewedAt: new Date(),
-        renewedBy: currentUser.email
-      }, { merge: true });
+        renewedBy: currentUser.email,
+        updatedAt: new Date(), // Ensure updatedAt is also set
+        lastModified: new Date(), // Additional field to ensure mobile app picks up changes
+        // Also ensure status is explicitly set to active for mobile app compatibility
+        status: 'active'
+      };
+
+      // If eSIM is deactivated, also record activation details
+      if (selectedEsimForActivation.status === 'deactivated') {
+        updateData.activatedAt = new Date();
+        updateData.activatedBy = currentUser.email;
+      }
       
-      toast.success(`eSIM activated successfully and expiry set to ${newExpiryDate.toLocaleDateString()}`);
+      await setDoc(doc(db, 'users', userId, 'esims', selectedEsimForActivation.id), updateData, { merge: true });
+      
+      const action = selectedEsimForActivation.status === 'deactivated' ? 'activated and extended' : 'extended';
+      toast.success(`eSIM ${action} successfully. New expiry: ${newExpiryDate.toLocaleDateString()}. The mobile app will show the updated status when refreshed.`);
       setShowActivateModal(false);
       setSelectedEsimForActivation(null);
       setCustomExpiryDate('');
       await loadEsimOrders(); // Reload the list
     } catch (error) {
-      console.error('Error activating eSIM:', error);
-      toast.error(`Error activating eSIM: ${error.message}`);
+      console.error('Error extending eSIM:', error);
+      toast.error(`Error extending eSIM: ${error.message}`);
     }
   };
 
@@ -1199,15 +1210,13 @@ const UserDetailsPage = () => {
                           </div>
                           
                           <div className="flex flex-col space-y-2 ml-4">
-                            {(order.status === 'deactivated' || (order.status === 'active' && order.expiryDate && new Date(order.expiryDate) < new Date())) && (
-                              <button
-                                onClick={() => handleAdvancedActivation(order)}
-                                className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm font-medium flex items-center transition-colors"
-                              >
-                                <Power className="w-4 h-4 mr-2" />
-                                {order.status === 'deactivated' ? 'Activate & Extend' : 'Extend Expiry'}
-                              </button>
-                            )}
+                            <button
+                              onClick={() => handleAdvancedActivation(order)}
+                              className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm font-medium flex items-center transition-colors"
+                            >
+                              <Calendar className="w-4 h-4 mr-2" />
+                              Extend
+                            </button>
                             <button
                               onClick={() => handleReassignEsim(order)}
                               className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium flex items-center transition-colors"
@@ -1620,7 +1629,7 @@ const UserDetailsPage = () => {
             <div className="p-6">
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-lg font-medium text-gray-900">
-                  {selectedEsimForActivation.status === 'deactivated' ? 'Activate eSIM' : 'Extend eSIM Expiry'}
+                  Extend eSIM
                 </h3>
                 <button
                   onClick={() => {
@@ -1667,8 +1676,13 @@ const UserDetailsPage = () => {
                     className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                   <p className="text-sm text-gray-500 mt-1">
-                    Leave empty to extend by the original plan period ({selectedEsimForActivation.period || selectedEsimForActivation.periodDays || 7} days)
+                    Leave empty to extend by the original plan period ({selectedEsimForActivation.period || selectedEsimForActivation.periodDays || 7} days from now)
                   </p>
+                  <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-md">
+                    <p className="text-sm text-green-800">
+                      <strong>After extension:</strong> This eSIM will be moved to the Active tab in the mobile app with the new expiry date.
+                    </p>
+                  </div>
                 </div>
               </div>
 
@@ -1687,7 +1701,7 @@ const UserDetailsPage = () => {
                   onClick={handleConfirmActivation}
                   className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md text-sm font-medium"
                 >
-                  {selectedEsimForActivation.status === 'deactivated' ? 'Activate eSIM' : 'Extend Expiry'}
+                  Extend eSIM
                 </button>
               </div>
             </div>
