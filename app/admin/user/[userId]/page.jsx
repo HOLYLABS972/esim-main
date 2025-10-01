@@ -173,7 +173,7 @@ const UserDetailsPage = () => {
   useEffect(() => {
     if (reassignUserSearch.trim()) {
       const filtered = allUsers.filter(user => 
-        user.email.toLowerCase().includes(reassignUserSearch.toLowerCase()) &&
+        user.email && user.email.toLowerCase().includes(reassignUserSearch.toLowerCase()) &&
         user.id !== userId // Exclude current user
       );
       setFilteredUsers(filtered);
@@ -1034,7 +1034,13 @@ const UserDetailsPage = () => {
                           <div className="flex-1">
                             <div className="flex items-center gap-3 mb-3">
                               <h4 className="text-lg font-semibold text-gray-900">
-                                {order.countryName || order.country || 'Unknown Country'}
+                                {(() => {
+                                  const country = order.countryName || order.country;
+                                  if (typeof country === 'object' && country !== null) {
+                                    return country.name || country.slug || 'Unknown Country';
+                                  }
+                                  return country || 'Unknown Country';
+                                })()}
                               </h4>
                               <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                                 order.status === 'active' && (!order.expiryDate || new Date(order.expiryDate) > new Date()) ? 'bg-green-100 text-green-800' :
@@ -1056,11 +1062,27 @@ const UserDetailsPage = () => {
                               </div>
                               <div>
                                 <p className="text-sm text-gray-600 mb-1">Plan</p>
-                                <p className="text-sm text-gray-900">{order.planName || 'Unknown Plan'}</p>
+                                <p className="text-sm text-gray-900">
+                                  {(() => {
+                                    const plan = order.planName;
+                                    if (typeof plan === 'object' && plan !== null) {
+                                      return plan.name || plan.slug || 'Unknown Plan';
+                                    }
+                                    return plan || 'Unknown Plan';
+                                  })()}
+                                </p>
                               </div>
                               <div>
                                 <p className="text-sm text-gray-600 mb-1">Data</p>
-                                <p className="text-sm text-gray-900">{order.capacity || 'Unknown'} {order.capacityUnit || 'GB'}</p>
+                                <p className="text-sm text-gray-900">
+                                  {(() => {
+                                    const capacity = order.capacity;
+                                    if (typeof capacity === 'object' && capacity !== null) {
+                                      return `${capacity.value || capacity.amount || 'Unknown'} ${capacity.unit || order.capacityUnit || 'GB'}`;
+                                    }
+                                    return `${capacity || 'Unknown'} ${order.capacityUnit || 'GB'}`;
+                                  })()}
+                                </p>
                               </div>
                               <div>
                                 <p className="text-sm text-gray-600 mb-1">Price</p>
@@ -1068,7 +1090,15 @@ const UserDetailsPage = () => {
                               </div>
                               <div>
                                 <p className="text-sm text-gray-600 mb-1">Operator</p>
-                                <p className="text-sm text-gray-900">{order.operatorName || order.operator || 'Unknown'}</p>
+                                <p className="text-sm text-gray-900">
+                                  {(() => {
+                                    const operator = order.operatorName || order.operator;
+                                    if (typeof operator === 'object' && operator !== null) {
+                                      return operator.name || operator.slug || 'Unknown';
+                                    }
+                                    return operator || 'Unknown';
+                                  })()}
+                                </p>
                               </div>
                               <div>
                                 <p className="text-sm text-gray-600 mb-1">Period</p>

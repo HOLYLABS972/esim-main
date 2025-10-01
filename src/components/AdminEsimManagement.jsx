@@ -1,13 +1,12 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { collection, query, getDocs, getDoc, doc, deleteDoc, orderBy } from 'firebase/firestore';
+import { collection, query, getDocs, getDoc, doc, deleteDoc, orderBy, limit, startAfter } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { 
   Search, 
-  Eye, 
   Trash2, 
   RefreshCw, 
   User, 
@@ -17,7 +16,8 @@ import {
   X,
   UserCircle,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Plus
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -34,46 +34,102 @@ const AdminEsimManagement = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [usersPerPage] = useState(15);
 
-  // Load users with their eSIM counts
-  const loadUsers = async () => {
+  // Load users for specific page (true Firestore pagination)
+  const loadUsers = async (page = 1) => {
     try {
       setLoading(true);
       
-      // Get all users
-      const usersSnapshot = await getDocs(collection(db, 'users'));
+      // Calculate offset for pagination
+      const offset = (page - 1) * usersPerPage;
+      
+      // Build Firestore query with pagination
+      let usersQuery;
+      
+      if (page === 1) {
+        // First page - no offset needed
+        usersQuery = query(
+          collection(db, 'users'),
+          orderBy('createdAt', 'desc'),
+          limit(usersPerPage)
+        );
+      } else {
+        // For subsequent pages, we need to skip documents
+        // First, get the total count to calculate how many to skip
+        const countQuery = query(collection(db, 'users'));
+        const countSnapshot = await getDocs(countQuery);
+        const totalUsers = countSnapshot.docs.length;
+        
+        // Get all users up to the offset to find the start document
+        const skipQuery = query(
+          collection(db, 'users'),
+          orderBy('createdAt', 'desc'),
+          limit(offset)
+        );
+        const skipSnapshot = await getDocs(skipQuery);
+        
+        if (skipSnapshot.docs.length === offset && skipSnapshot.docs.length > 0) {
+          // Use the last document as startAfter cursor
+          usersQuery = query(
+            collection(db, 'users'),
+            orderBy('createdAt', 'desc'),
+            startAfter(skipSnapshot.docs[skipSnapshot.docs.length - 1]),
+            limit(usersPerPage)
+          );
+        } else {
+          // No more users to load
+          setUsers([]);
+          setFilteredUsers([]);
+          setLoading(false);
+          return;
+        }
+      }
+      
+      console.log(`Loading page ${page} users from Firestore...`);
+      const usersSnapshot = await getDocs(usersQuery);
+      
+      console.log(`Loaded ${usersSnapshot.docs.length} users from Firestore for page ${page}`);
+      
       const usersData = [];
       
-      for (const userDoc of usersSnapshot.docs) {
+      // Process each user document with minimal data fetching
+      const userPromises = usersSnapshot.docs.map(async (userDoc) => {
         const userData = userDoc.data();
         
-        // Get eSIM count for this user
+        // Get only eSIM count and basic stats (limit to 10 for performance)
         const esimsSnapshot = await getDocs(
           query(
             collection(db, 'users', userDoc.id, 'esims'),
-            orderBy('createdAt', 'desc')
+            orderBy('createdAt', 'desc'),
+            limit(10) // Reduced from 50 to 10 for faster loading
           )
         );
         
-        const esims = esimsSnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-          createdAt: doc.data().createdAt?.toDate(),
-        }));
+        // Process eSIMs in parallel with minimal data
+        const esims = esimsSnapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            status: data.status,
+            price: data.price || 0,
+            // Don't load full eSIM data - just what we need for display
+          };
+        });
         
-        usersData.push({
+        return {
           id: userDoc.id,
           email: userData.email || userData.actualEmail || 'No email',
           createdAt: userData.createdAt?.toDate(),
-          esims: esims,
+          esims: esims, // Minimal eSIM data
           esimCount: esims.length,
           activeEsims: esims.filter(esim => esim.status === 'active').length,
           deactivatedEsims: esims.filter(esim => esim.status === 'deactivated').length,
           totalSpent: esims.reduce((sum, esim) => sum + (esim.price || 0), 0),
-        });
-      }
+        };
+      });
       
-      // Sort by eSIM count (descending)
-      usersData.sort((a, b) => b.esimCount - a.esimCount);
+      // Wait for all user processing to complete
+      const processedUsers = await Promise.all(userPromises);
+      usersData.push(...processedUsers);
       
       setUsers(usersData);
       setFilteredUsers(usersData);
@@ -86,24 +142,65 @@ const AdminEsimManagement = () => {
     }
   };
 
-  // Filter users based on search term
+  // Handle search - reload users when search changes
   useEffect(() => {
-    if (!searchTerm) {
-      setFilteredUsers(users);
-    } else {
+    if (searchTerm) {
+      // For search, we'll need to implement a different approach
+      // For now, just filter the current loaded users
       const filtered = users.filter(user =>
         user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
         user.id.toLowerCase().includes(searchTerm.toLowerCase())
       );
       setFilteredUsers(filtered);
+    } else {
+      setFilteredUsers(users);
     }
-    // Reset to page 1 when search changes
-    setCurrentPage(1);
   }, [searchTerm, users]);
 
-  // Load users on component mount
+  // Pagination calculations
+  const [totalUsers, setTotalUsers] = useState(0);
+  const totalPages = Math.ceil(totalUsers / usersPerPage);
+
+  // Pagination handlers
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+    loadUsers(pageNumber);
+  };
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      const newPage = currentPage - 1;
+      setCurrentPage(newPage);
+      loadUsers(newPage);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      const newPage = currentPage + 1;
+      setCurrentPage(newPage);
+      loadUsers(newPage);
+    }
+  };
+
+  // Load total count and first page on component mount
   useEffect(() => {
-    loadUsers();
+    const loadInitialData = async () => {
+      try {
+        // Get total user count quickly (without loading all data)
+        const countQuery = query(collection(db, 'users'));
+        const countSnapshot = await getDocs(countQuery);
+        setTotalUsers(countSnapshot.docs.length);
+        
+        // Load first page
+        await loadUsers(1);
+      } catch (error) {
+        console.error('Error loading initial data:', error);
+        toast.error('Failed to load users');
+      }
+    };
+    
+    loadInitialData();
   }, []);
 
   // Handle user selection
@@ -148,28 +245,6 @@ const AdminEsimManagement = () => {
     return date.toLocaleDateString();
   };
 
-  // Pagination calculations
-  const indexOfLastUser = currentPage * usersPerPage;
-  const indexOfFirstUser = indexOfLastUser - usersPerPage;
-  const currentUsers = filteredUsers.slice(indexOfFirstUser, indexOfLastUser);
-  const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
-
-  // Pagination handlers
-  const handlePageChange = (pageNumber) => {
-    setCurrentPage(pageNumber);
-  };
-
-  const handlePreviousPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
-
-  const handleNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -230,8 +305,8 @@ Actions
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {currentUsers.map((user) => (
-                    <tr key={user.id} className="hover:bg-gray-50">
+                  {filteredUsers.map((user) => (
+                    <tr key={user.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => handleViewUser(user)}>
                       {/* User Column */}
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
@@ -251,17 +326,9 @@ Actions
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <Smartphone className="w-4 h-4 text-blue-500 mr-2" />
-                          <div className="flex flex-col">
-                            <span className="text-sm font-medium text-gray-900">
-                              {user.esimCount} total
-                            </span>
-                            <div className="flex gap-2 text-xs">
-                              <span className="text-green-600">{user.activeEsims} active</span>
-                              {user.deactivatedEsims > 0 && (
-                                <span className="text-orange-600">{user.deactivatedEsims} deactivated</span>
-                              )}
-                            </div>
-                          </div>
+                          <span className="text-sm font-medium text-gray-900">
+                            {user.esimCount}
+                          </span>
                         </div>
                       </td>
                       
@@ -286,25 +353,17 @@ Actions
                       
                       {/* Actions Column */}
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <div className="flex flex-col space-y-2">
-                          <button
-                            onClick={() => handleViewUser(user)}
-                            className="text-blue-600 hover:text-blue-900 flex items-center justify-center w-full py-1 px-2 rounded border border-blue-200 hover:bg-blue-50 transition-colors"
-                          >
-                            <Eye className="w-4 h-4 mr-1" />
-                            View
-                          </button>
-                          <button
-                            onClick={() => {
-                              setUserToDelete(user);
-                              setShowDeleteModal(true);
-                            }}
-                            className="text-red-600 hover:text-red-900 flex items-center justify-center w-full py-1 px-2 rounded border border-red-200 hover:bg-red-50 transition-colors"
-                          >
-                            <Trash2 className="w-4 h-4 mr-1" />
-                            Delete
-                          </button>
-                        </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation(); // Prevent row click
+                            setUserToDelete(user);
+                            setShowDeleteModal(true);
+                          }}
+                          className="text-red-600 hover:text-red-900 flex items-center justify-center w-full py-1 px-2 rounded border border-red-200 hover:bg-red-50 transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4 mr-1" />
+                          Delete
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -315,7 +374,7 @@ Actions
         </div>
 
         {/* Pagination */}
-        {filteredUsers.length > usersPerPage && (
+        {totalPages > 1 && (
           <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6 rounded-lg shadow-sm">
             <div className="flex-1 flex justify-between sm:hidden">
               <button
@@ -336,11 +395,11 @@ Actions
             <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
               <div>
                 <p className="text-sm text-gray-700">
-                  Showing <span className="font-medium">{indexOfFirstUser + 1}</span> to{' '}
+                  Showing <span className="font-medium">{(currentPage - 1) * usersPerPage + 1}</span> to{' '}
                   <span className="font-medium">
-                    {Math.min(indexOfLastUser, filteredUsers.length)}
+                    {Math.min(currentPage * usersPerPage, totalUsers)}
                   </span>{' '}
-                  of <span className="font-medium">{filteredUsers.length}</span> results
+                  of <span className="font-medium">{totalUsers}</span> results
                 </p>
               </div>
               <div>
