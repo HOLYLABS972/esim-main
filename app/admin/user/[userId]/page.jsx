@@ -733,19 +733,7 @@ const UserDetailsPage = () => {
         </div>
 
         {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Referral Codes</p>
-                <p className="text-2xl font-bold text-blue-600">{referralCodes.length}</p>
-              </div>
-              <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center">
-                <Gift className="w-6 h-6 text-blue-600" />
-              </div>
-            </div>
-          </div>
-          
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-white rounded-xl shadow-lg p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -935,17 +923,6 @@ const UserDetailsPage = () => {
                 {/* Action Buttons */}
                 <div className="flex justify-between items-center">
                   <h3 className="text-lg font-semibold text-gray-900">Referral Code Management</h3>
-                  <div className="flex space-x-3">
-                    {referralCodes.length === 0 ? (
-                      <button
-                        onClick={handleGenerateReferralCode}
-                        className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center transition-colors"
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Generate Referral Code
-                      </button>
-                    ) : null}
-                  </div>
                 </div>
 
                 {/* Current Referral Code */}
