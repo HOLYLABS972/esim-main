@@ -11,7 +11,7 @@ import {
   signInWithPopup,
   GoogleAuthProvider
 } from 'firebase/auth';
-import { doc, setDoc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, setDoc, getDoc, collection, query, where, getDocs, addDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../firebase/config';
 import { generateOTPWithTimestamp } from '../utils/otpUtils';
 import { sendVerificationEmail } from '../services/emailService';
@@ -103,6 +103,15 @@ export function AuthProvider({ children }) {
           referredBy: null,
           referralCodeUsed: false
         });
+
+        // Automatically add user to newsletter collection
+        try {
+          await addToNewsletter(user.email, user.displayName, 'web_dashboard');
+          console.log('✅ User automatically added to newsletter via Google Sign In');
+        } catch (newsletterError) {
+          console.error('❌ Error adding user to newsletter:', newsletterError);
+          // Don't fail the signup if newsletter addition fails
+        }
       }
       
       return user;
@@ -216,6 +225,15 @@ export function AuthProvider({ children }) {
           console.error('❌ Error processing referral:', referralError);
           // Don't fail the signup if referral processing fails
         }
+      }
+
+      // Automatically add user to newsletter collection
+      try {
+        await addToNewsletter(user.email, pendingSignup.displayName, 'web_dashboard');
+        console.log('✅ User automatically added to newsletter');
+      } catch (newsletterError) {
+        console.error('❌ Error adding user to newsletter:', newsletterError);
+        // Don't fail the signup if newsletter addition fails
       }
 
       // Clear pending signup data
@@ -338,6 +356,50 @@ export function AuthProvider({ children }) {
     hasSuperAdminAccess: () => hasSuperAdminAccess(userProfile),
     hasAdminPermission: (permission) => hasAdminPermission(userProfile, permission)
   };
+
+  // Helper function to add user to newsletter collection
+  async function addToNewsletter(email, displayName, source) {
+    try {
+      // Check if email already exists in newsletter collection
+      const existingQuery = query(
+        collection(db, 'newsletter_subscriptions'),
+        where('email', '==', email)
+      );
+      const existingSnapshot = await getDocs(existingQuery);
+      
+      if (existingSnapshot.empty) {
+        // Create new newsletter subscription
+        await addDoc(collection(db, 'newsletter_subscriptions'), {
+          email: email,
+          displayName: displayName,
+          status: 'active',
+          source: source,
+          subscribedAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+          unsubscribedAt: null,
+          tags: [],
+          notes: 'Auto-subscribed during registration'
+        });
+      } else {
+        // Update existing subscription to active if it was unsubscribed
+        const existingDoc = existingSnapshot.docs[0];
+        const existingData = existingDoc.data();
+        
+        if (existingData.status === 'unsubscribed') {
+          await updateDoc(doc(db, 'newsletter_subscriptions', existingDoc.id), {
+            status: 'active',
+            updatedAt: serverTimestamp(),
+            unsubscribedAt: null,
+            source: source,
+            displayName: displayName
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error adding user to newsletter:', error);
+      throw error;
+    }
+  }
 
   return (
     <AuthContext.Provider value={value}>
