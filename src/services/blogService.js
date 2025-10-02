@@ -78,6 +78,18 @@ export const blogService = {
         updatedAt: doc.data().updatedAt?.toDate() || null
       }));
 
+      // Sort posts by publishedAt (latest first), with fallback to createdAt for posts without publishedAt
+      posts.sort((a, b) => {
+        const aDate = a.publishedAt || a.createdAt;
+        const bDate = b.publishedAt || b.createdAt;
+        
+        if (!aDate && !bDate) return 0;
+        if (!aDate) return 1; // Put posts without dates at the end
+        if (!bDate) return -1;
+        
+        return bDate.getTime() - aDate.getTime(); // Descending order (latest first)
+      });
+
       return {
         posts,
         lastDoc: snapshot.docs[snapshot.docs.length - 1] || null,
@@ -184,6 +196,11 @@ export const blogService = {
       
       const post = createBlogPost(enhancedPostData);
       
+      // Set publishedAt if the post is being created as published
+      if (post.status === 'published') {
+        post.publishedAt = serverTimestamp();
+      }
+      
       // Generate slug if not provided
       if (!post.slug) {
         post.slug = generateSlug(post.title);
@@ -212,9 +229,24 @@ export const blogService = {
       const postRef = doc(db, 'blog_posts', id);
       const updateData = {
         ...enhancedPostData,
-        updatedAt: serverTimestamp(),
-        publishedAt: serverTimestamp() // Update published date when post is updated
+        updatedAt: serverTimestamp()
       };
+
+      // Only set publishedAt if the post is being published for the first time
+      // Check if the post currently exists and doesn't have a publishedAt
+      const currentPost = await getDoc(postRef);
+      if (currentPost.exists()) {
+        const currentData = currentPost.data();
+        // Only set publishedAt if the post is being published and doesn't already have a publishedAt
+        if (enhancedPostData.status === 'published' && !currentData.publishedAt) {
+          updateData.publishedAt = serverTimestamp();
+        }
+      } else {
+        // If creating a new post and it's published, set publishedAt
+        if (enhancedPostData.status === 'published') {
+          updateData.publishedAt = serverTimestamp();
+        }
+      }
 
       // Generate slug if title changed and no custom slug provided
       if (enhancedPostData.title && !enhancedPostData.slug) {
@@ -277,6 +309,37 @@ export const blogService = {
       return true;
     } catch (error) {
       console.error('Error unpublishing post:', error);
+      throw error;
+    }
+  },
+
+  // Fix posts that are missing publishedAt field (utility function for data migration)
+  async fixMissingPublishedAt() {
+    try {
+      const q = query(
+        collection(db, 'blog_posts'),
+        where('status', '==', 'published'),
+        where('publishedAt', '==', null)
+      );
+      
+      const snapshot = await getDocs(q);
+      const batch = [];
+      
+      snapshot.docs.forEach(doc => {
+        const postData = doc.data();
+        // Set publishedAt to createdAt if it exists, otherwise use current timestamp
+        const publishedAt = postData.createdAt || serverTimestamp();
+        batch.push(updateDoc(doc.ref, { publishedAt }));
+      });
+      
+      if (batch.length > 0) {
+        await Promise.all(batch);
+        console.log(`Fixed ${batch.length} posts with missing publishedAt field`);
+      }
+      
+      return batch.length;
+    } catch (error) {
+      console.error('Error fixing missing publishedAt fields:', error);
       throw error;
     }
   },
