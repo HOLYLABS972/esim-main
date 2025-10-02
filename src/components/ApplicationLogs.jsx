@@ -304,7 +304,6 @@ const ApplicationLogs = () => {
                       
                       <div className="flex items-center space-x-4 text-xs text-gray-500">
                         <div className="flex items-center space-x-1">
-                          <Clock className="w-3 h-3" />
                           <span>{formatTimestamp(log.timestamp)}</span>
                         </div>
                         
