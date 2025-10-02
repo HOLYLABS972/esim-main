@@ -2,19 +2,18 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { collection, query, orderBy, limit, getDocs, startAfter } from 'firebase/firestore';
+import { collection, query, orderBy, limit, getDocs, startAfter, doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { motion } from 'framer-motion';
 import { 
   FileText, 
-  RefreshCw, 
+  RefreshCw,
   AlertTriangle,
-  CheckCircle,
-  Info,
   Clock,
   CreditCard,
   Globe,
-  Smartphone
+  Smartphone,
+  Search
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -24,6 +23,7 @@ const ApplicationLogs = () => {
   const [loading, setLoading] = useState(false);
   const [lastDoc, setLastDoc] = useState(null);
   const [hasMore, setHasMore] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Load logs on component mount
   useEffect(() => {
@@ -32,25 +32,41 @@ const ApplicationLogs = () => {
     }
   }, [currentUser]);
 
+  // Helper function to get user email by ID
+  const getUserEmailById = async (userId) => {
+    try {
+      const userDoc = await getDoc(doc(db, 'users', userId));
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        return userData.actualEmail || userData.email || userId;
+      }
+      return userId; // Return ID if no email found
+    } catch (error) {
+      console.error('Error fetching user email:', error);
+      return userId; // Return ID as fallback
+    }
+  };
+
   const loadLogs = async (loadMore = false) => {
     try {
       setLoading(true);
       
-      // Load from both collections for backward compatibility
-      const [applicationLogsSnapshot, blacklistLogsSnapshot] = await Promise.all([
+      // Load from all collections for backward compatibility
+      const [applicationLogsSnapshot, blacklistLogsSnapshot, referralUsagesSnapshot] = await Promise.all([
         getDocs(query(
           collection(db, 'application_logs'),
           orderBy('timestamp', 'desc'),
           limit(50)
         )),
+        getDocs(collection(db, 'blacklist')),
         getDocs(query(
-          collection(db, 'blacklist'),
-          orderBy('timestamp', 'desc'),
+          collection(db, 'referralUsages'),
+          orderBy('createdAt', 'desc'),
           limit(50)
         ))
       ]);
 
-      // Combine logs from both collections
+      // Combine logs from all collections
       const applicationLogs = applicationLogsSnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
@@ -58,17 +74,79 @@ const ApplicationLogs = () => {
         source: 'application_logs'
       }));
 
-      const blacklistLogs = blacklistLogsSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        timestamp: doc.data().timestamp?.toDate() || new Date(),
-        source: 'blacklist',
-        type: 'blacklist', // Add type for backward compatibility
-        level: 'info' // Add default level for backward compatibility
-      }));
+          const blacklistLogs = await Promise.all(
+            blacklistLogsSnapshot.docs.map(async (doc) => {
+              const data = doc.data();
+              // Use createdAt as the main timestamp, fallback to other fields
+              const timestamp = data.createdAt?.toDate() ||
+                               data.blockedAt?.toDate() ||
+                               data.updatedAt?.toDate() ||
+                               data.timestamp?.toDate() ||
+                               new Date();
+
+              // Get user email if not already present
+              let userEmail = data.userEmail;
+              if (!userEmail && data.userId) {
+                userEmail = await getUserEmailById(data.userId);
+              }
+
+              return {
+                id: doc.id,
+                ...data,
+                timestamp: timestamp,
+                source: 'blacklist',
+                type: 'blacklist',
+                level: 'warning', // Blacklist entries are warnings
+                message: data.description || `User blocked: ${data.reason || 'unknown reason'}`,
+                details: null,
+                userId: data.userId,
+                userEmail: userEmail,
+                metadata: {
+                  reason: data.reason,
+                  status: data.status,
+                  source: data.source,
+                  clicksToday: data.clicksToday,
+                  maxClicksPerDay: data.maxClicksPerDay,
+                  autoUnblockTime: data.autoUnblockTime,
+                  blockedAt: data.blockedAt,
+                  additionalData: data.additionalData
+                }
+              };
+            })
+          );
+
+      // Process referral usage logs and fetch referrer and referred user emails
+      const referralUsageLogs = await Promise.all(
+        referralUsagesSnapshot.docs.map(async (doc) => {
+          const data = doc.data();
+          const referrerEmail = await getUserEmailById(data.referrerId);
+          const referredUserEmail = await getUserEmailById(data.referredUserId);
+          
+          return {
+            id: doc.id,
+            ...data,
+            timestamp: data.createdAt?.toDate() || new Date(),
+            source: 'referralUsages',
+            type: 'promocode',
+            level: 'success',
+            message: `Referral code "${data.referralCode}" used by ${referrerEmail}`,
+            details: null,
+            userId: data.referredUserId,
+            userEmail: referredUserEmail,
+            metadata: {
+              referralCode: data.referralCode,
+              referrerId: data.referrerId,
+              referrerEmail: referrerEmail,
+              referredUserId: data.referredUserId,
+              referredUserEmail: referredUserEmail,
+              status: data.status
+            }
+          };
+        })
+      );
 
       // Combine and sort by timestamp
-      const allLogs = [...applicationLogs, ...blacklistLogs]
+      const allLogs = [...applicationLogs, ...blacklistLogs, ...referralUsageLogs]
         .sort((a, b) => b.timestamp - a.timestamp);
 
       if (loadMore) {
@@ -77,10 +155,9 @@ const ApplicationLogs = () => {
         setLogs(allLogs);
       }
 
-      // Set pagination based on the larger collection
-      const maxDocs = Math.max(applicationLogsSnapshot.docs.length, blacklistLogsSnapshot.docs.length);
-      setLastDoc(maxDocs > 0 ? allLogs[allLogs.length - 1] : null);
-      setHasMore(maxDocs === 50);
+      // Set pagination based on application_logs collection only (blacklist loads all)
+      setLastDoc(applicationLogsSnapshot.docs.length > 0 ? applicationLogsSnapshot.docs[applicationLogsSnapshot.docs.length - 1] : null);
+      setHasMore(applicationLogsSnapshot.docs.length === 50);
     } catch (error) {
       console.error('Error loading logs:', error);
       toast.error('Failed to load application logs');
@@ -88,6 +165,21 @@ const ApplicationLogs = () => {
       setLoading(false);
     }
   };
+
+  // Filter logs based on search term
+  const filteredLogs = logs.filter(log => {
+    if (!searchTerm) return true;
+    
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      log.userEmail?.toLowerCase().includes(searchLower) ||
+      log.userId?.toLowerCase().includes(searchLower) ||
+      log.message?.toLowerCase().includes(searchLower) ||
+      log.details?.toLowerCase().includes(searchLower) ||
+      (log.metadata?.referrerEmail && log.metadata.referrerEmail.toLowerCase().includes(searchLower)) ||
+      (log.metadata?.referredUserEmail && log.metadata.referredUserEmail.toLowerCase().includes(searchLower))
+    );
+  });
 
   const getLogIcon = (type) => {
     switch (type) {
@@ -102,20 +194,6 @@ const ApplicationLogs = () => {
     }
   };
 
-  const getLogLevelIcon = (level) => {
-    switch (level) {
-      case 'error':
-        return <AlertTriangle className="w-4 h-4 text-red-500" />;
-      case 'warning':
-        return <AlertTriangle className="w-4 h-4 text-yellow-500" />;
-      case 'info':
-        return <Info className="w-4 h-4 text-blue-500" />;
-      case 'success':
-        return <CheckCircle className="w-4 h-4 text-green-500" />;
-      default:
-        return <Info className="w-4 h-4 text-gray-500" />;
-    }
-  };
 
   const getLogLevelColor = (level) => {
     switch (level) {
@@ -146,33 +224,32 @@ const ApplicationLogs = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Search Header */}
       <div className="bg-white rounded-xl shadow-lg p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-2xl font-bold text-gray-900 flex items-center">
             <FileText className="w-8 h-8 text-blue-600 mr-3" />
             Application Logs
           </h2>
-          <button
-            onClick={() => loadLogs()}
-            disabled={loading}
-            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
-          >
-            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
-          </button>
         </div>
-        
-        <p className="text-gray-600">
-          Monitor application events, errors, and system activities including Stripe key status.
-        </p>
+
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <input
+            type="text"
+            placeholder="Search by user email, user ID, or message..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+        </div>
       </div>
 
       {/* Logs List */}
       <div className="bg-white rounded-xl shadow-lg">
         <div className="p-6 border-b border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900">
-            Recent Activity ({logs.length} logs)
+            Recent Activity ({filteredLogs.length} of {logs.length} logs)
           </h3>
         </div>
         
@@ -182,13 +259,15 @@ const ApplicationLogs = () => {
               <RefreshCw className="w-8 h-8 text-gray-400 animate-spin mx-auto mb-4" />
               <p className="text-gray-500">Loading application logs...</p>
             </div>
-          ) : logs.length === 0 ? (
-            <div className="p-8 text-center">
-              <FileText className="w-8 h-8 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500">No logs found</p>
-            </div>
-          ) : (
-            logs.map((log) => (
+              ) : filteredLogs.length === 0 ? (
+                <div className="p-8 text-center">
+                  <FileText className="w-8 h-8 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-500">
+                    {searchTerm ? `No logs found matching "${searchTerm}"` : 'No logs found'}
+                  </p>
+                </div>
+              ) : (
+                filteredLogs.map((log) => (
               <motion.div
                 key={log.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -196,28 +275,22 @@ const ApplicationLogs = () => {
                 className={`p-4 border-l-4 ${getLogLevelColor(log.level)}`}
               >
                 <div className="flex items-start justify-between">
-                  <div className="flex items-start space-x-3 flex-1">
-                    <div className="flex items-center space-x-2">
-                      {getLogLevelIcon(log.level)}
-                      {getLogIcon(log.type)}
-                    </div>
+                    <div className="flex items-start space-x-3 flex-1">
+                      <div className="flex items-center space-x-2">
+                        {getLogIcon(log.type)}
+                      </div>
                     
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center space-x-2 mb-1">
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                          {log.level?.toUpperCase() || 'INFO'}
-                        </span>
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                          {log.type?.toUpperCase() || 'SYSTEM'}
-                        </span>
-                        {log.source && (
-                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                            log.source === 'blacklist' ? 'bg-orange-100 text-orange-800' : 'bg-green-100 text-green-800'
-                          }`}>
-                            {log.source === 'blacklist' ? 'LEGACY' : 'NEW'}
-                          </span>
-                        )}
-                      </div>
+                          <div className="flex items-center space-x-2 mb-1">
+                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                              log.type === 'blacklist' ? 'bg-orange-100 text-orange-800' :
+                              log.type === 'promocode' ? 'bg-purple-100 text-purple-800' :
+                              log.type === 'system' ? 'bg-red-100 text-red-800' :
+                              'bg-gray-100 text-gray-800'
+                            }`}>
+                              {log.type?.toUpperCase() || 'SYSTEM'}
+                            </span>
+                          </div>
                       
                       <p className="text-gray-900 font-medium mb-1">
                         {log.message}
@@ -237,7 +310,7 @@ const ApplicationLogs = () => {
                         
                         {log.userId && (
                           <div className="flex items-center space-x-1">
-                            <span>User: {log.userId}</span>
+                            <span>User: {log.userEmail || log.userId}</span>
                           </div>
                         )}
                         

@@ -362,38 +362,17 @@ export function AuthProvider({ children }) {
     try {
       // Check if email already exists in newsletter collection
       const existingQuery = query(
-        collection(db, 'newsletter_subscriptions'),
+        collection(db, 'newsletter'),
         where('email', '==', email)
       );
       const existingSnapshot = await getDocs(existingQuery);
       
       if (existingSnapshot.empty) {
         // Create new newsletter subscription
-        await addDoc(collection(db, 'newsletter_subscriptions'), {
+        await addDoc(collection(db, 'newsletter'), {
           email: email,
-          displayName: displayName,
-          status: 'active',
-          source: source,
-          subscribedAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-          unsubscribedAt: null,
-          tags: [],
-          notes: 'Auto-subscribed during registration'
+          timestamp: serverTimestamp()
         });
-      } else {
-        // Update existing subscription to active if it was unsubscribed
-        const existingDoc = existingSnapshot.docs[0];
-        const existingData = existingDoc.data();
-        
-        if (existingData.status === 'unsubscribed') {
-          await updateDoc(doc(db, 'newsletter_subscriptions', existingDoc.id), {
-            status: 'active',
-            updatedAt: serverTimestamp(),
-            unsubscribedAt: null,
-            source: source,
-            displayName: displayName
-          });
-        }
       }
     } catch (error) {
       console.error('Error adding user to newsletter:', error);
