@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { collection, query, getDocs, getDoc, doc, deleteDoc, orderBy, limit, startAfter } from 'firebase/firestore';
+import { collection, query, getDocs, getDoc, doc, deleteDoc, orderBy, limit, startAfter, where } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
@@ -142,45 +142,128 @@ const AdminEsimManagement = () => {
     }
   };
 
-  // Handle search - reload users when search changes
-  useEffect(() => {
-    if (searchTerm) {
-      // For search, we'll need to implement a different approach
-      // For now, just filter the current loaded users
-      const filtered = users.filter(user =>
-        user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.id.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      setFilteredUsers(filtered);
-    } else {
-      setFilteredUsers(users);
+  // Search users across entire database
+  const searchUsers = async (searchTerm) => {
+    if (!searchTerm.trim()) {
+      // If search term is empty, load the current page
+      await loadUsers(currentPage);
+      return;
     }
-  }, [searchTerm, users]);
+
+    try {
+      setLoading(true);
+      console.log(`Searching for: "${searchTerm}"`);
+      
+      // For better performance, limit the search to recent users (last 1000)
+      // This prevents searching through the entire database which could be slow
+      const usersQuery = query(
+        collection(db, 'users'),
+        orderBy('createdAt', 'desc'),
+        limit(1000) // Limit search scope for performance
+      );
+      
+      const usersSnapshot = await getDocs(usersQuery);
+      console.log(`Searching through ${usersSnapshot.docs.length} recent users`);
+      
+      const searchTermLower = searchTerm.toLowerCase();
+      
+      // Process each user document and check if it matches search criteria
+      const userPromises = usersSnapshot.docs.map(async (userDoc) => {
+        const userData = userDoc.data();
+        const userEmail = (userData.email || userData.actualEmail || '').toLowerCase();
+        const userId = userDoc.id.toLowerCase();
+        
+        // Check if user matches search criteria
+        if (userEmail.includes(searchTermLower) || userId.includes(searchTermLower)) {
+          // Get eSIM count and basic stats for matching users only
+          const esimsSnapshot = await getDocs(
+            query(
+              collection(db, 'users', userDoc.id, 'esims'),
+              orderBy('createdAt', 'desc'),
+              limit(10)
+            )
+          );
+          
+          const esims = esimsSnapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+              id: doc.id,
+              status: data.status,
+              price: data.price || 0,
+            };
+          });
+          
+          return {
+            id: userDoc.id,
+            email: userData.email || userData.actualEmail || 'No email',
+            createdAt: userData.createdAt?.toDate(),
+            esims: esims,
+            esimCount: esims.length,
+            activeEsims: esims.filter(esim => esim.status === 'active').length,
+            deactivatedEsims: esims.filter(esim => esim.status === 'deactivated').length,
+            totalSpent: esims.reduce((sum, esim) => sum + (esim.price || 0), 0),
+          };
+        }
+        return null; // User doesn't match search criteria
+      });
+      
+      // Wait for all user processing to complete and filter out null results
+      const processedUsers = (await Promise.all(userPromises)).filter(user => user !== null);
+      
+      console.log(`Found ${processedUsers.length} users matching search criteria`);
+      
+      setUsers(processedUsers);
+      setFilteredUsers(processedUsers);
+      setTotalUsers(processedUsers.length); // Update total count for search results
+      
+    } catch (error) {
+      console.error('Error searching users:', error);
+      toast.error('Failed to search users');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle search with debouncing
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      searchUsers(searchTerm);
+    }, 300); // 300ms debounce
+
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm]);
 
   // Pagination calculations
   const [totalUsers, setTotalUsers] = useState(0);
   const totalPages = Math.ceil(totalUsers / usersPerPage);
+  const isSearching = searchTerm.trim().length > 0;
 
   // Pagination handlers
   const handlePageChange = (pageNumber) => {
+    if (isSearching) {
+      // When searching, don't change pages - show all search results
+      return;
+    }
     setCurrentPage(pageNumber);
     loadUsers(pageNumber);
   };
 
   const handlePreviousPage = () => {
-    if (currentPage > 1) {
-      const newPage = currentPage - 1;
-      setCurrentPage(newPage);
-      loadUsers(newPage);
+    if (isSearching || currentPage <= 1) {
+      return;
     }
+    const newPage = currentPage - 1;
+    setCurrentPage(newPage);
+    loadUsers(newPage);
   };
 
   const handleNextPage = () => {
-    if (currentPage < totalPages) {
-      const newPage = currentPage + 1;
-      setCurrentPage(newPage);
-      loadUsers(newPage);
+    if (isSearching || currentPage >= totalPages) {
+      return;
     }
+    const newPage = currentPage + 1;
+    setCurrentPage(newPage);
+    loadUsers(newPage);
   };
 
   // Load total count and first page on component mount
@@ -261,10 +344,26 @@ const AdminEsimManagement = () => {
                   placeholder="Search by email or user ID..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
+                {searchTerm && (
+                  <button
+                    onClick={() => setSearchTerm('')}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
               </div>
             </div>
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm('')}
+                className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Clear Search
+              </button>
+            )}
           </div>
         </div>
 
@@ -374,7 +473,7 @@ Actions
         </div>
 
         {/* Pagination */}
-        {totalPages > 1 && (
+        {totalPages > 1 && !isSearching && (
           <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6 rounded-lg shadow-sm">
             <div className="flex-1 flex justify-between sm:hidden">
               <button
@@ -466,6 +565,15 @@ Actions
                 </nav>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Search Results Info */}
+        {isSearching && filteredUsers.length > 0 && (
+          <div className="bg-white px-4 py-3 border-t border-gray-200 sm:px-6 rounded-lg shadow-sm">
+            <p className="text-sm text-gray-700">
+              Found <span className="font-medium">{filteredUsers.length}</span> user(s) matching "{searchTerm}"
+            </p>
           </div>
         )}
 
