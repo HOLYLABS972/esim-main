@@ -64,7 +64,7 @@ import LinksManagement from './LinksManagement';
 import ContactRequestsManagement from './ContactRequestsManagement';
 import NewsletterManagement from './NewsletterManagement';
 import JobApplicationsManagement from './JobApplicationsManagement';
-import BlacklistLogs from './BlacklistLogs';
+import ApplicationLogs from './ApplicationLogs';
 
 // Helper function to get flag emoji from country code
 const getFlagEmoji = (countryCode) => {
@@ -937,7 +937,7 @@ const AdminDashboard = () => {
               { id: 'plans', label: 'Plans Management', icon: Smartphone, permission: canManagePlans },
               { id: 'esim', label: 'eSIM Management', icon: Activity, permission: canManagePlans },
               { id: 'notifications', label: 'Notifications', icon: MessageSquare, permission: true },
-              { id: 'blacklist', label: 'Blacklist Logs', icon: Shield, permission: canManageContactRequests },
+              { id: 'logs', label: 'Application Logs', icon: FileText, permission: canManageContactRequests },
             ].filter(tab => tab.permission).map((tab) => {
               const Icon = tab.icon;
               return (
@@ -1196,9 +1196,9 @@ const AdminDashboard = () => {
               <NotificationsManagement />
             )}
 
-            {/* Blacklist Logs Tab */}
-            {activeTab === 'blacklist' && canManageContactRequests && (
-              <BlacklistLogs />
+            {/* Application Logs Tab */}
+            {activeTab === 'logs' && canManageContactRequests && (
+              <ApplicationLogs />
             )}
 
             {/* Contact Requests Tab */}

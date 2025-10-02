@@ -17,7 +17,8 @@ import {
   AlertTriangle,
   CheckCircle,
   Info,
-  Save
+  Save,
+  CreditCard
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -39,6 +40,12 @@ const ConfigurationManagement = () => {
   const [regularDiscountPercentage, setRegularDiscountPercentage] = useState(10);
   const [transactionCommissionPercentage, setTransactionCommissionPercentage] = useState(5);
 
+  // Stripe Configuration
+  const [stripeConfig, setStripeConfig] = useState({
+    livePublishableKey: ''
+  });
+  const [savingStripe, setSavingStripe] = useState(false);
+
   // Version Configuration
   const [versionConfig, setVersionConfig] = useState({
     min_required_version: '1.0.0'
@@ -52,6 +59,7 @@ const ConfigurationManagement = () => {
       loadAiraloApiKey();
       loadMarkupPercentage();
       loadVersionConfig();
+      loadStripeConfig();
     }
   }, [currentUser]);
 
@@ -347,6 +355,68 @@ const ConfigurationManagement = () => {
     }));
   };
 
+  // Stripe Configuration Functions
+  const loadStripeConfig = async () => {
+    try {
+      const stripeConfigRef = doc(db, 'config', 'stripe');
+      const stripeConfigDoc = await getDoc(stripeConfigRef);
+      
+      if (stripeConfigDoc.exists()) {
+        const data = stripeConfigDoc.data();
+        setStripeConfig(prev => ({
+          ...prev,
+          livePublishableKey: data.livePublishableKey || data.live_publishable_key || ''
+        }));
+        console.log('✅ Loaded Stripe configuration from Firebase');
+      } else {
+        console.log('📝 No Stripe configuration found in Firebase');
+      }
+    } catch (error) {
+      console.error('❌ Error loading Stripe configuration:', error);
+      toast.error(`Error loading Stripe configuration: ${error.message}`);
+    }
+  };
+
+  const saveStripeConfig = async () => {
+    try {
+      setSavingStripe(true);
+      
+      // Validate key
+      if (!stripeConfig.livePublishableKey.trim()) {
+        toast.error('Please enter the live publishable key');
+        return;
+      }
+
+      if (!stripeConfig.livePublishableKey.startsWith('pk_live_')) {
+        toast.error('Live publishable key must start with pk_live_');
+        return;
+      }
+
+      const configData = {
+        livePublishableKey: stripeConfig.livePublishableKey.trim(),
+        updated_at: serverTimestamp(),
+        updated_by: currentUser?.uid || 'admin'
+      };
+
+      await setDoc(doc(db, 'config', 'stripe'), configData, { merge: true });
+      
+      toast.success('Stripe configuration saved successfully!');
+      console.log('✅ Stripe configuration saved to Firebase');
+    } catch (error) {
+      console.error('❌ Error saving Stripe configuration:', error);
+      toast.error(`Error saving Stripe configuration: ${error.message}`);
+    } finally {
+      setSavingStripe(false);
+    }
+  };
+
+  const handleStripeConfigChange = (field, value) => {
+    setStripeConfig(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -413,6 +483,48 @@ const ConfigurationManagement = () => {
               >
                 {loading ? <RefreshCw className="w-5 h-5 mr-2 animate-spin" /> : <Globe className="w-5 h-5 mr-2" />}
                 Save Airalo Client ID
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Stripe Configuration */}
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <h2 className="text-xl font-semibold mb-4 flex items-center">
+            <CreditCard className="text-green-600 mr-2" />
+            Stripe Configuration
+          </h2>
+          
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Live Publishable Key
+              </label>
+              <input
+                type="text"
+                value={stripeConfig.livePublishableKey}
+                onChange={(e) => handleStripeConfigChange('livePublishableKey', e.target.value)}
+                placeholder="pk_live_..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm font-mono"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Enter your Stripe live publishable key (starts with pk_live_)
+              </p>
+            </div>
+
+            {/* Save Button */}
+            <div className="flex justify-end pt-4">
+              <button
+                onClick={saveStripeConfig}
+                disabled={savingStripe}
+                className="flex items-center px-6 py-3 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white rounded-lg transition-colors"
+              >
+                {savingStripe ? (
+                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Save className="w-4 h-4 mr-2" />
+                )}
+                {savingStripe ? 'Saving...' : 'Save Stripe Key'}
               </button>
             </div>
           </div>
@@ -567,7 +679,6 @@ const ConfigurationManagement = () => {
           {/* Minimum Required Version */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              <AlertTriangle className="w-4 h-4 inline mr-1 text-red-500" />
               Minimum Required Version
             </label>
             <input

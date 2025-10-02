@@ -1,5 +1,6 @@
 import { db } from '../firebase/config';
 import { collection, doc, getDoc, setDoc, updateDoc, query, where, orderBy, limit, getDocs, serverTimestamp, increment, writeBatch, addDoc } from 'firebase/firestore';
+import { configService } from './configService';
 
 // Process referral when a user signs up with a referral code
 export const processReferralUsage = async (referralCode, newUserId) => {
@@ -12,6 +13,13 @@ export const processReferralUsage = async (referralCode, newUserId) => {
       const userData = userDoc.data();
       if (userData.referralCodeUsed) {
         console.log('❌ User has already used a referral code');
+        
+        // Log attempted duplicate usage
+        await configService.logPromocodeUsage(referralCode, newUserId, 'duplicate_attempt', {
+          message: 'User attempted to use a second referral code',
+          ip: userData.lastLoginIP || null
+        });
+        
         return { success: false, error: 'You have already used a referral code' };
       }
     }
@@ -21,6 +29,13 @@ export const processReferralUsage = async (referralCode, newUserId) => {
     
     if (!referralDoc.exists()) {
       console.log('❌ Referral code not found:', referralCode);
+      
+      // Log invalid code attempt
+      await configService.logPromocodeUsage(referralCode, newUserId, 'invalid_code', {
+        message: 'User attempted to use non-existent referral code',
+        ip: userDoc.exists() ? userDoc.data().lastLoginIP || null : null
+      });
+      
       return { success: false, error: 'Referral code not found' };
     }
     
@@ -35,6 +50,13 @@ export const processReferralUsage = async (referralCode, newUserId) => {
     // Check if code is active
     if (!referralData.isActive) {
       console.log('❌ Referral code is not active:', referralCode);
+      
+      // Log inactive code attempt
+      await configService.logPromocodeUsage(referralCode, newUserId, 'inactive_code', {
+        message: 'User attempted to use inactive referral code',
+        ip: userDoc.exists() ? userDoc.data().lastLoginIP || null : null
+      });
+      
       return { success: false, error: 'Referral code is not active' };
     }
     
@@ -42,6 +64,13 @@ export const processReferralUsage = async (referralCode, newUserId) => {
     const expiryDate = referralData.expiryDate;
     if (expiryDate && expiryDate.toDate() < new Date()) {
       console.log('❌ Referral code has expired:', referralCode);
+      
+      // Log expired code attempt
+      await configService.logPromocodeUsage(referralCode, newUserId, 'expired_code', {
+        message: 'User attempted to use expired referral code',
+        ip: userDoc.exists() ? userDoc.data().lastLoginIP || null : null
+      });
+      
       return { success: false, error: 'Referral code has expired' };
     }
     
@@ -68,6 +97,13 @@ export const processReferralUsage = async (referralCode, newUserId) => {
     console.log('💳 Committing batch transaction...');
     await batch.commit();
     console.log('✅ Batch transaction committed successfully');
+    
+    // Log successful referral usage
+    await configService.logPromocodeUsage(referralCode, newUserId, 'used', {
+      message: 'Referral code successfully applied',
+      referrerId: referrerId,
+      ip: userDoc.exists() ? userDoc.data().lastLoginIP || null : null
+    });
     
     console.log('✅ Referral usage processed successfully');
     return { success: true };

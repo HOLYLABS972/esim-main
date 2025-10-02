@@ -1,5 +1,5 @@
 // Configuration service to read admin settings
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, addDoc, serverTimestamp, collection } from 'firebase/firestore';
 import { db } from '../firebase/config';
 
 class ConfigService {
@@ -141,66 +141,126 @@ class ConfigService {
         const configData = configDoc.data();
         console.log('🔍 Stripe config from Firestore:', configData);
         
-        if (mode === 'live' || mode === 'production') {
-          const liveKey = configData.livePublishableKey || configData.live_key;
-          console.log('🔍 Live/Production key from DB:', liveKey ? 'Yes' : 'No');
-          if (liveKey) return liveKey;
-        } else if (mode === 'test') {
-          const testKey = configData.testPublishableKey || configData.test_key;
-          console.log('🔍 Test key from DB:', testKey ? 'Yes' : 'No');
-          if (testKey) return testKey;
+        // Always use live key (only one key supported now)
+        const liveKey = configData.livePublishableKey || configData.live_publishable_key;
+        console.log('🔍 Live key from DB:', liveKey ? 'Yes' : 'No');
+        if (liveKey) {
+          console.log('🔑 Using live key from Firebase');
+          return liveKey;
         }
       }
       
-      // Fallback to environment variables if Firestore doesn't have keys
-      console.log('🔍 Falling back to environment variables');
-      console.log('🔍 Available env vars:', {
-        live: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY_LIVE,
-        test: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY_TEST,
-        default: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
-      });
-      
-      if (mode === 'live' || mode === 'production') {
-        const liveKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY_LIVE;
-        console.log('🔍 Live/Production key from env:', liveKey ? 'Yes' : 'No');
-        if (!liveKey) {
-          console.warn('⚠️ Live key not found in env, falling back to test key');
-          return process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY_TEST;
-        }
-        return liveKey;
-      } else if (mode === 'test') {
-        const testKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY_TEST;
-        console.log('🔍 Test key from env:', testKey ? 'Yes' : 'No');
-        if (!testKey) {
-          console.warn('⚠️ Test key not found in env');
-          return null;
-        }
-        return testKey;
-      } else {
-        const defaultKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
-        console.log('🔍 Default key from env:', defaultKey ? 'Yes' : 'No');
-        return defaultKey;
-      }
+      // No fallback - show error if keys not found
+      console.error('❌ No Stripe keys found in Firebase');
+      throw new Error('Stripe keys not configured. Please contact administrator.');
     } catch (error) {
       console.error('❌ Error loading Stripe keys from Firestore:', error);
       
-      // Fallback to environment variables on error
-      if (mode === 'live' || mode === 'production') {
-        return process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY_LIVE;
-      } else if (mode === 'test') {
-        return process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY_TEST;
-      } else {
-        return process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+      // Log the error if it's related to expired keys
+      if (error.message && error.message.includes('expired')) {
+        this.logExpiredStripeKey('publishable', error);
       }
+      
+      throw new Error('Stripe keys not configured. Please contact administrator.');
     }
   }
 
   // Get Stripe secret key based on mode (for server-side)
-  getStripeSecretKey(mode = 'test') {
-    if (mode === 'live' || mode === 'production') {
-      return process.env.STRIPE_SECRET_KEY_LIVE || process.env.STRIPE_SECRET_KEY;
-    } else {
-      return process.env.STRIPE_SECRET_KEY_TEST || process.env.STRIPE_SECRET_KEY;
+  async getStripeSecretKey(mode = 'test') {
+    try {
+      // Try to get keys from Firestore first
+      const configRef = doc(db, 'config', 'stripe');
+      const configDoc = await getDoc(configRef);
+      
+      if (configDoc.exists()) {
+        const configData = configDoc.data();
+        
+        if (mode === 'live' || mode === 'production') {
+          const liveKey = configData.liveSecretKey || configData.live_secret_key;
+          if (liveKey) {
+            console.log('🔑 Using live secret key from Firebase');
+            return liveKey;
+          }
+        } else if (mode === 'test') {
+          const testKey = configData.testSecretKey || configData.test_secret_key;
+          if (testKey) {
+            console.log('🔑 Using test secret key from Firebase');
+            return testKey;
+          }
+        }
+      }
+      
+      // Fallback to environment variables
+      console.log('⚠️ No Stripe secret keys found in Firebase, falling back to environment variables');
+      if (mode === 'live' || mode === 'production') {
+        return process.env.STRIPE_SECRET_KEY_LIVE || process.env.STRIPE_SECRET_KEY;
+      } else {
+        return process.env.STRIPE_SECRET_KEY_TEST || process.env.STRIPE_SECRET_KEY;
+      }
+    } catch (error) {
+      console.error('❌ Error loading Stripe secret keys from Firestore:', error);
+      
+      // Final fallback to environment variables
+      if (mode === 'live' || mode === 'production') {
+        return process.env.STRIPE_SECRET_KEY_LIVE || process.env.STRIPE_SECRET_KEY;
+      } else {
+        return process.env.STRIPE_SECRET_KEY_TEST || process.env.STRIPE_SECRET_KEY;
+      }
+    }
+  }
+
+  // Log expired Stripe key event
+  async logExpiredStripeKey(keyType = 'unknown', error = null) {
+    try {
+      const logData = {
+        type: 'stripe',
+        level: 'error',
+        message: `Expired Stripe ${keyType} key detected`,
+        details: error ? `Error: ${error.message}` : 'Stripe key validation failed',
+        timestamp: serverTimestamp(),
+        metadata: {
+          keyType,
+          errorCode: error?.code || 'unknown',
+          userAgent: navigator.userAgent,
+          url: window.location.href
+        }
+      };
+
+      await addDoc(collection(db, 'application_logs'), logData);
+      console.log('✅ Expired Stripe key logged to application logs');
+    } catch (logError) {
+      console.error('❌ Failed to log expired Stripe key:', logError);
+    }
+  }
+
+  // Log promocode usage event
+  async logPromocodeUsage(promocode, userId, action, details = {}) {
+    try {
+      const logData = {
+        type: 'promocode',
+        level: action === 'used' ? 'success' : 'info',
+        message: `Promocode "${promocode}" ${action}`,
+        details: details.message || `Promocode ${action} by user`,
+        timestamp: serverTimestamp(),
+        userId: userId,
+        metadata: {
+          promocode,
+          action,
+          discountAmount: details.discountAmount || null,
+          originalAmount: details.originalAmount || null,
+          finalAmount: details.finalAmount || null,
+          planId: details.planId || null,
+          country: details.country || null,
+          userAgent: navigator.userAgent,
+          url: window.location.href,
+          ip: details.ip || null
+        }
+      };
+
+      await addDoc(collection(db, 'application_logs'), logData);
+      console.log(`✅ Promocode ${action} logged to application logs`);
+    } catch (logError) {
+      console.error('❌ Failed to log promocode usage:', logError);
     }
   }
 
