@@ -13,7 +13,9 @@ import {
   CreditCard,
   Globe,
   Smartphone,
-  Search
+  Search,
+  BarChart3,
+  ExternalLink
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
