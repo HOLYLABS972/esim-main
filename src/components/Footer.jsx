@@ -21,9 +21,9 @@ const Footer = () => {
   
   // Hardcoded social media links
   const socialMedia = {
-    instagram: 'https://www.instagram.com/roam.jet',
+    instagram: 'https://www.instagram.com/esim.roamjet',
     facebook: 'https://www.facebook.com/profile.php?id=61581184673040',
-    linkedin: 'https://www.linkedin.com/showcase/roamjet/'
+    linkedin: 'https://www.linkedin.com/company/holylabs/'
   };
   
   
