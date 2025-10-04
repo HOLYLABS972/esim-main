@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { imageUploadService } from '../services/imageUploadService';
+import { sendNotificationToAllUsers, getFCMTokenStats } from '../services/fcmService';
 
 // Helper function to get flag emoji from country code
 const getFlagEmoji = (countryCode) => {
@@ -66,12 +67,17 @@ const NotificationsManagement = () => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [uploadingImage, setUploadingImage] = useState(false);
+  
+  // FCM state
+  const [fcmStats, setFcmStats] = useState(null);
+  const [sendingNotification, setSendingNotification] = useState(false);
 
   // Load data on component mount
   useEffect(() => {
     if (currentUser) {
       loadNotifications();
       loadCountriesForNotifications();
+      loadFCMStats();
     }
   }, [currentUser]);
 
@@ -311,6 +317,54 @@ const NotificationsManagement = () => {
     setShowNotificationModal(true);
   };
 
+  // Load FCM token statistics
+  const loadFCMStats = async () => {
+    try {
+      const stats = await getFCMTokenStats();
+      setFcmStats(stats);
+    } catch (error) {
+      console.error('Error loading FCM stats:', error);
+    }
+  };
+
+  // Send FCM notification
+  const sendFCMNotification = async (notification) => {
+    if (!window.confirm(`Send push notification to all mobile users?\n\nTitle: ${notification.title}\nMessage: ${notification.name || notification.body}`)) {
+      return;
+    }
+
+    try {
+      setSendingNotification(true);
+      
+      const result = await sendNotificationToAllUsers({
+        title: notification.title,
+        body: notification.name || notification.body,
+        imageUrl: notification.imageUrl,
+        data: {
+          notificationId: notification.id,
+          type: 'general'
+        }
+      });
+
+      // Update notification with sent count
+      await updateDoc(doc(db, 'notifications', notification.id), {
+        sentCount: (notification.sentCount || 0) + result.successCount,
+        lastSentAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+
+      toast.success(`Push notification sent to ${result.successCount} devices`);
+      await loadNotifications();
+      await loadFCMStats();
+      
+    } catch (error) {
+      console.error('Error sending FCM notification:', error);
+      toast.error(`Failed to send notification: ${error.message}`);
+    } finally {
+      setSendingNotification(false);
+    }
+  };
+
   const openNotificationModal = () => {
     setEditingNotification(null);
     setNotificationFormData({
@@ -365,6 +419,31 @@ const NotificationsManagement = () => {
         </div>
       </div>
 
+      {/* FCM Stats */}
+      {fcmStats && (
+        <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">📱 Push Notification Stats</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-blue-600">{fcmStats.totalTokens}</div>
+              <div className="text-sm text-gray-600">Total Devices</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-green-600">{fcmStats.activeTokens}</div>
+              <div className="text-sm text-gray-600">Active Devices</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-orange-600">{fcmStats.platforms.ios}</div>
+              <div className="text-sm text-gray-600">iOS Devices</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-purple-600">{fcmStats.platforms.android}</div>
+              <div className="text-sm text-gray-600">Android Devices</div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Notifications List */}
       <div className="bg-white rounded-xl shadow-lg overflow-hidden">
         {loadingNotifications ? (
@@ -409,6 +488,14 @@ const NotificationsManagement = () => {
                       title="Edit notification"
                     >
                       <Edit className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => sendFCMNotification(notification)}
+                      disabled={sendingNotification}
+                      className="p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors disabled:opacity-50"
+                      title="Send push notification to mobile users"
+                    >
+                      <MessageSquare className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => deleteNotification(notification.id)}
