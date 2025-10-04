@@ -15,18 +15,18 @@ if (!admin.apps.length) {
 
 export async function POST(request) {
   try {
-    const body = await request.json();
+    const requestBody = await request.json();
     const { 
       title, 
-      body, 
+      body: messageBody, 
       tokens = [], // Array of FCM tokens
       topic, // Optional: send to topic instead of specific tokens
       data = {}, // Optional: custom data payload
       imageUrl // Optional: notification image
-    } = body;
+    } = requestBody;
 
     // Validation
-    if (!title || !body) {
+    if (!title || !messageBody) {
       return NextResponse.json(
         { error: 'Title and body are required' },
         { status: 400 }
@@ -44,7 +44,7 @@ export async function POST(request) {
     const message = {
       notification: {
         title,
-        body,
+        body: messageBody,
         ...(imageUrl && { imageUrl })
       },
       data: {
@@ -65,7 +65,7 @@ export async function POST(request) {
           aps: {
             alert: {
               title,
-              body
+              body: messageBody
             },
             sound: 'default',
             badge: 1
