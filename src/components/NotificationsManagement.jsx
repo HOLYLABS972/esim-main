@@ -16,7 +16,8 @@ import {
   Save,
   Upload,
   X,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Send
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { imageUploadService } from '../services/imageUploadService';
@@ -507,13 +508,19 @@ const NotificationsManagement = () => {
                     <button
                       onClick={() => sendFCMNotification(notification)}
                       disabled={sendingNotification}
-                      className="p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors disabled:opacity-50"
+                      className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       title="Send push notification NOW to all iOS and Android devices"
                     >
                       {sendingNotification ? (
-                        <div className="w-4 h-4 border-2 border-green-600 border-t-transparent rounded-full animate-spin"></div>
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                          Sending...
+                        </>
                       ) : (
-                        <MessageSquare className="w-4 h-4" />
+                        <>
+                          <Send className="w-4 h-4 mr-2" />
+                          Send Now
+                        </>
                       )}
                     </button>
                     <button
