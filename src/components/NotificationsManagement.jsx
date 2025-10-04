@@ -438,14 +438,14 @@ const NotificationsManagement = () => {
               <div className="text-2xl font-bold text-blue-600">{fcmStats.totalTokens}</div>
               <div className="text-sm text-gray-600">Total Sent</div>
             </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-orange-600">{fcmStats.platforms.ios}</div>
-              <div className="text-sm text-gray-600">iOS Devices</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-purple-600">{fcmStats.platforms.android}</div>
-              <div className="text-sm text-gray-600">Android Devices</div>
-            </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-orange-600">{fcmStats.platforms.ios}</div>
+            <div className="text-sm text-gray-600">iOS Received</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-purple-600">{fcmStats.platforms.android}</div>
+            <div className="text-sm text-gray-600">Android Received</div>
+          </div>
           </div>
         </div>
       )}
