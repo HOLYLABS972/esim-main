@@ -70,8 +70,10 @@ if (typeof window !== 'undefined') {
   window.testSpecificPost = testSpecificPost;
 }
 
-export default {
+const testAutoSEOUtils = {
   testAutoSEO,
   testSpecificPost,
   testPosts
 };
+
+export default testAutoSEOUtils;

@@ -97,7 +97,6 @@ function extractKeywords(text, maxKeywords = 8) {
  */
 function detectContentType(title, content) {
   const titleLower = title.toLowerCase();
-  const contentLower = content.toLowerCase();
   
   if (titleLower.includes('vs') || titleLower.includes('vs.') || titleLower.includes('comparison') || titleLower.includes('compare')) {
     return 'comparison';
@@ -272,10 +271,12 @@ export function enhancePostWithAutoSEO(postData) {
   };
 }
 
-export default {
+const autoSEOGenerator = {
   generateAutoSEO,
   enhancePostWithAutoSEO,
   extractKeywords,
   detectContentType,
   detectTargetAudience
 };
+
+export default autoSEOGenerator;

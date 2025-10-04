@@ -11,7 +11,7 @@ import {
   signInWithPopup,
   GoogleAuthProvider
 } from 'firebase/auth';
-import { doc, setDoc, getDoc, collection, query, where, getDocs, addDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, getDoc, collection, query, where, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../firebase/config';
 import { generateOTPWithTimestamp } from '../utils/otpUtils';
 import { sendVerificationEmail } from '../services/emailService';
@@ -368,9 +368,11 @@ export function AuthProvider({ children }) {
       const existingSnapshot = await getDocs(existingQuery);
       
       if (existingSnapshot.empty) {
-        // Create new newsletter subscription
+        // Create new newsletter subscription with all provided data
         await addDoc(collection(db, 'newsletter'), {
           email: email,
+          displayName: displayName,
+          source: source,
           timestamp: serverTimestamp()
         });
       }

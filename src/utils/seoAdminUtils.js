@@ -140,8 +140,10 @@ export async function checkSEOStatus() {
 }
 
 // Export for use in admin panel or console
-export default {
+const seoAdminUtils = {
   regeneratePostSEO,
   regenerateAllPostsSEO,
   checkSEOStatus
 };
+
+export default seoAdminUtils;
