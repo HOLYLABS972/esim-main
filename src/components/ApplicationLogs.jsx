@@ -231,6 +231,19 @@ const ApplicationLogs = () => {
             <FileText className="w-8 h-8 text-blue-600 mr-3" />
             Application Logs
           </h2>
+          
+          {/* Simple AppsFlyer Link */}
+          <a
+            href="https://hq1.appsflyer.com/home"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors"
+            title="Open AppsFlyer Dashboard"
+          >
+            <BarChart3 className="w-4 h-4 mr-2" />
+            AppsFlyer
+            <ExternalLink className="w-4 h-4 ml-2" />
+          </a>
         </div>
 
         <div className="relative">
