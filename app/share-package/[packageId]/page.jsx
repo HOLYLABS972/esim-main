@@ -37,13 +37,20 @@ const SharePackagePage = () => {
 
   const loadFromAiraloAPI = useCallback(async () => {
     try {
+      console.log('🔍 Searching for package in Airalo API:', packageId);
       const response = await fetch(`/api/airalo/plans`);
       const data = await response.json();
       
       if (data.success && data.plans) {
-        const packageData = data.plans.find(pkg => pkg.slug === packageId || pkg.id === packageId);
+        console.log(`📋 Found ${data.plans.length} plans in API response`);
+        const packageData = data.plans.find(pkg => 
+          pkg.slug === packageId || 
+          pkg.id === packageId ||
+          pkg.name?.toLowerCase().includes(packageId.toLowerCase())
+        );
+        
         if (packageData) {
-          console.log('📦 Airalo package data:', packageData);
+          console.log('📦 Airalo package data found:', packageData);
           const transformedData = {
             id: packageData.slug || packageData.id,
             name: packageData.name,
@@ -61,37 +68,89 @@ const SharePackagePage = () => {
           };
           console.log('🔄 Transformed package data:', transformedData);
           setPackageData(transformedData);
+          return true; // Package found
+        } else {
+          console.log('❌ Package not found in Airalo API response');
+          console.log('Available package IDs:', data.plans.map(p => p.slug || p.id).slice(0, 10));
         }
+      } else {
+        console.error('❌ Airalo API response failed:', data);
       }
+      return false; // Package not found
     } catch (error) {
-      console.error('Error loading from Airalo API:', error);
+      console.error('❌ Error loading from Airalo API:', error);
+      return false;
     }
   }, [packageId]);
 
   const loadPackageData = useCallback(async () => {
     try {
       setLoading(true);
+      console.log('🔍 Loading package data for ID:', packageId);
       
-      // Try to load from Firebase plans collection
+      // Try to load from Firebase dataplans collection first
       const { doc, getDoc } = await import('firebase/firestore');
       const { db } = await import('../../../src/firebase/config');
       
-      const packageRef = doc(db, 'plans', packageId);
+      const packageRef = doc(db, 'dataplans', packageId);
       const packageSnap = await getDoc(packageRef);
       
       if (packageSnap.exists()) {
         const data = packageSnap.data();
-        console.log('📦 Firebase package data:', data);
+        console.log('✅ Found package in Firebase dataplans:', data);
         setPackageData({
           id: packageSnap.id,
           ...data
         });
+        return; // Package found, exit early
       } else {
-        // If not found in Firebase, try to load from Airalo API
-        await loadFromAiraloAPI();
+        console.log('❌ Package not found in Firebase dataplans, trying Airalo API...');
+      }
+      
+      // If not found in Firebase, try to load from Airalo API
+      const foundInAPI = await loadFromAiraloAPI();
+      
+      if (!foundInAPI && urlCountryCode) {
+        console.log('🔍 Package not found by ID, trying to find by country code:', urlCountryCode);
+        // Try to find a package for the country from the URL
+        try {
+          const response = await fetch(`/api/airalo/plans?country=${urlCountryCode}`);
+          const data = await response.json();
+          
+          if (data.success && data.plans && data.plans.length > 0) {
+            // Use the first available plan for this country
+            const fallbackPackage = data.plans[0];
+            console.log('✅ Using fallback package for country:', fallbackPackage);
+            setPackageData({
+              id: fallbackPackage.slug || fallbackPackage.id,
+              name: fallbackPackage.name,
+              description: fallbackPackage.description,
+              price: fallbackPackage.price,
+              currency: fallbackPackage.currency || 'USD',
+              data: fallbackPackage.capacity || fallbackPackage.data,
+              dataUnit: fallbackPackage.data_unit || 'GB',
+              period: fallbackPackage.period || fallbackPackage.validity,
+              duration: fallbackPackage.period || fallbackPackage.validity,
+              country_code: fallbackPackage.country_codes?.[0] || fallbackPackage.country_code,
+              benefits: fallbackPackage.features || [],
+              speed: fallbackPackage.speed,
+              region_slug: fallbackPackage.region_slug
+            });
+            return;
+          }
+        } catch (fallbackError) {
+          console.error('❌ Error with fallback country search:', fallbackError);
+        }
+      }
+      
+      if (!foundInAPI) {
+        console.log('❌ Package not found in either Firebase or Airalo API');
+        console.log('Package ID:', packageId);
+        console.log('URL Country Code:', urlCountryCode);
+        // Don't set packageData to null here, let the component handle the "not found" state
       }
     } catch (error) {
-      console.error('Error loading package data:', error);
+      console.error('❌ Error loading package data:', error);
       toast.error('Failed to load package information');
     } finally {
       setLoading(false);
