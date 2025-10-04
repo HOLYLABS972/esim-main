@@ -2,21 +2,19 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { collection, query, getDocs, getDoc, doc, updateDoc, deleteDoc, addDoc, setDoc, serverTimestamp, orderBy } from 'firebase/firestore';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { collection, query, getDocs, doc, updateDoc, deleteDoc, addDoc, serverTimestamp, orderBy } from 'firebase/firestore';
+import { getFunctions } from 'firebase/functions';
 import { db } from '../firebase/config';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { 
   Plus, 
   Edit, 
   Trash2, 
   MessageSquare, 
   Search,
-  RefreshCw,
   Save,
   Upload,
   X,
-  Image as ImageIcon,
   Send
 } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -47,7 +45,7 @@ const getFlagEmoji = (countryCode) => {
 
 const NotificationsManagement = () => {
   const { currentUser } = useAuth();
-  const functions = getFunctions();
+  // const functions = getFunctions();
 
   // State Management
   const [notifications, setNotifications] = useState([]);
@@ -62,7 +60,7 @@ const NotificationsManagement = () => {
   });
   const [notificationErrors, setNotificationErrors] = useState({});
   const [loadingNotifications, setLoadingNotifications] = useState(false);
-  const [notificationCountries, setNotificationCountries] = useState([]);
+  // const [notificationCountries, setNotificationCountries] = useState([]);
   
   // Image upload state
   const [selectedImage, setSelectedImage] = useState(null);

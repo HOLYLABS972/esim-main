@@ -77,3 +77,4 @@ firebase-debug.*.log
 # Temporary files
 *.tmp
 *.temp
+esim-service.json

@@ -439,7 +439,7 @@ const PaymentSuccess = () => {
       const total = searchParams.get('total');
       const name = searchParams.get('name');
       const currency = searchParams.get('currency');
-      const order_id = searchParams.get('order_id');
+      // const order_id = searchParams.get('order_id');
       
       if (!orderParam || !email || !total) {
         setError('Missing payment information.');
@@ -529,7 +529,7 @@ const PaymentSuccess = () => {
                 const referrerData = referrerDoc.data();
                 referrerDisplay = referrerData.email || commissionResult.referrerId;
               }
-            } catch (error) {
+            } catch {
               console.log('Could not fetch referrer email, using UID');
             }
             
@@ -591,7 +591,7 @@ const PaymentSuccess = () => {
     } finally {
       setProcessing(false);
     }
-  }, [currentUser, searchParams, checkAndMarkLinkUsed, createOrderRecord, processTransactionCommission, router]);
+  }, [currentUser, searchParams, checkAndMarkLinkUsed, createOrderRecord, router]);
 
   useEffect(() => {
     if (currentUser && !hasProcessed.current) {
