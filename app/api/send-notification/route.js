@@ -37,6 +37,11 @@ export async function POST(request) {
     if (!FCM_SERVER_KEY) {
       console.log('⚠️ FCM_SERVER_KEY not set, returning mock response');
       console.log('📱 Would send notification:', { title, body: messageBody, tokens: tokens.length });
+      console.log('🔧 To enable real notifications:');
+      console.log('1. Go to Firebase Console → Project Settings → Cloud Messaging');
+      console.log('2. Copy the Server Key');
+      console.log('3. Set environment variable: FCM_SERVER_KEY=your_server_key');
+      console.log('4. Or use Firebase Admin SDK with service account credentials');
       
       return NextResponse.json({
         success: true,
@@ -44,7 +49,7 @@ export async function POST(request) {
         sentCount: tokens.length,
         successCount: tokens.length,
         failureCount: 0,
-        note: 'Mock response - FCM_SERVER_KEY not configured'
+        note: 'Mock response - FCM_SERVER_KEY not configured. Check server logs for setup instructions.'
       });
     }
 
