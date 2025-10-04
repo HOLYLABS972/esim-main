@@ -362,7 +362,7 @@ const NotificationsManagement = () => {
         fcmFailureCount: result.failureCount || 0
       });
 
-      toast.success(`🚀 Push notification sent immediately to ${result.successCount} devices!\n\n✅ iOS: ${result.platforms?.ios || 0} devices\n✅ Android: ${result.platforms?.android || 0} devices`);
+      toast.success('Success');
       
       await loadNotifications();
       await loadFCMStats();
