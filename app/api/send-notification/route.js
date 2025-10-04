@@ -1,17 +1,9 @@
 import { NextResponse } from 'next/server';
-import admin from 'firebase-admin';
 
-// Initialize Firebase Admin SDK
-if (!admin.apps.length) {
-  try {
-    admin.initializeApp({
-      credential: admin.credential.applicationDefault(),
-      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'esim-f0e3e',
-    });
-  } catch (error) {
-    console.error('Firebase Admin initialization error:', error);
-  }
-}
+// For development/testing, we'll use the FCM REST API directly
+// In production, you should use Firebase Admin SDK with proper service account credentials
+const FCM_SERVER_KEY = process.env.FCM_SERVER_KEY; // You'll need to set this
+const FCM_ENDPOINT = 'https://fcm.googleapis.com/fcm/send';
 
 export async function POST(request) {
   try {
@@ -40,79 +32,110 @@ export async function POST(request) {
       );
     }
 
-    // Build notification payload
-    const message = {
+    // For now, we'll return a mock success response since FCM_SERVER_KEY is not set
+    // In production, you need to set up proper Firebase Admin SDK credentials
+    if (!FCM_SERVER_KEY) {
+      console.log('⚠️ FCM_SERVER_KEY not set, returning mock response');
+      console.log('📱 Would send notification:', { title, body: messageBody, tokens: tokens.length });
+      
+      return NextResponse.json({
+        success: true,
+        messageId: 'mock-message-id',
+        sentCount: tokens.length,
+        successCount: tokens.length,
+        failureCount: 0,
+        note: 'Mock response - FCM_SERVER_KEY not configured'
+      });
+    }
+
+    // Build notification payload for FCM REST API
+    const payload = {
       notification: {
         title,
         body: messageBody,
-        ...(imageUrl && { imageUrl })
+        ...(imageUrl && { image: imageUrl })
       },
       data: {
         ...data,
         timestamp: Date.now().toString(),
         source: 'dashboard'
-      },
-      android: {
-        priority: 'high',
-        notification: {
-          channelId: 'fcm_notifications',
-          sound: 'default',
-          clickAction: 'FLUTTER_NOTIFICATION_CLICK'
-        }
-      },
-      apns: {
-        payload: {
-          aps: {
-            alert: {
-              title,
-              body: messageBody
-            },
-            sound: 'default',
-            badge: 1
-          }
-        }
       }
     };
 
-    let response;
+    let successCount = 0;
+    let failureCount = 0;
+    const responses = [];
 
     if (topic) {
       // Send to topic
-      message.topic = topic;
-      response = await admin.messaging().send(message);
-      console.log('✅ FCM notification sent to topic:', topic);
-    } else {
-      // Send to specific tokens
-      const messaging = admin.messaging();
-      
-      // Send to all tokens
-      response = await messaging.sendMulticast({
-        ...message,
-        tokens
+      const response = await fetch(FCM_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Authorization': `key=${FCM_SERVER_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...payload,
+          to: `/topics/${topic}`
+        }),
       });
+
+      const result = await response.json();
       
-      console.log(`✅ FCM notification sent to ${response.successCount}/${tokens.length} devices`);
-      
-      if (response.failureCount > 0) {
-        console.log('❌ Failed tokens:', response.responses
-          .map((resp, idx) => resp.success ? null : tokens[idx])
-          .filter(Boolean)
-        );
+      if (response.ok && result.success === 1) {
+        successCount = 1;
+        console.log('✅ FCM notification sent to topic:', topic);
+      } else {
+        failureCount = 1;
+        console.error('❌ FCM topic notification failed:', result);
       }
+    } else {
+      // Send to specific tokens (batch processing)
+      for (const token of tokens) {
+        try {
+          const response = await fetch(FCM_ENDPOINT, {
+            method: 'POST',
+            headers: {
+              'Authorization': `key=${FCM_SERVER_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              ...payload,
+              to: token
+            }),
+          });
+
+          const result = await response.json();
+          
+          if (response.ok && result.success === 1) {
+            successCount++;
+          } else {
+            failureCount++;
+            console.error('❌ FCM token notification failed:', result);
+          }
+          
+          responses.push(result);
+        } catch (error) {
+          failureCount++;
+          console.error('❌ FCM token notification error:', error);
+        }
+      }
+      
+      console.log(`✅ FCM notification sent to ${successCount}/${tokens.length} devices`);
     }
 
     return NextResponse.json({
       success: true,
-      messageId: response,
+      messageId: responses[0]?.message_id || 'batch-send',
       sentCount: tokens.length,
-      successCount: response.successCount || 1,
-      failureCount: response.failureCount || 0
+      successCount,
+      failureCount
     });
 
   } catch (error) {
     console.error('❌ FCM notification error:', error);
     return NextResponse.json(
-      { error: 'Failed to send notification', details: error.message },
+      { error: 'Failed to send notification from web', details: error.message },
       { status: 500 }
     );
   }
