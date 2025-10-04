@@ -423,14 +423,10 @@ const NotificationsManagement = () => {
       {fcmStats && (
         <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">📱 Push Notification Stats</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <div className="text-center">
               <div className="text-2xl font-bold text-blue-600">{fcmStats.totalTokens}</div>
-              <div className="text-sm text-gray-600">Total Devices</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">{fcmStats.activeTokens}</div>
-              <div className="text-sm text-gray-600">Active Devices</div>
+              <div className="text-sm text-gray-600">Total Sent</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-orange-600">{fcmStats.platforms.ios}</div>
