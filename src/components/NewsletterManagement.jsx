@@ -18,7 +18,7 @@ const NewsletterManagement = () => {
   const [filteredNewsletterSubscriptions, setFilteredNewsletterSubscriptions] = useState([]);
   const [newsletterSearchTerm, setNewsletterSearchTerm] = useState('');
   const [newsletterStatusFilter, setNewsletterStatusFilter] = useState('all');
-  const [newsletterStats] = useState({ total: 0, active: 0, unsubscribed: 0, bounced: 0 });
+  const [newsletterStats, setNewsletterStats] = useState({ total: 0, active: 0, unsubscribed: 0, bounced: 0 });
   const [loading, setLoading] = useState(false);
 
   // Load data on component mount
