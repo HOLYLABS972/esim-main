@@ -1,12 +1,12 @@
 import dynamic from 'next/dynamic';
 
 export const metadata = {
-  title: 'Return Policy - eSIM Plans',
-  description: 'Learn about our return policy, refund terms, and exchange procedures for eSIM services. Understand eligibility requirements and how to request refunds.',
-  keywords: ['return policy', 'refund policy', 'eSIM returns', 'digital goods refunds', 'eSIM exchanges'],
+  title: 'Return Policy - No Returns or Exchanges - eSIM Plans',
+  description: 'Our eSIM return policy: No returns or exchanges accepted. All purchases are final sale due to the digital nature of eSIM products.',
+  keywords: ['return policy', 'no returns', 'no exchanges', 'final sale', 'eSIM policy', 'digital goods'],
   openGraph: {
-    title: 'Return Policy - eSIM Plans',
-    description: 'Learn about our return policy, refund terms, and exchange procedures for eSIM services.',
+    title: 'Return Policy - No Returns or Exchanges - eSIM Plans',
+    description: 'Our eSIM return policy: No returns or exchanges accepted. All purchases are final sale.',
     url: '/return-policy',
   },
   alternates: {

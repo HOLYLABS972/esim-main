@@ -5,62 +5,66 @@ import Link from 'next/link';
 const ReturnPolicy = () => {
   const sections = [
     {
-      icon: Clock,
-      title: "Return & Refund Eligibility",
-      content: [
-        "Digital eSIM products are generally non-refundable once activated due to their nature as digital goods",
-        "Refunds may be considered within 24 hours of purchase if the eSIM has not been activated",
-        "Refunds are not available for data plans that have been partially or fully consumed",
-        "Service issues caused by network provider problems may qualify for credit or replacement",
-        "Refunds are processed within 5-10 business days to the original payment method"
-      ]
-    },
-    {
       icon: AlertTriangle,
-      title: "Non-Refundable Circumstances",
+      title: "No Returns or Exchanges Policy",
       content: [
-        "eSIM plans that have been activated and connected to a device",
-        "Data plans where usage has exceeded 10% of the total data allowance",
-        "Plans that have been used for more than 24 hours from activation",
-        "Refunds requested due to customer's device incompatibility (customer responsibility to verify compatibility)",
-        "Refunds requested due to customer's travel plans changing or cancellation",
-        "Plans purchased during promotional periods may have different refund terms"
+        "All eSIM products and services are final sale with no returns or exchanges accepted",
+        "Due to the digital nature of eSIM products, all purchases are considered final once completed",
+        "This policy applies to all countries and regions where our services are available",
+        "We do not accept returns or exchanges for any reason, including but not limited to:",
+        "• Device incompatibility (customers must verify compatibility before purchase)",
+        "• Change of travel plans or cancellation of trips",
+        "• Activation issues or connectivity problems",
+        "• Dissatisfaction with service quality or coverage",
+        "• Accidental purchases or duplicate orders"
       ]
     },
     {
       icon: Shield,
-      title: "Refund Process",
+      title: "Why No Returns Policy",
       content: [
-        "Submit a refund request through our customer support within the eligible timeframe",
-        "Provide order number, email address, and reason for refund request",
-        "Our team will review the request within 2-3 business days",
-        "Approved refunds will be processed to the original payment method",
-        "Credit card refunds may take 5-10 business days to appear on your statement",
-        "Digital wallet refunds (PayPal, Apple Pay, Google Pay) may take 3-5 business days"
-      ]
-    },
-    {
-      icon: RefreshCw,
-      title: "Service Credits & Replacements",
-      content: [
-        "If service issues are due to our error or network provider problems, we may offer service credits",
-        "Service credits are valid for 90 days from the issue date",
-        "Credits can be used towards future eSIM purchases on our platform",
-        "Defective or non-working eSIMs may be replaced at no additional cost",
-        "Replacement requests must be submitted within 48 hours of activation",
-        "We reserve the right to investigate usage patterns before approving replacements"
+        "eSIM products are digital goods that cannot be physically returned once purchased",
+        "Once an eSIM is activated, it becomes tied to a specific device and cannot be transferred",
+        "Data plans have immediate value and cannot be recovered once consumed",
+        "Digital products are exempt from traditional return policies under consumer law in many jurisdictions",
+        "Preventing abuse and ensuring fair pricing for all customers",
+        "Maintaining service quality and preventing system manipulation"
       ]
     },
     {
       icon: FileText,
-      title: "Dispute Resolution",
+      title: "Customer Responsibilities",
       content: [
-        "If you disagree with a refund decision, you may request a review by our management team",
-        "All disputes must be submitted in writing with supporting documentation",
-        "We will respond to dispute requests within 5 business days",
-        "For payment disputes, customers may contact their payment provider directly",
-        "We comply with all applicable consumer protection laws and regulations",
-        "This policy is subject to local laws and regulations in your jurisdiction"
+        "Verify device compatibility before making any purchase",
+        "Confirm travel dates and destinations before purchasing eSIM plans",
+        "Read all product descriptions and terms before completing purchase",
+        "Ensure you understand the data allowances and validity periods",
+        "Test eSIM activation in a timely manner after purchase",
+        "Contact customer support immediately if you encounter technical issues during activation"
+      ]
+    },
+    {
+      icon: Clock,
+      title: "Technical Support & Service Issues",
+      content: [
+        "While returns and exchanges are not accepted, we provide technical support for service issues",
+        "Contact our customer support team if you experience activation problems",
+        "We will investigate and resolve technical issues that prevent proper service activation",
+        "Service credits may be provided at our discretion for genuine technical problems",
+        "Support is available during business hours for all customers",
+        "We are committed to ensuring your eSIM works as described"
+      ]
+    },
+    {
+      icon: FileText,
+      title: "Legal Compliance",
+      content: [
+        "This policy complies with applicable consumer protection laws for digital goods",
+        "Customers have the right to dispute charges with their payment provider if applicable",
+        "This policy is subject to local laws and regulations in your jurisdiction",
+        "For questions about legal rights, customers should consult local consumer protection agencies",
+        "We reserve the right to modify this policy with appropriate notice",
+        "Continued use of our services constitutes acceptance of this policy"
       ]
     }
   ];
@@ -99,15 +103,14 @@ const ReturnPolicy = () => {
             <h2 className="text-xl font-semibold text-gray-900">Policy Overview</h2>
           </div>
           <p className="text-gray-700 leading-relaxed">
-            This Return Policy outlines the terms and conditions for returns, refunds, and exchanges 
-            of our eSIM services. Please read this policy carefully before making a purchase. 
+            This Return Policy clearly states that we do not accept returns or exchanges for our eSIM services. 
+            Please read this policy carefully before making a purchase. 
             By purchasing our eSIM products, you agree to the terms outlined in this policy.
           </p>
-          <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <p className="text-yellow-800 text-sm">
-              <strong>Important:</strong> Due to the digital nature of eSIM products, 
-              most purchases are final once activated. Please ensure your device is compatible 
-              and your travel plans are confirmed before purchasing.
+          <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-red-800 text-sm">
+              <strong>Important:</strong> All eSIM purchases are final sale with no returns or exchanges accepted. 
+              Please ensure your device is compatible and your travel plans are confirmed before purchasing.
             </p>
           </div>
         </div>
@@ -146,8 +149,8 @@ const ReturnPolicy = () => {
             <h3 className="text-xl font-semibold text-gray-900">Need Help?</h3>
           </div>
           <p className="text-gray-700 mb-4">
-            If you have questions about our return policy or need to request a refund, 
-            please contact our customer support team.
+            If you have questions about our policy or need technical support with your eSIM, 
+            please contact our customer support team. Note that we do not accept returns or exchanges.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
