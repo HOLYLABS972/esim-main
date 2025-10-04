@@ -97,17 +97,22 @@ function extractKeywords(text, maxKeywords = 8) {
  */
 function detectContentType(title, content) {
   const titleLower = title.toLowerCase();
+  const contentLower = content ? content.toLowerCase() : '';
   
-  if (titleLower.includes('vs') || titleLower.includes('vs.') || titleLower.includes('comparison') || titleLower.includes('compare')) {
+  if (titleLower.includes('vs') || titleLower.includes('vs.') || titleLower.includes('comparison') || titleLower.includes('compare') ||
+      contentLower.includes('comparison') || contentLower.includes('compare')) {
     return 'comparison';
   }
-  if (titleLower.includes('guide') || titleLower.includes('how to') || titleLower.includes('tutorial')) {
+  if (titleLower.includes('guide') || titleLower.includes('how to') || titleLower.includes('tutorial') ||
+      contentLower.includes('guide') || contentLower.includes('tutorial')) {
     return 'guide';
   }
-  if (titleLower.includes('review') || titleLower.includes('tested') || titleLower.includes('analysis')) {
+  if (titleLower.includes('review') || titleLower.includes('tested') || titleLower.includes('analysis') ||
+      contentLower.includes('review') || contentLower.includes('tested')) {
     return 'review';
   }
-  if (titleLower.includes('tips') || titleLower.includes('tricks') || titleLower.includes('advice')) {
+  if (titleLower.includes('tips') || titleLower.includes('tricks') || titleLower.includes('advice') ||
+      contentLower.includes('tips') || contentLower.includes('tricks')) {
     return 'tips';
   }
   

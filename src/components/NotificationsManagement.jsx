@@ -15,7 +15,8 @@ import {
   Save,
   Upload,
   X,
-  Send
+  Send,
+  RefreshCw
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { imageUploadService } from '../services/imageUploadService';
