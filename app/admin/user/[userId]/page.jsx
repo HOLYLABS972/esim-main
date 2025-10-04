@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '../../../../src/contexts/AuthContext';
 import { useAdmin } from '../../../../src/contexts/AdminContext';
-import { collection, query, where, getDocs, getDoc, doc, updateDoc, orderBy, deleteDoc, setDoc } from 'firebase/firestore';
+import { collection, query, getDocs, getDoc, doc, updateDoc, orderBy, deleteDoc, setDoc } from 'firebase/firestore';
 import { db } from '../../../../src/firebase/config';
 import { getAllReferralCodes, createReferralCode } from '../../../../src/services/referralService';
 // import { motion } from 'framer-motion'; // Temporarily disabled to fix build error
@@ -20,13 +20,10 @@ import {
   Trash2,
   Plus,
   Copy,
-  Eye,
   Smartphone,
   Edit,
   Users,
   Search,
-  ChevronDown,
-  Power,
   Calendar
 } from 'lucide-react';
 import toast from 'react-hot-toast';
