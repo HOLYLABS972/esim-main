@@ -1,5 +1,6 @@
 import React from 'react';
-import { FileText, Users, CreditCard, Shield, AlertTriangle, Scale } from 'lucide-react';
+import { FileText, Users, CreditCard, Shield, AlertTriangle, Scale, RefreshCw } from 'lucide-react';
+import Link from 'next/link';
 
 const TermsOfService = () => {
   const sections = [
@@ -20,7 +21,7 @@ const TermsOfService = () => {
         "We provide eSIM data plans for mobile connectivity in various countries and regions",
         "All prices are displayed in the applicable currency and include applicable taxes",
         "Payment is required before service activation and is processed securely",
-        "Refunds may be available according to our refund policy within specified timeframes",
+        "All purchases are final sale with no returns or exchanges accepted (see our Return Policy for details)",
         "We reserve the right to modify pricing with advance notice to customers"
       ]
     },
@@ -44,6 +45,18 @@ const TermsOfService = () => {
         "We do not guarantee uninterrupted or error-free service at all times",
         "Emergency services may not be available through our eSIM services",
         "You acknowledge that mobile services have inherent technical limitations"
+      ]
+    },
+    {
+      icon: RefreshCw,
+      title: "Return Policy & Refunds",
+      content: [
+        "All eSIM products and services are final sale with no returns or exchanges accepted",
+        "Due to the digital nature of eSIM products, all purchases are considered final once completed",
+        "This policy applies to all countries and regions where our services are available",
+        "Customers are responsible for verifying device compatibility before purchase",
+        "Technical support is available for activation issues, but no refunds will be provided",
+        "For complete details, please review our Return Policy"
       ]
     }
   ];
@@ -200,6 +213,38 @@ const TermsOfService = () => {
                     You agree to first attempt to resolve any disputes through our customer support 
                     team before pursuing formal legal action.
                   </p>
+                </div>
+              </div>
+            </div>
+            <div className="pointer-events-none absolute inset-px rounded-xl shadow-sm ring-1 ring-black/5"></div>
+          </div>
+
+          {/* Related Policies */}
+          <div className="relative mb-8">
+            <div className="absolute inset-px rounded-xl bg-white"></div>
+            <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
+              <div className="px-8 pt-8 pb-8">
+                <h2 className="text-2xl font-medium tracking-tight text-eerie-black mb-4">Related Policies</h2>
+                <div className="space-y-4 text-cool-black">
+                  <p>
+                    For additional information about our policies and procedures, please review the following documents:
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-4 mt-6">
+                    <Link 
+                      href="/return-policy"
+                      className="flex items-center space-x-2 px-4 py-2 bg-tufts-blue text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      <RefreshCw className="w-4 h-4" />
+                      <span>Return Policy</span>
+                    </Link>
+                    <Link 
+                      href="/privacy-policy"
+                      className="flex items-center space-x-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                    >
+                      <Shield className="w-4 h-4" />
+                      <span>Privacy Policy</span>
+                    </Link>
+                  </div>
                 </div>
               </div>
             </div>
