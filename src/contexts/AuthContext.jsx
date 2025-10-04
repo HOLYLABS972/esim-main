@@ -358,6 +358,7 @@ export function AuthProvider({ children }) {
   };
 
   // Helper function to add user to newsletter collection
+  // Fixed: displayName and source parameters are used in the addDoc call below
   async function addToNewsletter(email, displayName, source) {
     try {
       // Check if email already exists in newsletter collection
