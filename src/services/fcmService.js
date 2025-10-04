@@ -108,24 +108,38 @@ export const sendNotificationToAllUsers = async (notificationData) => {
 
     // Send notification
     console.log('📤 FCM Service: Sending notification to API...');
-    const sendResponse = await fetch(FCM_API_BASE_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        title,
-        body,
-        tokens,
-        data: {
-          ...data,
-          sentFrom: 'dashboard'
+    let sendResponse;
+    try {
+      sendResponse = await fetch(FCM_API_BASE_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-        imageUrl
-      }),
-    });
+        body: JSON.stringify({
+          title,
+          body,
+          tokens,
+          data: {
+            ...data,
+            sentFrom: 'dashboard'
+          },
+          imageUrl
+        }),
+      });
+    } catch (fetchError) {
+      console.error('❌ FCM Service: Network error during fetch:', fetchError);
+      throw new Error(`Network error: ${fetchError.message}`);
+    }
 
-    const result = await sendResponse.json();
+    let result;
+    try {
+      result = await sendResponse.json();
+    } catch (jsonError) {
+      console.error('❌ FCM Service: Error parsing JSON response:', jsonError);
+      const responseText = await sendResponse.text();
+      console.error('❌ FCM Service: Raw response:', responseText);
+      throw new Error(`Invalid JSON response: ${responseText}`);
+    }
     
     console.log('📨 FCM Service: API Response:', {
       status: sendResponse.status,
