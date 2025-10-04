@@ -42,8 +42,17 @@ export async function POST(request) {
       imageUrl // Optional: notification image
     } = requestBody;
 
+    console.log('📨 Received notification request:', {
+      title,
+      body: messageBody,
+      tokensCount: tokens.length,
+      topic,
+      hasImageUrl: !!imageUrl
+    });
+
     // Validation
     if (!title || !messageBody) {
+      console.error('❌ Validation failed: Title and body are required');
       return NextResponse.json(
         { error: 'Title and body are required' },
         { status: 400 }
@@ -51,6 +60,7 @@ export async function POST(request) {
     }
 
     if (!tokens.length && !topic) {
+      console.error('❌ Validation failed: Either tokens or topic is required');
       return NextResponse.json(
         { error: 'Either tokens or topic is required' },
         { status: 400 }
@@ -91,43 +101,77 @@ export async function POST(request) {
       }
     };
 
+    console.log('📝 Built message payload:', JSON.stringify(message, null, 2));
+
     let response;
+    const messaging = admin.messaging();
 
     if (topic) {
       // Send to topic using V1 API
       message.topic = topic;
-      response = await admin.messaging().send(message);
-      console.log('✅ FCM notification sent to topic:', topic);
+      console.log('📡 Sending to topic:', topic);
+      response = await messaging.send(message);
+      console.log('✅ FCM notification sent to topic:', topic, 'Response:', response);
     } else {
-      // Send to specific tokens using V1 API
-      const messaging = admin.messaging();
+      // Send to specific tokens using individual sends (more reliable than sendMulticast)
+      console.log('📱 Sending to', tokens.length, 'tokens individually...');
       
-      // Send to all tokens using multicast
-      response = await messaging.sendMulticast({
-        ...message,
-        tokens
-      });
+      const results = [];
+      let successCount = 0;
+      let failureCount = 0;
+      const failedTokens = [];
+
+      for (let i = 0; i < tokens.length; i++) {
+        const token = tokens[i];
+        try {
+          console.log(`📤 Sending to token ${i + 1}/${tokens.length}:`, token.substring(0, 20) + '...');
+          
+          const individualMessage = {
+            ...message,
+            token: token
+          };
+          
+          const result = await messaging.send(individualMessage);
+          results.push({ success: true, messageId: result });
+          successCount++;
+          console.log(`✅ Success for token ${i + 1}:`, result);
+        } catch (error) {
+          console.error(`❌ Failed for token ${i + 1}:`, error.message);
+          results.push({ success: false, error: error.message });
+          failedTokens.push(token);
+          failureCount++;
+        }
+      }
+
+      response = {
+        results,
+        successCount,
+        failureCount,
+        failedTokens
+      };
       
-      console.log(`✅ FCM notification sent to ${response.successCount}/${tokens.length} devices`);
-      
-      if (response.failureCount > 0) {
-        console.log('❌ Failed tokens:', response.responses
-          .map((resp, idx) => resp.success ? null : tokens[idx])
-          .filter(Boolean)
-        );
+      console.log(`📊 Final results: ${successCount}/${tokens.length} successful`);
+      if (failureCount > 0) {
+        console.log('❌ Failed tokens:', failedTokens.map(token => token.substring(0, 20) + '...'));
       }
     }
 
-    return NextResponse.json({
+    const finalResponse = {
       success: true,
-      messageId: response,
+      messageId: response.messageId || 'multiple',
       sentCount: tokens.length,
       successCount: response.successCount || 1,
-      failureCount: response.failureCount || 0
-    });
+      failureCount: response.failureCount || 0,
+      details: response
+    };
+
+    console.log('🎉 Notification sending completed:', finalResponse);
+
+    return NextResponse.json(finalResponse);
 
   } catch (error) {
     console.error('❌ FCM notification error:', error);
+    console.error('❌ Error stack:', error.stack);
     return NextResponse.json(
       { error: 'Failed to send notification from web', details: error.message },
       { status: 500 }

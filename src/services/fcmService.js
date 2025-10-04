@@ -77,21 +77,37 @@ export const sendNotificationToAllUsers = async (notificationData) => {
   try {
     const { title, body, data = {}, imageUrl, limit = 1000 } = notificationData;
 
+    console.log('🚀 FCM Service: Starting notification send to all users...', {
+      title,
+      body: body.substring(0, 50) + '...',
+      hasImageUrl: !!imageUrl,
+      limit
+    });
+
     if (!title || !body) {
       throw new Error('Title and body are required');
     }
 
     // Get all active FCM tokens
+    console.log('📱 FCM Service: Fetching active FCM tokens...');
     const response = await fetch(`${FCM_TOKENS_URL}?limit=${limit}`);
     const tokensData = await response.json();
+
+    console.log('📊 FCM Service: Token fetch result:', {
+      success: tokensData.success,
+      tokensCount: tokensData.tokens?.length || 0,
+      totalCount: tokensData.totalCount
+    });
 
     if (!tokensData.success || tokensData.tokens.length === 0) {
       throw new Error('No active FCM tokens found');
     }
 
     const tokens = tokensData.tokens.map(token => token.token);
+    console.log('🎯 FCM Service: Extracted', tokens.length, 'tokens for sending');
 
     // Send notification
+    console.log('📤 FCM Service: Sending notification to API...');
     const sendResponse = await fetch(FCM_API_BASE_URL, {
       method: 'POST',
       headers: {
@@ -110,17 +126,31 @@ export const sendNotificationToAllUsers = async (notificationData) => {
     });
 
     const result = await sendResponse.json();
+    
+    console.log('📨 FCM Service: API Response:', {
+      status: sendResponse.status,
+      success: result.success,
+      successCount: result.successCount,
+      failureCount: result.failureCount,
+      messageId: result.messageId
+    });
 
     if (!sendResponse.ok) {
+      console.error('❌ FCM Service: API Error:', result);
       throw new Error(result.error || 'Failed to send notification');
     }
 
-    return {
+    const finalResult = {
       ...result,
       totalUsers: tokensData.totalCount
     };
+
+    console.log('✅ FCM Service: Notification sent successfully:', finalResult);
+    return finalResult;
+    
   } catch (error) {
-    console.error('Error sending FCM notification to all users:', error);
+    console.error('❌ FCM Service: Error sending notification to all users:', error);
+    console.error('❌ FCM Service: Error stack:', error.stack);
     throw error;
   }
 };
