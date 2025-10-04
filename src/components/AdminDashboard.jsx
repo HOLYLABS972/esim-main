@@ -936,7 +936,6 @@ const AdminDashboard = () => {
               { id: 'countries', label: 'Countries', icon: Globe, permission: canManageCountries },
               { id: 'plans', label: 'Plans Management', icon: Smartphone, permission: canManagePlans },
               { id: 'esim', label: 'eSIM Management', icon: Activity, permission: canManagePlans },
-              { id: 'notifications', label: 'Notifications', icon: MessageSquare, permission: true },
               { id: 'logs', label: 'Application Logs', icon: FileText, permission: canManageContactRequests },
             ].filter(tab => tab.permission).map((tab) => {
               const Icon = tab.icon;
@@ -964,7 +963,7 @@ const AdminDashboard = () => {
               <button
                 onClick={() => setShowAdminDropdown(!showAdminDropdown)}
                 className={`w-full flex items-center justify-between px-4 py-3 rounded-lg font-medium transition-all duration-200 text-left ${
-                  ['requests', 'newsletter', 'jobs', 'blog'].includes(activeTab)
+                  ['requests', 'newsletter', 'jobs', 'blog', 'notifications'].includes(activeTab)
                     ? 'bg-black text-white shadow-lg'
                     : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                 }`}
@@ -984,7 +983,8 @@ const AdminDashboard = () => {
               {showAdminDropdown && (
                 <div className="ml-4 mt-2 space-y-1">
                   {[
-                    { id: 'requests', label: 'Contact Requests', icon: MessageSquare, permission: canManageContactRequests },
+                    { id: 'notifications', label: 'Notifications', icon: MessageSquare, permission: true },
+                    { id: 'requests', label: 'Contact Requests', icon: Mail, permission: canManageContactRequests },
                     { id: 'newsletter', label: 'Newsletter', icon: Mail, permission: canManageNewsletter },
                     { id: 'jobs', label: 'Job Applications', icon: Briefcase, permission: canManageContactRequests },
                     { id: 'blog', label: 'Blog Management', icon: FileText, permission: canManageBlog },
