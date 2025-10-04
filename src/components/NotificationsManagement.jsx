@@ -327,14 +327,16 @@ const NotificationsManagement = () => {
     }
   };
 
-  // Send FCM notification
+  // Send FCM notification immediately
   const sendFCMNotification = async (notification) => {
-    if (!window.confirm(`Send push notification to all mobile users?\n\nTitle: ${notification.title}\nMessage: ${notification.name || notification.body}`)) {
+    if (!window.confirm(`Send push notification to all mobile users NOW?\n\nTitle: ${notification.title}\nMessage: ${notification.name || notification.body}\n\nThis will send immediately to iOS and Android devices.`)) {
       return;
     }
 
     try {
       setSendingNotification(true);
+      
+      console.log('🚀 Sending FCM notification immediately...');
       
       const result = await sendNotificationToAllUsers({
         title: notification.title,
@@ -342,24 +344,31 @@ const NotificationsManagement = () => {
         imageUrl: notification.imageUrl,
         data: {
           notificationId: notification.id,
-          type: 'general'
+          type: 'general',
+          timestamp: Date.now().toString()
         }
       });
 
-      // Update notification with sent count
+      console.log('✅ FCM notification sent successfully:', result);
+
+      // Update notification with sent count and timestamp
       await updateDoc(doc(db, 'notifications', notification.id), {
         sentCount: (notification.sentCount || 0) + result.successCount,
         lastSentAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
+        updatedAt: serverTimestamp(),
+        fcmSentAt: serverTimestamp(), // Track when FCM was sent
+        fcmSuccessCount: result.successCount,
+        fcmFailureCount: result.failureCount || 0
       });
 
-      toast.success(`Push notification sent to ${result.successCount} devices`);
+      toast.success(`🚀 Push notification sent immediately to ${result.successCount} devices!\n\n✅ iOS: ${result.platforms?.ios || 0} devices\n✅ Android: ${result.platforms?.android || 0} devices`);
+      
       await loadNotifications();
       await loadFCMStats();
       
     } catch (error) {
-      console.error('Error sending FCM notification:', error);
-      toast.error(`Failed to send notification: ${error.message}`);
+      console.error('❌ Error sending FCM notification:', error);
+      toast.error(`Failed to send notification immediately: ${error.message}`);
     } finally {
       setSendingNotification(false);
     }
@@ -467,6 +476,11 @@ const NotificationsManagement = () => {
                   <div className="flex-1">
                     <div className="flex items-center space-x-3 mb-2">
                       <h3 className="text-lg font-semibold text-gray-900">{notification.title}</h3>
+                      {notification.fcmSentAt && (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          🚀 Sent via FCM
+                        </span>
+                      )}
                     </div>
                     <p className="text-gray-600 mb-3">{notification.body}</p>
                     <div className="flex items-center space-x-4 text-sm text-gray-500">
@@ -475,6 +489,11 @@ const NotificationsManagement = () => {
                         <span>Countries: {notification.countries.length}</span>
                       )}
                       <span>Created: {notification.createdAt?.toDate?.()?.toLocaleDateString() || 'Unknown'}</span>
+                      {notification.fcmSuccessCount && (
+                        <span className="text-green-600 font-medium">
+                          📱 Sent to {notification.fcmSuccessCount} devices
+                        </span>
+                      )}
                     </div>
                   </div>
                   <div className="flex space-x-2 ml-4">
@@ -489,9 +508,13 @@ const NotificationsManagement = () => {
                       onClick={() => sendFCMNotification(notification)}
                       disabled={sendingNotification}
                       className="p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors disabled:opacity-50"
-                      title="Send push notification to mobile users"
+                      title="Send push notification NOW to all iOS and Android devices"
                     >
-                      <MessageSquare className="w-4 h-4" />
+                      {sendingNotification ? (
+                        <div className="w-4 h-4 border-2 border-green-600 border-t-transparent rounded-full animate-spin"></div>
+                      ) : (
+                        <MessageSquare className="w-4 h-4" />
+                      )}
                     </button>
                     <button
                       onClick={() => deleteNotification(notification.id)}
