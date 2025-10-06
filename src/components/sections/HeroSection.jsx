@@ -10,9 +10,9 @@ export default function HeroSection() {
   
   if (isLoading) {
     return (
-      <div className="bg-white">
-        <div className="relative isolate px-6 pt-14 lg:px-8">
-          <div className="mx-auto max-w-2xl py-32 sm:py-48 lg:py-56">
+      <div className="bg-white min-h-screen flex flex-col">
+        <div className="relative isolate px-6 pt-14 lg:px-8 flex-1 flex flex-col">
+          <div className="mx-auto max-w-2xl py-32 sm:py-48 lg:py-56 flex-1 flex flex-col justify-center">
             <div className="text-center">
               <div className="animate-pulse space-y-4">
                 <div className="h-4 bg-gray-200 rounded w-3/4 mx-auto"></div>
@@ -42,8 +42,8 @@ export default function HeroSection() {
   };
 
   return (
-    <div className="bg-white">
-      <div className="relative isolate px-6 pt-14 lg:px-8">
+    <div className="bg-white min-h-screen ">
+      <div className="relative isolate px-6 pt-10 lg:px-8 flex-1 flex flex-col">
         {/* Top Gradient Blob */}
         <div aria-hidden="true" className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80">
           <div 
@@ -55,7 +55,7 @@ export default function HeroSection() {
           ></div>
         </div>
 
-        <div className="mx-auto max-w-5xl py-8 sm:py-16 lg:py-32">
+        <div className="mx-auto max-w-5xl py-6 sm:py-12 lg:py-24 flex-1 flex flex-col justify-center">
           {/* Announcement Banner */}
           <div className="mb-6 sm:mb-8 flex justify-center">
             <div className="relative rounded-full px-3 py-1 text-xs sm:text-sm/6 text-gray-600 ring-1 ring-jordy-blue/30 hover:ring-tufts-blue/50 bg-white/80 backdrop-blur-sm shadow-lg shadow-cobalt-blue">
@@ -109,7 +109,7 @@ export default function HeroSection() {
               </div>
             </h1>
               
-            <p className="mt-6 sm:mt-8 text-base sm:text-lg lg:text-xl font-medium text-pretty text-gray-600 px-4 sm:px-0">
+            <p className="mx-auto max-w-4xl py-6 text-base sm:text-lg lg:text-xl font-medium text-pretty text-gray-600 px-4 sm:px-0">
               {t('hero.description')}
             </p>
             <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-x-6 px-4 sm:px-0">

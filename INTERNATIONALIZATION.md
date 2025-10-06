@@ -108,6 +108,7 @@ const MyComponent = () => {
     "description": "Get instant mobile data...",
     "downloadApp": "Download App",
     "learnMore": "Learn more"
+    
   },
   "features": {
     "title": "Connect globally",
