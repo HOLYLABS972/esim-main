@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Calendar, User, Clock, ArrowLeft, Share2 } from 'lucide-react';
+import { Calendar, User, Clock, ArrowLeft, Share2, FolderOpen } from 'lucide-react';
 import blogService from '../services/blogService';
 
 const BlogPost = ({ slug }) => {
@@ -121,7 +121,7 @@ const BlogPost = ({ slug }) => {
 
   if (error || !post) {
     return (
-      <div className="min-h-screen bg-white py-24 flex items-center justify-center">
+      <div className="min-h-screen bg-white py-8 flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-4xl font-medium tracking-tight text-eerie-black mb-4">Post Not Found</h1>
           <p className="text-cool-black mb-8">{error || 'The blog post you\'re looking for doesn\'t exist.'}</p>
@@ -138,90 +138,149 @@ const BlogPost = ({ slug }) => {
 
 
   return (
-    <div className="min-h-screen bg-white py-24">
-      {/* Header */}
+    <div className="min-h-screen bg-white py-10">
+      {/* Hero Section with Image and Header Overlay */}
       <section className="bg-white">
-        <div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8">
+        <div className="mx-auto max-w-2xl px-6 lg:max-w-5xl lg:px-8">
           <div className="relative">
             <div className="absolute inset-px rounded-xl bg-white"></div>
             <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
-              <div className="px-8 pt-8 pb-8">
-          <Link 
-            href="/blog" 
-                  className="inline-flex items-center text-tufts-blue hover:text-cobalt-blue mb-6 font-medium transition-colors duration-200"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Blog
-          </Link>
-          
-                <div className="mb-4 flex flex-wrap gap-2 items-center">
-                  <span className="bg-tufts-blue/10 text-tufts-blue px-3 py-1 rounded-full text-sm font-medium">
-                {post.category}
-              </span>
-                  
-                  {/* Tags */}
-                  {post.tags && post.tags.length > 0 && (
-                    <>
-                      {post.tags.map((tag, index) => (
-                        <span
-                          key={index}
-                          className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm font-medium"
-                        >
-                          #{tag}
-                        </span>
-                      ))}
-                    </>
-                  )}
-            </div>
-            
-                <h1 className="text-4xl md:text-5xl font-medium tracking-tight text-eerie-black mb-6 leading-tight">
-              {post.title}
-            </h1>
-            
-                <div className="flex items-center justify-between text-cool-black mb-8">
-              <div className="flex items-center space-x-6">
-                <div className="flex items-center space-x-2">
-                  <User className="w-4 h-4" />
-                  <span>{post.author}</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Calendar className="w-4 h-4" />
-                      <span>{formatDate(post.publishedAt)}</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Clock className="w-4 h-4" />
-                  <span>{post.readTime}</span>
-                </div>
-              </div>
               
-                  <button 
-                    onClick={handleShare}
-                    className="flex items-center space-x-2 text-cool-black hover:text-eerie-black transition-colors duration-200"
-                  >
-                <Share2 className="w-4 h-4" />
-                <span>Share</span>
-              </button>
-            </div>
-              </div>
-            </div>
-            <div className="pointer-events-none absolute inset-px rounded-xl shadow-sm ring-1 ring-black/5"></div>
-          </div>
-        </div>
-      </section>
-
-      {/* Featured Image */}
-      <section className="bg-white">
-        <div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8 mt-6">
-          <div className="relative">
-            <div className="absolute inset-px rounded-xl bg-white"></div>
-            <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
+              {/* Featured Image Background */}
               {post.featuredImage && (
-                <img
-                  src={post.featuredImage}
-              alt={post.title}
-                  className="w-full h-64 md:h-96 object-cover"
-            />
+                <div className="relative h-96 md:h-[500px] lg:h-[400px]">
+                  <img
+                    src={post.featuredImage}
+                    alt={post.title}
+                    className="w-full h-full object-cover"
+                  />
+                  
+                  {/* Gradient Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
+                  
+                  {/* Header Content Overlay */}
+                  <div className="absolute inset-0 flex flex-col justify-between p-8">
+                    {/* Top Navigation */}
+                    <div className="flex justify-between items-start">
+                      <Link 
+                        href="/blog" 
+                        className="inline-flex items-center text-cool-black hover:text-eerie-black bg-white backdrop-blur-sm px-4 py-2 rounded-full font-medium transition-all duration-200"
+                      >
+                        <ArrowLeft className="w-4 h-4 mr-2" />
+                        Back to Blog
+                      </Link>
+                      
+                      <button 
+                        onClick={handleShare}
+                        className="flex items-center space-x-2 text-cool-black hover:text-eerie-black bg-white backdrop-blur-sm px-4 py-2 rounded-full transition-all duration-200"
+                      >
+                        <Share2 className="w-4 h-4" />
+                        <span>Share</span>
+                      </button>
+                    </div>
+                    
+                    {/* Bottom Content */}
+                    <div className="space-y-6">
+                      {/* Tags and Category */}
+                      <div className="flex flex-wrap gap-2 items-center">
+                        
+                        {post.tags && post.tags.length > 0 && (
+                          <>
+                            {post.tags.slice(0, 3).map((tag, index) => (
+                              <span
+                                key={index}
+                                className="bg-tufts-blue text-white px-3 py-1 rounded-full text-sm font-medium backdrop-blur-sm"
+                              >
+                                #{tag}
+                              </span>
+                            ))}
+                          </>
+                        )}
+                      </div>
+                      
+                      
+                      
+                      {/* Meta Information */}
+                      <div className="flex flex-wrap items-center gap-6 text-white/90">
+                        <div className="flex items-center space-x-2">
+                          <FolderOpen className="w-4 h-4" />
+                          <span className="font-medium">{post.category}</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Calendar className="w-4 h-4" />
+                          <span>{formatDate(post.publishedAt)}</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Clock className="w-4 h-4" />
+                          <span>{post.readTime}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               )}
+              
+              {/* Fallback Header (if no image) */}
+              {!post.featuredImage && (
+                <div className="px-8 pt-8 pb-8">
+                  <Link 
+                    href="/blog" 
+                    className="inline-flex items-center text-tufts-blue hover:text-cobalt-blue mb-6 font-medium transition-colors duration-200"
+                  >
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    Back to Blog
+                  </Link>
+                  
+                  <div className="mb-4 flex flex-wrap gap-2 items-center">
+                    <span className="bg-tufts-blue/10 text-tufts-blue px-3 py-1 rounded-full text-sm font-medium">
+                      {post.category}
+                    </span>
+                    
+                    {post.tags && post.tags.length > 0 && (
+                      <>
+                        {post.tags.map((tag, index) => (
+                          <span
+                            key={index}
+                            className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm font-medium"
+                          >
+                            #{tag}
+                          </span>
+                        ))}
+                      </>
+                    )}
+                  </div>
+                  
+                  <h1 className="text-4xl md:text-5xl font-medium tracking-tight text-eerie-black mb-6 leading-tight">
+                    {post.title}
+                  </h1>
+                  
+                  <div className="flex items-center justify-between text-cool-black mb-8">
+                    <div className="flex items-center space-x-6">
+                      <div className="flex items-center space-x-2">
+                        <User className="w-4 h-4" />
+                        <span>{post.author}</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Calendar className="w-4 h-4" />
+                        <span>{formatDate(post.publishedAt)}</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Clock className="w-4 h-4" />
+                        <span>{post.readTime}</span>
+                      </div>
+                    </div>
+                    
+                    <button 
+                      onClick={handleShare}
+                      className="flex items-center space-x-2 text-cool-black hover:text-eerie-black transition-colors duration-200"
+                    >
+                      <Share2 className="w-4 h-4" />
+                      <span>Share</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+              
             </div>
             <div className="pointer-events-none absolute inset-px rounded-xl shadow-sm ring-1 ring-black/5"></div>
           </div>
@@ -229,36 +288,32 @@ const BlogPost = ({ slug }) => {
       </section>
 
       {/* Content */}
-      <section className="bg-white py-16">
-        <div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8">
-          <div className="relative">
-            <div className="absolute inset-px rounded-xl bg-white"></div>
-            <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
-              <div className="px-8 pt-8 pb-8">
-                <div
-                  className="prose prose-lg max-w-none text-cool-black"
-            dangerouslySetInnerHTML={{ __html: post.content }}
-          />
-                
-                {/* Tags at bottom of post */}
-                {post.tags && post.tags.length > 0 && (
-                  <div className="mt-8 pt-6 border-t border-gray-200">
-                    <h3 className="text-lg font-medium text-gray-900 mb-3">Tags</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {post.tags.map((tag, index) => (
-                        <span
-                          key={index}
-                          className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm font-medium hover:bg-gray-200 transition-colors cursor-pointer"
-                        >
-                          #{tag}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
+      <section className="bg-white py-8">
+        <div className="mx-auto max-w-4xl px-6 lg:px-8">
+          <div className="bg-white">
+            {/* Article Content */}
+            <article className="prose prose-lg prose-slate max-w-none prose-headings:font-semibold prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg prose-p:text-base prose-p:leading-7 prose-img:max-w-md prose-img:h-auto">
+              <div
+                dangerouslySetInnerHTML={{ __html: post.content }}
+              />
+            </article>
+            
+            {/* Tags at bottom of post */}
+            {post.tags && post.tags.length > 0 && (
+              <div className="mt-8 pt-6 border-t border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">Related Tags</h3>
+                <div className="flex flex-wrap gap-2">
+                  {post.tags.map((tag, index) => (
+                    <span
+                      key={index}
+                      className="bg-blue-100 text-blue-800 px-3 py-1 rounded text-sm font-medium"
+                    >
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
               </div>
-            </div>
-            <div className="pointer-events-none absolute inset-px rounded-xl shadow-sm ring-1 ring-black/5"></div>
+            )}
           </div>
         </div>
       </section>

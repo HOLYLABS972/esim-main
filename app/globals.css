@@ -189,6 +189,27 @@
     color: var(--cool-black);
     font-family: 'Open Sans', sans-serif;
   }
+
+  /* Custom styles for rendered blog content */
+  .prose table {
+    @apply w-full border-collapse my-6;
+  }
+
+  .prose th, .prose td {
+    @apply border border-gray-300 p-3 text-left;
+  }
+
+  .prose th {
+    @apply bg-gray-100 font-semibold text-gray-800;
+  }
+
+  .prose tr:nth-child(even) {
+    @apply bg-gray-50;
+  }
+
+  .prose blockquote {
+    @apply border-l-4 border-blue-600 bg-blue-50 pl-4 py-2 my-6 text-gray-700 italic;
+  }
 }
 
 @layer utilities {

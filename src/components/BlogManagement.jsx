@@ -795,13 +795,201 @@ const BlogPostModal = ({ isOpen, onClose, onSave, formData, setFormData, loading
             <textarea
               value={formData.content}
               onChange={(e) => handleInputChange('content', e.target.value)}
-              rows="10"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Write your blog post content here. You can use HTML tags for formatting."
+              rows="12"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+              placeholder="Write your blog post content here using HTML tags for formatting..."
             />
-            <p className="text-sm text-gray-500 mt-1">
-              You can use HTML tags for formatting. For example: &lt;h2&gt;Heading&lt;/h2&gt;, &lt;p&gt;Paragraph&lt;/p&gt;, &lt;ul&gt;&lt;li&gt;List item&lt;/li&gt;&lt;/ul&gt;
-            </p>
+            
+            {/* Comprehensive HTML/Markdown Guide */}
+            <div className="mt-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <h4 className="text-sm font-semibold text-blue-900 mb-3">✨ Complete Content Formatting Guide</h4>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                {/* Headings */}
+                <div>
+                  <h5 className="font-semibold text-blue-800 mb-2">📝 Headings & Structure</h5>
+                  <div className="space-y-1 text-blue-700 font-mono bg-white p-2 rounded">
+                    <div>&lt;h1&gt;Main Title (Auto from title)&lt;/h1&gt;</div>
+                    <div>&lt;h2&gt;Major Section&lt;/h2&gt;</div>
+                    <div>&lt;h3&gt;Subsection&lt;/h3&gt;</div>
+                    <div>&lt;h4&gt;Sub-subsection&lt;/h4&gt;</div>
+                  </div>
+                </div>
+
+                {/* Text Formatting */}
+                <div>
+                  <h5 className="font-semibold text-blue-800 mb-2">🎨 Text Styling</h5>
+                  <div className="space-y-1 text-blue-700 font-mono bg-white p-2 rounded">
+                    <div>&lt;p&gt;Regular paragraph text&lt;/p&gt;</div>
+                    <div>&lt;strong&gt;Bold important text&lt;/strong&gt;</div>
+                    <div>&lt;em&gt;Italic emphasis&lt;/em&gt;</div>
+                    <div>&lt;code&gt;inline code&lt;/code&gt;</div>
+                  </div>
+                </div>
+
+                {/* Lists */}
+                <div>
+                  <h5 className="font-semibold text-blue-800 mb-2">📋 Lists</h5>
+                  <div className="space-y-1 text-blue-700 font-mono bg-white p-2 rounded">
+                    <div>&lt;ul&gt;</div>
+                    <div>&nbsp;&nbsp;&lt;li&gt;Bullet point&lt;/li&gt;</div>
+                    <div>&nbsp;&nbsp;&lt;li&gt;Another point&lt;/li&gt;</div>
+                    <div>&lt;/ul&gt;</div>
+                    <div className="mt-1">&lt;ol&gt;</div>
+                    <div>&nbsp;&nbsp;&lt;li&gt;Numbered item&lt;/li&gt;</div>
+                    <div>&lt;/ol&gt;</div>
+                  </div>
+                </div>
+
+                {/* Links & Images */}
+                <div>
+                  <h5 className="font-semibold text-blue-800 mb-2">🔗 Links & Images</h5>
+                  <div className="space-y-1 text-blue-700 font-mono bg-white p-2 rounded">
+                    <div>&lt;a href="https://example.com"&gt;Link&lt;/a&gt;</div>
+                    <div>&lt;img src="image.jpg" alt="desc" /&gt;</div>
+                  </div>
+                </div>
+
+                {/* Blockquotes */}
+                <div>
+                  <h5 className="font-semibold text-blue-800 mb-2">💬 Quotes & Callouts</h5>
+                  <div className="space-y-1 text-blue-700 font-mono bg-white p-2 rounded">
+                    <div>&lt;blockquote&gt;</div>
+                    <div>&nbsp;&nbsp;&lt;strong&gt;Key Point:&lt;/strong&gt;</div>
+                    <div>&nbsp;&nbsp;Important information</div>
+                    <div>&lt;/blockquote&gt;</div>
+                  </div>
+                </div>
+
+                {/* Code Blocks */}
+                <div>
+                  <h5 className="font-semibold text-blue-800 mb-2">💻 Code Blocks</h5>
+                  <div className="space-y-1 text-blue-700 font-mono bg-white p-2 rounded">
+                    <div>&lt;pre&gt;&lt;code&gt;</div>
+                    <div>Annual cost: €420</div>
+                    <div>Monthly data: 20GB</div>
+                    <div>Cost per GB: €1.75</div>
+                    <div>&lt;/code&gt;&lt;/pre&gt;</div>
+                  </div>
+                </div>
+
+                {/* Tables */}
+                <div className="md:col-span-2">
+                  <h5 className="font-semibold text-blue-800 mb-2">📊 Tables (Mobile-Optimized)</h5>
+                  <div className="text-blue-700 font-mono bg-white p-2 rounded text-xs">
+                    <div>&lt;table&gt;</div>
+                    <div>&nbsp;&nbsp;&lt;thead&gt;</div>
+                    <div>&nbsp;&nbsp;&nbsp;&nbsp;&lt;tr&gt;</div>
+                    <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;th&gt;Provider&lt;/th&gt;</div>
+                    <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;th&gt;Price&lt;/th&gt;</div>
+                    <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;th&gt;Data&lt;/th&gt;</div>
+                    <div>&nbsp;&nbsp;&nbsp;&nbsp;&lt;/tr&gt;</div>
+                    <div>&nbsp;&nbsp;&lt;/thead&gt;</div>
+                    <div>&nbsp;&nbsp;&lt;tbody&gt;</div>
+                    <div>&nbsp;&nbsp;&nbsp;&nbsp;&lt;tr&gt;</div>
+                    <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;td&gt;&lt;strong&gt;RoamJet&lt;/strong&gt;&lt;/td&gt;</div>
+                    <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;td&gt;€28&lt;/td&gt;</div>
+                    <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;td&gt;5GB&lt;/td&gt;</div>
+                    <div>&nbsp;&nbsp;&nbsp;&nbsp;&lt;/tr&gt;</div>
+                    <div>&nbsp;&nbsp;&lt;/tbody&gt;</div>
+                    <div>&lt;/table&gt;</div>
+                  </div>
+                </div>
+
+                {/* Table of Contents */}
+                <div>
+                  <h5 className="font-semibold text-blue-800 mb-2">📑 Table of Contents</h5>
+                  <div className="space-y-1 text-blue-700 font-mono bg-white p-2 rounded text-xs">
+                    <div>&lt;div class="toc"&gt;</div>
+                    <div>&nbsp;&nbsp;&lt;h2&gt;Table of Contents&lt;/h2&gt;</div>
+                    <div>&nbsp;&nbsp;&lt;ul&gt;</div>
+                    <div>&nbsp;&nbsp;&nbsp;&nbsp;&lt;li&gt;&lt;a href="#section1"&gt;Section&lt;/a&gt;&lt;/li&gt;</div>
+                    <div>&nbsp;&nbsp;&lt;/ul&gt;</div>
+                    <div>&lt;/div&gt;</div>
+                  </div>
+                </div>
+
+                {/* Video Embeds */}
+                <div>
+                  <h5 className="font-semibold text-blue-800 mb-2">🎥 YouTube Videos</h5>
+                  <div className="space-y-1 text-blue-700 font-mono bg-white p-2 rounded text-xs">
+                    <div>&lt;div class="video-container"&gt;</div>
+                    <div>&nbsp;&nbsp;&lt;iframe</div>
+                    <div>&nbsp;&nbsp;&nbsp;&nbsp;src="https://youtube.com/embed/ID"</div>
+                    <div>&nbsp;&nbsp;&nbsp;&nbsp;title="Video Title"&gt;</div>
+                    <div>&nbsp;&nbsp;&lt;/iframe&gt;</div>
+                    <div>&lt;/div&gt;</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Advanced Features */}
+              <div className="mt-4 p-3 bg-purple-50 border border-purple-200 rounded">
+                <h5 className="font-semibold text-purple-800 mb-2">🚀 Advanced Features</h5>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <h6 className="font-semibold text-purple-700 mb-1">Anchor Links (for TOC)</h6>
+                    <div className="text-purple-600 font-mono bg-white p-1 rounded">
+                      &lt;h2 id="pricing"&gt;Pricing&lt;/h2&gt;
+                    </div>
+                  </div>
+                  <div>
+                    <h6 className="font-semibold text-purple-700 mb-1">External Links</h6>
+                    <div className="text-purple-600 font-mono bg-white p-1 rounded">
+                      &lt;a href="url" target="_blank"&gt;Link&lt;/a&gt;
+                    </div>
+                  </div>
+                  <div>
+                    <h6 className="font-semibold text-purple-700 mb-1">Small Text</h6>
+                    <div className="text-purple-600 font-mono bg-white p-1 rounded">
+                      &lt;small&gt;Fine print text&lt;/small&gt;
+                    </div>
+                  </div>
+                  <div>
+                    <h6 className="font-semibold text-purple-700 mb-1">Line Breaks</h6>
+                    <div className="text-purple-600 font-mono bg-white p-1 rounded">
+                      Line 1&lt;br&gt;Line 2
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Pro Tips */}
+              <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded">
+                <h5 className="font-semibold text-green-800 mb-2">💡 Pro Writing Tips</h5>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  <ul className="text-xs text-green-700 space-y-1">
+                    <li>• Use &lt;h2&gt; for main sections with clear hierarchy</li>
+                    <li>• Add id attributes to headings for anchor links</li>
+                    <li>• Use &lt;strong&gt; for key points, &lt;em&gt; for emphasis</li>
+                    <li>• Include alt text for all images (accessibility)</li>
+                    <li>• Use blockquotes for important callouts</li>
+                    <li>• Keep table headers short for mobile readability</li>
+                  </ul>
+                  <ul className="text-xs text-green-700 space-y-1">
+                    <li>• Embed YouTube videos with responsive containers</li>
+                    <li>• Use Table of Contents for long articles</li>
+                    <li>• Link to related blog posts at the end</li>
+                    <li>• Use &lt;code&gt; for technical terms and values</li>
+                    <li>• Break up long paragraphs for mobile reading</li>
+                    <li>• Test tables on mobile - use fewer columns if needed</li>
+                  </ul>
+                </div>
+              </div>
+
+              {/* Mobile Optimization */}
+              <div className="mt-4 p-3 bg-orange-50 border border-orange-200 rounded">
+                <h5 className="font-semibold text-orange-800 mb-2">📱 Mobile Optimization</h5>
+                <ul className="text-xs text-orange-700 space-y-1">
+                  <li>• <strong>Tables:</strong> Keep to 3-4 columns max for mobile</li>
+                  <li>• <strong>Images:</strong> Always include alt text and use descriptive names</li>
+                  <li>• <strong>Videos:</strong> Use video-container class for responsive embeds</li>
+                  <li>• <strong>Text:</strong> Break long paragraphs into shorter ones</li>
+                  <li>• <strong>Links:</strong> Make link text descriptive (not "click here")</li>
+                  <li>• <strong>Lists:</strong> Use bullet points to break up dense information</li>
+                </ul>
+              </div>
+            </div>
           </div>
           
         </div>
