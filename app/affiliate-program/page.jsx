@@ -168,30 +168,42 @@ const AffiliateProgramPage = () => {
 
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <AffiliateHeader onBack={() => router.back()} />
+    <div className="min-h-screen bg-white ">
+      {/* Header Section */}
+      <section className="bg-white py-8">
+        <div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8">
+          <div className="relative">
+            <div className="absolute inset-px rounded-xl bg-white"></div>
+            <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
+              <div className="px-8 pt-6 pb-6">
+                <AffiliateHeader onBack={() => router.back()} />
+              </div>
+            </div>
+            <div className="pointer-events-none absolute inset-px rounded-xl shadow-sm ring-1 ring-black/5"></div>
+          </div>
+        </div>
+      </section>
 
-      {/* Content */}
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        {/* Stats Section */}
-        <AffiliateStats 
-          referralStats={referralStats}
-          loadingReferralStats={loadingReferralStats}
-          onEarningsClick={handleEarningsClick}
-        />
+      {/* Stats Section */}
+      <AffiliateStats 
+        referralStats={referralStats}
+        loadingReferralStats={loadingReferralStats}
+        onEarningsClick={handleEarningsClick}
+      />
 
-        {/* Withdrawal Section */}
-        <WithdrawalSection 
-          hasBankAccount={hasBankAccount}
-          checkingBankAccount={checkingBankAccount}
-          referralStats={referralStats}
-          onWithdrawClick={handleWithdrawClick}
-        />
+      {/* Withdrawal Section */}
+      <WithdrawalSection 
+        hasBankAccount={hasBankAccount}
+        checkingBankAccount={checkingBankAccount}
+        referralStats={referralStats}
+        onWithdrawClick={handleWithdrawClick}
+      />
 
-        {/* How It Works */}
-        <HowItWorks />
-      </div>
+      {/* How It Works */}
+      <HowItWorks />
+
+      {/* Spacing after content */}
+      <div className="h-20"></div>
     </div>
   );
 };

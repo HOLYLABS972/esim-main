@@ -25,14 +25,14 @@ const getFlagEmoji = (countryCode) => {
 
 const RecentOrders = ({ orders, loading, onViewQRCode }) => {
   return (
-    <section className="bg-white py-16">
+    <section className="bg-white ">
       <div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8">
         <div className="relative">
           <div className="absolute inset-px rounded-xl bg-white"></div>
           <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
             <div className="px-8 pt-8 pb-8">
               <div className="mb-6">
-                <h2 className="text-2xl font-medium tracking-tight text-eerie-black">Recent Orders</h2>
+                <h2 className="text-lg font-medium tracking-tight text-eerie-black">Recent Orders</h2>
               </div>
 
               {loading ? (

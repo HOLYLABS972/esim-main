@@ -16,14 +16,43 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID || "G-T0YBW024Z8"
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+// Debug Firebase configuration in development
+if (process.env.NODE_ENV === 'development') {
+  console.log('🔧 Firebase Config Debug:', {
+    apiKey: firebaseConfig.apiKey ? `${firebaseConfig.apiKey.substring(0, 10)}...` : 'NOT SET',
+    authDomain: firebaseConfig.authDomain,
+    projectId: firebaseConfig.projectId,
+    hasEnvVars: {
+      apiKey: !!process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+      authDomain: !!process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+      projectId: !!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    }
+  });
+}
 
-// Initialize Firebase services
-export const auth = getAuth(app);
-export const db = getFirestore(app);
-export const storage = getStorage(app);
-export const functions = getFunctions(app, 'us-central1');
+// Initialize Firebase with error handling
+let app;
+try {
+  app = initializeApp(firebaseConfig);
+  console.log('✅ Firebase app initialized successfully');
+} catch (error) {
+  console.error('❌ Firebase initialization error:', error);
+  throw new Error(`Firebase initialization failed: ${error.message}`);
+}
+
+// Initialize Firebase services with error handling
+export let auth, db, storage, functions;
+
+try {
+  auth = getAuth(app);
+  db = getFirestore(app);
+  storage = getStorage(app);
+  functions = getFunctions(app, 'us-central1');
+  console.log('✅ Firebase services initialized successfully');
+} catch (error) {
+  console.error('❌ Firebase services initialization error:', error);
+  throw new Error(`Firebase services initialization failed: ${error.message}`);
+}
 // Initialize Analytics only if supported
 export let analytics = null;
 isSupported().then((supported) => {

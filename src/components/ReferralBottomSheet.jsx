@@ -136,102 +136,101 @@ const ReferralBottomSheet = ({ isOpen, onClose }) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black bg-opacity-50 z-50"
+            className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
             onClick={handleClose}
-          />
-          
-          {/* Bottom Sheet */}
-          <motion.div
-            initial={{ y: '100%' }}
-            animate={{ y: 0 }}
-            exit={{ y: '100%' }}
-            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-2xl z-50 max-h-[80vh] overflow-y-auto"
           >
-            {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
-              <div className="flex items-center space-x-3">
-                <div className="bg-blue-100 p-2 rounded-full">
-                  <Gift className="w-6 h-6 text-blue-600" />
+            {/* Centered Modal */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="text-center p-6 pb-4">
+                <div className="bg-tufts-blue/10 p-3 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                  <Gift className="w-8 h-8 text-tufts-blue" />
                 </div>
-                <div>
-                  <h2 className="text-xl font-bold text-gray-900">Apply Referral Code</h2>
-                  <p className="text-sm text-gray-600">Enter a referral code to get rewards</p>
-                </div>
+                <h2 className="text-xl font-medium tracking-tight text-eerie-black mb-2">Apply Referral Code</h2>
+                <p className="text-cool-black">Enter a referral code to get rewards</p>
               </div>
-              <button
-                onClick={handleClose}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-              >
-                <X className="w-6 h-6 text-gray-600" />
-              </button>
-            </div>
 
-            {/* Content */}
-            <div className="p-6">
-              <div className="space-y-6">
-                {/* Referral Code Input */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Referral Code
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={referralCode}
-                      onChange={handleCodeChange}
-                      placeholder="Enter referral code"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center text-lg font-mono tracking-wider"
-                      maxLength={8}
-                      disabled={hasUsedReferral}
-                    />
-                    {isValidating && (
-                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
-                      </div>
+              {/* Content */}
+              <div className="px-6 pb-6">
+                <div className="space-y-6">
+                  {/* Referral Code Input */}
+                  <div>
+                    <label className="block text-sm font-medium text-cool-black mb-2">
+                      Referral Code
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={referralCode}
+                        onChange={handleCodeChange}
+                        placeholder="Enter referral code"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-tufts-blue focus:border-transparent text-center text-lg font-mono tracking-wider"
+                        maxLength={8}
+                        disabled={hasUsedReferral}
+                      />
+                      {isValidating && (
+                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-tufts-blue"></div>
+                        </div>
+                      )}
+                      {isValid && !isValidating && (
+                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                          <CheckCircle className="w-5 h-5 text-green-600" />
+                        </div>
+                      )}
+                      {validationError && !isValidating && (
+                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                          <AlertCircle className="w-5 h-5 text-red-600" />
+                        </div>
+                      )}
+                    </div>
+                    
+                    {validationError && (
+                      <p className="text-red-600 text-sm mt-2">{validationError}</p>
                     )}
-                    {isValid && !isValidating && (
-                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                        <CheckCircle className="w-5 h-5 text-green-600" />
-                      </div>
-                    )}
-                    {validationError && !isValidating && (
-                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                        <AlertCircle className="w-5 h-5 text-red-600" />
-                      </div>
+                    
+                    {isValid && (
+                      <p className="text-green-600 text-sm mt-2">✓ Valid referral code!</p>
                     )}
                   </div>
-                  
-                  {validationError && (
-                    <p className="text-red-600 text-sm mt-2">{validationError}</p>
-                  )}
-                  
-                  {isValid && (
-                    <p className="text-green-600 text-sm mt-2">✓ Valid referral code!</p>
-                  )}
-                </div>
 
-                {/* Action Buttons */}
-                <div className="space-y-3">
-                  {!hasUsedReferral && (
+                  {/* Action Buttons */}
+                  <div className="space-y-3">
+                    {!hasUsedReferral && (
+                      <button
+                        onClick={handleApply}
+                        disabled={isSubmitting || isValidating || (referralCode && !isValid)}
+                        className="w-full bg-tufts-blue hover:bg-cobalt-blue disabled:opacity-50 disabled:cursor-not-allowed px-6 py-3 rounded-lg text-white font-medium transition-colors"
+                      >
+                        {isSubmitting ? 'Applying...' : 'Apply Referral Code'}
+                      </button>
+                    )}
+                    
                     <button
-                      onClick={handleApply}
-                      disabled={isSubmitting || isValidating || (referralCode && !isValid)}
-                      className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed px-6 py-3 rounded-lg text-white font-medium transition-colors"
+                      onClick={handleClose}
+                      className="w-full bg-gray-100 hover:bg-gray-200 px-6 py-3 rounded-lg text-cool-black font-medium transition-colors"
                     >
-                      {isSubmitting ? 'Applying...' : 'Apply Referral Code'}
+                      Cancel
                     </button>
-                  )}
-                  
-                  <button
-                    onClick={handleClose}
-                    className="w-full bg-gray-100 hover:bg-gray-200 px-6 py-3 rounded-lg text-gray-700 font-medium transition-colors"
-                  >
-                    Cancel
-                  </button>
+                  </div>
                 </div>
               </div>
-            </div>
+
+              {/* Close button in top right */}
+              <button
+                onClick={handleClose}
+                className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <X className="w-5 h-5 text-cool-black" />
+              </button>
+            </motion.div>
           </motion.div>
         </>
       )}

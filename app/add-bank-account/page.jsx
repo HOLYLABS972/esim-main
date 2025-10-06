@@ -103,7 +103,7 @@ const AddBankAccountPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-4xl mx-auto px-4 py-4">
@@ -112,11 +112,11 @@ const AddBankAccountPage = () => {
               onClick={() => router.back()}
               className="p-2 hover:bg-gray-100 rounded-full transition-colors"
             >
-              <ArrowLeft className="w-5 h-5 text-gray-600" />
+              <ArrowLeft className="w-5 h-5 text-cool-black" />
             </button>
             <div>
-              <h1 className="text-xl font-bold text-gray-900">Add Bank Account</h1>
-              <p className="text-sm text-gray-600">Add your bank details for withdrawals</p>
+              <h1 className="text-xl font-bold text-cool-black">Add Bank Account</h1>
+              <p className="text-sm text-cool-black">Add your bank details for withdrawals</p>
             </div>
           </div>
         </div>
@@ -131,17 +131,17 @@ const AddBankAccountPage = () => {
         >
           {loading ? (
             <div className="flex justify-center items-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-tufts-blue"></div>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-6">
             {/* Account Holder Name */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-cool-black mb-2">
                 Account Holder Name *
               </label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-cool-black" />
                 <input
                   type="text"
                   name="accountHolderName"
@@ -156,11 +156,11 @@ const AddBankAccountPage = () => {
 
             {/* Phone Number */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-cool-black mb-2">
                 Phone Number *
               </label>
               <div className="relative">
-                <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-cool-black" />
                 <input
                   type="tel"
                   name="phoneNumber"
@@ -175,11 +175,11 @@ const AddBankAccountPage = () => {
 
             {/* Bank Name */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-cool-black mb-2">
                 Bank Name *
               </label>
               <div className="relative">
-                <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-cool-black" />
                 <input
                   type="text"
                   name="bankName"
@@ -195,11 +195,11 @@ const AddBankAccountPage = () => {
             {/* Account Number, Routing Number, and Branch Number */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-cool-black mb-2">
                   Account Number *
                 </label>
                 <div className="relative">
-                  <CreditCard className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <CreditCard className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-cool-black" />
                   <input
                     type="text"
                     name="accountNumber"
@@ -213,7 +213,7 @@ const AddBankAccountPage = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-cool-black mb-2">
                   Routing Number *
                 </label>
                 <input
@@ -228,7 +228,7 @@ const AddBankAccountPage = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-cool-black mb-2">
                   Branch Number *
                 </label>
                 <input
@@ -246,7 +246,7 @@ const AddBankAccountPage = () => {
 
             {/* Country */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-cool-black mb-2">
                 Country *
               </label>
               <select
@@ -408,14 +408,14 @@ const AddBankAccountPage = () => {
               <button
                 type="button"
                 onClick={() => router.back()}
-                className="px-6 py-3 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-colors"
+                className="px-6 py-3 text-cool-black bg-gray-100 hover:bg-gray-200 rounded-full font-medium transition-colors"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors flex items-center space-x-2"
+                className="px-6 py-3 bg-tufts-blue hover:bg-cobalt-blue disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-full font-medium transition-colors flex items-center space-x-2"
               >
                 {isSubmitting ? (
                   <>

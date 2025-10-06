@@ -6,7 +6,7 @@ const StatsCards = ({ orders, activeOrders, referralStats }) => {
   const router = useRouter();
 
   return (
-    <section className="bg-white py-16">
+    <section className="bg-white py-8">
       <div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Total Orders Card */}
@@ -16,12 +16,14 @@ const StatsCards = ({ orders, activeOrders, referralStats }) => {
               <div className="px-8 pt-8 pb-8">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-cool-black">Total Orders</p>
-                    <p className="text-3xl font-bold text-eerie-black mt-2">{orders.length}</p>
+                    <p className="text-lg font-medium text-cool-black">Total Orders</p>
+                    <p className="text-2xl font-bold text-eerie-black mt-2 flex items-center">
+                      <Globe className="w-6 h-6 text-tufts-blue mr-2" />
+                      {orders.length}
+                    </p>
+                   
                   </div>
-                  <div className="bg-tufts-blue/10 p-3 rounded-full">
-                    <Globe className="w-6 h-6 text-tufts-blue" />
-                  </div>
+                 
                 </div>
               </div>
             </div>
@@ -35,12 +37,13 @@ const StatsCards = ({ orders, activeOrders, referralStats }) => {
               <div className="px-8 pt-8 pb-8">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-cool-black">Active eSIMs</p>
-                    <p className="text-3xl font-bold text-green-600 mt-2">{activeOrders.length}</p>
+                    <p className="text-lg font-medium text-cool-black">Active eSIMs</p>
+                    <p className="text-2xl font-bold text-cool-black mt-2 flex items-center">
+                      <QrCode className="w-6 h-6 text-tufts-blue mr-2" />
+                      {activeOrders.length}
+                    </p>
                   </div>
-                  <div className="bg-green-500/10 p-3 rounded-full">
-                    <QrCode className="w-6 h-6 text-green-600" />
-                  </div>
+                 
                 </div>
               </div>
             </div>
@@ -57,23 +60,25 @@ const StatsCards = ({ orders, activeOrders, referralStats }) => {
               <div className="px-8 pt-8 pb-8">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-cool-black">Your Performance</p>
+                    <p className="text-lg font-medium text-cool-black">Your Performance</p>
+                   
                     <div className="flex items-center space-x-4 mt-2">
-                      <div>
-                        <p className="text-3xl font-bold text-purple-600">${referralStats.totalEarnings.toFixed(2)}</p>
+                     
+                      
+                        <div className="flex items-center">
+                          <Wallet className="w-6 h-6 text-tufts-blue mr-2" />
+                          <p className="text-2xl font-bold text-cool-black">${referralStats.totalEarnings.toFixed(2)}</p>
+                        </div>
                         <p className="text-xs text-cool-black">Total Earnings</p>
-                      </div>
                       {(referralStats.usageCount || 0) > 0 && (
                         <div className="border-l border-gray-200 pl-4">
-                          <p className="text-3xl font-bold text-green-600">{Math.floor(referralStats.usageCount || 0)}</p>
+                          <p className="text-2xl font-bold text-cool-black">{Math.floor(referralStats.usageCount || 0)}</p>
                         </div>
                       )}
                     </div>
-                    <p className="text-xs text-purple-600 mt-2 font-medium">Tap to join affiliate program →</p>
+                    <p className="text-xs text-tufts-blue mt-2 font-medium">Tap to join affiliate program →</p>
                   </div>
-                  <div className="bg-purple-500/10 p-3 rounded-full">
-                    <Wallet className="w-6 h-6 text-purple-600" />
-                  </div>
+                  
                 </div>
               </div>
             </div>

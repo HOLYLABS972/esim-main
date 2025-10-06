@@ -760,7 +760,7 @@ const Dashboard = () => {
 
 
   return (
-    <div className="min-h-screen bg-white py-24">
+    <div className="min-h-screen bg-white py-8">
       {/* Access Denied Alert */}
       <AccessDeniedAlert show={searchParams.get('error') === 'access_denied'} />
 
