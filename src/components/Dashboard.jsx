@@ -2,116 +2,23 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { collection, query, where, getDocs, doc, setDoc, getDoc, deleteDoc, serverTimestamp, addDoc, updateDoc } from 'firebase/firestore';
+import { collection, query, getDocs, doc, setDoc, getDoc, deleteDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
-import { motion } from 'framer-motion';
-import { User, Globe, Settings, QrCode, Eye, Download, Trash2, MoreVertical, Smartphone, Shield, AlertTriangle, Wallet, Flame, Gift } from 'lucide-react';
-import toast from 'react-hot-toast';
-
-// Helper function to get flag emoji from country code
-const getFlagEmoji = (countryCode) => {
-  if (!countryCode || countryCode.length !== 2) return '🌍';
-  
-  // Handle special cases like PT-MA, multi-region codes, etc.
-  if (countryCode.includes('-') || countryCode.length > 2) {
-    return '🌍';
-  }
-  
-  try {
-    const codePoints = countryCode
-      .toUpperCase()
-      .split('')
-      .map(char => 127397 + char.charCodeAt());
-    
-    return String.fromCodePoint(...codePoints);
-  } catch (error) {
-    console.warn('Invalid country code: ' + countryCode, error);
-    return '🌍';
-  }
-};
 import { useRouter, useSearchParams } from 'next/navigation';
-import QRCode from 'qrcode';
 import { esimService } from '../services/esimService';
 import { getReferralStats, createReferralCode } from '../services/referralService';
+import toast from 'react-hot-toast';
+
+// Dashboard Components
+import AccessDeniedAlert from './dashboard/AccessDeniedAlert';
+import DashboardHeader from './dashboard/DashboardHeader';
+import StatsCards from './dashboard/StatsCards';
+import RecentOrders from './dashboard/RecentOrders';
+import AccountSettings from './dashboard/AccountSettings';
+import QRCodeModal from './dashboard/QRCodeModal';
+import EsimDetailsModal from './dashboard/EsimDetailsModal';
+import EsimUsageModal from './dashboard/EsimUsageModal';
 import ReferralBottomSheet from './ReferralBottomSheet';
-
-// Generate actual QR code from LPA data using qrcode library
-const generateLPAQRCode = async (lpaData) => {
-  try {
-    if (!lpaData) return null;
-    
-    // Generate QR code as data URL
-    const qrDataUrl = await QRCode.toDataURL(lpaData, {
-      width: 256,
-      margin: 2,
-      color: {
-        dark: '#000000',
-        light: '#FFFFFF'
-      }
-    });
-    
-    return qrDataUrl;
-  } catch (error) {
-    console.error('Error generating LPA QR code:', error);
-    return null;
-  }
-};
-
-// LPA QR Code Display Component for Dashboard
-const LPAQRCodeDisplay = ({ lpaData }) => {
-  const [qrCodeUrl, setQrCodeUrl] = useState(null);
-  const [isGenerating, setIsGenerating] = useState(true);
-
-  useEffect(() => {
-    const generateQR = async () => {
-      try {
-        setIsGenerating(true);
-        const qrUrl = await generateLPAQRCode(lpaData);
-        setQrCodeUrl(qrUrl);
-      } catch (error) {
-        console.error('Error generating QR code:', error);
-      } finally {
-        setIsGenerating(false);
-      }
-    };
-
-    if (lpaData) {
-      generateQR();
-    }
-  }, [lpaData]);
-
-  if (isGenerating) {
-    return (
-      <div className="text-center">
-        <div className="w-full h-full flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-        </div>
-        <p className="text-sm text-gray-600 mt-2">Generating QR Code...</p>
-      </div>
-    );
-  }
-
-  if (qrCodeUrl) {
-    return (
-      <div className="text-center">
-        <img 
-          src={qrCodeUrl} 
-          alt="eSIM LPA QR Code" 
-          className="w-full h-full object-contain"
-        />
-      </div>
-    );
-  }
-
-  return (
-    <div className="text-center">
-      <div className="w-full h-full flex items-center justify-center">
-        <QrCode className="w-32 h-32 text-gray-400" />
-      </div>
-      <p className="text-sm text-gray-500 mt-2">QR generation failed</p>
-    </div>
-  );
-};
 
 const Dashboard = () => {
   const { currentUser, userProfile, loadUserProfile, loading: authLoading } = useAuth();
@@ -708,6 +615,43 @@ const Dashboard = () => {
   };
 
 
+  const handleCheckEsimDetails = async () => {
+    if (!selectedOrder || loadingEsimDetails) return;
+    
+    try {
+      setLoadingEsimDetails(true);
+      console.log('📊 Checking eSIM details for order:', selectedOrder);
+      
+      // Get ICCID from the order
+      const iccid = selectedOrder.qrCode?.iccid || selectedOrder.iccid;
+      
+      if (!iccid) {
+        console.log('❌ No ICCID found in order');
+        alert('No ICCID found in this order. Cannot check eSIM details.');
+        return;
+      }
+      
+      console.log('📊 Checking eSIM details for ICCID:', iccid);
+      const result = await esimService.getEsimDetailsByIccid(iccid);
+      
+      if (result.success) {
+        setEsimDetails(result.data);
+        console.log('✅ eSIM details retrieved:', result.data);
+        
+        // Update country info if needed
+        await updateOrderCountryInfo(selectedOrder, result.data);
+      } else {
+        console.log('❌ Failed to get eSIM details:', result.error);
+        alert(`Failed to get eSIM details: ${result.error}`);
+      }
+    } catch (error) {
+      console.error('❌ Error checking eSIM details:', error);
+      alert(`Error checking eSIM details: ${error.message}`);
+    } finally {
+      setLoadingEsimDetails(false);
+    }
+  };
+
   const handleCheckEsimUsage = async () => {
     if (!selectedOrder || loadingEsimUsage) return;
     
@@ -818,808 +762,61 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-white py-24">
       {/* Access Denied Alert */}
-      {searchParams.get('error') === 'access_denied' && (
-        <section className="bg-white">
-          <div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8 mb-8">
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="relative"
-            >
-              <div className="absolute inset-px rounded-xl bg-red-50"></div>
-              <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
-                <div className="px-8 pt-6 pb-6">
-                  <div className="flex items-center">
-                    <AlertTriangle className="w-5 h-5 text-red-600 mr-3" />
-                    <div>
-                      <h3 className="text-sm font-medium text-red-800">Access Denied</h3>
-                      <p className="text-sm text-red-700 mt-1">
-                        You don't have permission to access the admin panel. Only administrators can access this area.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="pointer-events-none absolute inset-px rounded-xl shadow-sm ring-1 ring-red-200"></div>
-            </motion.div>
-          </div>
-        </section>
-      )}
+      <AccessDeniedAlert show={searchParams.get('error') === 'access_denied'} />
 
       {/* Header Section */}
-      <section className="bg-white">
-        <div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="relative"
-          >
-            <div className="absolute inset-px rounded-xl bg-white"></div>
-            <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
-              <div className="px-8 pt-8 pb-8">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <div className="bg-tufts-blue/10 p-3 rounded-full">
-                      <User className="w-8 h-8 text-tufts-blue" />
-                    </div>
-                    <div>
-                      <h1 className="text-3xl font-medium tracking-tight text-eerie-black">
-                        Welcome back, {currentUser.displayName || currentUser.email}!
-                      </h1>
-                      <p className="text-cool-black mt-2">
-                        Manage your eSIM orders and account settings
-                      </p>
-                    </div>
-                  </div>
-                  {!userProfile?.referralCodeUsed && (
-                    <button
-                      onClick={() => setShowReferralSheet(true)}
-                      className="btn-primary flex items-center space-x-2"
-                    >
-                      <Gift className="w-4 h-4" />
-                      <span>Apply Referral</span>
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-            <div className="pointer-events-none absolute inset-px rounded-xl shadow-sm ring-1 ring-black/5"></div>
-          </motion.div>
-        </div>
-      </section>
-
+      <DashboardHeader 
+        currentUser={currentUser}
+        userProfile={userProfile}
+        onShowReferralSheet={() => setShowReferralSheet(true)}
+      />
 
       {/* Stats Cards */}
-      <section className="bg-white py-16">
-        <div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.1 }}
-              className="relative"
-            >
-              <div className="absolute inset-px rounded-xl bg-white"></div>
-              <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
-                <div className="px-8 pt-8 pb-8">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-cool-black">Total Orders</p>
-                      <p className="text-3xl font-bold text-eerie-black mt-2">{orders.length}</p>
-                    </div>
-                    <div className="bg-tufts-blue/10 p-3 rounded-full">
-                      <Globe className="w-6 h-6 text-tufts-blue" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="pointer-events-none absolute inset-px rounded-xl shadow-sm ring-1 ring-black/5"></div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.2 }}
-              className="relative"
-            >
-              <div className="absolute inset-px rounded-xl bg-white"></div>
-              <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
-                <div className="px-8 pt-8 pb-8">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-cool-black">Active eSIMs</p>
-                      <p className="text-3xl font-bold text-green-600 mt-2">{activeOrders.length}</p>
-                    </div>
-                    <div className="bg-green-500/10 p-3 rounded-full">
-                      <QrCode className="w-6 h-6 text-green-600" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="pointer-events-none absolute inset-px rounded-xl shadow-sm ring-1 ring-black/5"></div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.3 }}
-              className="relative cursor-pointer group"
-              onClick={() => router.push('/affiliate-program')}
-            >
-              <div className="absolute inset-px rounded-xl bg-white group-hover:bg-gray-50 transition-colors"></div>
-              <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
-                <div className="px-8 pt-8 pb-8">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-cool-black">Your Performance</p>
-                      <div className="flex items-center space-x-4 mt-2">
-                        <div>
-                          <p className="text-3xl font-bold text-purple-600">${referralStats.totalEarnings.toFixed(2)}</p>
-                          <p className="text-xs text-cool-black">Total Earnings</p>
-                        </div>
-                        {(referralStats.usageCount || 0) > 0 && (
-                          <div className="border-l border-gray-200 pl-4">
-                            <p className="text-3xl font-bold text-green-600">{Math.floor(referralStats.usageCount || 0)}</p>
-                          </div>
-                        )}
-                      </div>
-                      <p className="text-xs text-purple-600 mt-2 font-medium">Tap to join affiliate program →</p>
-                    </div>
-                    <div className="bg-purple-500/10 p-3 rounded-full">
-                      <Wallet className="w-6 h-6 text-purple-600" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="pointer-events-none absolute inset-px rounded-xl shadow-sm ring-1 ring-black/5 group-hover:ring-gray-300 transition-colors"></div>
-            </motion.div>
-          </div>
-        </div>
-      </section>
+      <StatsCards 
+        orders={orders}
+        activeOrders={activeOrders}
+        referralStats={referralStats}
+      />
 
       {/* Recent Orders */}
-      <section className="bg-white py-16">
-        <div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="relative"
-          >
-            <div className="absolute inset-px rounded-xl bg-white"></div>
-            <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
-              <div className="px-8 pt-8 pb-8">
-                <div className="mb-6">
-                  <h2 className="text-2xl font-medium tracking-tight text-eerie-black">Recent Orders</h2>
-                </div>
-
-                {loading ? (
-                  <div className="flex justify-center items-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-tufts-blue"></div>
-                  </div>
-                ) : orders.length === 0 ? (
-                  <div className="text-center py-8">
-                    <Globe className="w-12 h-12 text-cool-black/40 mx-auto mb-4" />
-                    <p className="text-cool-black">No orders yet</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {orders.slice(0, 5).map((order) => (
-                      order && (
-                        <div
-                          key={order.id || order.orderId || Math.random()}
-                          className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200"
-                        >
-                          <div className="flex items-center space-x-3">
-                            <div className="text-2xl">
-                              {getFlagEmoji(order.countryCode)}
-                            </div>
-                            <div>
-                              <p className="font-medium text-eerie-black">{order.planName || 'Unknown Plan'}</p>
-                              <p className="text-sm text-cool-black">Order #{order.orderId || order.id || 'Unknown'}</p>
-                              <p className="text-xs text-cool-black/60">
-                                {order.countryName || order.countryCode || 'Unknown Country'}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex items-center space-x-4">
-                            <div className="text-right">
-                              <p className="font-medium text-eerie-black">${Math.round(order.amount || 0)}</p>
-                              <div className="flex items-center justify-end space-x-2">
-                                <div className={`w-2 h-2 rounded-full ${
-                                  order.status === 'active' ? 'bg-green-500' :
-                                  order.status === 'pending' ? 'bg-yellow-500' : 'bg-gray-500'
-                                }`}></div>
-                                <p className="text-sm text-cool-black capitalize">{order.status || 'unknown'}</p>
-                              </div>
-                            </div>
-                            <button
-                              onClick={() => handleViewQRCode(order)}
-                              className="flex items-center space-x-2 px-3 py-2 bg-tufts-blue/10 text-tufts-blue rounded-lg hover:bg-tufts-blue/20 transition-colors duration-200"
-                            >
-                              <QrCode className="w-4 h-4" />
-                              <span className="text-sm">View QR</span>
-                            </button>
-                          </div>
-                        </div>
-                      )
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-            <div className="pointer-events-none absolute inset-px rounded-xl shadow-sm ring-1 ring-black/5"></div>
-          </motion.div>
-        </div>
-      </section>
-
-
+      <RecentOrders 
+        orders={orders}
+        loading={loading}
+        onViewQRCode={handleViewQRCode}
+      />
 
       {/* Account Settings */}
-      <section className="bg-white py-16">
-        <div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="relative"
-          >
-            <div className="absolute inset-px rounded-xl bg-white"></div>
-            <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
-              <div className="px-8 pt-8 pb-8">
-                <div className="flex items-center space-x-3 mb-6">
-                  <Settings className="w-6 h-6 text-tufts-blue" />
-                  <h2 className="text-2xl font-medium tracking-tight text-eerie-black">Account Settings</h2>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-cool-black">Email</label>
-                      <p className="mt-1 text-eerie-black">{currentUser.email}</p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-cool-black">Name</label>
-                      <p className="mt-1 text-eerie-black">{currentUser.displayName || 'Not set'}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-cool-black">Account Created</label>
-                      <p className="mt-1 text-eerie-black">
-                        {userProfile?.createdAt ? 
-                          (userProfile.createdAt.toDate ? 
-                            new Date(userProfile.createdAt.toDate()).toLocaleDateString() :
-                            new Date(userProfile.createdAt).toLocaleDateString()
-                          ) : 
-                          'Unknown'
-                        }
-                      </p>
-                      {!userProfile?.createdAt && (
-                        <button 
-                          onClick={async () => {
-                            console.log('Manual refresh triggered');
-                            await loadUserProfile();
-                          }}
-                          className="mt-2 text-sm text-tufts-blue hover:text-cobalt-blue underline transition-colors"
-                        >
-                          Refresh Profile
-                        </button>
-                      )}
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-cool-black">Role</label>
-                      <p className="mt-1 text-eerie-black capitalize">{userProfile?.role || 'customer'}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="pointer-events-none absolute inset-px rounded-xl shadow-sm ring-1 ring-black/5"></div>
-          </motion.div>
-        </div>
-      </section>
+      <AccountSettings 
+        currentUser={currentUser}
+        userProfile={userProfile}
+        onLoadUserProfile={loadUserProfile}
+      />
 
       {/* Spacing after dashboard */}
       <div className="h-20"></div>
 
       {/* QR Code Modal */}
-      {showQRModal && selectedOrder && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="relative max-w-md w-full mx-4"
-          >
-            <div className="absolute inset-px rounded-xl bg-white"></div>
-            <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
-              <div className="px-8 pt-8 pb-8">
-                <div className="text-center">
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-xl font-medium text-eerie-black">eSIM QR Code</h3>
-                    <button
-                      onClick={() => setShowQRModal(false)}
-                      className="text-cool-black hover:text-eerie-black transition-colors"
-                    >
-                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
-              
-                  <div className="mb-6">
-                    <h4 className="font-medium text-eerie-black mb-2">{selectedOrder.planName || 'Unknown Plan'}</h4>
-                    <p className="text-sm text-cool-black">Order #{selectedOrder.orderId || selectedOrder.id || 'Unknown'}</p>
-                    <p className="text-sm text-cool-black">${Math.round(selectedOrder.amount || 0)}</p>
-                  </div>
-
-                  {/* QR Code Display - Clean and Simple */}
-                  <div className="bg-gray-50 p-6 rounded-lg mb-6">
-                    {console.log('🔍 QR Code data for display:', selectedOrder.qrCode)}
-                    {console.log('🔍 Full selectedOrder:', selectedOrder)}
-                    {selectedOrder.qrCode && selectedOrder.qrCode.qrCode ? (
-                      // Show the actual QR code from LPA data (contains "Add Cellular Plan")
-                      <div className="text-center">
-                        <div className="w-64 h-64 mx-auto bg-white p-4 rounded-lg border-2 border-green-300 shadow-sm">
-                          <LPAQRCodeDisplay lpaData={selectedOrder.qrCode.qrCode} />
-                        </div>
-                        <p className="text-xs text-gray-500 mt-2">✅ Real QR Code from Airalo (Add Cellular Plan)</p>
-                        <p className="text-xs text-gray-400 mt-1 break-all">QR Data: {selectedOrder.qrCode.qrCode?.substring(0, 50)}...</p>
-                      </div>
-                    ) : selectedOrder.qrCode && selectedOrder.qrCode.qrCodeUrl ? (
-                      // Fallback: Show QR code image from URL
-                      <div className="text-center">
-                        <div className="w-64 h-64 mx-auto bg-white p-4 rounded-lg border-2 border-blue-300 shadow-sm">
-                          <img 
-                            src={selectedOrder.qrCode.qrCodeUrl} 
-                            alt="eSIM QR Code" 
-                            className="w-full h-full object-contain"
-                          />
-                        </div>
-                        <p className="text-xs text-gray-500 mt-2">✅ QR Code Image from Airalo</p>
-                      </div>
-                    ) : selectedOrder.qrCode && selectedOrder.qrCode.directAppleInstallationUrl ? (
-                      // Show Apple installation link
-                      <div className="text-center">
-                        <div className="w-64 h-64 mx-auto bg-white p-4 rounded-lg border-2 border-purple-300 shadow-sm flex items-center justify-center">
-                          <div className="text-center">
-                            <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                              <span className="text-2xl">📱</span>
-                            </div>
-                            <p className="text-sm text-gray-600 mb-2">Apple eSIM Installation</p>
-                            <a 
-                              href={selectedOrder.qrCode.directAppleInstallationUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-block px-4 py-2 bg-purple-500 text-white text-sm rounded hover:bg-purple-600"
-                            >
-                              Install eSIM
-                            </a>
-                          </div>
-                        </div>
-                        <p className="text-xs text-gray-500 mt-2">✅ Direct Apple Installation Link</p>
-                      </div>
-                    ) : (
-                      // Fallback - no QR code available
-                      <div className="text-center">
-                        <div className="w-64 h-64 mx-auto bg-white p-4 rounded-lg border-2 border-gray-300 shadow-sm">
-                          <div className="w-full h-full flex items-center justify-center">
-                            <QrCode className="w-32 h-32 text-gray-400" />
-                          </div>
-                          <p className="text-sm text-gray-500 mt-2">
-                            {selectedOrder.qrCode?.fallbackReason?.includes('not available yet') 
-                              ? 'QR code is being generated...' 
-                              : selectedOrder.qrCode?.fallbackReason || 'No QR code available'}
-                          </p>
-                          {selectedOrder.qrCode?.canRetry && (
-                            <p className="text-xs text-blue-600 mt-1">Click "Generate QR Code" to try again</p>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="space-y-3">
-                    {/* Actions Dropdown Menu */}
-                    <div className="relative dropdown-container">
-                      <button
-                        onClick={() => setShowDropdown(!showDropdown)}
-                        className="w-full px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center justify-center"
-                      >
-                        <MoreVertical className="w-4 h-4 mr-2" />
-                        Actions
-                      </button>
-                      
-                      {showDropdown && (
-                        <div className="absolute bottom-full left-0 right-0 mb-2 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
-                          {/* Check eSIM Details */}
-                          {(selectedOrder.qrCode?.iccid || selectedOrder.iccid) && (
-                            <button
-                              onClick={() => {
-                                setShowDropdown(false);
-                                handleCheckEsimDetails();
-                              }}
-                              disabled={loadingEsimDetails}
-                              className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-                            >
-                              {loadingEsimDetails ? (
-                                <>
-                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600 mr-3"></div>
-                                  <span className="text-green-600">Checking eSIM Details...</span>
-                                </>
-                              ) : (
-                                <>
-                                  <Eye className="w-4 h-4 mr-3 text-green-600" />
-                                  <span className="text-gray-700">Check eSIM Details in API</span>
-                                </>
-                              )}
-                            </button>
-                          )}
-
-                          {/* Check eSIM Usage */}
-                          {(selectedOrder.qrCode?.iccid || selectedOrder.iccid) && (
-                            <button
-                              onClick={() => {
-                                setShowDropdown(false);
-                                handleCheckEsimUsage();
-                              }}
-                              disabled={loadingEsimUsage}
-                              className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-                            >
-                              {loadingEsimUsage ? (
-                                <>
-                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-600 mr-3"></div>
-                                  <span className="text-purple-600">Checking Usage...</span>
-                                </>
-                              ) : (
-                                <>
-                                  <Eye className="w-4 h-4 mr-3 text-purple-600" />
-                                  <span className="text-gray-700">Check Usage & Status</span>
-                                </>
-                              )}
-                            </button>
-                          )}
-
-                          {/* Open in Apple eSIM */}
-                          {selectedOrder.qrCode && selectedOrder.qrCode.directAppleInstallationUrl && (
-                            <button
-                              onClick={() => {
-                                setShowDropdown(false);
-                                window.open(selectedOrder.qrCode.directAppleInstallationUrl, '_blank', 'noopener,noreferrer');
-                              }}
-                              className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center"
-                            >
-                              <Smartphone className="w-4 h-4 mr-3 text-orange-600" />
-                              <span className="text-gray-700">Open in Apple eSIM</span>
-                            </button>
-                          )}
-
-                          {/* Download QR Code */}
-                          {selectedOrder.qrCode && selectedOrder.qrCode.qrCodeUrl && (
-                            <button
-                              onClick={() => {
-                                setShowDropdown(false);
-                                const link = document.createElement('a');
-                                link.href = selectedOrder.qrCode.qrCodeUrl;
-                                link.download = `esim-qr-${selectedOrder.orderId || selectedOrder.id}.png`;
-                                link.click();
-                              }}
-                              className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center"
-                            >
-                              <Download className="w-4 h-4 mr-3 text-blue-600" />
-                              <span className="text-gray-700">Download QR Code</span>
-                            </button>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="pointer-events-none absolute inset-px rounded-xl shadow-sm ring-1 ring-black/5"></div>
-          </motion.div>
-        </div>
-      )}
+      <QRCodeModal 
+        show={showQRModal}
+        selectedOrder={selectedOrder}
+        onClose={() => setShowQRModal(false)}
+        onCheckEsimDetails={handleCheckEsimDetails}
+        onCheckEsimUsage={handleCheckEsimUsage}
+        loadingEsimDetails={loadingEsimDetails}
+        loadingEsimUsage={loadingEsimUsage}
+      />
 
       {/* eSIM Details Modal */}
-      {esimDetails && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="relative max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto"
-          >
-            <div className="absolute inset-px rounded-xl bg-white"></div>
-            <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
-              <div className="px-8 pt-8 pb-8">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-xl font-medium text-eerie-black">eSIM Details from Airalo API</h3>
-                  <button
-                    onClick={() => setEsimDetails(null)}
-                    className="text-cool-black hover:text-eerie-black transition-colors"
-                  >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-            
-            <div className="space-y-6">
-              {/* Basic eSIM Info */}
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h4 className="font-semibold text-gray-900 mb-3">Basic Information</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="font-medium text-gray-600">ICCID:</span>
-                    <p className="text-gray-900 font-mono">{esimDetails.iccid}</p>
-                  </div>
-                  <div>
-                    <span className="font-medium text-gray-600">Matching ID:</span>
-                    <p className="text-gray-900">{esimDetails.matching_id}</p>
-                  </div>
-                  <div>
-                    <span className="font-medium text-gray-600">Created At:</span>
-                    <p className="text-gray-900">{esimDetails.created_at}</p>
-                  </div>
-                  <div>
-                    <span className="font-medium text-gray-600">Recycled:</span>
-                    <p className="text-gray-900">{esimDetails.recycled ? 'Yes' : 'No'}</p>
-                  </div>
-                  {esimDetails.recycled_at && (
-                    <div>
-                      <span className="font-medium text-gray-600">Recycled At:</span>
-                      <p className="text-gray-900">{esimDetails.recycled_at}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* QR Code Information */}
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <h4 className="font-semibold text-gray-900 mb-3">QR Code Information</h4>
-                <div className="space-y-3 text-sm">
-                  <div>
-                    <span className="font-medium text-gray-600">QR Code Data:</span>
-                    <p className="text-gray-900 font-mono break-all bg-white p-2 rounded border">
-                      {esimDetails.qrcode}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="font-medium text-gray-600">QR Code URL:</span>
-                    <p className="text-blue-600 break-all">
-                      <a href={esimDetails.qrcode_url} target="_blank" rel="noopener noreferrer" className="hover:underline">
-                        {esimDetails.qrcode_url}
-                      </a>
-                    </p>
-                  </div>
-                  {esimDetails.direct_apple_installation_url && (
-                    <div>
-                      <span className="font-medium text-gray-600">Apple Installation URL:</span>
-                      <p className="text-blue-600 break-all">
-                        <a href={esimDetails.direct_apple_installation_url} target="_blank" rel="noopener noreferrer" className="hover:underline">
-                          {esimDetails.direct_apple_installation_url}
-                        </a>
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Package Information */}
-              {esimDetails.simable && (
-                <div className="bg-green-50 p-4 rounded-lg">
-                  <h4 className="font-semibold text-gray-900 mb-3">Package Information</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="font-medium text-gray-600">Package:</span>
-                      <p className="text-gray-900">{esimDetails.simable.package}</p>
-                    </div>
-                    <div>
-                      <span className="font-medium text-gray-600">Data:</span>
-                      <p className="text-gray-900">{esimDetails.simable.data}</p>
-                    </div>
-                    <div>
-                      <span className="font-medium text-gray-600">Validity:</span>
-                      <p className="text-gray-900">{esimDetails.simable.validity} days</p>
-                    </div>
-                    <div>
-                      <span className="font-medium text-gray-600">Price:</span>
-                      <p className="text-gray-900">{esimDetails.simable.currency} {esimDetails.simable.price}</p>
-                    </div>
-                    <div>
-                      <span className="font-medium text-gray-600">Status:</span>
-                      <p className="text-gray-900">{esimDetails.simable.status?.name}</p>
-                    </div>
-                    <div>
-                      <span className="font-medium text-gray-600">eSIM Type:</span>
-                      <p className="text-gray-900">{esimDetails.simable.esim_type}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* User Information */}
-              {esimDetails.simable?.user && (
-                <div className="bg-purple-50 p-4 rounded-lg">
-                  <h4 className="font-semibold text-gray-900 mb-3">User Information</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="font-medium text-gray-600">Name:</span>
-                      <p className="text-gray-900">{esimDetails.simable.user.name}</p>
-                    </div>
-                    <div>
-                      <span className="font-medium text-gray-600">Email:</span>
-                      <p className="text-gray-900">{esimDetails.simable.user.email}</p>
-                    </div>
-                    <div>
-                      <span className="font-medium text-gray-600">Company:</span>
-                      <p className="text-gray-900">{esimDetails.simable.user.company}</p>
-                    </div>
-                    <div>
-                      <span className="font-medium text-gray-600">Created At:</span>
-                      <p className="text-gray-900">{esimDetails.simable.user.created_at}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-                </div>
-              </div>
-            </div>
-            <div className="pointer-events-none absolute inset-px rounded-xl shadow-sm ring-1 ring-black/5"></div>
-          </motion.div>
-        </div>
-      )}
+      <EsimDetailsModal 
+        esimDetails={esimDetails}
+        onClose={() => setEsimDetails(null)}
+      />
 
       {/* eSIM Usage Modal */}
-      {esimUsage && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="relative max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto"
-          >
-            <div className="absolute inset-px rounded-xl bg-white"></div>
-            <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
-              <div className="px-8 pt-8 pb-8">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-xl font-medium text-eerie-black">eSIM Usage & Status</h3>
-                  <button
-                    onClick={() => setEsimUsage(null)}
-                    className="text-cool-black hover:text-eerie-black transition-colors"
-                  >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-            
-            <div className="space-y-6">
-              {/* Status Overview */}
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h4 className="font-semibold text-gray-900 mb-3">Status Overview</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="font-medium text-gray-600">Status:</span>
-                    <p className={`text-gray-900 font-semibold ${
-                      esimUsage.status === 'ACTIVE' ? 'text-green-600' :
-                      esimUsage.status === 'EXPIRED' ? 'text-red-600' :
-                      esimUsage.status === 'FINISHED' ? 'text-orange-600' :
-                      'text-gray-600'
-                    }`}>
-                      {esimUsage.status}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="font-medium text-gray-600">Unlimited:</span>
-                    <p className="text-gray-900">{esimUsage.is_unlimited ? 'Yes' : 'No'}</p>
-                  </div>
-                  <div>
-                    <span className="font-medium text-gray-600">Expires At:</span>
-                    <p className="text-gray-900">{esimUsage.expired_at}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Data Usage */}
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <h4 className="font-semibold text-gray-900 mb-3">Data Usage</h4>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-gray-600">Total Data:</span>
-                    <span className="text-sm font-semibold text-gray-900">
-                      {esimUsage.is_unlimited ? 'Unlimited' : `${esimUsage.total} MB`}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-gray-600">Remaining Data:</span>
-                    <span className="text-sm font-semibold text-gray-900">
-                      {esimUsage.is_unlimited ? 'Unlimited' : `${esimUsage.remaining} MB`}
-                    </span>
-                  </div>
-                  {!esimUsage.is_unlimited && (
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div 
-                        className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                        style={{ 
-                          width: `${((esimUsage.total - esimUsage.remaining) / esimUsage.total) * 100}%` 
-                        }}
-                      ></div>
-                    </div>
-                  )}
-                  {!esimUsage.is_unlimited && (
-                    <div className="text-xs text-gray-500 text-center">
-                      {Math.round(((esimUsage.total - esimUsage.remaining) / esimUsage.total) * 100)}% used
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Voice Usage */}
-              {esimUsage.total_voice > 0 && (
-                <div className="bg-green-50 p-4 rounded-lg">
-                  <h4 className="font-semibold text-gray-900 mb-3">Voice Usage</h4>
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-gray-600">Total Voice:</span>
-                      <span className="text-sm font-semibold text-gray-900">{esimUsage.total_voice} minutes</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-gray-600">Remaining Voice:</span>
-                      <span className="text-sm font-semibold text-gray-900">{esimUsage.remaining_voice} minutes</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div 
-                        className="bg-green-600 h-2 rounded-full transition-all duration-300"
-                        style={{ 
-                          width: `${((esimUsage.total_voice - esimUsage.remaining_voice) / esimUsage.total_voice) * 100}%` 
-                        }}
-                      ></div>
-                    </div>
-                    <div className="text-xs text-gray-500 text-center">
-                      {Math.round(((esimUsage.total_voice - esimUsage.remaining_voice) / esimUsage.total_voice) * 100)}% used
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Text Usage */}
-              {esimUsage.total_text > 0 && (
-                <div className="bg-purple-50 p-4 rounded-lg">
-                  <h4 className="font-semibold text-gray-900 mb-3">Text Usage</h4>
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-gray-600">Total Text:</span>
-                      <span className="text-sm font-semibold text-gray-900">{esimUsage.total_text} SMS</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-gray-600">Remaining Text:</span>
-                      <span className="text-sm font-semibold text-gray-900">{esimUsage.remaining_text} SMS</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div 
-                        className="bg-purple-600 h-2 rounded-full transition-all duration-300"
-                        style={{ 
-                          width: `${((esimUsage.total_text - esimUsage.remaining_text) / esimUsage.total_text) * 100}%` 
-                        }}
-                      ></div>
-                    </div>
-                    <div className="text-xs text-gray-500 text-center">
-                      {Math.round(((esimUsage.total_text - esimUsage.remaining_text) / esimUsage.total_text) * 100)}% used
-                    </div>
-                  </div>
-                </div>
-              )}
-
-                </div>
-              </div>
-            </div>
-            <div className="pointer-events-none absolute inset-px rounded-xl shadow-sm ring-1 ring-black/5"></div>
-          </motion.div>
-        </div>
-      )}
+      <EsimUsageModal 
+        esimUsage={esimUsage}
+        onClose={() => setEsimUsage(null)}
+      />
 
       {/* Referral Bottom Sheet */}
       <ReferralBottomSheet 

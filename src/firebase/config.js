@@ -37,7 +37,23 @@ isSupported().then((supported) => {
   console.log('⚠️ Firebase Analytics initialization failed:', error);
 });
 
-// Configure functions region if needed
-// functions.useEmulator('localhost', 5001); // Uncomment for local development
+// Configure emulators for local development
+if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+  // Only connect to emulators in development
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🔧 Connecting to Firebase emulators...');
+    
+    // Uncomment these lines if you want to use Firebase emulators
+    // import { connectAuthEmulator } from 'firebase/auth';
+    // import { connectFirestoreEmulator } from 'firebase/firestore';
+    // import { connectFunctionsEmulator } from 'firebase/functions';
+    // import { connectStorageEmulator } from 'firebase/storage';
+    
+    // connectAuthEmulator(auth, 'http://localhost:9099');
+    // connectFirestoreEmulator(db, 'localhost', 8080);
+    // connectFunctionsEmulator(functions, 'localhost', 5001);
+    // connectStorageEmulator(storage, 'localhost', 9199);
+  }
+}
 
 export default app;
