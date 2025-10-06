@@ -8,7 +8,7 @@ import { Search } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '../contexts/AuthContext';
 import PlanSelectionBottomSheet from './PlanSelectionBottomSheet';
-import { getCountriesWithPricing, getPricingStats } from '../services/plansService';
+import { getCountriesWithPricing } from '../services/plansService';
 import { getRegularSettings } from '../services/settingsService';
 import { useI18n } from '../contexts/I18nContext';
 import { detectPlatform, shouldRedirectToDownload, isMobileDevice } from '../utils/platformDetection';
@@ -135,21 +135,6 @@ const EsimPlans = () => {
     gcTime: 10 * 60 * 1000, // 10 minutes
   });
 
-  // Fetch pricing statistics
-  const { data: pricingStats, isLoading: statsLoading } = useQuery({
-    queryKey: ['pricing-stats'],
-    queryFn: async () => {
-      try {
-        return await getPricingStats();
-      } catch (error) {
-        console.error('Error fetching pricing stats:', error);
-        return { totalPlans: 0, totalCountries: 0, averagePrice: 0, minPrice: 0, maxPrice: 0 };
-      }
-    },
-    retry: 1,
-    staleTime: 10 * 60 * 1000, // 10 minutes
-    gcTime: 15 * 60 * 1000, // 15 minutes
-  });
 
 
   useEffect(() => {
@@ -376,31 +361,6 @@ const EsimPlans = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="destination-top mb-8">
-            {/* Plans Counter and Stats */}
-            {pricingStats && !statsLoading && (
-              <div className="text-center mb-8">
-                <div className="bg-white rounded-2xl shadow-lg p-6 max-w-4xl mx-auto">
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="text-center">
-                      <div className="text-3xl font-bold text-tufts-blue">{pricingStats.totalPlans}</div>
-                      <div className="text-sm text-gray-600">{t('plans.totalPlans', 'Total Plans')}</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-3xl font-bold text-tufts-blue">{pricingStats.totalCountries}</div>
-                      <div className="text-sm text-gray-600">{t('plans.countries', 'Countries')}</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-3xl font-bold text-tufts-blue">${calculateDiscountedPrice(parseFloat(pricingStats.minPrice)).toFixed(2)}</div>
-                      <div className="text-sm text-gray-600">{t('plans.startingFrom', 'Starting From')}</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-3xl font-bold text-tufts-blue">${calculateDiscountedPrice(parseFloat(pricingStats.averagePrice)).toFixed(2)}</div>
-                      <div className="text-sm text-gray-600">{t('plans.averagePrice', 'Average Price')}</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
 
           {/* Search Box */}
           <div className="search-box max-w-md mx-auto mb-8">

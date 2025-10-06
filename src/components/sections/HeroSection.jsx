@@ -6,7 +6,10 @@ import Link from 'next/link';
 import { detectPlatform } from '../../utils/platformDetection';
 
 export default function HeroSection() {
-  const { t, isLoading } = useI18n();
+  const { t, isLoading, locale } = useI18n();
+  
+  // Check if current locale is RTL
+  const isRTL = locale === 'ar' || locale === 'he';
   
   if (isLoading) {
     return (
@@ -55,10 +58,10 @@ export default function HeroSection() {
           ></div>
         </div>
 
-        <div className="mx-auto max-w-5xl py-6 sm:py-12 lg:py-24 flex-1 flex flex-col justify-center">
+        <div className="mx-auto max-w-5xl py-6 sm:py-12 lg:py-24  justify-center">
           {/* Announcement Banner */}
           <div className="mb-6 sm:mb-8 flex justify-center">
-            <div className="relative rounded-full px-3 py-1 text-xs sm:text-sm/6 text-gray-600 ring-1 ring-jordy-blue/30 hover:ring-tufts-blue/50 bg-white/80 backdrop-blur-sm shadow-lg shadow-cobalt-blue">
+            <div className={`relative rounded-full px-3 py-1 text-xs sm:text-sm/6 text-gray-600 ring-1 ring-jordy-blue/30 hover:ring-tufts-blue/50 bg-white/80 backdrop-blur-sm shadow-lg shadow-cobalt-blue text-center ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
               {t('hero.announcement')}
             </div>
           </div>
@@ -73,7 +76,7 @@ export default function HeroSection() {
                   <span className="text-eerie-black font-semibold">{t('hero.stayConnected')}</span>
                   <span className="inline-block transform -rotate-12 pointer-events-none">
                     <div className="w-10 h-10 bg-white border-2 border-cobalt-blue rounded-lg shadow-lg flex items-center justify-center">
-                      <Image src="/images/logo_icon/sx.png" alt="Globe" width={32} height={32} className="w-8 h-8" />
+                      <Image src="/images/logo_icon/sx.png" alt="Globe" width={32} height={32} className="w-8 h-8 sm:w-6 sm:h-6" />
                     </div>
                   </span> 
                 </div>

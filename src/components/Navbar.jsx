@@ -85,7 +85,7 @@ const Navbar = ({ hideLanguageSelector = false }) => {
               alt="Roam Jet Plans Logo"
               className="h-8 w-auto"
             />
-            <span className="ml-1 text-xl font-bold text-gray-900">{t('navbar.logo', 'RoamJet')}</span>
+            <span className="ml-2 text-xl font-semibold text-gray-900">{t('navbar.logo', 'RoamJet')}</span>
           </Link>
         </div>
         

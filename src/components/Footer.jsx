@@ -89,7 +89,7 @@ const Footer = () => {
                   height={40}
                   className="h-10 w-auto"
                 />
-                <span className="text-2xl font-bold text-eerie-black ml-2">{getText('footer.brandName', 'RoamJet')}</span>
+                <span className="text-2xl font-semibold text-eerie-black ml-2">{getText('footer.brandName', 'RoamJet')}</span>
               </Link>
               <p className="footer-item__desc text-eerie-black mb-6 leading-relaxed">
                 {getText('footer.companyDescription', 'Your trusted partner for global eSIM connectivity. Stay connected worldwide with our reliable data plans.')}
