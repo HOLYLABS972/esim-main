@@ -150,5 +150,43 @@
     "withdrawFunds": "سحب الأموال",
     "addBankAccount": "إضافة حساب مصرفي",
     "addBankAccountDesc": "أضف تفاصيل حسابك المصرفي لسحب أرباحك"
+  },
+  "auth": {
+    "login": {
+      "title": "تسجيل الدخول إلى حسابك",
+      "subtitle": "أو",
+      "createAccount": "إنشاء حساب جديد",
+      "emailLabel": "عنوان البريد الإلكتروني",
+      "emailPlaceholder": "أدخل بريدك الإلكتروني",
+      "passwordLabel": "كلمة المرور",
+      "passwordPlaceholder": "أدخل كلمة المرور",
+      "forgotPassword": "نسيت كلمة المرور؟",
+      "signInButton": "تسجيل الدخول",
+      "orContinueWith": "أو المتابعة مع",
+      "signInWithGoogle": "تسجيل الدخول مع Google",
+      "fillAllFields": "يرجى ملء جميع الحقول",
+      "loginSuccessful": "تم تسجيل الدخول بنجاح!",
+      "loginFailed": "فشل في تسجيل الدخول",
+      "googleSignInSuccessful": "تم تسجيل الدخول مع Google بنجاح!",
+      "googleSignInFailed": "فشل في تسجيل الدخول مع Google"
+    },
+    "register": {
+      "title": "إنشاء حسابك",
+      "subtitle": "أو",
+      "signInExisting": "تسجيل الدخول إلى حسابك الحالي",
+      "fullNameLabel": "الاسم الكامل",
+      "fullNamePlaceholder": "أدخل اسمك الكامل",
+      "emailLabel": "عنوان البريد الإلكتروني",
+      "emailPlaceholder": "أدخل بريدك الإلكتروني",
+      "passwordLabel": "كلمة المرور",
+      "passwordPlaceholder": "أدخل كلمة المرور",
+      "createAccountButton": "إنشاء حساب",
+      "fillAllFields": "يرجى ملء جميع الحقول",
+      "passwordTooShort": "يجب أن تكون كلمة المرور 6 أحرف على الأقل",
+      "accountCreated": "تم إنشاء الحساب! يرجى التحقق من بريدك الإلكتروني للحصول على رمز التحقق.",
+      "registrationFailed": "فشل في إرسال رمز التحقق"
+    },
+    "welcomeMessage": "مرحباً بك في RoamJet - حل eSIM العالمي الخاص بك",
+    "trustedByThousands": "موثوق من قبل آلاف المسافرين حول العالم"
   }
 }

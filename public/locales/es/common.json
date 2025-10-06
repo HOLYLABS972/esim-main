@@ -150,5 +150,43 @@
     "withdrawFunds": "Retirar Fondos",
     "addBankAccount": "Agregar Cuenta Bancaria",
     "addBankAccountDesc": "Agrega los detalles de tu cuenta bancaria para retirar tus ganancias"
+  },
+  "auth": {
+    "login": {
+      "title": "Inicia sesión en tu cuenta",
+      "subtitle": "O",
+      "createAccount": "crea una nueva cuenta",
+      "emailLabel": "Dirección de correo electrónico",
+      "emailPlaceholder": "Ingresa tu correo electrónico",
+      "passwordLabel": "Contraseña",
+      "passwordPlaceholder": "Ingresa tu contraseña",
+      "forgotPassword": "¿Olvidaste tu contraseña?",
+      "signInButton": "Iniciar sesión",
+      "orContinueWith": "O continúa con",
+      "signInWithGoogle": "Iniciar sesión con Google",
+      "fillAllFields": "Por favor completa todos los campos",
+      "loginSuccessful": "¡Inicio de sesión exitoso!",
+      "loginFailed": "Error al iniciar sesión",
+      "googleSignInSuccessful": "¡Inicio de sesión con Google exitoso!",
+      "googleSignInFailed": "Error al iniciar sesión con Google"
+    },
+    "register": {
+      "title": "Crea tu cuenta",
+      "subtitle": "O",
+      "signInExisting": "inicia sesión en tu cuenta existente",
+      "fullNameLabel": "Nombre completo",
+      "fullNamePlaceholder": "Ingresa tu nombre completo",
+      "emailLabel": "Dirección de correo electrónico",
+      "emailPlaceholder": "Ingresa tu correo electrónico",
+      "passwordLabel": "Contraseña",
+      "passwordPlaceholder": "Ingresa tu contraseña",
+      "createAccountButton": "Crear cuenta",
+      "fillAllFields": "Por favor completa todos los campos",
+      "passwordTooShort": "La contraseña debe tener al menos 6 caracteres",
+      "accountCreated": "¡Cuenta creada! Por favor revisa tu correo electrónico para el código de verificación.",
+      "registrationFailed": "Error al enviar el código de verificación"
+    },
+    "welcomeMessage": "Bienvenido a RoamJet - Tu solución eSIM global",
+    "trustedByThousands": "Confiado por miles de viajeros en todo el mundo"
   }
 }

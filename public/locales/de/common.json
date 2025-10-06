@@ -150,5 +150,43 @@
     "withdrawFunds": "Geld Abheben",
     "addBankAccount": "Bankkonto Hinzufügen",
     "addBankAccountDesc": "Fügen Sie Ihre Bankkontodetails hinzu, um Ihre Einnahmen abzuheben"
+  },
+  "auth": {
+    "login": {
+      "title": "Melden Sie sich in Ihrem Konto an",
+      "subtitle": "Oder",
+      "createAccount": "erstellen Sie ein neues Konto",
+      "emailLabel": "E-Mail-Adresse",
+      "emailPlaceholder": "Geben Sie Ihre E-Mail ein",
+      "passwordLabel": "Passwort",
+      "passwordPlaceholder": "Geben Sie Ihr Passwort ein",
+      "forgotPassword": "Passwort vergessen?",
+      "signInButton": "Anmelden",
+      "orContinueWith": "Oder fortfahren mit",
+      "signInWithGoogle": "Mit Google anmelden",
+      "fillAllFields": "Bitte füllen Sie alle Felder aus",
+      "loginSuccessful": "Anmeldung erfolgreich!",
+      "loginFailed": "Anmeldung fehlgeschlagen",
+      "googleSignInSuccessful": "Google-Anmeldung erfolgreich!",
+      "googleSignInFailed": "Google-Anmeldung fehlgeschlagen"
+    },
+    "register": {
+      "title": "Erstellen Sie Ihr Konto",
+      "subtitle": "Oder",
+      "signInExisting": "melden Sie sich in Ihrem bestehenden Konto an",
+      "fullNameLabel": "Vollständiger Name",
+      "fullNamePlaceholder": "Geben Sie Ihren vollständigen Namen ein",
+      "emailLabel": "E-Mail-Adresse",
+      "emailPlaceholder": "Geben Sie Ihre E-Mail ein",
+      "passwordLabel": "Passwort",
+      "passwordPlaceholder": "Geben Sie Ihr Passwort ein",
+      "createAccountButton": "Konto erstellen",
+      "fillAllFields": "Bitte füllen Sie alle Felder aus",
+      "passwordTooShort": "Das Passwort muss mindestens 6 Zeichen lang sein",
+      "accountCreated": "Konto erstellt! Bitte überprüfen Sie Ihre E-Mail für den Verifizierungscode.",
+      "registrationFailed": "Fehler beim Senden des Verifizierungscodes"
+    },
+    "welcomeMessage": "Willkommen bei RoamJet - Ihre globale eSIM-Lösung",
+    "trustedByThousands": "Vertraut von Tausenden von Reisenden weltweit"
   }
 }

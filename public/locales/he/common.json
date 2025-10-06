@@ -150,5 +150,43 @@
     "withdrawFunds": "משיכת כספים",
     "addBankAccount": "הוספת חשבון בנק",
     "addBankAccountDesc": "הוסיפו את פרטי חשבון הבנק שלכם כדי למשוך את הרווחים"
+  },
+  "auth": {
+    "login": {
+      "title": "התחבר לחשבון שלך",
+      "subtitle": "או",
+      "createAccount": "צור חשבון חדש",
+      "emailLabel": "כתובת אימייל",
+      "emailPlaceholder": "הכנס את האימייל שלך",
+      "passwordLabel": "סיסמה",
+      "passwordPlaceholder": "הכנס את הסיסמה שלך",
+      "forgotPassword": "שכחת את הסיסמה?",
+      "signInButton": "התחבר",
+      "orContinueWith": "או המשך עם",
+      "signInWithGoogle": "התחבר עם Google",
+      "fillAllFields": "אנא מלא את כל השדות",
+      "loginSuccessful": "התחברות הצליחה!",
+      "loginFailed": "התחברות נכשלה",
+      "googleSignInSuccessful": "התחברות עם Google הצליחה!",
+      "googleSignInFailed": "התחברות עם Google נכשלה"
+    },
+    "register": {
+      "title": "צור את החשבון שלך",
+      "subtitle": "או",
+      "signInExisting": "התחבר לחשבון הקיים שלך",
+      "fullNameLabel": "שם מלא",
+      "fullNamePlaceholder": "הכנס את השם המלא שלך",
+      "emailLabel": "כתובת אימייל",
+      "emailPlaceholder": "הכנס את האימייל שלך",
+      "passwordLabel": "סיסמה",
+      "passwordPlaceholder": "הכנס את הסיסמה שלך",
+      "createAccountButton": "צור חשבון",
+      "fillAllFields": "אנא מלא את כל השדות",
+      "passwordTooShort": "הסיסמה חייבת להיות באורך 6 תווים לפחות",
+      "accountCreated": "חשבון נוצר! אנא בדוק את האימייל שלך לקוד אימות.",
+      "registrationFailed": "שליחת קוד אימות נכשלה"
+    },
+    "welcomeMessage": "ברוכים הבאים ל-RoamJet - פתרון ה-eSIM הגלובלי שלכם",
+    "trustedByThousands": "מועדף על ידי אלפי מטיילים ברחבי העולם"
   }
 }

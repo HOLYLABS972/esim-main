@@ -166,5 +166,43 @@
     "withdrawFunds": "Withdraw Funds",
     "addBankAccount": "Add Bank Account",
     "addBankAccountDesc": "Add your bank account details to withdraw your earnings"
+  },
+  "auth": {
+    "login": {
+      "title": "Sign in to your account",
+      "subtitle": "Or",
+      "createAccount": "create a new account",
+      "emailLabel": "Email address",
+      "emailPlaceholder": "Enter your email",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "Enter your password",
+      "forgotPassword": "Forgot your password?",
+      "signInButton": "Sign in",
+      "orContinueWith": "Or continue with",
+      "signInWithGoogle": "Sign in with Google",
+      "fillAllFields": "Please fill in all fields",
+      "loginSuccessful": "Login successful!",
+      "loginFailed": "Failed to login",
+      "googleSignInSuccessful": "Signed in with Google successfully!",
+      "googleSignInFailed": "Failed to sign in with Google"
+    },
+    "register": {
+      "title": "Create your account",
+      "subtitle": "Or",
+      "signInExisting": "sign in to your existing account",
+      "fullNameLabel": "Full Name",
+      "fullNamePlaceholder": "Enter your full name",
+      "emailLabel": "Email address",
+      "emailPlaceholder": "Enter your email",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "Enter your password",
+      "createAccountButton": "Create Account",
+      "fillAllFields": "Please fill in all fields",
+      "passwordTooShort": "Password must be at least 6 characters",
+      "accountCreated": "Account created! Please check your email for verification code.",
+      "registrationFailed": "Failed to send verification code"
+    },
+    "welcomeMessage": "Welcome to RoamJet - Your global eSIM solution",
+    "trustedByThousands": "Trusted by thousands of travelers worldwide"
   }
 }

@@ -149,5 +149,43 @@
     "withdrawFunds": "Вывести Средства",
     "addBankAccount": "Добавить Банковский Счет",
     "addBankAccountDesc": "Добавьте данные вашего банковского счета для вывода заработка"
+  },
+  "auth": {
+    "login": {
+      "title": "Войдите в свой аккаунт",
+      "subtitle": "Или",
+      "createAccount": "создайте новый аккаунт",
+      "emailLabel": "Адрес электронной почты",
+      "emailPlaceholder": "Введите ваш email",
+      "passwordLabel": "Пароль",
+      "passwordPlaceholder": "Введите ваш пароль",
+      "forgotPassword": "Забыли пароль?",
+      "signInButton": "Войти",
+      "orContinueWith": "Или продолжить с",
+      "signInWithGoogle": "Войти через Google",
+      "fillAllFields": "Пожалуйста, заполните все поля",
+      "loginSuccessful": "Вход выполнен успешно!",
+      "loginFailed": "Ошибка входа",
+      "googleSignInSuccessful": "Вход через Google выполнен успешно!",
+      "googleSignInFailed": "Ошибка входа через Google"
+    },
+    "register": {
+      "title": "Создайте свой аккаунт",
+      "subtitle": "Или",
+      "signInExisting": "войдите в существующий аккаунт",
+      "fullNameLabel": "Полное имя",
+      "fullNamePlaceholder": "Введите ваше полное имя",
+      "emailLabel": "Адрес электронной почты",
+      "emailPlaceholder": "Введите ваш email",
+      "passwordLabel": "Пароль",
+      "passwordPlaceholder": "Введите ваш пароль",
+      "createAccountButton": "Создать аккаунт",
+      "fillAllFields": "Пожалуйста, заполните все поля",
+      "passwordTooShort": "Пароль должен содержать не менее 6 символов",
+      "accountCreated": "Аккаунт создан! Проверьте вашу электронную почту для получения кода подтверждения.",
+      "registrationFailed": "Ошибка отправки кода подтверждения"
+    },
+    "welcomeMessage": "Добро пожаловать в RoamJet - ваше глобальное решение eSIM",
+    "trustedByThousands": "Доверяют тысячи путешественников по всему миру"
   }
 }
