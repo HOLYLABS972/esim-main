@@ -55,23 +55,16 @@ const Login = () => {
 
 
   return (
-    <div className="min-h-screen flex bg-alice-blue">
+    <div className="min-h-screen flex">
       {/* Left side - Form */}
-      <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-20 xl:px-24">
+      <div className="flex-1 flex items-center justify-center px-4 sm:px-4 lg:px-16 xl:px-16">
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          className="max-w-sm w-full space-y-8"
+          className="max-w-sm w-full"
         >
           <div>
-            <div className="flex items-center justify-center mb-8">
-              <img 
-                src="/images/logo_icon/logo.png" 
-                alt="RoamJet" 
-                className="h-12 w-auto"
-              />
-            </div>
-            <h2 className="text-center text-3xl font-bold text-eerie-black" style={{ fontFamily: 'Open Sans, sans-serif' }}>
+            <h2 className="text-center text-3xl font-semibold text-eerie-black" style={{ fontFamily: 'Open Sans, sans-serif' }}>
               {t('auth.login.title', 'Sign in to your account')}
             </h2>
             <p className="mt-2 text-center text-sm text-cool-black">
@@ -172,7 +165,7 @@ const Login = () => {
                   <div className="w-full border-t border-jordy-blue opacity-30" />
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-4 bg-alice-blue text-cool-black opacity-70" style={{ fontFamily: 'Open Sans, sans-serif' }}>
+                  <span className="px-4 bg-white text-cool-black " style={{ fontFamily: 'Open Sans, sans-serif' }}>
                     {t('auth.login.orContinueWith', 'Or continue with')}
                   </span>
                 </div>
@@ -199,29 +192,12 @@ const Login = () => {
 
       {/* Right side - Image/Branding */}
       <div className="hidden lg:block relative w-0 flex-1">
-        <div className="absolute inset-0 bg-gradient-secondary">
-          <div className="absolute inset-0 bg-black opacity-10"></div>
+        <div className="absolute inset-0">
           <img
             className="absolute inset-0 h-full w-full object-cover mix-blend-multiply"
-            src="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2084&q=80"
+            src=" /images/logo_icon/vwvw.avif"
             alt="Travel background"
           />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="text-center text-white px-8">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-              >
-                <h1 className="text-4xl font-bold mb-4" style={{ fontFamily: 'Open Sans, sans-serif' }}>
-                  {t('auth.welcomeMessage', 'Welcome to RoamJet - Your global eSIM solution')}
-                </h1>
-                <p className="text-xl opacity-90" style={{ fontFamily: 'Open Sans, sans-serif' }}>
-                  {t('auth.trustedByThousands', 'Trusted by thousands of travelers worldwide')}
-                </p>
-              </motion.div>
-            </div>
-          </div>
         </div>
       </div>
     </div>

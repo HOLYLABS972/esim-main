@@ -40,7 +40,7 @@ export const metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://esimplans.com'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://www.roamjet.net'),
   alternates: {
     canonical: '/',
   },
@@ -53,7 +53,7 @@ export const metadata = {
     siteName: 'RoamJet',
     images: [
       {
-        url: '/images/og-image.jpg',
+        url: '/images/og-image.svg',
         width: 1200,
         height: 630,
         alt: 'RoamJet - Best eSIM Plans for Travelers',
@@ -64,7 +64,23 @@ export const metadata = {
     card: 'summary_large_image',
     title: 'Best eSIM Plans for Backpackers, Travelers & Digital Nomads | RoamJet',
     description: 'Perfect eSIM plans for backpackers, travelers, and digital nomads. Compare Airalo vs RoamJet vs eSIMo. Global data connectivity in 200+ countries.',
-    images: ['/images/twitter-image.jpg'],
+    images: ['/images/og-image.svg'],
+  },
+  icons: {
+    icon: [
+      { url: '/images/logo_icon/favicon.png', sizes: '32x32', type: 'image/png' },
+      { url: '/images/logo_icon/favicon.png', sizes: '16x16', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/images/logo_icon/ioslogo.png', sizes: '180x180', type: 'image/png' },
+    ],
+    other: [
+      {
+        rel: 'mask-icon',
+        url: '/images/logo_icon/logo.png',
+        color: '#468BE6',
+      },
+    ],
   },
   robots: {
     index: true,
@@ -101,11 +117,38 @@ export default function RootLayout({ children }) {
           }}
         />
         <link rel="manifest" href="/manifest.json" />
+        <link rel="icon" href="/app/favicon.ico" sizes="any" />
+        <link rel="icon" href="/images/logo_icon/favicon.png" type="image/png" />
+        <link rel="apple-touch-icon" href="/images/logo_icon/ioslogo.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet" />
         <meta name="theme-color" content="#468BE6" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        
+        {/* Structured Data for SEO */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              "name": "RoamJet",
+              "url": "https://www.roamjet.net",
+              "logo": "https://www.roamjet.net/images/logo_icon/logo.png",
+              "description": "Global eSIM plans for travelers, backpackers, and digital nomads. Instant activation in 200+ countries.",
+              "sameAs": [
+                "https://twitter.com/roamjet",
+                "https://facebook.com/roamjet"
+              ],
+              "contactPoint": {
+                "@type": "ContactPoint",
+                "contactType": "customer service",
+                "availableLanguage": ["English", "Spanish", "French", "German", "Arabic", "Hebrew", "Russian"]
+              }
+            })
+          }}
+        />
       </head>
       <body>
         <Providers>

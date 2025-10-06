@@ -1,5 +1,5 @@
 export default function sitemap() {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://esimplans.com'
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.roamjet.net'
   
   return [
     {
@@ -9,10 +9,22 @@ export default function sitemap() {
       priority: 1,
     },
     {
+      url: `${baseUrl}/esim-plans`,
+      lastModified: new Date(),
+      changeFrequency: 'daily',
+      priority: 0.9,
+    },
+    {
       url: `${baseUrl}/checkout`,
       lastModified: new Date(),
       changeFrequency: 'weekly',
       priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/affiliate-program`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.7,
     },
     {
       url: `${baseUrl}/dashboard`,

@@ -4,13 +4,27 @@ import Loading from '../../src/components/Loading'
 import AuthRedirect from '../../src/components/AuthRedirect'
 
 export const metadata = {
-  title: 'Login - eSIM Plans',
-  description: 'Sign in to your eSIM Plans account to manage your data plans and settings.',
-  keywords: ['login', 'sign in', 'eSIM account', 'authentication'],
+  title: 'Login - RoamJet',
+  description: 'Sign in to your RoamJet account to manage your global eSIM plans and travel connectivity.',
+  keywords: ['login', 'sign in', 'RoamJet account', 'eSIM authentication', 'travel eSIM login'],
   openGraph: {
-    title: 'Login - eSIM Plans',
-    description: 'Sign in to your eSIM Plans account to manage your data plans and settings.',
+    title: 'Login - RoamJet | Global eSIM Plans',
+    description: 'Sign in to your RoamJet account to manage your global eSIM plans and travel connectivity.',
     url: '/login',
+    images: [
+      {
+        url: '/images/og-image.svg',
+        width: 1200,
+        height: 630,
+        alt: 'RoamJet Login - Global eSIM Plans',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Login - RoamJet | Global eSIM Plans',
+    description: 'Sign in to your RoamJet account to manage your global eSIM plans and travel connectivity.',
+    images: ['/images/og-image.svg'],
   },
   alternates: {
     canonical: '/login',
