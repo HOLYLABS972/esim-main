@@ -55,7 +55,7 @@ export default function HeroSection() {
           ></div>
         </div>
 
-        <div className="mx-auto max-w-5xl py-16 sm:py-32 lg:py-56">
+        <div className="mx-auto max-w-5xl py-8 sm:py-16 lg:py-32">
           {/* Announcement Banner */}
           <div className="mb-6 sm:mb-8 flex justify-center">
             <div className="relative rounded-full px-3 py-1 text-xs sm:text-sm/6 text-gray-600 ring-1 ring-jordy-blue/30 hover:ring-tufts-blue/50 bg-white/80 backdrop-blur-sm shadow-lg shadow-cobalt-blue">
@@ -119,9 +119,14 @@ export default function HeroSection() {
               >
                 {t('hero.downloadApp')}
               </button>
-              <Link href="/blog" className="text-sm sm:text-sm/6 font-semibold text-gray-600 hover:text-tufts-blue transition-colors">
-                {t('hero.learnMore')}
-              </Link>
+              <button
+                onClick={() => {
+                  window.location.href = '/esim-plans';
+                }}
+                className="btn-secondary w-full sm:w-auto"
+              >
+                {t('hero.exploreTariffs')}
+              </button>
             </div>
           </div>
 
