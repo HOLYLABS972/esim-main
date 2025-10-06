@@ -816,278 +816,343 @@ const Dashboard = () => {
 
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen bg-white py-24">
       {/* Access Denied Alert */}
       {searchParams.get('error') === 'access_denied' && (
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4"
-        >
-          <div className="flex items-center">
-            <AlertTriangle className="w-5 h-5 text-red-600 mr-3" />
-            <div>
-              <h3 className="text-sm font-medium text-red-800">Access Denied</h3>
-              <p className="text-sm text-red-700 mt-1">
-                You don't have permission to access the admin panel. Only administrators can access this area.
-              </p>
-            </div>
+        <section className="bg-white">
+          <div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8 mb-8">
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="relative"
+            >
+              <div className="absolute inset-px rounded-xl bg-red-50"></div>
+              <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
+                <div className="px-8 pt-6 pb-6">
+                  <div className="flex items-center">
+                    <AlertTriangle className="w-5 h-5 text-red-600 mr-3" />
+                    <div>
+                      <h3 className="text-sm font-medium text-red-800">Access Denied</h3>
+                      <p className="text-sm text-red-700 mt-1">
+                        You don't have permission to access the admin panel. Only administrators can access this area.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="pointer-events-none absolute inset-px rounded-xl shadow-sm ring-1 ring-red-200"></div>
+            </motion.div>
           </div>
-        </motion.div>
+        </section>
       )}
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="space-y-8"
-      >
-        {/* Header */}
-        <div className="bg-white rounded-xl shadow-lg p-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="bg-blue-100 p-3 rounded-full">
-                <User className="w-8 h-8 text-blue-600" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">
-                  Welcome back, {currentUser.displayName || currentUser.email}!
-                </h1>
-                <p className="text-gray-600">
-                  Manage your eSIM orders and account settings
-                </p>
-              </div>
-            </div>
-            {!userProfile?.referralCodeUsed && (
-              <button
-                onClick={() => setShowReferralSheet(true)}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-2"
-              >
-                <Gift className="w-4 h-4" />
-                <span>Apply Referral</span>
-              </button>
-            )}
-          </div>
-        </div>
-
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* Header Section */}
+      <section className="bg-white">
+        <div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8">
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.1 }}
-            className="bg-white rounded-xl shadow-lg p-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="relative"
           >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Orders</p>
-                <p className="text-3xl font-bold text-gray-900">{orders.length}</p>
-              </div>
-              <div className="bg-blue-100 p-3 rounded-full">
-                <Globe className="w-6 h-6 text-blue-600" />
-              </div>
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.2 }}
-            className="bg-white rounded-xl shadow-lg p-6"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Active eSIMs</p>
-                <p className="text-3xl font-bold text-green-600">{activeOrders.length}</p>
-              </div>
-              <div className="bg-green-100 p-3 rounded-full">
-                <QrCode className="w-6 h-6 text-green-600" />
-              </div>
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.3 }}
-            className="bg-white rounded-xl shadow-lg p-6 cursor-pointer hover:shadow-xl transition-shadow duration-200"
-            onClick={() => router.push('/affiliate-program')}
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Your Performance</p>
-                <div className="flex items-center space-x-4">
-                  <div>
-                    <p className="text-3xl font-bold text-purple-600">${referralStats.totalEarnings.toFixed(2)}</p>
-                    <p className="text-xs text-gray-500">Total Earnings</p>
-                  </div>
-                  {(referralStats.usageCount || 0) > 0 && (
-                    <div className="border-l border-gray-200 pl-4">
-                      <p className="text-3xl font-bold text-green-600">{Math.floor(referralStats.usageCount || 0)}</p>
+            <div className="absolute inset-px rounded-xl bg-white"></div>
+            <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
+              <div className="px-8 pt-8 pb-8">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div className="bg-tufts-blue/10 p-3 rounded-full">
+                      <User className="w-8 h-8 text-tufts-blue" />
                     </div>
+                    <div>
+                      <h1 className="text-3xl font-medium tracking-tight text-eerie-black">
+                        Welcome back, {currentUser.displayName || currentUser.email}!
+                      </h1>
+                      <p className="text-cool-black mt-2">
+                        Manage your eSIM orders and account settings
+                      </p>
+                    </div>
+                  </div>
+                  {!userProfile?.referralCodeUsed && (
+                    <button
+                      onClick={() => setShowReferralSheet(true)}
+                      className="btn-primary flex items-center space-x-2"
+                    >
+                      <Gift className="w-4 h-4" />
+                      <span>Apply Referral</span>
+                    </button>
                   )}
                 </div>
-                <p className="text-xs text-purple-600 mt-2 font-medium">Tap to join affiliate program →</p>
-              </div>
-              <div className="bg-purple-100 p-3 rounded-full">
-                <Wallet className="w-6 h-6 text-purple-600" />
               </div>
             </div>
+            <div className="pointer-events-none absolute inset-px rounded-xl shadow-sm ring-1 ring-black/5"></div>
           </motion.div>
         </div>
+      </section>
 
-        {/* Recent Orders */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="bg-white rounded-xl shadow-lg p-6"
-        >
-          <div className="mb-6">
-            <h2 className="text-xl font-bold text-gray-900">Recent Orders</h2>
-          </div>
 
-          {loading ? (
-            <div className="flex justify-center items-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            </div>
-          ) : orders.length === 0 ? (
-            <div className="text-center py-8">
-              <Globe className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500">No orders yet</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {orders.slice(0, 5).map((order) => (
-                order && (
-                  <div
-                    key={order.id || order.orderId || Math.random()}
-                    className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200"
-                  >
-                    <div className="flex items-center space-x-3">
-                      <div className="text-2xl">
-                        {getFlagEmoji(order.countryCode)}
-                      </div>
-                      <div>
-                        <p className="font-medium text-gray-900">{order.planName || 'Unknown Plan'}</p>
-                        <p className="text-sm text-gray-500">Order #{order.orderId || order.id || 'Unknown'}</p>
-                        <p className="text-xs text-gray-400">
-                          {order.countryName || order.countryCode || 'Unknown Country'}
-                        </p>
-                      </div>
+      {/* Stats Cards */}
+      <section className="bg-white py-16">
+        <div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.1 }}
+              className="relative"
+            >
+              <div className="absolute inset-px rounded-xl bg-white"></div>
+              <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
+                <div className="px-8 pt-8 pb-8">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-cool-black">Total Orders</p>
+                      <p className="text-3xl font-bold text-eerie-black mt-2">{orders.length}</p>
                     </div>
-                    <div className="flex items-center space-x-4">
-                      <div className="text-right">
-                        <p className="font-medium text-gray-900">${Math.round(order.amount || 0)}</p>
-                        <div className="flex items-center justify-end space-x-2">
-                          <div className={`w-2 h-2 rounded-full ${
-                            order.status === 'active' ? 'bg-green-500' :
-                            order.status === 'pending' ? 'bg-yellow-500' : 'bg-gray-500'
-                          }`}></div>
-                          <p className="text-sm text-gray-500 capitalize">{order.status || 'unknown'}</p>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => handleViewQRCode(order)}
-                        className="flex items-center space-x-2 px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors duration-200"
-                      >
-                        <QrCode className="w-4 h-4" />
-                        <span className="text-sm">View QR</span>
-                      </button>
+                    <div className="bg-tufts-blue/10 p-3 rounded-full">
+                      <Globe className="w-6 h-6 text-tufts-blue" />
                     </div>
                   </div>
-                )
-              ))}
-            </div>
-          )}
-        </motion.div>
+                </div>
+              </div>
+              <div className="pointer-events-none absolute inset-px rounded-xl shadow-sm ring-1 ring-black/5"></div>
+            </motion.div>
 
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.2 }}
+              className="relative"
+            >
+              <div className="absolute inset-px rounded-xl bg-white"></div>
+              <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
+                <div className="px-8 pt-8 pb-8">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-cool-black">Active eSIMs</p>
+                      <p className="text-3xl font-bold text-green-600 mt-2">{activeOrders.length}</p>
+                    </div>
+                    <div className="bg-green-500/10 p-3 rounded-full">
+                      <QrCode className="w-6 h-6 text-green-600" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="pointer-events-none absolute inset-px rounded-xl shadow-sm ring-1 ring-black/5"></div>
+            </motion.div>
 
-
-        {/* Account Settings */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="bg-white rounded-xl shadow-lg p-6"
-        >
-          <div className="flex items-center space-x-3 mb-6">
-            <Settings className="w-6 h-6 text-gray-600" />
-            <h2 className="text-xl font-bold text-gray-900">Account Settings</h2>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.3 }}
+              className="relative cursor-pointer group"
+              onClick={() => router.push('/affiliate-program')}
+            >
+              <div className="absolute inset-px rounded-xl bg-white group-hover:bg-gray-50 transition-colors"></div>
+              <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
+                <div className="px-8 pt-8 pb-8">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-cool-black">Your Performance</p>
+                      <div className="flex items-center space-x-4 mt-2">
+                        <div>
+                          <p className="text-3xl font-bold text-purple-600">${referralStats.totalEarnings.toFixed(2)}</p>
+                          <p className="text-xs text-cool-black">Total Earnings</p>
+                        </div>
+                        {(referralStats.usageCount || 0) > 0 && (
+                          <div className="border-l border-gray-200 pl-4">
+                            <p className="text-3xl font-bold text-green-600">{Math.floor(referralStats.usageCount || 0)}</p>
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-xs text-purple-600 mt-2 font-medium">Tap to join affiliate program →</p>
+                    </div>
+                    <div className="bg-purple-500/10 p-3 rounded-full">
+                      <Wallet className="w-6 h-6 text-purple-600" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="pointer-events-none absolute inset-px rounded-xl shadow-sm ring-1 ring-black/5 group-hover:ring-gray-300 transition-colors"></div>
+            </motion.div>
           </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Email</label>
-                <p className="mt-1 text-gray-900">{currentUser.email}</p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Name</label>
-                <p className="mt-1 text-gray-900">{currentUser.displayName || 'Not set'}</p>
-              </div>
-            </div>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Account Created</label>
-                <p className="mt-1 text-gray-900">
-                  {userProfile?.createdAt ? 
-                    (userProfile.createdAt.toDate ? 
-                      new Date(userProfile.createdAt.toDate()).toLocaleDateString() :
-                      new Date(userProfile.createdAt).toLocaleDateString()
-                    ) : 
-                    'Unknown'
-                  }
-                </p>
-                {!userProfile?.createdAt && (
-                  <button 
-                    onClick={async () => {
-                      console.log('Manual refresh triggered');
-                      await loadUserProfile();
-                    }}
-                    className="mt-2 text-sm text-blue-600 hover:text-blue-800 underline"
-                  >
-                    Refresh Profile
-                  </button>
+        </div>
+      </section>
+
+      {/* Recent Orders */}
+      <section className="bg-white py-16">
+        <div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="relative"
+          >
+            <div className="absolute inset-px rounded-xl bg-white"></div>
+            <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
+              <div className="px-8 pt-8 pb-8">
+                <div className="mb-6">
+                  <h2 className="text-2xl font-medium tracking-tight text-eerie-black">Recent Orders</h2>
+                </div>
+
+                {loading ? (
+                  <div className="flex justify-center items-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-tufts-blue"></div>
+                  </div>
+                ) : orders.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Globe className="w-12 h-12 text-cool-black/40 mx-auto mb-4" />
+                    <p className="text-cool-black">No orders yet</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {orders.slice(0, 5).map((order) => (
+                      order && (
+                        <div
+                          key={order.id || order.orderId || Math.random()}
+                          className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200"
+                        >
+                          <div className="flex items-center space-x-3">
+                            <div className="text-2xl">
+                              {getFlagEmoji(order.countryCode)}
+                            </div>
+                            <div>
+                              <p className="font-medium text-eerie-black">{order.planName || 'Unknown Plan'}</p>
+                              <p className="text-sm text-cool-black">Order #{order.orderId || order.id || 'Unknown'}</p>
+                              <p className="text-xs text-cool-black/60">
+                                {order.countryName || order.countryCode || 'Unknown Country'}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-4">
+                            <div className="text-right">
+                              <p className="font-medium text-eerie-black">${Math.round(order.amount || 0)}</p>
+                              <div className="flex items-center justify-end space-x-2">
+                                <div className={`w-2 h-2 rounded-full ${
+                                  order.status === 'active' ? 'bg-green-500' :
+                                  order.status === 'pending' ? 'bg-yellow-500' : 'bg-gray-500'
+                                }`}></div>
+                                <p className="text-sm text-cool-black capitalize">{order.status || 'unknown'}</p>
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => handleViewQRCode(order)}
+                              className="flex items-center space-x-2 px-3 py-2 bg-tufts-blue/10 text-tufts-blue rounded-lg hover:bg-tufts-blue/20 transition-colors duration-200"
+                            >
+                              <QrCode className="w-4 h-4" />
+                              <span className="text-sm">View QR</span>
+                            </button>
+                          </div>
+                        </div>
+                      )
+                    ))}
+                  </div>
                 )}
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Role</label>
-                <p className="mt-1 text-gray-900 capitalize">{userProfile?.role || 'customer'}</p>
+            </div>
+            <div className="pointer-events-none absolute inset-px rounded-xl shadow-sm ring-1 ring-black/5"></div>
+          </motion.div>
+        </div>
+      </section>
+
+
+
+      {/* Account Settings */}
+      <section className="bg-white py-16">
+        <div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="relative"
+          >
+            <div className="absolute inset-px rounded-xl bg-white"></div>
+            <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
+              <div className="px-8 pt-8 pb-8">
+                <div className="flex items-center space-x-3 mb-6">
+                  <Settings className="w-6 h-6 text-tufts-blue" />
+                  <h2 className="text-2xl font-medium tracking-tight text-eerie-black">Account Settings</h2>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-cool-black">Email</label>
+                      <p className="mt-1 text-eerie-black">{currentUser.email}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-cool-black">Name</label>
+                      <p className="mt-1 text-eerie-black">{currentUser.displayName || 'Not set'}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-cool-black">Account Created</label>
+                      <p className="mt-1 text-eerie-black">
+                        {userProfile?.createdAt ? 
+                          (userProfile.createdAt.toDate ? 
+                            new Date(userProfile.createdAt.toDate()).toLocaleDateString() :
+                            new Date(userProfile.createdAt).toLocaleDateString()
+                          ) : 
+                          'Unknown'
+                        }
+                      </p>
+                      {!userProfile?.createdAt && (
+                        <button 
+                          onClick={async () => {
+                            console.log('Manual refresh triggered');
+                            await loadUserProfile();
+                          }}
+                          className="mt-2 text-sm text-tufts-blue hover:text-cobalt-blue underline transition-colors"
+                        >
+                          Refresh Profile
+                        </button>
+                      )}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-cool-black">Role</label>
+                      <p className="mt-1 text-eerie-black capitalize">{userProfile?.role || 'customer'}</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </motion.div>
+            <div className="pointer-events-none absolute inset-px rounded-xl shadow-sm ring-1 ring-black/5"></div>
+          </motion.div>
+        </div>
+      </section>
 
-      </motion.div>
+      {/* Spacing after dashboard */}
+      <div className="h-20"></div>
 
       {/* QR Code Modal */}
       {showQRModal && selectedOrder && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full mx-4"
+            className="relative max-w-md w-full mx-4"
           >
-            <div className="text-center">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-bold text-gray-900">eSIM QR Code</h3>
-                <button
-                  onClick={() => setShowQRModal(false)}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
+            <div className="absolute inset-px rounded-xl bg-white"></div>
+            <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
+              <div className="px-8 pt-8 pb-8">
+                <div className="text-center">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-xl font-medium text-eerie-black">eSIM QR Code</h3>
+                    <button
+                      onClick={() => setShowQRModal(false)}
+                      className="text-cool-black hover:text-eerie-black transition-colors"
+                    >
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
               
-              <div className="mb-6">
-                <h4 className="font-medium text-gray-900 mb-2">{selectedOrder.planName || 'Unknown Plan'}</h4>
-                <p className="text-sm text-gray-500">Order #{selectedOrder.orderId || selectedOrder.id || 'Unknown'}</p>
-                <p className="text-sm text-gray-500">${Math.round(selectedOrder.amount || 0)}</p>
-              </div>
+                  <div className="mb-6">
+                    <h4 className="font-medium text-eerie-black mb-2">{selectedOrder.planName || 'Unknown Plan'}</h4>
+                    <p className="text-sm text-cool-black">Order #{selectedOrder.orderId || selectedOrder.id || 'Unknown'}</p>
+                    <p className="text-sm text-cool-black">${Math.round(selectedOrder.amount || 0)}</p>
+                  </div>
 
               {/* QR Code Display - Clean and Simple */}
               <div className="bg-gray-50 p-6 rounded-lg mb-6">
@@ -1249,33 +1314,36 @@ const Dashboard = () => {
                     </div>
                   )}
                 </div>
-                
-                
+                </div>
               </div>
             </div>
+            <div className="pointer-events-none absolute inset-px rounded-xl shadow-sm ring-1 ring-black/5"></div>
           </motion.div>
         </div>
       )}
 
       {/* eSIM Details Modal */}
       {esimDetails && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-2xl shadow-xl p-8 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto"
+            className="relative max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto"
           >
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-gray-900">eSIM Details from Airalo API</h3>
-              <button
-                onClick={() => setEsimDetails(null)}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
+            <div className="absolute inset-px rounded-xl bg-white"></div>
+            <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
+              <div className="px-8 pt-8 pb-8">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-xl font-medium text-eerie-black">eSIM Details from Airalo API</h3>
+                  <button
+                    onClick={() => setEsimDetails(null)}
+                    className="text-cool-black hover:text-eerie-black transition-colors"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
             
             <div className="space-y-6">
               {/* Basic eSIM Info */}
@@ -1396,31 +1464,36 @@ const Dashboard = () => {
                 </div>
               )}
 
+                </div>
+              </div>
             </div>
-
+            <div className="pointer-events-none absolute inset-px rounded-xl shadow-sm ring-1 ring-black/5"></div>
           </motion.div>
         </div>
       )}
 
       {/* eSIM Usage Modal */}
       {esimUsage && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-2xl shadow-xl p-8 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto"
+            className="relative max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto"
           >
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-gray-900">eSIM Usage & Status</h3>
-              <button
-                onClick={() => setEsimUsage(null)}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
+            <div className="absolute inset-px rounded-xl bg-white"></div>
+            <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
+              <div className="px-8 pt-8 pb-8">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-xl font-medium text-eerie-black">eSIM Usage & Status</h3>
+                  <button
+                    onClick={() => setEsimUsage(null)}
+                    className="text-cool-black hover:text-eerie-black transition-colors"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
             
             <div className="space-y-6">
               {/* Status Overview */}
@@ -1539,8 +1612,10 @@ const Dashboard = () => {
                 </div>
               )}
 
+                </div>
+              </div>
             </div>
-
+            <div className="pointer-events-none absolute inset-px rounded-xl shadow-sm ring-1 ring-black/5"></div>
           </motion.div>
         </div>
       )}
