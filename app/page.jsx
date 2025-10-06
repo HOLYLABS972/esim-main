@@ -10,7 +10,7 @@ import {
 export default function HomePage() {
   return (
     <div dir="ltr" lang="en">
-      <main className="min-h-screen bg-alice-blue">
+      <main className="min-h-screen bg-white">
         {/* Hero Section */}
         <HeroSection />
 
