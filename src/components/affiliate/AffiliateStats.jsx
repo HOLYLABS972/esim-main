@@ -51,12 +51,8 @@ const AffiliateStats = ({ referralStats, loadingReferralStats, onEarningsClick }
           <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
             <div className="px-8 pt-8 pb-8">
               <div className="text-left mb-8">
-                <div className="flex items-center justify-left mb-4">
-                  <div className="bg-tufts-blue/10 p-3 rounded-full">
-                    <Star className="w-6 h-6 text-tufts-blue" />
-                  </div>
-                </div>
-                <h3 className="text-lg font-medium tracking-tight text-eerie-black mb-2">{t('affiliate.yourPerformance', 'Your Performance')}</h3>
+                
+                <h3 className="text-2xl font-medium tracking-tight text-eerie-black mb-2">{t('affiliate.yourPerformance', 'Your Performance')}</h3>
                 <p className="text-cool-black">{t('affiliate.trackSuccess', 'Track your referral success and earnings')}</p>
               </div>
 
@@ -81,7 +77,7 @@ const AffiliateStats = ({ referralStats, loadingReferralStats, onEarningsClick }
                       <button
                         onClick={copyReferralCode}
                         disabled={!referralStats.referralCode}
-                        className="flex-1 bg-tufts-blue hover:bg-cobalt-blue disabled:opacity-50 disabled:cursor-not-allowed px-4 py-3 rounded-full text-lg font-medium transition-colors text-white"
+                        className="flex-1 bg-tufts-blue hover:bg-cobalt-blue disabled:opacity-50 disabled:cursor-not-allowed px-2 py-1.5 rounded-full text-lg font-medium transition-colors text-white"
                       >
                         <Copy className="w-4 h-4 inline mr-2" />
                         {t('affiliate.copy', 'Copy')}
@@ -89,7 +85,7 @@ const AffiliateStats = ({ referralStats, loadingReferralStats, onEarningsClick }
                       <button
                         onClick={shareReferralCode}
                         disabled={!referralStats.referralCode}
-                        className="flex-1 bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed px-4 py-3 rounded-full text-lg font-medium transition-colors text-cool-black border border-gray-200"
+                        className="flex-1 bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed px-2 py-1.5 rounded-full text-lg font-medium transition-colors text-cool-black border border-gray-200"
                       >
                         <Share2 className="w-4 h-4 inline mr-2" />
                         {t('affiliate.share', 'Share')}

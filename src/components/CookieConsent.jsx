@@ -34,6 +34,11 @@ const CookieConsent = () => {
     };
     localStorage.setItem('cookieConsent', JSON.stringify(consent));
     setShowBanner(false);
+    
+    // Dispatch event for Facebook Pixel and other integrations
+    window.dispatchEvent(new CustomEvent('cookieConsentChanged', {
+      detail: consent
+    }));
   };
 
   const handleRejectAll = () => {
@@ -46,6 +51,11 @@ const CookieConsent = () => {
     };
     localStorage.setItem('cookieConsent', JSON.stringify(consent));
     setShowBanner(false);
+    
+    // Dispatch event for Facebook Pixel and other integrations
+    window.dispatchEvent(new CustomEvent('cookieConsentChanged', {
+      detail: consent
+    }));
   };
 
   return (

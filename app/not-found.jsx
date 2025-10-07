@@ -1,0 +1,84 @@
+'use client';
+
+import Link from 'next/link';
+import { Home, ArrowLeft, Search, RefreshCw } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+
+export default function NotFound() {
+  const router = useRouter();
+
+  const handleGoBack = () => {
+    router.back();
+  };
+
+  const handleRefresh = () => {
+    window.location.reload();
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-alice-blue via-white to-jordy-blue/20 flex items-center justify-center px-4 sm:px-6 lg:px-8">
+      <div className="max-w-4xl mx-auto text-center">
+        {/* SVG Illustration */}
+        <div className="mb-4 flex justify-center">
+          <div className="w-full max-w-md sm:max-w-lg lg:max-w-xl">
+            <img 
+              src="/images/logo_icon/404 Error-rafiki.svg" 
+              alt="404 Error Illustration" 
+              className="w-full h-auto"
+            />
+          </div>
+        </div>
+
+        {/* Error Content */}
+        <div className="space-y-6">
+          {/* Main Heading */}
+          <div className="space-y-3">
+            
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-semibold text-eerie-black">
+              Oops! Page Not Found
+            </h1>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-6">
+            {/* Primary Action - Home */}
+            <Link 
+              href="/"
+              className="btn-primary px-4 py-2 flex items-center space-x-3 text-base font-semibold w-full sm:w-auto"
+            >
+              <Home className="w-4 h-4" />
+              <span>Back to Home</span>
+            </Link>
+
+            {/* Secondary Actions */}
+            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+              <button
+                onClick={handleGoBack}
+                className="flex items-center justify-center space-x-2 px-4 py-2 bg-white text-tufts-blue border-2 border-tufts-blue rounded-full font-semibold hover:bg-tufts-blue hover:text-white transition-all duration-200 shadow-md hover:shadow-lg w-full sm:w-auto"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>Go Back</span>
+              </button>
+
+              <button
+                onClick={handleRefresh}
+                className="flex items-center justify-center space-x-2 px-4 py-2 bg-white text-tufts-blue border-2 border-tufts-blue rounded-full font-semibold hover:bg-tufts-blue hover:text-white transition-all duration-200 shadow-md hover:shadow-lg w-full sm:w-auto"
+              >
+                <RefreshCw className="w-4 h-4" />
+                <span>Refresh</span>
+              </button>
+            </div>
+          </div>
+
+          
+          {/* Footer Message */}
+          <div className="pt-8">
+            <p className="text-sm text-cool-black">
+              Need help? <Link href="/contact" className="text-tufts-blue hover:underline font-medium">Contact our support team</Link>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
