@@ -14,7 +14,7 @@ export const supportedLanguageCodes = supportedLanguages.map(lang => lang.code);
 
 /**
  * Detect current language from URL path
- * @param {string} pathname - Current pathname (e.g., '/spanish/blog', '/blog', '/french/blog/post-slug')
+ * @param {string} pathname - Current pathname (e.g., '/es/blog', '/blog', '/fr/blog/post-slug')
  * @returns {string} - Language code (e.g., 'es', 'en', 'fr')
  */
 export const detectLanguageFromPath = (pathname) => {
@@ -24,7 +24,12 @@ export const detectLanguageFromPath = (pathname) => {
   const pathSegments = pathname.replace(/^\//, '').split('/');
   const firstSegment = pathSegments[0];
   
-  // Check if first segment matches a language route
+  // Check if first segment matches a language code directly
+  if (supportedLanguageCodes.includes(firstSegment)) {
+    return firstSegment;
+  }
+  
+  // Check if first segment matches old language route names (for backward compatibility)
   const languageRoutes = {
     'spanish': 'es',
     'french': 'fr', 
@@ -78,17 +83,12 @@ export const getLocalizedBlogUrl = (slug, language = 'en') => {
     return `/blog/${slug}`;
   }
   
-  const languageRoutes = {
-    'es': 'spanish',
-    'fr': 'french',
-    'de': 'german', 
-    'ar': 'arabic',
-    'he': 'hebrew',
-    'ru': 'russian'
-  };
+  // Use language codes directly in URLs
+  if (supportedLanguageCodes.includes(language)) {
+    return `/${language}/blog/${slug}`;
+  }
   
-  const route = languageRoutes[language];
-  return route ? `/${route}/blog/${slug}` : `/blog/${slug}`;
+  return `/blog/${slug}`;
 };
 
 /**
@@ -101,15 +101,10 @@ export const getLocalizedBlogListUrl = (language = 'en') => {
     return '/blog';
   }
   
-  const languageRoutes = {
-    'es': 'spanish',
-    'fr': 'french',
-    'de': 'german',
-    'ar': 'arabic', 
-    'he': 'hebrew',
-    'ru': 'russian'
-  };
+  // Use language codes directly in URLs
+  if (supportedLanguageCodes.includes(language)) {
+    return `/${language}/blog`;
+  }
   
-  const route = languageRoutes[language];
-  return route ? `/${route}/blog` : '/blog';
+  return '/blog';
 };

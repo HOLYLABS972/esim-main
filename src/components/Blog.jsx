@@ -18,8 +18,11 @@ const Blog = () => {
   // Debug logging
   console.log('Blog component - Current locale:', locale, 'pathname:', pathname);
   
-  // Use locale from I18n context, fallback to URL-based detection if needed
-  const detectedLanguage = locale || detectLanguageFromPath(pathname);
+  // Prioritize URL-based detection for immediate response, then use I18n context
+  const urlLanguage = detectLanguageFromPath(pathname);
+  const detectedLanguage = urlLanguage || locale || 'en';
+  
+  console.log('Blog: Language detection - pathname:', pathname, 'urlLanguage:', urlLanguage, 'locale:', locale, 'final detectedLanguage:', detectedLanguage);
   
   console.log('Blog component - Detected language:', detectedLanguage);
   
@@ -38,7 +41,7 @@ const Blog = () => {
   useEffect(() => {
     loadBlogPosts();
     loadCategories();
-  }, [detectedLanguage, locale]); // Add locale as dependency to ensure reload on language change
+  }, [detectedLanguage, pathname, locale]); // Add pathname as dependency for immediate URL-based changes
 
   // Filter posts when search term or category changes
   useEffect(() => {
@@ -205,7 +208,7 @@ const Blog = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2  lg:grid-cols-3 gap-6">
               {filteredPosts.map((post, index) => (
-              <Link href={`/blog/${post.baseSlug || post.slug}`} key={post.id}>
+              <Link href={getLocalizedBlogUrl(post.baseSlug || post.slug, detectedLanguage)} key={post.id}>
                 <article className="relative cursor-pointer group  transition-transform duration-200 ">
                   <div className="absolute inset-px rounded-xl bg-white shadow-lg"></div>
                   <div className="relative flex h-full flex-col overflow-hidden rounded-xl">

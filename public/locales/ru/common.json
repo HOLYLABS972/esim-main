@@ -164,7 +164,7 @@
     "postNotFound": "Пост не найден",
     "postNotFoundDescription": "Пост блога, который вы ищете, не существует.",
     "relatedTags": "Связанные теги",
-    "sharePost": "Поделиться этим постом",
+    "sharePost": "Поделиться",
     "copyLink": "Копировать ссылку",
     "linkCopied": "Ссылка скопирована в буфер обмена!",
     "newsletter": {

@@ -298,6 +298,20 @@
     @apply border-l-4 border-cobalt-blue pl-4 py-2 my-6 text-eerie-black text-lg italic rounded-lg;
   }
 
+  /* Reduce strong text size in blog content */
+  .prose strong {
+    @apply font-semibold;
+    font-size: 0.95em; /* Slightly smaller than normal text */
+    font-weight: 600; /* Reduce from default bold (700) to semibold (600) */
+  }
+
+  /* Specific styling for strong elements within blockquotes */
+  .prose blockquote strong {
+    @apply font-medium;
+    font-size: 0.9em; /* Even smaller in quotes */
+    font-weight: 500; /* Medium weight instead of bold */
+  }
+
   /* Blog post images */
   .prose img {
     @apply rounded-xl shadow-md mx-auto my-6;

@@ -181,7 +181,7 @@
     "postNotFound": "Post Not Found",
     "postNotFoundDescription": "The blog post you're looking for doesn't exist.",
     "relatedTags": "Related Tags",
-    "sharePost": "Share this post",
+    "sharePost": "Share",
     "copyLink": "Copy Link",
     "linkCopied": "Link copied to clipboard!",
     "newsletter": {

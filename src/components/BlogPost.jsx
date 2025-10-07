@@ -13,8 +13,11 @@ const BlogPost = ({ slug }) => {
   const pathname = usePathname();
   const { locale, t } = useI18n();
   
-  // Use locale from I18n context, fallback to URL-based detection if needed
-  const detectedLanguage = locale || detectLanguageFromPath(pathname);
+  // Prioritize URL-based detection for immediate response, then use I18n context
+  const urlLanguage = detectLanguageFromPath(pathname);
+  const detectedLanguage = urlLanguage || locale || 'en';
+  
+  console.log('BlogPost: Language detection - pathname:', pathname, 'urlLanguage:', urlLanguage, 'locale:', locale, 'final detectedLanguage:', detectedLanguage);
   
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -23,7 +26,7 @@ const BlogPost = ({ slug }) => {
 
   useEffect(() => {
     loadBlogPost();
-  }, [slug, detectedLanguage, locale]); // Add locale as dependency to ensure reload on language change
+  }, [slug, detectedLanguage, pathname, locale]); // Add pathname as dependency for immediate URL-based changes
 
   const loadBlogPost = async () => {
     try {
@@ -141,7 +144,7 @@ const BlogPost = ({ slug }) => {
           <h1 className="text-4xl font-medium tracking-tight text-eerie-black mb-4">{t('blog.postNotFound', 'Post Not Found')}</h1>
           <p className="text-cool-black mb-8">{error || t('blog.postNotFoundDescription', 'The blog post you\'re looking for doesn\'t exist.')}</p>
           <Link 
-            href="/blog" 
+            href={getLocalizedBlogListUrl(detectedLanguage)} 
             className="btn-primary px-6 py-3"
           >
             {t('blog.backToBlog', 'Back to Blog')}
@@ -230,7 +233,7 @@ const BlogPost = ({ slug }) => {
                     {/* Top Navigation */}
                     <div className="flex justify-between items-start">
                       <Link 
-                        href="/blog" 
+                        href={getLocalizedBlogListUrl(detectedLanguage)} 
                         className="inline-flex items-center text-white hover:text-gray-200 bg-black/30 backdrop-blur-sm px-3 py-2 sm:px-4 rounded-full transition-all duration-200 text-sm sm:text-base"
                       >
                         <ArrowLeft className="w-4 h-4 mr-1 sm:mr-2" />
@@ -240,7 +243,7 @@ const BlogPost = ({ slug }) => {
                       
                       <button 
                         onClick={handleShare}
-                        className="flex items-center space-x-1 sm:space-x-2 text-cool-black hover:text-eerie-black bg-white backdrop-blur-sm px-3 py-2 sm:px-4 rounded-full transition-all duration-200 text-sm sm:text-base"
+                        className="flex items-center space-x-1 sm:space-x-2 text-cool-black hover:text-eerie-black bg-white backdrop-blur-sm px-2 py-1.5 sm:px-4 rounded-full transition-all duration-200 text-sm sm:text-base"
                       >
                         <Share2 className="w-4 h-4" />
                         <span className="hidden sm:inline">{t('blog.sharePost', 'Share')}</span>
@@ -254,46 +257,20 @@ const BlogPost = ({ slug }) => {
                         {post.title}
                       </h1>
                       
-                      {/* Tags and Category */}
-                      <div className="flex flex-wrap gap-2 items-center">
-                        {/* Always show current language */}
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium backdrop-blur-sm ${
-                          post.isFallback 
-                            ? 'bg-orange-500 text-white' 
-                            : 'bg-blue-500 text-white'
-                        }`}>
-                          {post.language?.toUpperCase() || 'EN'} {post.isFallback ? 'Fallback' : 'Version'}
-                        </span>
-                        
-                        {post.tags && post.tags.length > 0 && (
-                          <>
-                            {post.tags.slice(0, 3).map((tag, index) => (
-                              <span
-                                key={index}
-                                className="bg-tufts-blue text-white px-3 py-1 rounded-full text-sm font-medium backdrop-blur-sm"
-                              >
-                                #{tag}
-                              </span>
-                            ))}
-                          </>
-                        )}
-                      </div>
+                      
                       
                       {/* Meta Information */}
                       <div className="flex flex-wrap items-center gap-3 sm:gap-6 text-white/90 text-sm sm:text-base">
                         <div className="flex items-center space-x-1 sm:space-x-2">
                           <FolderOpen className="w-3 h-3 sm:w-4 sm:h-4" />
-                          <span className="font-medium">{post.category}</span>
+                          <span className="font-sm">{post.category}</span>
                         </div>
                         <div className="flex items-center space-x-1 sm:space-x-2">
                           <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
                           <span className="hidden sm:inline">{formatDate(post.publishedAt)}</span>
                           <span className="sm:hidden">{new Date(post.publishedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
                         </div>
-                        <div className="flex items-center space-x-1 sm:space-x-2">
-                          <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
-                          <span>{post.readTime}</span>
-                        </div>
+                        
                       </div>
                     </div>
                   </div>
@@ -304,7 +281,7 @@ const BlogPost = ({ slug }) => {
               {!post.featuredImage && (
                 <div className="px-8 pt-8 pb-8">
                     <Link 
-                      href="/blog" 
+                      href={getLocalizedBlogListUrl(detectedLanguage)} 
                       className="inline-flex items-center text-tufts-blue hover:text-cobalt-blue mb-6 font-medium transition-colors duration-200"
                     >
                     <ArrowLeft className="w-4 h-4 mr-2" />
@@ -345,10 +322,7 @@ const BlogPost = ({ slug }) => {
                   
                   <div className="flex items-center justify-between text-cool-black mb-8">
                     <div className="flex items-center space-x-6">
-                      <div className="flex items-center space-x-2">
-                        <User className="w-4 h-4" />
-                        <span>{post.author}</span>
-                      </div>
+                      
                       <div className="flex items-center space-x-2">
                         <Calendar className="w-4 h-4" />
                         <span>{formatDate(post.publishedAt)}</span>
@@ -378,7 +352,7 @@ const BlogPost = ({ slug }) => {
 
       {/* Content */}
       <section className="bg-white ">
-        <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 mt-10">
           <div className="bg-white overflow-hidden">
             {/* Article Content */}
             <article className="prose prose-lg prose-slate max-w-none prose-headings:font-semibold prose-p:text-base prose-p:leading-7">

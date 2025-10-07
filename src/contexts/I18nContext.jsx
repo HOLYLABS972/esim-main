@@ -51,7 +51,14 @@ export const I18nProvider = ({ children }) => {
         initialLocale = savedLanguage;
       } else {
         // Fallback to pathname detection if no saved language
-        if (pathname.startsWith('/hebrew')) initialLocale = 'he';
+        if (pathname.startsWith('/he')) initialLocale = 'he';
+        else if (pathname.startsWith('/ar')) initialLocale = 'ar';
+        else if (pathname.startsWith('/ru')) initialLocale = 'ru';
+        else if (pathname.startsWith('/de')) initialLocale = 'de';
+        else if (pathname.startsWith('/fr')) initialLocale = 'fr';
+        else if (pathname.startsWith('/es')) initialLocale = 'es';
+        // Support old language routes for backward compatibility
+        else if (pathname.startsWith('/hebrew')) initialLocale = 'he';
         else if (pathname.startsWith('/arabic')) initialLocale = 'ar';
         else if (pathname.startsWith('/russian')) initialLocale = 'ru';
         else if (pathname.startsWith('/german')) initialLocale = 'de';
@@ -88,6 +95,49 @@ export const I18nProvider = ({ children }) => {
       initializeLocale();
     }
   }, [pathname, isInitialized]);
+
+  // Sync locale with URL changes (for when user navigates via URL)
+  useEffect(() => {
+    if (isInitialized) {
+      const urlLanguage = pathname.startsWith('/he') ? 'he' :
+                         pathname.startsWith('/ar') ? 'ar' :
+                         pathname.startsWith('/ru') ? 'ru' :
+                         pathname.startsWith('/de') ? 'de' :
+                         pathname.startsWith('/fr') ? 'fr' :
+                         pathname.startsWith('/es') ? 'es' :
+                         pathname.startsWith('/hebrew') ? 'he' :
+                         pathname.startsWith('/arabic') ? 'ar' :
+                         pathname.startsWith('/russian') ? 'ru' :
+                         pathname.startsWith('/german') ? 'de' :
+                         pathname.startsWith('/french') ? 'fr' :
+                         pathname.startsWith('/spanish') ? 'es' : 'en';
+      
+      if (urlLanguage !== locale) {
+        console.log('I18nContext: URL language changed from', locale, 'to', urlLanguage, '- updating context only');
+        // Update locale and translations without saving to localStorage (to avoid loops)
+        setLocale(urlLanguage);
+        
+        // Load translations for the new locale
+        const loadTranslations = async () => {
+          try {
+            setIsLoading(true);
+            const response = await fetch(`/locales/${urlLanguage}/common.json`);
+            if (response.ok) {
+              const data = await response.json();
+              setTranslations(data);
+              console.log('I18nContext: Translations loaded for URL language:', urlLanguage);
+            }
+          } catch (error) {
+            console.error('Failed to load translations for URL language:', error);
+          } finally {
+            setIsLoading(false);
+          }
+        };
+        
+        loadTranslations();
+      }
+    }
+  }, [pathname, isInitialized]); // Remove locale from dependencies to avoid loops
 
   const t = (key, fallback = '') => {
     const keys = key.split('.');

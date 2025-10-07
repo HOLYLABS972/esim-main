@@ -30,8 +30,22 @@ const Footer = () => {
   const loading = false;
 
   // Check if we're on a language-specific page or blog page (which has i18n context)
-  const isLanguagePage = ['/hebrew', '/arabic', '/russian', '/german', '/french', '/spanish'].includes(pathname);
+  const isLanguagePage = [
+    // New language-code routes
+    '/he', '/ar', '/ru', '/de', '/fr', '/es',
+    // Old language routes (for backward compatibility)
+    '/hebrew', '/arabic', '/russian', '/german', '/french', '/spanish'
+  ].includes(pathname);
+  
   const isBlogPage = pathname.startsWith('/blog') || 
+                    // New language-code blog routes
+                    pathname.startsWith('/he/blog') || 
+                    pathname.startsWith('/ar/blog') || 
+                    pathname.startsWith('/ru/blog') || 
+                    pathname.startsWith('/de/blog') || 
+                    pathname.startsWith('/fr/blog') || 
+                    pathname.startsWith('/es/blog') ||
+                    // Old language blog routes (for backward compatibility)
                     pathname.startsWith('/hebrew/blog') || 
                     pathname.startsWith('/arabic/blog') || 
                     pathname.startsWith('/russian/blog') || 

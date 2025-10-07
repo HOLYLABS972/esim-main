@@ -166,7 +166,7 @@
     "postNotFound": "Article non trouvé",
     "postNotFoundDescription": "L'article de blog que vous recherchez n'existe pas.",
     "relatedTags": "Tags associés",
-    "sharePost": "Partager cet article",
+    "sharePost": "Partager",
     "copyLink": "Copier le lien",
     "linkCopied": "Lien copié dans le presse-papiers !",
     "newsletter": {
