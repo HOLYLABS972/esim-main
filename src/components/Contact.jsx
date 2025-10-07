@@ -18,10 +18,16 @@ import {
   Wifi,
   Settings
 } from 'lucide-react';
+import { useI18n } from '../contexts/I18nContext';
 import { createContactRequest } from '../services/contactService';
 import toast from 'react-hot-toast';
 
 const Contact = () => {
+  const { t, locale } = useI18n();
+  
+  // Debug logging
+  console.log('Contact component - Current locale:', locale);
+  
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -216,6 +222,11 @@ const Contact = () => {
       <section className="bg-white">
         <div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8">
           <div className="text-center">
+            <div className="mb-4">
+              <span className="inline-block px-2 py-1 text-xs bg-red-100 text-red-800 rounded">
+                Contact Language: {locale || 'en'}
+              </span>
+            </div>
             <h2 className="text-center text-xl font-semibold text-tufts-blue">
               <span>{'{ '}</span>
               Get in touch

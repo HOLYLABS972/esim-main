@@ -58,6 +58,16 @@ export const getLanguageFlag = (code) => {
 };
 
 /**
+ * Get text direction for language
+ * @param {string} code - Language code
+ * @returns {string} - 'rtl' or 'ltr'
+ */
+export const getLanguageDirection = (code) => {
+  const rtlLanguages = ['ar', 'he']; // Arabic and Hebrew are RTL
+  return rtlLanguages.includes(code) ? 'rtl' : 'ltr';
+};
+
+/**
  * Generate localized blog URL
  * @param {string} slug - Blog post slug
  * @param {string} language - Language code

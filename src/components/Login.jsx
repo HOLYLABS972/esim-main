@@ -15,7 +15,7 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const { login, signInWithGoogle } = useAuth();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const router = useRouter();
 
   const handleSubmit = async (e) => {
@@ -64,6 +64,11 @@ const Login = () => {
           className="max-w-sm w-full"
         >
           <div>
+            <div className="text-center mb-2">
+              <span className="inline-block px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">
+                Current Language: {locale || 'en'}
+              </span>
+            </div>
             <h2 className="text-center text-3xl font-semibold text-eerie-black" style={{ fontFamily: 'Open Sans, sans-serif' }}>
               {t('auth.login.title', 'Sign in to your account')}
             </h2>

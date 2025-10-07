@@ -13,7 +13,7 @@ const BlogPost = ({ slug }) => {
   const pathname = usePathname();
   const { locale, t } = useI18n();
   
-  // Fallback to URL-based detection if I18n context doesn't have language
+  // Use locale from I18n context, fallback to URL-based detection if needed
   const detectedLanguage = locale || detectLanguageFromPath(pathname);
   
   const [post, setPost] = useState(null);
@@ -23,14 +23,14 @@ const BlogPost = ({ slug }) => {
 
   useEffect(() => {
     loadBlogPost();
-  }, [slug, detectedLanguage]);
+  }, [slug, detectedLanguage, locale]); // Add locale as dependency to ensure reload on language change
 
   const loadBlogPost = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      console.log('Loading blog post with slug:', slug);
+      console.log('BlogPost: Loading blog post with slug:', slug, 'detectedLanguage:', detectedLanguage, 'locale:', locale);
       
       if (!slug) {
         setError('No blog post specified');
@@ -38,7 +38,12 @@ const BlogPost = ({ slug }) => {
       }
 
       const postData = await blogService.getPostBySlug(slug, detectedLanguage);
-      console.log('Blog post data:', postData, 'Language:', detectedLanguage);
+      console.log('BlogPost: Loaded post data:', {
+        title: postData?.title,
+        language: postData?.language,
+        isFallback: postData?.isFallback,
+        slug: postData?.slug
+      });
       
       if (postData) {
         setPost(postData);
@@ -133,10 +138,10 @@ const BlogPost = ({ slug }) => {
     return (
       <div className="min-h-screen bg-white py-8 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-4xl font-medium tracking-tight text-eerie-black mb-4">Post Not Found</h1>
-          <p className="text-cool-black mb-8">{error || 'The blog post you\'re looking for doesn\'t exist.'}</p>
+          <h1 className="text-4xl font-medium tracking-tight text-eerie-black mb-4">{t('blog.postNotFound', 'Post Not Found')}</h1>
+          <p className="text-cool-black mb-8">{error || t('blog.postNotFoundDescription', 'The blog post you\'re looking for doesn\'t exist.')}</p>
           <Link 
-            href={getLocalizedBlogListUrl(detectedLanguage)} 
+            href="/blog" 
             className="btn-primary px-6 py-3"
           >
             {t('blog.backToBlog', 'Back to Blog')}
@@ -225,12 +230,12 @@ const BlogPost = ({ slug }) => {
                     {/* Top Navigation */}
                     <div className="flex justify-between items-start">
                       <Link 
-                        href={getLocalizedBlogListUrl(detectedLanguage)} 
-                        className="inline-flex items-center text-cool-black hover:text-eerie-black bg-white backdrop-blur-sm px-3 py-2 sm:px-4 rounded-full font-medium transition-all duration-200 text-sm sm:text-base"
+                        href="/blog" 
+                        className="inline-flex items-center text-white hover:text-gray-200 bg-black/30 backdrop-blur-sm px-3 py-2 sm:px-4 rounded-full transition-all duration-200 text-sm sm:text-base"
                       >
                         <ArrowLeft className="w-4 h-4 mr-1 sm:mr-2" />
                         <span className="hidden sm:inline">{t('blog.backToBlog', 'Back to Blog')}</span>
-                        <span className="sm:hidden">Back</span>
+                        <span className="sm:hidden">Blog</span>
                       </Link>
                       
                       <button 
@@ -238,7 +243,7 @@ const BlogPost = ({ slug }) => {
                         className="flex items-center space-x-1 sm:space-x-2 text-cool-black hover:text-eerie-black bg-white backdrop-blur-sm px-3 py-2 sm:px-4 rounded-full transition-all duration-200 text-sm sm:text-base"
                       >
                         <Share2 className="w-4 h-4" />
-                        <span className="hidden sm:inline">Share</span>
+                        <span className="hidden sm:inline">{t('blog.sharePost', 'Share')}</span>
                       </button>
                     </div>
                     
@@ -251,11 +256,14 @@ const BlogPost = ({ slug }) => {
                       
                       {/* Tags and Category */}
                       <div className="flex flex-wrap gap-2 items-center">
-                        {post.isFallback && (
-                          <span className="bg-orange-500 text-white px-2 py-1 rounded-full text-xs font-medium backdrop-blur-sm">
-                            {post.language?.toUpperCase() || 'EN'} Version
-                          </span>
-                        )}
+                        {/* Always show current language */}
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium backdrop-blur-sm ${
+                          post.isFallback 
+                            ? 'bg-orange-500 text-white' 
+                            : 'bg-blue-500 text-white'
+                        }`}>
+                          {post.language?.toUpperCase() || 'EN'} {post.isFallback ? 'Fallback' : 'Version'}
+                        </span>
                         
                         {post.tags && post.tags.length > 0 && (
                           <>
@@ -296,7 +304,7 @@ const BlogPost = ({ slug }) => {
               {!post.featuredImage && (
                 <div className="px-8 pt-8 pb-8">
                     <Link 
-                      href={getLocalizedBlogListUrl(detectedLanguage)} 
+                      href="/blog" 
                       className="inline-flex items-center text-tufts-blue hover:text-cobalt-blue mb-6 font-medium transition-colors duration-200"
                     >
                     <ArrowLeft className="w-4 h-4 mr-2" />
@@ -306,6 +314,15 @@ const BlogPost = ({ slug }) => {
                   <div className="mb-4 flex flex-wrap gap-2 items-center">
                     <span className="bg-tufts-blue/10 text-tufts-blue px-3 py-1 rounded-full text-sm font-medium">
                       {post.category}
+                    </span>
+                    
+                    {/* Always show current language */}
+                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                      post.isFallback 
+                        ? 'bg-orange-500 text-white' 
+                        : 'bg-blue-500 text-white'
+                    }`}>
+                      {post.language?.toUpperCase() || 'EN'} {post.isFallback ? 'Fallback' : 'Version'}
                     </span>
                     
                     {post.tags && post.tags.length > 0 && (
@@ -347,7 +364,7 @@ const BlogPost = ({ slug }) => {
                       className="flex items-center space-x-2 text-tufts-blue hover:text-cobalt-blue transition-colors duration-200"
                     >
                       <Share2 className="w-4 h-4" />
-                      <span>Share</span>
+                      <span>{t('blog.sharePost', 'Share')}</span>
                     </button>
                   </div>
                 </div>
@@ -360,7 +377,7 @@ const BlogPost = ({ slug }) => {
       </section>
 
       {/* Content */}
-      <section className="bg-white py-8">
+      <section className="bg-white ">
         <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
           <div className="bg-white overflow-hidden">
             {/* Article Content */}
@@ -373,7 +390,7 @@ const BlogPost = ({ slug }) => {
             {/* Tags at bottom of post */}
             {post.tags && post.tags.length > 0 && (
               <div className="mt-8 pt-6 border-t border-gray-200">
-                <h3 className="text-lg font-semibold text-eerie-black mb-3">Related Tags</h3>
+                <h3 className="text-lg font-semibold text-eerie-black mb-3">{t('blog.relatedTags', 'Related Tags')}</h3>
                 <div className="flex flex-wrap gap-2">
                   {post.tags.map((tag, index) => (
                     <span
@@ -458,7 +475,7 @@ const BlogPost = ({ slug }) => {
                 onClick={() => setShowShareModal(false)}
                 className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
               >
-                Close
+                {t('common.close', 'Close')}
               </button>
             </div>
           </div>

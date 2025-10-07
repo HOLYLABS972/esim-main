@@ -151,6 +151,34 @@
     "addBankAccount": "Bankkonto Hinzufügen",
     "addBankAccountDesc": "Fügen Sie Ihre Bankkontodetails hinzu, um Ihre Einnahmen abzuheben"
   },
+  "blog": {
+    "title": "eSIM Einblicke",
+    "subtitle": "Bleiben Sie auf dem Laufenden mit eSIM-Technologie",
+    "description": "Entdecken Sie die neuesten Trends, Anleitungen und Einblicke in die eSIM-Technologie und globale Konnektivitätslösungen.",
+    "searchPlaceholder": "Blog-Beiträge suchen...",
+    "allCategories": "Alle Kategorien",
+    "loadingPosts": "Blog-Beiträge werden geladen...",
+    "noPostsFound": "Keine Blog-Beiträge gefunden, die Ihren Kriterien entsprechen",
+    "noPostsAvailable": "Noch keine Blog-Beiträge verfügbar",
+    "readMore": "Weiterlesen",
+    "backToBlog": "Zurück zum Blog",
+    "postNotFound": "Beitrag nicht gefunden",
+    "postNotFoundDescription": "Der Blog-Beitrag, den Sie suchen, existiert nicht.",
+    "relatedTags": "Verwandte Tags",
+    "sharePost": "Diesen Beitrag teilen",
+    "copyLink": "Link kopieren",
+    "linkCopied": "Link in die Zwischenablage kopiert!",
+    "newsletter": {
+      "title": "Bleiben Sie auf dem Laufenden mit eSIM-Neuigkeiten",
+      "description": "Erhalten Sie die neuesten eSIM-Einblicke, Reisetipps und Technologie-Updates direkt in Ihren Posteingang",
+      "emailPlaceholder": "Geben Sie Ihre E-Mail ein",
+      "subscribe": "Abonnieren",
+      "subscribing": "Abonnieren...",
+      "subscribeSuccess": "Erfolgreich für unseren Newsletter angemeldet!",
+      "subscribeError": "Fehler beim Abonnieren des Newsletters. Bitte versuchen Sie es erneut.",
+      "reactivated": "Willkommen zurück! Ihr Newsletter-Abonnement wurde reaktiviert."
+    }
+  },
   "auth": {
     "login": {
       "title": "Melden Sie sich in Ihrem Konto an",

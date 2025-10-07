@@ -15,8 +15,13 @@ const Blog = () => {
   const pathname = usePathname();
   const { locale, t } = useI18n();
   
-  // Fallback to URL-based detection if I18n context doesn't have language
+  // Debug logging
+  console.log('Blog component - Current locale:', locale, 'pathname:', pathname);
+  
+  // Use locale from I18n context, fallback to URL-based detection if needed
   const detectedLanguage = locale || detectLanguageFromPath(pathname);
+  
+  console.log('Blog component - Detected language:', detectedLanguage);
   
   const [blogPosts, setBlogPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -29,11 +34,11 @@ const Blog = () => {
   const [newsletterEmail, setNewsletterEmail] = useState('');
   const [isNewsletterSubmitting, setIsNewsletterSubmitting] = useState(false);
 
-  // Load blog posts on component mount
+  // Load blog posts on component mount and when language changes
   useEffect(() => {
     loadBlogPosts();
     loadCategories();
-  }, [detectedLanguage]);
+  }, [detectedLanguage, locale]); // Add locale as dependency to ensure reload on language change
 
   // Filter posts when search term or category changes
   useEffect(() => {
@@ -111,26 +116,26 @@ const Blog = () => {
       
       if (result.success) {
         if (result.message === 'Email reactivated') {
-          toast.success('Welcome back! Your newsletter subscription has been reactivated.');
+          toast.success(t('blog.newsletter.reactivated', 'Welcome back! Your newsletter subscription has been reactivated.'));
         } else {
-          toast.success('Successfully subscribed to our newsletter!');
+          toast.success(t('blog.newsletter.subscribeSuccess', 'Successfully subscribed to our newsletter!'));
         }
         
         // Reset form
         setNewsletterEmail('');
       } else {
-        toast.error(result.message || 'Failed to subscribe to newsletter');
+        toast.error(result.message || t('blog.newsletter.subscribeError', 'Failed to subscribe to newsletter. Please try again.'));
       }
     } catch (error) {
       console.error('Error subscribing to newsletter:', error);
-      toast.error('Failed to subscribe to newsletter. Please try again.');
+      toast.error(t('blog.newsletter.subscribeError', 'Failed to subscribe to newsletter. Please try again.'));
     } finally {
       setIsNewsletterSubmitting(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-white pt-24">
+    <div className="min-h-screen bg-white pt-6">
       {/* Header Section */}
       <section className="bg-white">
         <div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8">
@@ -161,14 +166,14 @@ const Blog = () => {
                 placeholder={t('blog.searchPlaceholder', 'Search blog posts...')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-3 border-0 shadow-lg rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
             <div className="md:w-48">
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-3 border-0 shadow-lg rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="all">{t('blog.allCategories', 'All Categories')}</option>
                 {categories.map(category => (
@@ -185,7 +190,7 @@ const Blog = () => {
         <div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8">
           {loading ? (
             <div className="text-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+              <div className="animate-spin rounded-full h-12 w-12 shadow-lg mx-auto "></div>
               <p className="mt-4 text-gray-600">{t('blog.loadingPosts', 'Loading blog posts...')}</p>
             </div>
           ) : filteredPosts.length === 0 ? (
@@ -198,11 +203,11 @@ const Blog = () => {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2  lg:grid-cols-3 gap-6">
               {filteredPosts.map((post, index) => (
-              <Link href={getLocalizedBlogUrl(post.slug, post.language)} key={post.id}>
-                <article className="relative cursor-pointer group transition-transform duration-200 ">
-                  <div className="absolute inset-px rounded-xl bg-white"></div>
+              <Link href={`/blog/${post.baseSlug || post.slug}`} key={post.id}>
+                <article className="relative cursor-pointer group  transition-transform duration-200 ">
+                  <div className="absolute inset-px rounded-xl bg-white shadow-lg"></div>
                   <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
                   <div className="relative">
                     {post.featuredImage ? (
@@ -219,12 +224,12 @@ const Blog = () => {
                       </div>
                     )}
                     <div className="absolute top-4 left-4 flex gap-2">
-                      <span className="bg-tufts-blue text-white px-3 py-1 rounded-full text-sm font-medium">
+                      <span className="bg-tufts-blue text-white px-2 py-1 rounded-full text-sm font-medium backdrop-blur-sm">
                         {post.category}
                       </span>
                       {post.isFallback && (
-                        <span className="bg-orange-500 text-white px-2 py-1 rounded-full text-xs font-medium">
-                          {post.language?.toUpperCase() || 'EN'}
+                        <span className="bg-orange-500 text-white px-2 py-1 rounded-full text-sm font-medium">
+                          {post.language?.toUpperCase() || 'EN'} {post.isFallback ? 'Fallback' : 'Version'}
                         </span>
                       )}
                     </div>
@@ -235,16 +240,11 @@ const Blog = () => {
                       {post.title}
                     </h2>
                     
-                    <p className="text-sm text-cool-black mb-4 line-clamp-2 flex-1 leading-relaxed">
-                      {post.excerpt}
-                    </p>
+                    
                     
                     <div className="flex items-center justify-between text-sm text-cool-black mb-4">
                       <div className="flex items-center space-x-4">
-                        <div className="flex items-center space-x-1">
-                          <User className="w-4 h-4" />
-                          <span>{post.author}</span>
-                        </div>
+                        
                         <div className="flex items-center space-x-1">
                           <Calendar className="w-4 h-4" />
                           <span>{formatDate(post.publishedAt)}</span>
@@ -278,13 +278,13 @@ const Blog = () => {
                       </div>
                       
                       <div className="inline-flex items-center space-x-1 text-tufts-blue group-hover:text-cobalt-blue font-medium transition-colors duration-200">
-                        <span>Read More</span>
+                        <span>{t('blog.readMore', 'Read More')}</span>
                         <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200" />
                       </div>
                     </div>
                   </div>
                   </div>
-                  <div className="pointer-events-none absolute inset-px rounded-xl shadow-sm ring-1 ring-black/5 group-hover:ring-tufts-blue/20 transition-all duration-200"></div>
+                  <div className="pointer-events-none absolute inset-px rounded-xl"></div>
                 </article>
               </Link>
             ))}
@@ -297,15 +297,15 @@ const Blog = () => {
       <section className="bg-eerie-black text-white py-16">
         <div className="mx-auto max-w-4xl px-6 text-center">
           <h2 className="text-3xl md:text-4xl font-medium tracking-tight text-white mb-6">
-            Stay Updated with eSIM News
+            {t('blog.newsletter.title', 'Stay Updated with eSIM News')}
           </h2>
           <p className="text-xl text-alice-blue mb-8">
-            Get the latest eSIM insights, travel tips, and technology updates delivered to your inbox
+            {t('blog.newsletter.description', 'Get the latest eSIM insights, travel tips, and technology updates delivered to your inbox')}
           </p>
           <form onSubmit={handleNewsletterSubmit} className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
             <input
               type="email"
-              placeholder="Enter your email"
+              placeholder={t('blog.newsletter.emailPlaceholder', 'Enter your email')}
               value={newsletterEmail}
               onChange={(e) => setNewsletterEmail(e.target.value)}
               required
@@ -319,12 +319,12 @@ const Blog = () => {
               {isNewsletterSubmitting ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Subscribing...
+                  {t('blog.newsletter.subscribing', 'Subscribing...')}
                 </>
               ) : (
                 <>
                   <Mail className="w-4 h-4 mr-2" />
-                  Subscribe
+                  {t('blog.newsletter.subscribe', 'Subscribe')}
                 </>
               )}
             </button>

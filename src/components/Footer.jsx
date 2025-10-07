@@ -29,12 +29,19 @@ const Footer = () => {
   
   const loading = false;
 
-  // Check if we're on a language-specific page
+  // Check if we're on a language-specific page or blog page (which has i18n context)
   const isLanguagePage = ['/hebrew', '/arabic', '/russian', '/german', '/french', '/spanish'].includes(pathname);
+  const isBlogPage = pathname.startsWith('/blog') || 
+                    pathname.startsWith('/hebrew/blog') || 
+                    pathname.startsWith('/arabic/blog') || 
+                    pathname.startsWith('/russian/blog') || 
+                    pathname.startsWith('/german/blog') || 
+                    pathname.startsWith('/french/blog') || 
+                    pathname.startsWith('/spanish/blog');
   
-  // Use translations only on language-specific pages, otherwise use English
+  // Use translations on language-specific pages and blog pages
   const getText = (key, englishText) => {
-    return isLanguagePage ? t(key, englishText) : englishText;
+    return (isLanguagePage || isBlogPage) ? t(key, englishText) : englishText;
   };
 
   const quickLinks = [

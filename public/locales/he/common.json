@@ -151,6 +151,34 @@
     "addBankAccount": "הוספת חשבון בנק",
     "addBankAccountDesc": "הוסיפו את פרטי חשבון הבנק שלכם כדי למשוך את הרווחים"
   },
+  "blog": {
+    "title": "תובנות eSIM",
+    "subtitle": "הישארו מעודכנים עם טכנולוגיית eSIM",
+    "description": "גלו את המגמות האחרונות, המדריכים והתובנות בטכנולוגיית eSIM ופתרונות קישוריות גלובליים.",
+    "searchPlaceholder": "חפש פוסטים בבלוג...",
+    "allCategories": "כל הקטגוריות",
+    "loadingPosts": "טוען פוסטים בבלוג...",
+    "noPostsFound": "לא נמצאו פוסטים בבלוג התואמים לקריטריונים שלך",
+    "noPostsAvailable": "עדיין אין פוסטים זמינים בבלוג",
+    "readMore": "קרא עוד",
+    "backToBlog": "חזור לבלוג",
+    "postNotFound": "פוסט לא נמצא",
+    "postNotFoundDescription": "פוסט הבלוג שאתה מחפש לא קיים.",
+    "relatedTags": "תגיות קשורות",
+    "sharePost": "שתף פוסט זה",
+    "copyLink": "העתק קישור",
+    "linkCopied": "קישור הועתק ללוח!",
+    "newsletter": {
+      "title": "הישארו מעודכנים עם חדשות eSIM",
+      "description": "קבלו את התובנות האחרונות של eSIM, טיפים לנסיעות ועדכוני טכנולוגיה ישירות לתיבת הדואר שלכם",
+      "emailPlaceholder": "הכנס את האימייל שלך",
+      "subscribe": "הירשם",
+      "subscribing": "נרשם...",
+      "subscribeSuccess": "נרשמת בהצלחה לניוזלטר שלנו!",
+      "subscribeError": "נכשל ברישום לניוזלטר. אנא נסה שוב.",
+      "reactivated": "ברוך השב! מנוי הניוזלטר שלך הופעל מחדש."
+    }
+  },
   "auth": {
     "login": {
       "title": "התחבר לחשבון שלך",

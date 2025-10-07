@@ -28,30 +28,75 @@ const LanguageSelector = () => {
       return languages.find(lang => lang.code === locale) || languages.find(lang => lang.code === 'en');
     }
     
-    // Fallback to pathname detection
-    if (pathname === '/hebrew') return languages.find(lang => lang.code === 'he');
-    if (pathname === '/arabic') return languages.find(lang => lang.code === 'ar');
-    if (pathname === '/russian') return languages.find(lang => lang.code === 'ru');
-    if (pathname === '/german') return languages.find(lang => lang.code === 'de');
-    if (pathname === '/french') return languages.find(lang => lang.code === 'fr');
-    if (pathname === '/spanish') return languages.find(lang => lang.code === 'es');
+    // Fallback to pathname detection for home pages
+    if (pathname.startsWith('/hebrew')) return languages.find(lang => lang.code === 'he');
+    if (pathname.startsWith('/arabic')) return languages.find(lang => lang.code === 'ar');
+    if (pathname.startsWith('/russian')) return languages.find(lang => lang.code === 'ru');
+    if (pathname.startsWith('/german')) return languages.find(lang => lang.code === 'de');
+    if (pathname.startsWith('/french')) return languages.find(lang => lang.code === 'fr');
+    if (pathname.startsWith('/spanish')) return languages.find(lang => lang.code === 'es');
     return languages.find(lang => lang.code === 'en'); // default to English
   };
 
   const currentLanguage = getCurrentLanguage();
 
+  const getLocalizedPath = (languageCode, currentPath) => {
+    // Remove any existing language prefix from the path
+    let cleanPath = currentPath;
+    const languagePrefixes = ['/hebrew', '/arabic', '/russian', '/german', '/french', '/spanish'];
+    
+    for (const prefix of languagePrefixes) {
+      if (cleanPath.startsWith(prefix)) {
+        cleanPath = cleanPath.substring(prefix.length) || '/';
+        break;
+      }
+    }
+    
+    // Get the new language prefix
+    const languageRoutes = {
+      'en': '',
+      'he': '/hebrew',
+      'ar': '/arabic', 
+      'ru': '/russian',
+      'de': '/german',
+      'fr': '/french',
+      'es': '/spanish'
+    };
+    
+    const newPrefix = languageRoutes[languageCode] || '';
+    return `${newPrefix}${cleanPath}`;
+  };
+
   const handleLanguageChange = async (language) => {
+    console.log('LanguageSelector: Changing language to', language.code, 'from pathname', pathname);
     setIsOpen(false);
     
-    // Check if we're on a blog page
-    const isBlogPage = pathname.includes('/blog');
+    // Check if we're on the home page (root or language-specific home)
+    const isHomePage = pathname === '/' || 
+                      pathname === '/hebrew' || 
+                      pathname === '/arabic' || 
+                      pathname === '/russian' || 
+                      pathname === '/german' || 
+                      pathname === '/french' || 
+                      pathname === '/spanish';
     
-    if (isBlogPage) {
-      // For blog pages, just change the language context without navigation
-      await changeLanguage(language.code);
+    console.log('LanguageSelector: isHomePage?', isHomePage);
+    
+    if (isHomePage) {
+      // For home page, navigate to the language-specific route
+      const newPath = getLocalizedPath(language.code, '/');
+      console.log('LanguageSelector: Navigating to', newPath);
+      router.push(newPath);
     } else {
-      // For other pages, navigate to the language-specific route
-      router.push(language.route);
+      // For all other pages, just change the language context without navigation
+      console.log('LanguageSelector: Using changeLanguage function');
+      if (changeLanguage && typeof changeLanguage === 'function') {
+        console.log('LanguageSelector: Calling changeLanguage with', language.code);
+        await changeLanguage(language.code);
+        console.log('LanguageSelector: changeLanguage completed');
+      } else {
+        console.error('changeLanguage function is not available');
+      }
     }
   };
 

@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import Blog from '../../src/components/Blog'
 import Loading from '../../src/components/Loading'
+import RTLWrapper from '../../src/components/RTLWrapper'
 
 export const metadata = {
   title: 'Blog - eSIM Plans',
@@ -18,8 +19,10 @@ export const metadata = {
 
 export default function BlogPage() {
   return (
-    <Suspense fallback={<Loading />}>
-      <Blog />
-    </Suspense>
+    <RTLWrapper>
+      <Suspense fallback={<Loading />}>
+        <Blog />
+      </Suspense>
+    </RTLWrapper>
   )
 }

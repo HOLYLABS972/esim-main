@@ -152,6 +152,34 @@
     "addBankAccount": "Ajouter un Compte Bancaire",
     "addBankAccountDesc": "Ajoutez les détails de votre compte bancaire pour retirer vos gains"
   },
+  "blog": {
+    "title": "Perspectives eSIM",
+    "subtitle": "Restez à jour avec la technologie eSIM",
+    "description": "Découvrez les dernières tendances, guides et perspectives sur la technologie eSIM et les solutions de connectivité mondiale.",
+    "searchPlaceholder": "Rechercher des articles de blog...",
+    "allCategories": "Toutes les catégories",
+    "loadingPosts": "Chargement des articles de blog...",
+    "noPostsFound": "Aucun article de blog trouvé correspondant à vos critères",
+    "noPostsAvailable": "Aucun article de blog disponible pour le moment",
+    "readMore": "Lire la suite",
+    "backToBlog": "Retour au blog",
+    "postNotFound": "Article non trouvé",
+    "postNotFoundDescription": "L'article de blog que vous recherchez n'existe pas.",
+    "relatedTags": "Tags associés",
+    "sharePost": "Partager cet article",
+    "copyLink": "Copier le lien",
+    "linkCopied": "Lien copié dans le presse-papiers !",
+    "newsletter": {
+      "title": "Restez informé des actualités eSIM",
+      "description": "Recevez les dernières perspectives eSIM, conseils de voyage et mises à jour technologiques dans votre boîte de réception",
+      "emailPlaceholder": "Entrez votre e-mail",
+      "subscribe": "S'abonner",
+      "subscribing": "Abonnement en cours...",
+      "subscribeSuccess": "Abonnement à notre newsletter réussi !",
+      "subscribeError": "Échec de l'abonnement à la newsletter. Veuillez réessayer.",
+      "reactivated": "Bon retour ! Votre abonnement à la newsletter a été réactivé."
+    }
+  },
   "auth": {
     "login": {
       "title": "Connectez-vous à votre compte",

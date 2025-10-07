@@ -111,6 +111,7 @@ export const blogService = {
               seoDescription: translation.seoDescription,
               language: actualLanguage,
               isFallback: isFallback,
+              baseSlug: data.baseSlug || data.slug, // Ensure baseSlug is available for URL generation
               publishedAt: data.publishedAt?.toDate() || null,
               createdAt: data.createdAt?.toDate() || null,
               updatedAt: data.updatedAt?.toDate() || null
@@ -217,6 +218,7 @@ export const blogService = {
   // Get blog post by slug with language support and translation variants
   async getPostBySlug(slug, language = 'en') {
     try {
+      console.log('BlogService: getPostBySlug called with slug:', slug, 'language:', language);
       let post = null;
 
       // First, try to find a post with translations that has this slug in the requested language
@@ -247,35 +249,68 @@ export const blogService = {
               seoTitle: translation.seoTitle,
               seoDescription: translation.seoDescription,
               language: language,
+              isFallback: false, // Not a fallback since we found exact match
               publishedAt: data.publishedAt?.toDate() || null,
               createdAt: data.createdAt?.toDate() || null,
               updatedAt: data.updatedAt?.toDate() || null
             };
             break;
           } else {
-            // Check if any translation has this slug (for fallback)
+            // Check if any translation has this slug (for cross-language access)
+            let foundTranslation = null;
+            let foundLangCode = null;
+            
             for (const [langCode, translation] of Object.entries(data.translations)) {
               if (translation.slug === slug) {
-                post = {
-                  id: doc.id,
-                  ...data,
-                  // Use the found translation
-                  title: translation.title,
-                  slug: translation.slug,
-                  excerpt: translation.excerpt,
-                  content: translation.content,
-                  seoTitle: translation.seoTitle,
-                  seoDescription: translation.seoDescription,
-                  language: langCode,
-                  publishedAt: data.publishedAt?.toDate() || null,
-                  createdAt: data.createdAt?.toDate() || null,
-                  updatedAt: data.updatedAt?.toDate() || null,
-                  isFallback: language !== langCode // Mark as fallback if not requested language
-                };
+                foundTranslation = translation;
+                foundLangCode = langCode;
                 break;
               }
             }
-            if (post) break;
+            
+            if (foundTranslation) {
+              // Found the post by slug in a different language
+              // Now check if the requested language exists for this post
+              const requestedTranslation = data.translations[language];
+              
+              if (requestedTranslation) {
+                // Use the requested language version
+                console.log('BlogService: Found cross-language match! Using requested language:', language);
+                post = {
+                  id: doc.id,
+                  ...data,
+                  title: requestedTranslation.title,
+                  slug: requestedTranslation.slug,
+                  excerpt: requestedTranslation.excerpt,
+                  content: requestedTranslation.content,
+                  seoTitle: requestedTranslation.seoTitle,
+                  seoDescription: requestedTranslation.seoDescription,
+                  language: language,
+                  isFallback: false, // Not a fallback since we found the requested language
+                  publishedAt: data.publishedAt?.toDate() || null,
+                  createdAt: data.createdAt?.toDate() || null,
+                  updatedAt: data.updatedAt?.toDate() || null
+                };
+              } else {
+                // Fallback to the found language
+                post = {
+                  id: doc.id,
+                  ...data,
+                  title: foundTranslation.title,
+                  slug: foundTranslation.slug,
+                  excerpt: foundTranslation.excerpt,
+                  content: foundTranslation.content,
+                  seoTitle: foundTranslation.seoTitle,
+                  seoDescription: foundTranslation.seoDescription,
+                  language: foundLangCode,
+                  publishedAt: data.publishedAt?.toDate() || null,
+                  createdAt: data.createdAt?.toDate() || null,
+                  updatedAt: data.updatedAt?.toDate() || null,
+                  isFallback: language !== foundLangCode // Mark as fallback if not requested language
+                };
+              }
+              break;
+            }
           }
         } else {
           // Old format without translations - backward compatibility
@@ -293,6 +328,13 @@ export const blogService = {
           }
         }
       }
+      
+      console.log('BlogService: Returning post:', post ? {
+        title: post.title,
+        language: post.language,
+        isFallback: post.isFallback,
+        slug: post.slug
+      } : 'null');
       
       return post;
     } catch (error) {

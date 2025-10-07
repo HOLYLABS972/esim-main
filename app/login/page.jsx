@@ -2,6 +2,7 @@ import { Suspense } from 'react'
 import Login from '../../src/components/Login'
 import Loading from '../../src/components/Loading'
 import AuthRedirect from '../../src/components/AuthRedirect'
+import RTLWrapper from '../../src/components/RTLWrapper'
 
 export const metadata = {
   title: 'Login - RoamJet',
@@ -33,10 +34,12 @@ export const metadata = {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<Loading />}>
-      <AuthRedirect redirectTo="/dashboard">
-        <Login />
-      </AuthRedirect>
-    </Suspense>
+    <RTLWrapper>
+      <Suspense fallback={<Loading />}>
+        <AuthRedirect redirectTo="/dashboard">
+          <Login />
+        </AuthRedirect>
+      </Suspense>
+    </RTLWrapper>
   )
 }

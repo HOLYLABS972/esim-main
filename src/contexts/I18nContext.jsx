@@ -25,28 +25,54 @@ export const I18nProvider = ({ children }) => {
   const [locale, setLocale] = useState('en');
   const [translations, setTranslations] = useState({});
   const [isLoading, setIsLoading] = useState(true);
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  // Determine locale from pathname and load translations
+  // Initialize locale and translations on mount
   useEffect(() => {
-    const initializeTranslations = async () => {
-      let detectedLocale = 'en';
+    const initializeLocale = async () => {
+      console.log('I18nContext: Initializing locale...');
       
-      if (pathname === '/hebrew') detectedLocale = 'he';
-      else if (pathname === '/arabic') detectedLocale = 'ar';
-      else if (pathname === '/russian') detectedLocale = 'ru';
-      else if (pathname === '/german') detectedLocale = 'de';
-      else if (pathname === '/french') detectedLocale = 'fr';
-      else if (pathname === '/spanish') detectedLocale = 'es';
+      // First, check for saved language in localStorage, then cookies
+      let savedLanguage = localStorage.getItem('roamjet-language');
       
-      setLocale(detectedLocale);
+      // If not in localStorage, check cookies as backup
+      if (!savedLanguage && typeof window !== 'undefined' && window.getLanguageFromCookie) {
+        savedLanguage = window.getLanguageFromCookie();
+        if (savedLanguage) {
+          // Sync back to localStorage
+          localStorage.setItem('roamjet-language', savedLanguage);
+        }
+      }
       
-      // Load translations immediately
+      let initialLocale = 'en';
+      
+      if (savedLanguage) {
+        console.log('I18nContext: Found saved language:', savedLanguage);
+        initialLocale = savedLanguage;
+      } else {
+        // Fallback to pathname detection if no saved language
+        if (pathname.startsWith('/hebrew')) initialLocale = 'he';
+        else if (pathname.startsWith('/arabic')) initialLocale = 'ar';
+        else if (pathname.startsWith('/russian')) initialLocale = 'ru';
+        else if (pathname.startsWith('/german')) initialLocale = 'de';
+        else if (pathname.startsWith('/french')) initialLocale = 'fr';
+        else if (pathname.startsWith('/spanish')) initialLocale = 'es';
+        
+        console.log('I18nContext: No saved language, detected from pathname:', initialLocale);
+      }
+      
+      // Set the locale
+      setLocale(initialLocale);
+      
+      // Load translations for the determined locale
       try {
         setIsLoading(true);
-        const response = await fetch(`/locales/${detectedLocale}/common.json`);
+        console.log('I18nContext: Loading translations for', initialLocale);
+        const response = await fetch(`/locales/${initialLocale}/common.json`);
         if (response.ok) {
           const data = await response.json();
           setTranslations(data);
+          console.log('I18nContext: Translations loaded successfully for', initialLocale);
         } else {
           console.error('Failed to load translations, response not ok:', response.status);
         }
@@ -54,11 +80,14 @@ export const I18nProvider = ({ children }) => {
         console.error('Failed to load translations:', error);
       } finally {
         setIsLoading(false);
+        setIsInitialized(true);
       }
     };
 
-    initializeTranslations();
-  }, [pathname]);
+    if (!isInitialized) {
+      initializeLocale();
+    }
+  }, [pathname, isInitialized]);
 
   const t = (key, fallback = '') => {
     const keys = key.split('.');
@@ -76,15 +105,29 @@ export const I18nProvider = ({ children }) => {
   };
 
   const changeLanguage = async (newLocale) => {
+    console.log('I18nContext: changeLanguage called with', newLocale);
+    
+    // Save to localStorage for persistence
+    localStorage.setItem('roamjet-language', newLocale);
+    console.log('I18nContext: Saved language to localStorage:', newLocale);
+    
+    // Also save to cookies as backup
+    if (typeof window !== 'undefined' && window.saveLanguageToCookie) {
+      window.saveLanguageToCookie(newLocale);
+    }
+    
+    // Update locale state
     setLocale(newLocale);
     
     // Load translations for the new locale
     try {
       setIsLoading(true);
+      console.log('I18nContext: Loading translations for', newLocale);
       const response = await fetch(`/locales/${newLocale}/common.json`);
       if (response.ok) {
         const data = await response.json();
         setTranslations(data);
+        console.log('I18nContext: Translations loaded successfully for', newLocale);
       } else {
         console.error('Failed to load translations, response not ok:', response.status);
       }

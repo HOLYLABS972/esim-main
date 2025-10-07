@@ -22,6 +22,27 @@ const CookieConsent = () => {
       setShowBanner(true);
       console.log('Cookie consent reset - banner should appear');
     };
+
+    // Helper functions for language persistence
+    window.saveLanguageToCookie = (language) => {
+      // Set cookie that expires in 1 year
+      const expires = new Date();
+      expires.setFullYear(expires.getFullYear() + 1);
+      document.cookie = `roamjet-language=${language}; expires=${expires.toUTCString()}; path=/; SameSite=Lax`;
+      console.log('Language saved to cookie:', language);
+    };
+
+    window.getLanguageFromCookie = () => {
+      const cookies = document.cookie.split(';');
+      for (let cookie of cookies) {
+        const [name, value] = cookie.trim().split('=');
+        if (name === 'roamjet-language') {
+          console.log('Language loaded from cookie:', value);
+          return value;
+        }
+      }
+      return null;
+    };
   }, []);
 
   const handleAcceptAll = () => {
