@@ -68,7 +68,7 @@ const Contact = () => {
     
     try {
       await createContactRequest(formData);
-      toast.success('Your message has been sent successfully! We\'ll get back to you soon.');
+      toast.success(t('contact.messageSuccess', 'Your message has been sent successfully! We\'ll get back to you soon.'));
       
       // Reset form
       setFormData({
@@ -78,7 +78,7 @@ const Contact = () => {
       });
     } catch (error) {
       console.error('Error submitting contact request:', error);
-      toast.error('Failed to send message. Please try again.');
+      toast.error(t('contact.messageFailed', 'Failed to send message. Please try again.'));
     } finally {
       setIsSubmitting(false);
     }
@@ -94,9 +94,9 @@ const Contact = () => {
       console.log('Adding email:', contactInfo.email);
       info.push({
         icon: Mail,
-        title: "Email Us",
+        title: t('contact.emailUs', 'Email Us'),
         content: contactInfo.email,
-        description: "Send us an email anytime",
+        description: t('contact.emailDescription', 'Send us an email anytime'),
         link: `mailto:${contactInfo.email}`
       });
     }
@@ -105,9 +105,9 @@ const Contact = () => {
       console.log('Adding phone:', contactInfo.phone);
       info.push({
         icon: Phone,
-        title: "Telegram Us",
+        title: t('contact.telegramUs', 'Telegram Us'),
         content: contactInfo.phone,
-        description: "Contact us via Telegram",
+        description: t('contact.telegramDescription', 'Contact us via Telegram'),
         link: `https://t.me/theholylabs`
       });
     }
@@ -143,69 +143,69 @@ const Contact = () => {
   const faqCategories = [
     {
       icon: Smartphone,
-      title: "Getting Started",
+      title: t('contact.faq.gettingStarted', 'Getting Started'),
       faqs: [
         {
-          question: "What is an eSIM and how does it work?",
-          answer: "An eSIM (embedded SIM) is a digital SIM card that's built into your device. Instead of inserting a physical SIM card, you can download and activate a cellular plan directly onto your device. This allows you to switch between carriers and plans without needing to swap physical cards."
+          question: t('contact.faq.whatIsEsim', 'What is an eSIM and how does it work?'),
+          answer: t('contact.faq.whatIsEsimAnswer', "An eSIM (embedded SIM) is a digital SIM card that's built into your device. Instead of inserting a physical SIM card, you can download and activate a cellular plan directly onto your device. This allows you to switch between carriers and plans without needing to swap physical cards.")
         },
         {
-          question: "Which devices support eSIM?",
-          answer: "Most modern smartphones support eSIM, including iPhone XS and newer, Google Pixel 3 and newer, Samsung Galaxy S20 and newer, and many others. Check your device settings or contact us to confirm compatibility."
+          question: t('contact.faq.deviceSupport', 'Which devices support eSIM?'),
+          answer: t('contact.faq.deviceSupportAnswer', 'Most modern smartphones support eSIM, including iPhone XS and newer, Google Pixel 3 and newer, Samsung Galaxy S20 and newer, and many others. Check your device settings or contact us to confirm compatibility.')
         },
         {
-          question: "How do I activate my eSIM?",
-          answer: "After purchase, you'll receive a QR code via email. Simply scan this code with your device's camera in the cellular settings, and your eSIM will be activated automatically. Detailed instructions are provided for each device type."
+          question: t('contact.faq.howToActivate', 'How do I activate my eSIM?'),
+          answer: t('contact.faq.howToActivateAnswer', "After purchase, you'll receive a QR code via email. Simply scan this code with your device's camera in the cellular settings, and your eSIM will be activated automatically. Detailed instructions are provided for each device type.")
         }
       ]
     },
     {
       icon: CreditCard,
-      title: "Billing & Plans",
+      title: t('contact.faq.billingPlans', 'Billing & Plans'),
       faqs: [
         {
-          question: "What payment methods do you accept?",
-          answer: "We accept all major credit cards (Visa, Mastercard, American Express), PayPal, Apple Pay, Google Pay, and various local payment methods depending on your region."
+          question: t('contact.faq.paymentMethods', 'What payment methods do you accept?'),
+          answer: t('contact.faq.paymentMethodsAnswer', 'We accept all major credit cards (Visa, Mastercard, American Express), PayPal, Apple Pay, Google Pay, and various local payment methods depending on your region.')
         },
         {
-          question: "Can I get a refund if I'm not satisfied?",
-          answer: "Yes, we offer a 7-day money-back guarantee for unused data plans. If you haven't activated your eSIM or used any data, you can request a full refund within 7 days of purchase."
+          question: t('contact.faq.refundPolicy', "Can I get a refund if I'm not satisfied?"),
+          answer: t('contact.faq.refundPolicyAnswer', "Yes, we offer a 7-day money-back guarantee for unused data plans. If you haven't activated your eSIM or used any data, you can request a full refund within 7 days of purchase.")
         },
         {
-          question: "Do your plans include unlimited data?",
-          answer: "We offer both limited and unlimited data plans. Unlimited plans may have fair usage policies or speed throttling after certain thresholds, which are clearly stated in the plan details."
+          question: t('contact.faq.unlimitedData', 'Do your plans include unlimited data?'),
+          answer: t('contact.faq.unlimitedDataAnswer', 'We offer both limited and unlimited data plans. Unlimited plans may have fair usage policies or speed throttling after certain thresholds, which are clearly stated in the plan details.')
         }
       ]
     },
     {
       icon: Wifi,
-      title: "Connectivity Issues",
+      title: t('contact.faq.connectivityIssues', 'Connectivity Issues'),
       faqs: [
         {
-          question: "My eSIM isn't connecting to the network. What should I do?",
-          answer: "First, ensure you're in an area with network coverage. Try restarting your device, toggling airplane mode on/off, or manually selecting the network in your cellular settings. If issues persist, contact our support team."
+          question: t('contact.faq.notConnecting', "My eSIM isn't connecting to the network. What should I do?"),
+          answer: t('contact.faq.notConnectingAnswer', "First, ensure you're in an area with network coverage. Try restarting your device, toggling airplane mode on/off, or manually selecting the network in your cellular settings. If issues persist, contact our support team.")
         },
         {
-          question: "Why is my data speed slower than expected?",
-          answer: "Data speeds can vary based on network congestion, your location, device capabilities, and plan type. Some plans may have speed limitations or throttling after certain usage thresholds."
+          question: t('contact.faq.slowSpeed', 'Why is my data speed slower than expected?'),
+          answer: t('contact.faq.slowSpeedAnswer', 'Data speeds can vary based on network congestion, your location, device capabilities, and plan type. Some plans may have speed limitations or throttling after certain usage thresholds.')
         },
         {
-          question: "Can I use my eSIM for calls and SMS?",
-          answer: "Our eSIM plans are primarily data-only. However, you can use VoIP services like WhatsApp, Skype, or FaceTime for calls and messaging over your data connection."
+          question: t('contact.faq.callsSms', 'Can I use my eSIM for calls and SMS?'),
+          answer: t('contact.faq.callsSmsAnswer', 'Our eSIM plans are primarily data-only. However, you can use VoIP services like WhatsApp, Skype, or FaceTime for calls and messaging over your data connection.')
         }
       ]
     },
     {
       icon: Settings,
-      title: "Account Management",
+      title: t('contact.faq.accountManagement', 'Account Management'),
       faqs: [
         {
-          question: "How do I check my data usage?",
-          answer: "You can monitor your data usage through your device's settings or our mobile app. We also send notifications when you're approaching your data limit."
+          question: t('contact.faq.checkUsage', 'How do I check my data usage?'),
+          answer: t('contact.faq.checkUsageAnswer', "You can monitor your data usage through your device's settings or our mobile app. We also send notifications when you're approaching your data limit.")
         },
         {
-          question: "How do I delete an eSIM from my device?",
-          answer: "Go to your device's cellular settings, select the eSIM plan you want to remove, and choose 'Delete eSIM' or 'Remove Plan'. This will permanently delete the eSIM from your device."
+          question: t('contact.faq.deleteEsim', 'How do I delete an eSIM from my device?'),
+          answer: t('contact.faq.deleteEsimAnswer', "Go to your device's cellular settings, select the eSIM plan you want to remove, and choose 'Delete eSIM' or 'Remove Plan'. This will permanently delete the eSIM from your device.")
         }
       ]
     }
@@ -222,22 +222,16 @@ const Contact = () => {
       <section className="bg-white">
         <div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8">
           <div className="text-center">
-            <div className="mb-4">
-              <span className="inline-block px-2 py-1 text-xs bg-red-100 text-red-800 rounded">
-                Contact Language: {locale || 'en'}
-              </span>
-            </div>
             <h2 className="text-center text-xl font-semibold text-tufts-blue">
               <span>{'{ '}</span>
-              Get in touch
+              {t('contact.title', 'Get in touch')}
               <span>{' }'}</span>
             </h2>
             <p className="mx-auto mt-12 max-w-4xl text-center text-4xl font-semibold tracking-tight text-eerie-black sm:text-5xl">
-              We're here to help with all your eSIM needs
+              {t('contact.subtitle', "We're here to help with all your eSIM needs")}
             </p>
             <p className="mx-auto mt-6 max-w-2xl text-center text-lg text-cool-black mb-5">
-              Get in touch with our team for support, questions, or partnerships. 
-              We're here to help with all your connectivity needs.
+              {t('contact.description', 'Get in touch with our team for support, questions, or partnerships. We\'re here to help with all your connectivity needs.')}
             </p>
           </div>
         </div>
@@ -252,11 +246,11 @@ const Contact = () => {
               <div className="absolute inset-px rounded-xl bg-white"></div>
               <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
                 <div className="px-8 pt-8 pb-8">
-                  <h2 className="text-2xl font-medium tracking-tight text-eerie-black mb-6">Send us a Message</h2>
+                  <h2 className="text-2xl font-medium tracking-tight text-eerie-black mb-6">{t('contact.sendMessage', 'Send us a Message')}</h2>
                   <form onSubmit={handleSubmit} className="space-y-6">
                     <div>
                       <label htmlFor="name" className="block text-sm font-medium text-cool-black mb-2">
-                        Full Name
+                        {t('contact.fullName', 'Full Name')}
                       </label>
                       <div className="relative">
                         <User className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
@@ -268,14 +262,14 @@ const Contact = () => {
                           onChange={handleInputChange}
                           required
                           className="input-field w-full pl-10 pr-4 py-3"
-                          placeholder="Enter your full name"
+                          placeholder={t('contact.fullNamePlaceholder', 'Enter your full name')}
                         />
                       </div>
                     </div>
 
                     <div>
                       <label htmlFor="email" className="block text-sm font-medium text-cool-black mb-2">
-                        Email Address
+                        {t('contact.emailAddress', 'Email Address')}
                       </label>
                       <div className="relative">
                         <Mail className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
@@ -287,7 +281,7 @@ const Contact = () => {
                           onChange={handleInputChange}
                           required
                           className="input-field w-full pl-10 pr-4 py-3"
-                          placeholder="Enter your email address"
+                          placeholder={t('contact.emailPlaceholder', 'Enter your email address')}
                         />
                       </div>
                     </div>
@@ -295,7 +289,7 @@ const Contact = () => {
 
                     <div>
                       <label htmlFor="message" className="block text-sm font-medium text-cool-black mb-2">
-                        Message
+                        {t('contact.message', 'Message')}
                       </label>
                       <div className="relative">
                         <MessageSquare className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
@@ -307,7 +301,7 @@ const Contact = () => {
                           required
                           rows={5}
                           className="input-field w-full pl-10 pr-4 py-3 resize-none"
-                          placeholder="Tell us how we can help you..."
+                          placeholder={t('contact.messagePlaceholder', 'Tell us how we can help you...')}
                         />
                       </div>
                     </div>
@@ -320,12 +314,12 @@ const Contact = () => {
                       {isSubmitting ? (
                         <>
                           <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                          Sending...
+                          {t('contact.sending', 'Sending...')}
                         </>
                       ) : (
                         <>
                           <Send className="w-5 h-5 mr-2" />
-                          Send Message
+                          {t('contact.sendButton', 'Send Message')}
                         </>
                       )}
                     </button>
@@ -344,7 +338,7 @@ const Contact = () => {
                   <div className="px-8 pt-8 pb-8">
                     <div className="flex items-center mb-6">
                       <Building className="w-8 h-8 text-tufts-blue mr-3" />
-                      <h2 className="text-2xl font-medium tracking-tight text-eerie-black">Our Office</h2>
+                      <h2 className="text-2xl font-medium tracking-tight text-eerie-black">{t('contact.ourOffice', 'Our Office')}</h2>
                     </div>
                 
                     {(() => {
@@ -399,7 +393,7 @@ const Contact = () => {
                   <div className="px-8 pt-8 pb-8">
                     <div className="flex items-center mb-6">
                       <Clock className="w-8 h-8 text-tufts-blue mr-3" />
-                      <h3 className="text-xl font-medium tracking-tight text-eerie-black">Business Hours</h3>
+                      <h3 className="text-xl font-medium tracking-tight text-eerie-black">{t('contact.businessHours', 'Business Hours')}</h3>
                     </div>
                     <div className="space-y-3 text-cool-black">
                       {Object.entries(businessHours).map(([day, hours]) => {
@@ -434,14 +428,14 @@ const Contact = () => {
           <div className="text-center mb-12">
             <h2 className="text-center text-xl font-semibold text-tufts-blue">
               <span>{'{ '}</span>
-              Help Center
+              {t('contact.helpCenter', 'Help Center')}
               <span>{' }'}</span>
             </h2>
             <p className="mx-auto mt-6 max-w-4xl text-center text-3xl font-semibold tracking-tight text-eerie-black sm:text-4xl">
-              Frequently Asked Questions
+              {t('contact.faqTitle', 'Frequently Asked Questions')}
             </p>
             <p className="mx-auto mt-4 max-w-2xl text-center text-lg text-cool-black">
-              Find quick answers to common questions about our eSIM services
+              {t('contact.faqDescription', 'Find quick answers to common questions about our eSIM services')}
             </p>
           </div>
 

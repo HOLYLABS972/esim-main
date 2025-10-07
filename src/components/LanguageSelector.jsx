@@ -81,6 +81,11 @@ const LanguageSelector = () => {
       }
     }
     
+    // Ensure cleanPath starts with /
+    if (!cleanPath.startsWith('/')) {
+      cleanPath = '/' + cleanPath;
+    }
+    
     // Get the new language prefix using language codes
     const languageRoutes = {
       'en': '',
@@ -93,6 +98,16 @@ const LanguageSelector = () => {
     };
     
     const newPrefix = languageRoutes[languageCode] || '';
+    
+    // Handle special cases for English
+    if (languageCode === 'en') {
+      // For English, remove language prefix but keep the path
+      const newPath = cleanPath === '/' ? '/' : cleanPath;
+      console.log('LanguageSelector: Generated English path:', newPath);
+      return newPath;
+    }
+    
+    // For other languages, add the language prefix
     const newPath = `${newPrefix}${cleanPath}`;
     console.log('LanguageSelector: Generated new path:', newPath);
     return newPath;

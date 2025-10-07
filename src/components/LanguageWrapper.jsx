@@ -14,7 +14,7 @@ const LanguageWrapper = ({ children }) => {
     // Old language routes (for backward compatibility)
     '/hebrew', '/arabic', '/russian', '/german', '/french', '/spanish', 
     // Other translated pages
-    '/contact', '/privacy-policy', '/terms-of-service', '/cookie-policy'
+    '/contact', '/login', '/register', '/privacy-policy', '/terms-of-service', '/cookie-policy'
   ];
   
   // Also apply i18n to blog pages (both new and old routes)
@@ -33,9 +33,24 @@ const LanguageWrapper = ({ children }) => {
                     pathname.startsWith('/german/blog') || 
                     pathname.startsWith('/french/blog') || 
                     pathname.startsWith('/spanish/blog');
+
+  // Check for language-specific routes (e.g., /he/contact, /ru/login, etc.)
+  const isLanguageSpecificPage = pathname.startsWith('/he/') || 
+                                pathname.startsWith('/ar/') || 
+                                pathname.startsWith('/ru/') || 
+                                pathname.startsWith('/de/') || 
+                                pathname.startsWith('/fr/') || 
+                                pathname.startsWith('/es/') ||
+                                // Old language routes (for backward compatibility)
+                                pathname.startsWith('/hebrew/') || 
+                                pathname.startsWith('/arabic/') || 
+                                pathname.startsWith('/russian/') || 
+                                pathname.startsWith('/german/') || 
+                                pathname.startsWith('/french/') || 
+                                pathname.startsWith('/spanish/');
   
-  // Don't apply i18n to admin or other pages (but include blog pages)
-  if (!translatedPages.includes(pathname) && !isBlogPage) {
+  // Don't apply i18n to admin or other pages (but include blog pages and language-specific pages)
+  if (!translatedPages.includes(pathname) && !isBlogPage && !isLanguageSpecificPage) {
     console.log('LanguageWrapper: No I18n context for pathname:', pathname);
     return children;
   }

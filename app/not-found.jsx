@@ -41,14 +41,7 @@ export default function NotFound() {
 
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-6">
-            {/* Primary Action - Home */}
-            <Link 
-              href="/"
-              className="btn-primary px-4 py-2 flex items-center space-x-3 text-base font-semibold w-full sm:w-auto"
-            >
-              <Home className="w-4 h-4" />
-              <span>Back to Home</span>
-            </Link>
+            
 
             {/* Secondary Actions */}
             <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
@@ -60,13 +53,7 @@ export default function NotFound() {
                 <span>Go Back</span>
               </button>
 
-              <button
-                onClick={handleRefresh}
-                className="flex items-center justify-center space-x-2 px-4 py-2 bg-white text-tufts-blue border-2 border-tufts-blue rounded-full font-semibold hover:bg-tufts-blue hover:text-white transition-all duration-200 shadow-md hover:shadow-lg w-full sm:w-auto"
-              >
-                <RefreshCw className="w-4 h-4" />
-                <span>Refresh</span>
-              </button>
+             
             </div>
           </div>
 
