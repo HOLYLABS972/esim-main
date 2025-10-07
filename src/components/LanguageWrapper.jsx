@@ -6,7 +6,7 @@ import { I18nProvider } from '../contexts/I18nContext';
 const LanguageWrapper = ({ children }) => {
   const pathname = usePathname();
   
-  // Only apply i18n to landing page and specific pages that should be translated
+  // Pages that should have I18n context
   const translatedPages = [
     '/', 
     // New language-code routes
@@ -17,7 +17,7 @@ const LanguageWrapper = ({ children }) => {
     '/contact', '/login', '/register', '/privacy-policy', '/terms-of-service', '/cookie-policy'
   ];
   
-  // Also apply i18n to blog pages (both new and old routes)
+  // Check for blog pages (both old and new language routes)
   const isBlogPage = pathname.startsWith('/blog') || 
                     // New language-code blog routes
                     pathname.startsWith('/he/blog') || 
@@ -49,13 +49,13 @@ const LanguageWrapper = ({ children }) => {
                                 pathname.startsWith('/french/') || 
                                 pathname.startsWith('/spanish/');
   
-  // Don't apply i18n to admin or other pages (but include blog pages and language-specific pages)
   if (!translatedPages.includes(pathname) && !isBlogPage && !isLanguageSpecificPage) {
     console.log('LanguageWrapper: No I18n context for pathname:', pathname);
     return children;
   }
   
   console.log('LanguageWrapper: Providing I18n context for pathname:', pathname);
+  
   return (
     <I18nProvider>
       {children}

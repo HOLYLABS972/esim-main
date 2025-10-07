@@ -21,11 +21,22 @@ const LanguageSelector = () => {
     { code: 'es', name: getLanguageName('es'), flag: getLanguageFlag('es'), route: '/es' }
   ];
 
-  // Determine current language from I18n context first, then pathname
+  // Determine current language from multiple sources
   const getCurrentLanguage = () => {
     // First try to use the I18n context locale
     if (locale) {
       return languages.find(lang => lang.code === locale) || languages.find(lang => lang.code === 'en');
+    }
+    
+    // Check localStorage for saved language preference
+    if (typeof window !== 'undefined') {
+      const savedLanguage = localStorage.getItem('roamjet-language');
+      if (savedLanguage) {
+        const savedLang = languages.find(lang => lang.code === savedLanguage);
+        if (savedLang) {
+          return savedLang;
+        }
+      }
     }
     
     // Fallback to pathname detection for both old and new routes
@@ -52,17 +63,32 @@ const LanguageSelector = () => {
     
     // Handle blog URLs specially
     if (currentPath.includes('/blog')) {
-      // Extract blog slug if it's a blog post
-      const blogPostMatch = currentPath.match(/\/blog\/(.+)$/);
-      if (blogPostMatch) {
-        const slug = blogPostMatch[1];
-        console.log('LanguageSelector: Found blog post slug:', slug);
+      // Check for blog post with language prefix first
+      const langBlogPostMatch = currentPath.match(/^\/(he|ar|ru|de|fr|es)\/blog\/(.+)$/);
+      if (langBlogPostMatch) {
+        const slug = langBlogPostMatch[2];
+        console.log('LanguageSelector: Found localized blog post slug:', slug);
         return getLocalizedBlogUrl(slug, languageCode);
       }
       
-      // It's a blog list page
-      if (currentPath.includes('/blog') && !blogPostMatch) {
-        console.log('LanguageSelector: Found blog list page');
+      // Check for root blog post
+      const blogPostMatch = currentPath.match(/^\/blog\/(.+)$/);
+      if (blogPostMatch) {
+        const slug = blogPostMatch[1];
+        console.log('LanguageSelector: Found root blog post slug:', slug);
+        return getLocalizedBlogUrl(slug, languageCode);
+      }
+      
+      // Check for localized blog list page
+      const langBlogListMatch = currentPath.match(/^\/(he|ar|ru|de|fr|es)\/blog\/?$/);
+      if (langBlogListMatch) {
+        console.log('LanguageSelector: Found localized blog list page');
+        return getLocalizedBlogListUrl(languageCode);
+      }
+      
+      // It's a root blog list page
+      if (currentPath === '/blog' || currentPath === '/blog/') {
+        console.log('LanguageSelector: Found root blog list page');
         return getLocalizedBlogListUrl(languageCode);
       }
     }
@@ -117,7 +143,13 @@ const LanguageSelector = () => {
     console.log('LanguageSelector: Changing language to', language.code, 'from pathname', pathname);
     setIsOpen(false);
     
-    // Always change the language context first
+    // Always save language preference to localStorage first
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('roamjet-language', language.code);
+      console.log('LanguageSelector: Saved language to localStorage:', language.code);
+    }
+    
+    // Change the language context if available
     if (changeLanguage && typeof changeLanguage === 'function') {
       console.log('LanguageSelector: Calling changeLanguage with', language.code);
       await changeLanguage(language.code);
@@ -128,10 +160,8 @@ const LanguageSelector = () => {
     const newPath = getLocalizedPath(language.code, pathname);
     console.log('LanguageSelector: Navigating from', pathname, 'to', newPath);
     
-    // Only navigate if the path actually changes
-    if (newPath !== pathname) {
-      router.push(newPath);
-    }
+    // Always navigate to ensure URL reflects the language choice
+    router.push(newPath);
   };
 
   return (

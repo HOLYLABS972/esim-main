@@ -20,13 +20,29 @@ import {
 } from 'lucide-react';
 import { useI18n } from '../contexts/I18nContext';
 import { createContactRequest } from '../services/contactService';
+import { getLanguageDirection, detectLanguageFromPath } from '../utils/languageUtils';
+import { usePathname } from 'next/navigation';
 import toast from 'react-hot-toast';
 
 const Contact = () => {
   const { t, locale } = useI18n();
+  const pathname = usePathname();
+  
+  // Get current language for RTL detection
+  const getCurrentLanguage = () => {
+    if (locale) return locale;
+    if (typeof window !== 'undefined') {
+      const savedLanguage = localStorage.getItem('roamjet-language');
+      if (savedLanguage) return savedLanguage;
+    }
+    return detectLanguageFromPath(pathname);
+  };
+
+  const currentLanguage = getCurrentLanguage();
+  const isRTL = getLanguageDirection(currentLanguage) === 'rtl';
   
   // Debug logging
-  console.log('Contact component - Current locale:', locale);
+  console.log('Contact component - Current locale:', locale, 'Language:', currentLanguage, 'Is RTL:', isRTL);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -217,7 +233,7 @@ const Contact = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white py-24">
+    <div className="min-h-screen bg-white py-24" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Header Section */}
       <section className="bg-white">
         <div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8">
@@ -240,20 +256,29 @@ const Contact = () => {
       {/* Contact Form and Office Info */}
       <section className="bg-white">
         <div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-6">
+          <div className="grid lg:grid-cols-2 gap-6" style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
             {/* Contact Form */}
             <div className="relative">
               <div className="absolute inset-px rounded-xl bg-white"></div>
               <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
                 <div className="px-8 pt-8 pb-8">
-                  <h2 className="text-2xl font-medium tracking-tight text-eerie-black mb-6">{t('contact.sendMessage', 'Send us a Message')}</h2>
-                  <form onSubmit={handleSubmit} className="space-y-6">
+                  <h2 
+                    className="text-2xl font-medium tracking-tight text-eerie-black mb-6"
+                    style={{ textAlign: isRTL ? 'right' : 'left' }}
+                  >
+                    {t('contact.sendMessage', 'Send us a Message')}
+                  </h2>
+                  <form onSubmit={handleSubmit} className="space-y-6 contact-form">
                     <div>
-                      <label htmlFor="name" className="block text-sm font-medium text-cool-black mb-2">
+                      <label 
+                        htmlFor="name" 
+                        className="block text-sm font-medium text-cool-black mb-2"
+                        style={{ textAlign: isRTL ? 'right' : 'left' }}
+                      >
                         {t('contact.fullName', 'Full Name')}
                       </label>
                       <div className="relative">
-                        <User className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+                        <User className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 w-5 h-5 text-gray-400`} />
                         <input
                           type="text"
                           id="name"
@@ -261,18 +286,27 @@ const Contact = () => {
                           value={formData.name}
                           onChange={handleInputChange}
                           required
-                          className="input-field w-full pl-10 pr-4 py-3"
+                          className={`input-field w-full py-3 ${isRTL ? 'pr-10 pl-4' : 'pl-10 pr-4'}`}
+                          style={{ 
+                            textAlign: isRTL ? 'right' : 'left',
+                            direction: isRTL ? 'rtl' : 'ltr'
+                          }}
                           placeholder={t('contact.fullNamePlaceholder', 'Enter your full name')}
+                          dir={isRTL ? 'rtl' : 'ltr'}
                         />
                       </div>
                     </div>
 
                     <div>
-                      <label htmlFor="email" className="block text-sm font-medium text-cool-black mb-2">
+                      <label 
+                        htmlFor="email" 
+                        className="block text-sm font-medium text-cool-black mb-2"
+                        style={{ textAlign: isRTL ? 'right' : 'left' }}
+                      >
                         {t('contact.emailAddress', 'Email Address')}
                       </label>
                       <div className="relative">
-                        <Mail className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+                        <Mail className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 w-5 h-5 text-gray-400`} />
                         <input
                           type="email"
                           id="email"
@@ -280,19 +314,28 @@ const Contact = () => {
                           value={formData.email}
                           onChange={handleInputChange}
                           required
-                          className="input-field w-full pl-10 pr-4 py-3"
+                          className={`input-field w-full py-3 ${isRTL ? 'pr-10 pl-4' : 'pl-10 pr-4'}`}
+                          style={{ 
+                            textAlign: isRTL ? 'right' : 'left',
+                            direction: isRTL ? 'rtl' : 'ltr'
+                          }}
                           placeholder={t('contact.emailPlaceholder', 'Enter your email address')}
+                          dir={isRTL ? 'rtl' : 'ltr'}
                         />
                       </div>
                     </div>
 
 
                     <div>
-                      <label htmlFor="message" className="block text-sm font-medium text-cool-black mb-2">
+                      <label 
+                        htmlFor="message" 
+                        className="block text-sm font-medium text-cool-black mb-2"
+                        style={{ textAlign: isRTL ? 'right' : 'left' }}
+                      >
                         {t('contact.message', 'Message')}
                       </label>
                       <div className="relative">
-                        <MessageSquare className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+                        <MessageSquare className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 w-5 h-5 text-gray-400`} />
                         <textarea
                           id="message"
                           name="message"
@@ -300,8 +343,13 @@ const Contact = () => {
                           onChange={handleInputChange}
                           required
                           rows={5}
-                          className="input-field w-full pl-10 pr-4 py-3 resize-none"
+                          className={`input-field w-full py-3 resize-none ${isRTL ? 'pr-10 pl-4' : 'pl-10 pr-4'}`}
+                          style={{ 
+                            textAlign: isRTL ? 'right' : 'left',
+                            direction: isRTL ? 'rtl' : 'ltr'
+                          }}
                           placeholder={t('contact.messagePlaceholder', 'Tell us how we can help you...')}
+                          dir={isRTL ? 'rtl' : 'ltr'}
                         />
                       </div>
                     </div>
@@ -336,9 +384,9 @@ const Contact = () => {
                 <div className="absolute inset-px rounded-xl bg-white"></div>
                 <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
                   <div className="px-8 pt-8 pb-8">
-                    <div className="flex items-center mb-6">
-                      <Building className="w-8 h-8 text-tufts-blue mr-3" />
-                      <h2 className="text-2xl font-medium tracking-tight text-eerie-black">{t('contact.ourOffice', 'Our Office')}</h2>
+                    <div className={`flex items-center mb-6 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                      <Building className={`w-8 h-8 text-tufts-blue ${isRTL ? 'ml-3' : 'mr-3'}`} />
+                      <h2 className={`text-2xl font-medium tracking-tight text-eerie-black ${isRTL ? 'text-right' : 'text-left'}`}>{t('contact.ourOffice', 'Our Office')}</h2>
                     </div>
                 
                     {(() => {
@@ -350,27 +398,27 @@ const Contact = () => {
                       return (
                         <div className="space-y-4">
                           <div>
-                            <h3 className="text-lg font-medium text-eerie-black mb-2">
+                            <h3 className={`text-lg font-medium text-eerie-black mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>
                               {office.companyName}
                             </h3>
                             <div className="space-y-2 text-cool-black">
                               {office.address && office.address.trim() !== '' && (
-                                <p className="flex items-start">
-                                  <MapPin className="w-5 h-5 mr-2 mt-0.5 text-tufts-blue flex-shrink-0" />
+                                <p className={`flex items-start ${isRTL ? 'flex-row-reverse text-right' : 'text-left'}`}>
+                                  <MapPin className={`w-5 h-5 mt-0.5 text-tufts-blue flex-shrink-0 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                                   <span>{office.address}</span>
                                 </p>
                               )}
                               {office.phone && office.phone.trim() !== '' && (
-                                <p className="flex items-center">
-                                  <Phone className="w-5 h-5 mr-2 text-tufts-blue" />
+                                <p className={`flex items-center ${isRTL ? 'flex-row-reverse text-right' : 'text-left'}`}>
+                                  <Phone className={`w-5 h-5 text-tufts-blue ${isRTL ? 'ml-2' : 'mr-2'}`} />
                                   <a href="https://t.me/theholylabs" className="text-tufts-blue hover:text-cobalt-blue transition-colors duration-200">
                                     {office.phone}
                                   </a>
                                 </p>
                               )}
                               {office.email && office.email.trim() !== '' && (
-                                <p className="flex items-center">
-                                  <Mail className="w-5 h-5 mr-2 text-tufts-blue" />
+                                <p className={`flex items-center ${isRTL ? 'flex-row-reverse text-right' : 'text-left'}`}>
+                                  <Mail className={`w-5 h-5 text-tufts-blue ${isRTL ? 'ml-2' : 'mr-2'}`} />
                                   <a href={`mailto:${office.email}`} className="text-tufts-blue hover:text-cobalt-blue transition-colors duration-200">
                                     {office.email}
                                   </a>
@@ -391,9 +439,9 @@ const Contact = () => {
                 <div className="absolute inset-px rounded-xl bg-white"></div>
                 <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
                   <div className="px-8 pt-8 pb-8">
-                    <div className="flex items-center mb-6">
-                      <Clock className="w-8 h-8 text-tufts-blue mr-3" />
-                      <h3 className="text-xl font-medium tracking-tight text-eerie-black">{t('contact.businessHours', 'Business Hours')}</h3>
+                    <div className={`flex items-center mb-6 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                      <Clock className={`w-8 h-8 text-tufts-blue ${isRTL ? 'ml-3' : 'mr-3'}`} />
+                      <h3 className={`text-xl font-medium tracking-tight text-eerie-black ${isRTL ? 'text-right' : 'text-left'}`}>{t('contact.businessHours', 'Business Hours')}</h3>
                     </div>
                     <div className="space-y-3 text-cool-black">
                       {Object.entries(businessHours).map(([day, hours]) => {
@@ -402,7 +450,7 @@ const Contact = () => {
                         const timeDisplay = isClosed ? 'Closed' : `${hours.open || '--'} - ${hours.close || '--'}`;
                         
                         return (
-                          <div key={day} className="flex justify-between">
+                          <div key={day} className={`flex justify-between ${isRTL ? 'text-right' : 'text-left'}`}>
                             <span>{dayName}</span>
                             <span className={`font-medium ${isClosed ? 'text-gray-500' : 'text-eerie-black'}`}>
                               {timeDisplay}
@@ -439,7 +487,7 @@ const Contact = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6" style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
             {faqCategories.map((category, categoryIndex) => {
               const CategoryIcon = category.icon;
               return (
@@ -450,11 +498,11 @@ const Contact = () => {
                   <div className="absolute inset-px rounded-xl bg-white"></div>
                   <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
                     <div className="px-8 pt-8 pb-8">
-                      <div className="flex items-center mb-6">
-                        <div className="w-12 h-12 bg-tufts-blue/10 rounded-xl flex items-center justify-center mr-4">
+                      <div className={`flex items-center mb-6 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                        <div className={`w-12 h-12 bg-tufts-blue/10 rounded-xl flex items-center justify-center ${isRTL ? 'ml-4' : 'mr-4'}`}>
                           <CategoryIcon className="w-6 h-6 text-tufts-blue" />
                         </div>
-                        <h3 className="text-xl font-medium tracking-tight text-eerie-black">{category.title}</h3>
+                        <h3 className={`text-xl font-medium tracking-tight text-eerie-black ${isRTL ? 'text-right' : 'text-left'}`}>{category.title}</h3>
                       </div>
                       
                       <div className="space-y-3">
@@ -464,9 +512,9 @@ const Contact = () => {
                             <div key={faqIndex} className="bg-alice-blue/50 rounded-lg border border-tufts-blue/10">
                               <button
                                 onClick={() => toggleFaq(categoryIndex, faqIndex)}
-                                className="w-full px-4 py-3 text-left flex items-center justify-between hover:bg-tufts-blue/5 transition-colors duration-200 rounded-lg"
+                                className={`w-full px-4 py-3 flex items-center justify-between hover:bg-tufts-blue/5 transition-colors duration-200 rounded-lg ${isRTL ? 'text-right' : 'text-left'}`}
                               >
-                                <span className="font-medium text-eerie-black text-sm">{faq.question}</span>
+                                <span className={`font-medium text-eerie-black text-sm ${isRTL ? 'text-right' : 'text-left'}`}>{faq.question}</span>
                                 {isOpen ? (
                                   <ChevronUp className="w-4 h-4 text-tufts-blue flex-shrink-0" />
                                 ) : (
@@ -475,7 +523,7 @@ const Contact = () => {
                               </button>
                               {isOpen && (
                                 <div className="px-4 pb-3">
-                                  <p className="text-cool-black leading-relaxed text-sm">{faq.answer}</p>
+                                  <p className={`text-cool-black leading-relaxed text-sm ${isRTL ? 'text-right' : 'text-left'}`}>{faq.answer}</p>
                                 </div>
                               )}
                             </div>

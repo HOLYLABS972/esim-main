@@ -2,12 +2,13 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '../contexts/AuthContext';
 import { useI18n } from '../contexts/I18nContext';
 import { motion } from 'framer-motion';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { detectLanguageFromPath } from '../utils/languageUtils';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -17,6 +18,26 @@ const Login = () => {
   const { login, signInWithGoogle } = useAuth();
   const { t, locale } = useI18n();
   const router = useRouter();
+  const pathname = usePathname();
+
+  // Get current language for localized URLs
+  const getCurrentLanguage = () => {
+    if (locale) return locale;
+    if (typeof window !== 'undefined') {
+      const savedLanguage = localStorage.getItem('roamjet-language');
+      if (savedLanguage) return savedLanguage;
+    }
+    return detectLanguageFromPath(pathname);
+  };
+
+  const currentLanguage = getCurrentLanguage();
+
+  const getLocalizedUrl = (path) => {
+    if (currentLanguage === 'en') {
+      return path;
+    }
+    return `/${currentLanguage}${path}`;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -70,7 +91,7 @@ const Login = () => {
             <p className="mt-2 text-center text-sm text-cool-black">
               {t('auth.login.subtitle', 'Or')}{' '}
               <Link
-                href="/register"
+                href={getLocalizedUrl('/register')}
                 className="font-semibold text-tufts-blue hover:text-cobalt-blue transition-colors"
               >
                 {t('auth.login.createAccount', 'create a new account')}

@@ -2,12 +2,13 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { useAuth } from '../contexts/AuthContext';
 import { useI18n } from '../contexts/I18nContext';
 import { motion } from 'framer-motion';
 import { Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { detectLanguageFromPath } from '../utils/languageUtils';
 
 const Register = () => {
   const [displayName, setDisplayName] = useState('');
@@ -17,9 +18,29 @@ const Register = () => {
   const [loading, setLoading] = useState(false);
   const [referralCode, setReferralCode] = useState('');
   const { signup } = useAuth();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const pathname = usePathname();
+
+  // Get current language for localized URLs
+  const getCurrentLanguage = () => {
+    if (locale) return locale;
+    if (typeof window !== 'undefined') {
+      const savedLanguage = localStorage.getItem('roamjet-language');
+      if (savedLanguage) return savedLanguage;
+    }
+    return detectLanguageFromPath(pathname);
+  };
+
+  const currentLanguage = getCurrentLanguage();
+
+  const getLocalizedUrl = (path) => {
+    if (currentLanguage === 'en') {
+      return path;
+    }
+    return `/${currentLanguage}${path}`;
+  };
 
   // Check for referral code in URL
   useEffect(() => {
@@ -75,7 +96,7 @@ const Register = () => {
             <p className="mt-2 text-center text-sm text-cool-black">
               {t('auth.register.subtitle', 'Or')}{' '}
               <Link
-                href="/login"
+                href={getLocalizedUrl('/login')}
                 className="font-semibold text-tufts-blue hover:text-cobalt-blue transition-colors"
               >
                 {t('auth.register.signInExisting', 'sign in to your existing account')}

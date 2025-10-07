@@ -4,6 +4,304 @@
   direction: rtl;
 }
 
+/* RTL Input Fields and Form Elements */
+[dir="rtl"] .input-field {
+  text-align: right !important;
+  direction: rtl !important;
+}
+
+[dir="rtl"] input {
+  text-align: right !important;
+  direction: rtl !important;
+}
+
+[dir="rtl"] textarea {
+  text-align: right !important;
+  direction: rtl !important;
+}
+
+[dir="rtl"] label {
+  text-align: right !important;
+}
+
+/* RTL Text Alignment */
+[dir="rtl"] .text-left {
+  text-align: right !important;
+}
+
+[dir="rtl"] h1, [dir="rtl"] h2, [dir="rtl"] h3, [dir="rtl"] h4, [dir="rtl"] h5, [dir="rtl"] h6 {
+  text-align: center !important;
+}
+
+[dir="rtl"] p {
+  text-align: right !important;
+}
+
+/* RTL Container and Layout Support */
+[dir="rtl"] .grid {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .flex {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .space-y-6 > * {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .space-y-4 > * {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .space-y-3 > * {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .space-y-2 > * {
+  direction: rtl !important;
+}
+
+/* RTL Form Container */
+[dir="rtl"] form {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .relative {
+  direction: rtl !important;
+}
+
+/* RTL Flex Direction Overrides */
+[dir="rtl"] .flex-row {
+  flex-direction: row-reverse !important;
+}
+
+[dir="rtl"] .flex-col {
+  flex-direction: column !important;
+}
+
+/* RTL Grid Layout */
+[dir="rtl"] .lg\\:grid-cols-2 {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .grid-cols-1 {
+  direction: rtl !important;
+}
+
+/* RTL Spacing and Margins */
+[dir="rtl"] .mr-2 {
+  margin-right: 0 !important;
+  margin-left: 0.5rem !important;
+}
+
+[dir="rtl"] .mr-3 {
+  margin-right: 0 !important;
+  margin-left: 0.75rem !important;
+}
+
+[dir="rtl"] .mr-4 {
+  margin-right: 0 !important;
+  margin-left: 1rem !important;
+}
+
+[dir="rtl"] .ml-2 {
+  margin-left: 0 !important;
+  margin-right: 0.5rem !important;
+}
+
+[dir="rtl"] .ml-3 {
+  margin-left: 0 !important;
+  margin-right: 0.75rem !important;
+}
+
+[dir="rtl"] .ml-4 {
+  margin-left: 0 !important;
+  margin-right: 1rem !important;
+}
+
+/* RTL Padding */
+[dir="rtl"] .pl-10 {
+  padding-left: 0 !important;
+  padding-right: 2.5rem !important;
+}
+
+[dir="rtl"] .pr-4 {
+  padding-right: 0 !important;
+  padding-left: 1rem !important;
+}
+
+[dir="rtl"] .pr-10 {
+  padding-right: 0 !important;
+  padding-left: 2.5rem !important;
+}
+
+[dir="rtl"] .pl-4 {
+  padding-left: 0 !important;
+  padding-right: 1rem !important;
+}
+
+/* RTL Positioning */
+[dir="rtl"] .left-3 {
+  left: auto !important;
+  right: 0.75rem !important;
+}
+
+[dir="rtl"] .right-3 {
+  right: auto !important;
+  left: 0.75rem !important;
+}
+
+/* RTL Contact Form Specific */
+[dir="rtl"] .contact-form {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .contact-form * {
+  direction: rtl !important;
+}
+
+/* RTL Div and Container Support */
+[dir="rtl"] div {
+  direction: rtl !important;
+}
+
+[dir="rtl"] section {
+  direction: rtl !important;
+}
+
+/* RTL Flex Utilities Override */
+[dir="rtl"] .justify-between {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .items-center {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .items-start {
+  direction: rtl !important;
+}
+
+/* RTL Text Utilities Override - Keep center alignment for centered elements */
+[dir="rtl"] .text-center {
+  text-align: center !important;
+}
+
+[dir="rtl"] .text-sm {
+  text-align: right !important;
+}
+
+[dir="rtl"] .text-lg:not(.text-center) {
+  text-align: right !important;
+}
+
+[dir="rtl"] .text-xl:not(.text-center) {
+  text-align: right !important;
+}
+
+[dir="rtl"] .text-2xl:not(.text-center) {
+  text-align: right !important;
+}
+
+[dir="rtl"] .text-3xl:not(.text-center) {
+  text-align: right !important;
+}
+
+[dir="rtl"] .text-4xl {
+  text-align: center !important;
+}
+
+[dir="rtl"] .text-5xl {
+  text-align: center !important;
+}
+
+/* Specific overrides for Contact page centered elements */
+[dir="rtl"] .text-center.text-xl {
+  text-align: center !important;
+}
+
+[dir="rtl"] .text-center.text-3xl {
+  text-align: center !important;
+}
+
+[dir="rtl"] .text-center.text-4xl {
+  text-align: center !important;
+}
+
+[dir="rtl"] .text-center.text-5xl {
+  text-align: center !important;
+}
+
+[dir="rtl"] .text-center.text-lg {
+  text-align: center !important;
+}
+
+/* High priority rule to ensure text-center always stays centered */
+[dir="rtl"] .text-center {
+  text-align: center !important;
+}
+
+[dir="rtl"] .mx-auto.text-center {
+  text-align: center !important;
+}
+
+/* RTL Block Elements */
+[dir="rtl"] .block {
+  direction: rtl !important;
+  text-align: right !important;
+}
+
+/* RTL Specific Overrides for Contact Page */
+[dir="rtl"] .mx-auto {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .max-w-2xl {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .max-w-7xl {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .px-6 {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .px-8 {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .py-3 {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .py-24 {
+  direction: rtl !important;
+}
+
+/* RTL Gap and Spacing */
+[dir="rtl"] .gap-6 {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .space-y-6 {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .space-y-4 {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .space-y-3 {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .space-y-2 {
+  direction: rtl !important;
+}
+
 /* Fix for Features Section Device Compatibility Card */
 [dir="rtl"] .features-section .lg\\:row-span-2 {
   direction: rtl;
@@ -68,15 +366,7 @@
 }
 
 /* More specific fixes for the device compatibility section */
-[dir="rtl"] .relative.min-h-\\[20rem\\] {
-  direction: rtl;
-}
-
-[dir="rtl"] .relative.min-h-\\[24rem\\] {
-  direction: rtl;
-}
-
-[dir="rtl"] .relative.min-h-\\[30rem\\] {
+[dir="rtl"] .relative {
   direction: rtl;
 }
 
@@ -116,23 +406,13 @@
 }
 
 /* Additional fixes for the device compatibility card layout */
-[dir="rtl"] .relative.min-h-\\[20rem\\].sm\\:min-h-\\[24rem\\].lg\\:min-h-\\[30rem\\].w-full.grow {
+[dir="rtl"] .w-full {
   direction: rtl;
 }
 
-[dir="rtl"] .relative.min-h-\\[20rem\\].sm\\:min-h-\\[24rem\\].lg\\:min-h-\\[30rem\\].w-full.grow .absolute {
+/* Simplified RTL absolute positioning */
+[dir="rtl"] .absolute {
   direction: rtl;
-}
-
-/* Fix the code editor box to not overlap text */
-[dir="rtl"] .absolute.top-6.sm\\:top-8.lg\\:top-10.right-0.bottom-0.left-4.sm\\:left-6.lg\\:left-10 {
-  position: absolute !important;
-  top: 1.5rem !important;
-  right: 1rem !important;
-  left: auto !important;
-  bottom: 0 !important;
-  width: calc(100% - 2rem) !important;
-  max-width: 300px !important;
 }
 
 [dir="rtl"] .sm\\:top-8 {

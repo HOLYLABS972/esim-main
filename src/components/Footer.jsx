@@ -52,10 +52,25 @@ const Footer = () => {
                     pathname.startsWith('/german/blog') || 
                     pathname.startsWith('/french/blog') || 
                     pathname.startsWith('/spanish/blog');
+
+  // Check for language-specific routes (e.g., /he/contact, /ru/login, etc.)
+  const isLanguageSpecificPage = pathname.startsWith('/he/') || 
+                                pathname.startsWith('/ar/') || 
+                                pathname.startsWith('/ru/') || 
+                                pathname.startsWith('/de/') || 
+                                pathname.startsWith('/fr/') || 
+                                pathname.startsWith('/es/') ||
+                                // Old language routes (for backward compatibility)
+                                pathname.startsWith('/hebrew/') || 
+                                pathname.startsWith('/arabic/') || 
+                                pathname.startsWith('/russian/') || 
+                                pathname.startsWith('/german/') || 
+                                pathname.startsWith('/french/') || 
+                                pathname.startsWith('/spanish/');
   
-  // Use translations on language-specific pages and blog pages
+  // Use translations on language-specific pages, blog pages, and language-specific routes
   const getText = (key, englishText) => {
-    return (isLanguagePage || isBlogPage) ? t(key, englishText) : englishText;
+    return (isLanguagePage || isBlogPage || isLanguageSpecificPage) ? t(key, englishText) : englishText;
   };
 
   const quickLinks = [

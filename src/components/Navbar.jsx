@@ -3,17 +3,44 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { createPortal } from 'react-dom';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useI18n } from '../contexts/I18nContext';
 import { useAuth } from '../contexts/AuthContext';
 import LanguageSelector from './LanguageSelector';
 import { detectPlatform } from '../utils/platformDetection';
+import { detectLanguageFromPath, getLocalizedBlogListUrl } from '../utils/languageUtils';
 
 const Navbar = ({ hideLanguageSelector = false }) => {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { currentUser, logout } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  // Detect current language from multiple sources
+  const getCurrentLanguage = () => {
+    // First try I18n context
+    if (locale) return locale;
+    
+    // Check localStorage
+    if (typeof window !== 'undefined') {
+      const savedLanguage = localStorage.getItem('roamjet-language');
+      if (savedLanguage) return savedLanguage;
+    }
+    
+    // Fallback to URL detection
+    return detectLanguageFromPath(pathname);
+  };
+
+  const currentLanguage = getCurrentLanguage();
+
+  // Generate localized URLs
+  const getLocalizedUrl = (path) => {
+    if (currentLanguage === 'en') {
+      return path;
+    }
+    return `/${currentLanguage}${path}`;
+  };
 
   const handleDownloadApp = () => {
     const platform = detectPlatform();
@@ -78,7 +105,7 @@ const Navbar = ({ hideLanguageSelector = false }) => {
       <div className="bg-white/80 shadow-sm shadow-white/30 backdrop-blur-sm w-full">
       <nav aria-label="Global" className="mx-auto flex max-w-7xl items-center justify-between p-2 lg:px-8">
         <div className="flex lg:flex-1">
-          <Link href="/" className="-m-1.5 p-1.5 flex items-center">
+          <Link href={getLocalizedUrl("/")} className="-m-1.5 p-1.5 flex items-center">
             <span className="sr-only">RoamJet Plans</span>
             <img
               src="/images/logo_icon/logo.png"
@@ -104,24 +131,19 @@ const Navbar = ({ hideLanguageSelector = false }) => {
         </div>
         
         <div className="hidden lg:flex lg:gap-x-12">
-          <button 
-            onClick={handleDownloadApp}
-            className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors bg-transparent border-none cursor-pointer"
-          >
-            {t('navbar.downloadApp', 'Download App')}
-          </button>
-          <Link href="/contact" className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
+          
+          <Link href={getLocalizedUrl('/contact')} className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
             {t('navbar.contactUs', 'Contact Us')}
           </Link>
-          <Link href="/blog" className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
+          <Link href={getLocalizedBlogListUrl(currentLanguage)} className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
             {t('navbar.blog', 'Blog')}
           </Link>
           {currentUser ? (
             <>
-              <Link href="/esim-plans" className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
+              <Link href={getLocalizedUrl("/esim-plans")} className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
                 {t('navbar.plans', 'Plans')}
               </Link>
-              <Link href="/dashboard" className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
+              <Link href={getLocalizedUrl("/dashboard")} className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
                 {t('navbar.dashboard', 'Dashboard')}
               </Link>
               <button
@@ -132,7 +154,7 @@ const Navbar = ({ hideLanguageSelector = false }) => {
               </button>
             </>
           ) : (
-            <Link href="/login" className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
+            <Link href={getLocalizedUrl('/login')} className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
               {t('navbar.login', 'Login')}
             </Link>
           )}
@@ -154,7 +176,7 @@ const Navbar = ({ hideLanguageSelector = false }) => {
           >
             {/* Header with logo and close button */}
             <div className="flex items-center justify-between p-6">
-              <Link href="/" className="
+              <Link href={getLocalizedUrl("/")} className="
                flex items-center" onClick={() => setIsMenuOpen(false)}>
                 <span className="sr-only">RoamJet Plans</span>
                 <img
@@ -198,20 +220,20 @@ const Navbar = ({ hideLanguageSelector = false }) => {
                     {t('navbar.downloadApp', 'Download App')}
                   </button>
                   <Link
-                    href="/contact"
+                    href={getLocalizedUrl('/contact')}
                     className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     {t('navbar.contactUs', 'Contact Us')}
                   </Link>
                   <Link
-                    href="/blog"
+                    href={getLocalizedBlogListUrl(currentLanguage)}
                     className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     {t('navbar.blog', 'Blog')}
                   </Link>
-                  {currentUser && (
+                  {currentUser ? (
                     <>
                       <Link
                         href="/esim-plans"
@@ -237,6 +259,14 @@ const Navbar = ({ hideLanguageSelector = false }) => {
                         {t('navbar.logout', 'Logout')}
                       </button>
                     </>
+                  ) : (
+                    <Link
+                      href={getLocalizedUrl('/login')}
+                      className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      {t('navbar.login', 'Login')}
+                    </Link>
                   )}
                 </div>
               </div>
