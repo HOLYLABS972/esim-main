@@ -3,10 +3,19 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Head from 'next/head';
+import { usePathname } from 'next/navigation';
 import { Calendar, User, Clock, ArrowLeft, Share2, FolderOpen } from 'lucide-react';
+import { useI18n } from '../contexts/I18nContext';
 import blogService from '../services/blogService';
+import { detectLanguageFromPath, getLocalizedBlogListUrl } from '../utils/languageUtils';
 
 const BlogPost = ({ slug }) => {
+  const pathname = usePathname();
+  const { locale, t } = useI18n();
+  
+  // Fallback to URL-based detection if I18n context doesn't have language
+  const detectedLanguage = locale || detectLanguageFromPath(pathname);
+  
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -14,7 +23,7 @@ const BlogPost = ({ slug }) => {
 
   useEffect(() => {
     loadBlogPost();
-  }, [slug]);
+  }, [slug, detectedLanguage]);
 
   const loadBlogPost = async () => {
     try {
@@ -28,8 +37,8 @@ const BlogPost = ({ slug }) => {
         return;
       }
 
-      const postData = await blogService.getPostBySlug(slug);
-      console.log('Blog post data:', postData);
+      const postData = await blogService.getPostBySlug(slug, detectedLanguage);
+      console.log('Blog post data:', postData, 'Language:', detectedLanguage);
       
       if (postData) {
         setPost(postData);
@@ -63,7 +72,7 @@ const BlogPost = ({ slug }) => {
     const url = window.location.href;
     try {
       await navigator.clipboard.writeText(url);
-      alert('Link copied to clipboard!');
+      alert(t('blog.linkCopied', 'Link copied to clipboard!'));
       setShowShareModal(false);
     } catch (err) {
       // Fallback if clipboard API fails
@@ -73,7 +82,7 @@ const BlogPost = ({ slug }) => {
       textArea.select();
       document.execCommand('copy');
       document.body.removeChild(textArea);
-      alert('Link copied to clipboard!');
+      alert(t('blog.linkCopied', 'Link copied to clipboard!'));
       setShowShareModal(false);
     }
   };
@@ -127,10 +136,10 @@ const BlogPost = ({ slug }) => {
           <h1 className="text-4xl font-medium tracking-tight text-eerie-black mb-4">Post Not Found</h1>
           <p className="text-cool-black mb-8">{error || 'The blog post you\'re looking for doesn\'t exist.'}</p>
           <Link 
-            href="/blog" 
+            href={getLocalizedBlogListUrl(detectedLanguage)} 
             className="btn-primary px-6 py-3"
           >
-            Back to Blog
+            {t('blog.backToBlog', 'Back to Blog')}
           </Link>
         </div>
       </div>
@@ -216,11 +225,11 @@ const BlogPost = ({ slug }) => {
                     {/* Top Navigation */}
                     <div className="flex justify-between items-start">
                       <Link 
-                        href="/blog" 
+                        href={getLocalizedBlogListUrl(detectedLanguage)} 
                         className="inline-flex items-center text-cool-black hover:text-eerie-black bg-white backdrop-blur-sm px-3 py-2 sm:px-4 rounded-full font-medium transition-all duration-200 text-sm sm:text-base"
                       >
                         <ArrowLeft className="w-4 h-4 mr-1 sm:mr-2" />
-                        <span className="hidden sm:inline">Back to Blog</span>
+                        <span className="hidden sm:inline">{t('blog.backToBlog', 'Back to Blog')}</span>
                         <span className="sm:hidden">Back</span>
                       </Link>
                       
@@ -235,8 +244,18 @@ const BlogPost = ({ slug }) => {
                     
                     {/* Bottom Content */}
                     <div className="space-y-6">
+                      {/* Title */}
+                      <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-white leading-tight">
+                        {post.title}
+                      </h1>
+                      
                       {/* Tags and Category */}
                       <div className="flex flex-wrap gap-2 items-center">
+                        {post.isFallback && (
+                          <span className="bg-orange-500 text-white px-2 py-1 rounded-full text-xs font-medium backdrop-blur-sm">
+                            {post.language?.toUpperCase() || 'EN'} Version
+                          </span>
+                        )}
                         
                         {post.tags && post.tags.length > 0 && (
                           <>
@@ -251,8 +270,6 @@ const BlogPost = ({ slug }) => {
                           </>
                         )}
                       </div>
-                      
-                      
                       
                       {/* Meta Information */}
                       <div className="flex flex-wrap items-center gap-3 sm:gap-6 text-white/90 text-sm sm:text-base">
@@ -278,12 +295,12 @@ const BlogPost = ({ slug }) => {
               {/* Fallback Header (if no image) */}
               {!post.featuredImage && (
                 <div className="px-8 pt-8 pb-8">
-                  <Link 
-                    href="/blog" 
-                    className="inline-flex items-center text-tufts-blue hover:text-cobalt-blue mb-6 font-medium transition-colors duration-200"
-                  >
+                    <Link 
+                      href={getLocalizedBlogListUrl(detectedLanguage)} 
+                      className="inline-flex items-center text-tufts-blue hover:text-cobalt-blue mb-6 font-medium transition-colors duration-200"
+                    >
                     <ArrowLeft className="w-4 h-4 mr-2" />
-                    Back to Blog
+                    {t('blog.backToBlog', 'Back to Blog')}
                   </Link>
                   
                   <div className="mb-4 flex flex-wrap gap-2 items-center">
@@ -347,7 +364,7 @@ const BlogPost = ({ slug }) => {
         <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
           <div className="bg-white overflow-hidden">
             {/* Article Content */}
-            <article className="prose prose-lg prose-slate max-w-none prose-headings:font-semibold prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg prose-p:text-base prose-p:leading-7 prose-img:max-w-full prose-img:h-auto">
+            <article className="prose prose-lg prose-slate max-w-none prose-headings:font-semibold prose-p:text-base prose-p:leading-7">
               <div
                 dangerouslySetInnerHTML={{ __html: post.content }}
               />
@@ -380,7 +397,7 @@ const BlogPost = ({ slug }) => {
       {showShareModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Share this post</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('blog.sharePost', 'Share this post')}</h3>
             
             <div className="space-y-3">
               <button
@@ -390,7 +407,7 @@ const BlogPost = ({ slug }) => {
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                 </svg>
-                <span>Copy Link</span>
+                <span>{t('blog.copyLink', 'Copy Link')}</span>
               </button>
               
               <div className="grid grid-cols-2 gap-2">

@@ -82,16 +82,13 @@
   }
   table th {
     font-size: 16px;
-    background-color: var(--tufts-blue);
     font-weight: 600;
     line-height: 24px;
     letter-spacing: -0.25px;
     font-family: 'Open Sans', sans-serif;
-    color: var(--white);
   }
   table td {
     font-size: 16px;
-    background-color: var(--white);
     font-weight: 400;
     line-height: 24px;
     letter-spacing: -0.25px;
@@ -237,7 +234,7 @@
   }
 
   .prose th, .prose td {
-    @apply p-3 text-center;
+    @apply py-2 px-3 text-center;
     min-width: 100px;
     border-right: 1px solid #e5e7eb;
     border-bottom: 1px solid #e5e7eb;
@@ -254,7 +251,7 @@
 
   @media (min-width: 768px) {
     .prose th, .prose td {
-      @apply p-4;
+      @apply py-2 px-4;
       min-width: 120px;
     }
   }
@@ -299,10 +296,36 @@
 
   .prose blockquote {
     @apply border-l-4 border-cobalt-blue pl-4 py-2 my-6 text-eerie-black text-lg italic rounded-lg;
-    
   }
 
+  /* Blog post images */
+  .prose img {
+    @apply rounded-xl shadow-md mx-auto my-6;
+    max-width: 100%;
+    height: auto;
+    max-height: 500px;
+    object-fit: cover;
+  }
 
+  @media (min-width: 768px) {
+    .prose img {
+      max-width: 800px;
+      max-height: 600px;
+    }
+  }
+
+  @media (max-width: 767px) {
+    .prose img {
+      @apply w-full max-w-sm mx-auto;
+      max-height: 300px;
+    }
+  }
+
+  /* YouTube iframe responsive */
+  .prose iframe {
+    @apply w-full max-w-full rounded-xl;
+    aspect-ratio: 16/9;
+  }
 
   @media (max-width: 767px) {
     .prose iframe {
@@ -311,22 +334,89 @@
     }
   }
 
-  /* General mobile responsiveness for prose content */
+  /* Custom heading sizes for blog posts - Subtle differences */
+  .prose h1 {
+    font-size: 32px;
+    line-height: 1.3;
+    font-weight: 700;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+  }
+
+  .prose h2 {
+    font-size: 28px;
+    line-height: 1.3;
+    font-weight: 600;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .prose h3 {
+    font-size: 24px;
+    line-height: 1.4;
+    font-weight: 600;
+    margin-top: 1.25rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .prose h4 {
+    font-size: 22px;
+    line-height: 1.4;
+    font-weight: 500;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .prose h5 {
+    font-size: 20px;
+    line-height: 1.5;
+    font-weight: 500;
+    margin-top: 0.75rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .prose h6 {
+    font-size: 18px;
+    line-height: 1.5;
+    font-weight: 500;
+    margin-top: 0.5rem;
+    margin-bottom: 0.25rem;
+  }
+
+  /* Mobile responsive heading sizes */
   @media (max-width: 767px) {
     .prose {
       @apply text-sm;
     }
     
     .prose h1 {
-      @apply text-xl;
+      font-size: 26px;
+      line-height: 1.3;
     }
     
     .prose h2 {
-      @apply text-lg;
+      font-size: 24px;
+      line-height: 1.3;
     }
     
     .prose h3 {
-      @apply text-base;
+      font-size: 22px;
+      line-height: 1.4;
+    }
+
+    .prose h4 {
+      font-size: 20px;
+      line-height: 1.4;
+    }
+
+    .prose h5 {
+      font-size: 18px;
+      line-height: 1.5;
+    }
+
+    .prose h6 {
+      font-size: 16px;
+      line-height: 1.5;
     }
     
     .prose p {

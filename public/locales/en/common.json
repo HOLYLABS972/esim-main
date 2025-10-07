@@ -167,6 +167,34 @@
     "addBankAccount": "Add Bank Account",
     "addBankAccountDesc": "Add your bank account details to withdraw your earnings"
   },
+  "blog": {
+    "title": "eSIM Insights",
+    "subtitle": "Stay updated with eSIM technology",
+    "description": "Discover the latest trends, guides, and insights in eSIM technology and global connectivity solutions.",
+    "searchPlaceholder": "Search blog posts...",
+    "allCategories": "All Categories",
+    "loadingPosts": "Loading blog posts...",
+    "noPostsFound": "No blog posts found matching your criteria",
+    "noPostsAvailable": "No blog posts available yet",
+    "readMore": "Read More",
+    "backToBlog": "Back to Blog",
+    "postNotFound": "Post Not Found",
+    "postNotFoundDescription": "The blog post you're looking for doesn't exist.",
+    "relatedTags": "Related Tags",
+    "sharePost": "Share this post",
+    "copyLink": "Copy Link",
+    "linkCopied": "Link copied to clipboard!",
+    "newsletter": {
+      "title": "Stay Updated with eSIM News",
+      "description": "Get the latest eSIM insights, travel tips, and technology updates delivered to your inbox",
+      "emailPlaceholder": "Enter your email",
+      "subscribe": "Subscribe",
+      "subscribing": "Subscribing...",
+      "subscribeSuccess": "Successfully subscribed to our newsletter!",
+      "subscribeError": "Failed to subscribe to newsletter. Please try again.",
+      "reactivated": "Welcome back! Your newsletter subscription has been reactivated."
+    }
+  },
   "auth": {
     "login": {
       "title": "Sign in to your account",

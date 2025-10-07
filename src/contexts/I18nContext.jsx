@@ -14,6 +14,7 @@ export const useI18n = () => {
       t: (key, fallback) => fallback || key,
       translations: {},
       isLoading: false,
+      changeLanguage: async () => {}, // Add fallback changeLanguage function
     };
   }
   return context;
@@ -74,11 +75,32 @@ export const I18nProvider = ({ children }) => {
     return typeof value === 'string' ? value : fallback || key;
   };
 
+  const changeLanguage = async (newLocale) => {
+    setLocale(newLocale);
+    
+    // Load translations for the new locale
+    try {
+      setIsLoading(true);
+      const response = await fetch(`/locales/${newLocale}/common.json`);
+      if (response.ok) {
+        const data = await response.json();
+        setTranslations(data);
+      } else {
+        console.error('Failed to load translations, response not ok:', response.status);
+      }
+    } catch (error) {
+      console.error('Failed to load translations:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const value = {
     locale,
     t,
     translations,
     isLoading,
+    changeLanguage,
   };
 
   return (

@@ -1,12 +1,19 @@
 import { Suspense } from 'react'
+import { headers } from 'next/headers'
 import BlogPost from '../../../src/components/BlogPost'
 import Loading from '../../../src/components/Loading'
 import blogService from '../../../src/services/blogService'
+import { detectLanguageFromPath } from '../../../src/utils/languageUtils'
 
 export async function generateMetadata({ params }) {
   try {
-    // Fetch the actual blog post data
-    const post = await blogService.getPostBySlug(params.id);
+    // Get the current pathname to detect language
+    const headersList = headers();
+    const pathname = headersList.get('x-pathname') || '/blog';
+    const currentLanguage = detectLanguageFromPath(pathname);
+    
+    // Fetch the actual blog post data with language support
+    const post = await blogService.getPostBySlug(params.id, currentLanguage);
     
     if (!post) {
       return {
@@ -16,10 +23,36 @@ export async function generateMetadata({ params }) {
     }
 
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.roamjet.net';
-    const postUrl = `${baseUrl}/blog/${params.id}`;
+    
+    // Generate localized URL
+    const languageRoutes = {
+      'es': 'spanish',
+      'fr': 'french',
+      'de': 'german',
+      'ar': 'arabic',
+      'he': 'hebrew',
+      'ru': 'russian'
+    };
+    
+    const route = languageRoutes[currentLanguage];
+    const postUrl = route ? `${baseUrl}/${route}/blog/${params.id}` : `${baseUrl}/blog/${params.id}`;
+    
     const imageUrl = post.featuredImage ? 
       (post.featuredImage.startsWith('http') ? post.featuredImage : `${baseUrl}${post.featuredImage}`) :
       `${baseUrl}/images/og-image.svg`;
+      
+    // Map language codes to locales
+    const localeMap = {
+      'en': 'en_US',
+      'es': 'es_ES', 
+      'fr': 'fr_FR',
+      'de': 'de_DE',
+      'ar': 'ar_SA',
+      'he': 'he_IL',
+      'ru': 'ru_RU'
+    };
+    
+    const locale = localeMap[currentLanguage] || 'en_US';
 
     return {
       title: `${post.title} | RoamJet Blog`,
@@ -32,7 +65,7 @@ export async function generateMetadata({ params }) {
       // Open Graph for Facebook, LinkedIn, etc.
       openGraph: {
         type: 'article',
-        locale: 'en_US',
+        locale: locale,
         url: postUrl,
         title: post.title,
         description: post.excerpt || post.seoDescription || 'Read our latest insights about eSIM technology and global connectivity.',

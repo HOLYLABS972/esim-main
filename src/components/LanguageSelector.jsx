@@ -2,11 +2,13 @@
 
 import React, { useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
+import { useI18n } from '../contexts/I18nContext';
 import { getLanguageName, getLanguageFlag } from '../utils/languageUtils';
 
 const LanguageSelector = () => {
   const pathname = usePathname();
   const router = useRouter();
+  const { locale, changeLanguage } = useI18n();
   const [isOpen, setIsOpen] = useState(false);
 
   const languages = [
@@ -19,8 +21,14 @@ const LanguageSelector = () => {
     { code: 'es', name: getLanguageName('es'), flag: getLanguageFlag('es'), route: '/spanish' }
   ];
 
-  // Determine current language from pathname
+  // Determine current language from I18n context first, then pathname
   const getCurrentLanguage = () => {
+    // First try to use the I18n context locale
+    if (locale) {
+      return languages.find(lang => lang.code === locale) || languages.find(lang => lang.code === 'en');
+    }
+    
+    // Fallback to pathname detection
     if (pathname === '/hebrew') return languages.find(lang => lang.code === 'he');
     if (pathname === '/arabic') return languages.find(lang => lang.code === 'ar');
     if (pathname === '/russian') return languages.find(lang => lang.code === 'ru');
@@ -32,9 +40,19 @@ const LanguageSelector = () => {
 
   const currentLanguage = getCurrentLanguage();
 
-  const handleLanguageChange = (languageRoute) => {
+  const handleLanguageChange = async (language) => {
     setIsOpen(false);
-    router.push(languageRoute);
+    
+    // Check if we're on a blog page
+    const isBlogPage = pathname.includes('/blog');
+    
+    if (isBlogPage) {
+      // For blog pages, just change the language context without navigation
+      await changeLanguage(language.code);
+    } else {
+      // For other pages, navigate to the language-specific route
+      router.push(language.route);
+    }
   };
 
   return (
@@ -62,14 +80,14 @@ const LanguageSelector = () => {
             {languages.map((language) => (
               <button
                 key={language.code}
-                onClick={() => handleLanguageChange(language.route)}
+                onClick={() => handleLanguageChange(language)}
                 className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 transition-colors flex items-center space-x-3 ${
-                  language.route === pathname ? 'bg-tufts-blue text-white hover:bg-tufts-blue' : 'text-gray-700'
+                  language.code === locale || (language.route === pathname && !locale) ? 'bg-tufts-blue text-white hover:bg-tufts-blue' : 'text-gray-700'
                 }`}
               >
                 <span className="text-lg">{language.flag}</span>
                 <span>{language.name}</span>
-                {language.route === pathname && (
+                {(language.code === locale || (language.route === pathname && !locale)) && (
                   <svg className="w-4 h-4 ml-auto" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>

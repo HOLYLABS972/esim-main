@@ -55,9 +55,10 @@ export const generateSlug = (title) => {
 
 // Blog service functions
 export const blogService = {
-  // Get all published blog posts
-  async getPublishedPosts(limitCount = 10, lastDoc = null) {
+  // Get all published blog posts with language support and translation variants
+  async getPublishedPosts(limitCount = 10, lastDoc = null, language = 'en') {
     try {
+      // Get all published posts regardless of language
       let q = query(
         collection(db, 'blog_posts'),
         where('status', '==', 'published'),
@@ -70,13 +71,64 @@ export const blogService = {
       }
 
       const snapshot = await getDocs(q);
-      const posts = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        publishedAt: doc.data().publishedAt?.toDate() || null,
-        createdAt: doc.data().createdAt?.toDate() || null,
-        updatedAt: doc.data().updatedAt?.toDate() || null
-      }));
+      const posts = snapshot.docs.map(doc => {
+        const data = doc.data();
+        
+        // Handle new translation format
+        if (data.translations) {
+          // Try to get the requested language first
+          let translation = data.translations[language];
+          let actualLanguage = language;
+          let isFallback = false;
+          
+          // If requested language doesn't exist, fall back to English
+          if (!translation && language !== 'en') {
+            translation = data.translations['en'];
+            actualLanguage = 'en';
+            isFallback = true;
+          }
+          
+          // If English doesn't exist either, use the first available translation
+          if (!translation) {
+            const availableLanguages = Object.keys(data.translations);
+            if (availableLanguages.length > 0) {
+              actualLanguage = availableLanguages[0];
+              translation = data.translations[actualLanguage];
+              isFallback = language !== actualLanguage;
+            }
+          }
+          
+          if (translation) {
+            return {
+              id: doc.id,
+              ...data,
+              // Override with language-specific content
+              title: translation.title,
+              slug: translation.slug,
+              excerpt: translation.excerpt,
+              content: translation.content,
+              seoTitle: translation.seoTitle,
+              seoDescription: translation.seoDescription,
+              language: actualLanguage,
+              isFallback: isFallback,
+              publishedAt: data.publishedAt?.toDate() || null,
+              createdAt: data.createdAt?.toDate() || null,
+              updatedAt: data.updatedAt?.toDate() || null
+            };
+          }
+        }
+        
+        // Handle old format (backward compatibility)
+        return {
+          id: doc.id,
+          ...data,
+          language: data.language || 'en',
+          isFallback: language !== (data.language || 'en'),
+          publishedAt: data.publishedAt?.toDate() || null,
+          createdAt: data.createdAt?.toDate() || null,
+          updatedAt: data.updatedAt?.toDate() || null
+        };
+      }).filter(post => post !== undefined); // Filter out any undefined posts
 
       // Sort posts by publishedAt (latest first), with fallback to createdAt for posts without publishedAt
       posts.sort((a, b) => {
@@ -115,13 +167,17 @@ export const blogService = {
       }
 
       const snapshot = await getDocs(q);
-      const posts = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        publishedAt: doc.data().publishedAt?.toDate() || null,
-        createdAt: doc.data().createdAt?.toDate() || null,
-        updatedAt: doc.data().updatedAt?.toDate() || null
-      }));
+      const posts = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          language: data.language || 'en', // Default to English for backward compatibility
+          publishedAt: data.publishedAt?.toDate() || null,
+          createdAt: data.createdAt?.toDate() || null,
+          updatedAt: data.updatedAt?.toDate() || null
+        };
+      });
 
       return {
         posts,
@@ -158,30 +214,87 @@ export const blogService = {
     }
   },
 
-  // Get blog post by slug
-  async getPostBySlug(slug) {
+  // Get blog post by slug with language support and translation variants
+  async getPostBySlug(slug, language = 'en') {
     try {
-      const q = query(
+      let post = null;
+
+      // First, try to find a post with translations that has this slug in the requested language
+      const allPostsQuery = query(
         collection(db, 'blog_posts'),
-        where('slug', '==', slug),
-        where('status', '==', 'published'),
-        limit(1)
+        where('status', '==', 'published')
       );
       
-      const snapshot = await getDocs(q);
-      if (!snapshot.empty) {
-        const doc = snapshot.docs[0];
+      const allSnapshot = await getDocs(allPostsQuery);
+      
+      for (const doc of allSnapshot.docs) {
         const data = doc.data();
-        return {
-          id: doc.id,
-          ...data,
-          publishedAt: data.publishedAt?.toDate() || null,
-          createdAt: data.createdAt?.toDate() || null,
-          updatedAt: data.updatedAt?.toDate() || null
-        };
-      } else {
-        return null;
+        
+        // Check if this post has the requested slug in any language
+        if (data.translations) {
+          // New format with translations
+          const translation = data.translations[language];
+          if (translation && translation.slug === slug) {
+            // Found exact language match
+            post = {
+              id: doc.id,
+              ...data,
+              // Override with language-specific content
+              title: translation.title,
+              slug: translation.slug,
+              excerpt: translation.excerpt,
+              content: translation.content,
+              seoTitle: translation.seoTitle,
+              seoDescription: translation.seoDescription,
+              language: language,
+              publishedAt: data.publishedAt?.toDate() || null,
+              createdAt: data.createdAt?.toDate() || null,
+              updatedAt: data.updatedAt?.toDate() || null
+            };
+            break;
+          } else {
+            // Check if any translation has this slug (for fallback)
+            for (const [langCode, translation] of Object.entries(data.translations)) {
+              if (translation.slug === slug) {
+                post = {
+                  id: doc.id,
+                  ...data,
+                  // Use the found translation
+                  title: translation.title,
+                  slug: translation.slug,
+                  excerpt: translation.excerpt,
+                  content: translation.content,
+                  seoTitle: translation.seoTitle,
+                  seoDescription: translation.seoDescription,
+                  language: langCode,
+                  publishedAt: data.publishedAt?.toDate() || null,
+                  createdAt: data.createdAt?.toDate() || null,
+                  updatedAt: data.updatedAt?.toDate() || null,
+                  isFallback: language !== langCode // Mark as fallback if not requested language
+                };
+                break;
+              }
+            }
+            if (post) break;
+          }
+        } else {
+          // Old format without translations - backward compatibility
+          if (data.slug === slug) {
+            post = {
+              id: doc.id,
+              ...data,
+              language: data.language || 'en',
+              publishedAt: data.publishedAt?.toDate() || null,
+              createdAt: data.createdAt?.toDate() || null,
+              updatedAt: data.updatedAt?.toDate() || null,
+              isFallback: language !== (data.language || 'en')
+            };
+            break;
+          }
+        }
       }
+      
+      return post;
     } catch (error) {
       console.error('Error fetching post by slug:', error);
       throw error;

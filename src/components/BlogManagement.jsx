@@ -44,21 +44,91 @@ const BlogManagement = () => {
   const [imagePreview, setImagePreview] = useState(null);
   const [uploadingImage, setUploadingImage] = useState(false);
 
+  // Supported languages
+  const supportedLanguages = [
+    { code: 'en', name: 'English', flag: '🇺🇸' },
+    { code: 'es', name: 'Spanish', flag: '🇪🇸' },
+    { code: 'fr', name: 'French', flag: '🇫🇷' },
+    { code: 'de', name: 'German', flag: '🇩🇪' },
+    { code: 'ar', name: 'Arabic', flag: '🇸🇦' },
+    { code: 'he', name: 'Hebrew', flag: '🇮🇱' },
+    { code: 'ru', name: 'Russian', flag: '🇷🇺' }
+  ];
+
   // Form state for creating/editing posts
   const [formData, setFormData] = useState({
-    title: '',
-    slug: '',
-    excerpt: '',
-    content: '',
+    // Base post data (shared across all language variants)
+    baseSlug: '', // Base slug for the post (same for all languages)
     author: '',
     category: 'General',
     tags: [],
     featuredImage: '',
     status: 'published',
-    seoTitle: '',
-    seoDescription: '',
-    seoKeywords: []
+    seoKeywords: [],
+    
+    // Language-specific content
+    currentLanguage: 'en', // Currently editing language
+    translations: {
+      en: {
+        title: '',
+        slug: '',
+        excerpt: '',
+        content: '',
+        seoTitle: '',
+        seoDescription: ''
+      }
+    }
   });
+
+  // State for managing translations
+  const [availableTranslations, setAvailableTranslations] = useState(['en']);
+  const [editingTranslation, setEditingTranslation] = useState('en');
+
+  // Add a new language translation
+  const addTranslation = (languageCode) => {
+    if (!availableTranslations.includes(languageCode)) {
+      const currentTranslation = formData.translations[editingTranslation];
+      setFormData(prev => ({
+        ...prev,
+        translations: {
+          ...prev.translations,
+          [languageCode]: {
+            title: '',
+            slug: prev.baseSlug ? `${prev.baseSlug}-${languageCode}` : '',
+            excerpt: '',
+            content: '',
+            seoTitle: '',
+            seoDescription: ''
+          }
+        }
+      }));
+      setAvailableTranslations(prev => [...prev, languageCode]);
+      setEditingTranslation(languageCode);
+    }
+  };
+
+  // Remove a language translation
+  const removeTranslation = (languageCode) => {
+    if (languageCode !== 'en' && availableTranslations.length > 1) {
+      setFormData(prev => {
+        const newTranslations = { ...prev.translations };
+        delete newTranslations[languageCode];
+        return {
+          ...prev,
+          translations: newTranslations
+        };
+      });
+      setAvailableTranslations(prev => prev.filter(lang => lang !== languageCode));
+      if (editingTranslation === languageCode) {
+        setEditingTranslation('en');
+      }
+    }
+  };
+
+  // Switch between language translations
+  const switchTranslation = (languageCode) => {
+    setEditingTranslation(languageCode);
+  };
 
   // Load posts on component mount
   useEffect(() => {
@@ -201,38 +271,58 @@ const BlogManagement = () => {
 
   const handleCreatePost = () => {
     setFormData({
-      title: '',
-      slug: '',
-      excerpt: '',
-      content: '',
+      baseSlug: '',
       author: currentUser?.displayName || currentUser?.email || '',
       category: 'General',
       tags: [],
       featuredImage: '',
       status: 'published',
-      seoTitle: '',
-      seoDescription: '',
-      seoKeywords: []
+      seoKeywords: [],
+      currentLanguage: 'en',
+      translations: {
+        en: {
+          title: '',
+          slug: '',
+          excerpt: '',
+          content: '',
+          seoTitle: '',
+          seoDescription: ''
+        }
+      }
     });
+    setAvailableTranslations(['en']);
+    setEditingTranslation('en');
     setImagePreview(null);
     setShowCreateModal(true);
   };
 
   const handleEditPost = (post) => {
+    // Convert old format to new format if needed
+    const translations = post.translations || {
+      [post.language || 'en']: {
+        title: post.title || '',
+        slug: post.slug || '',
+        excerpt: post.excerpt || '',
+        content: post.content || '',
+        seoTitle: post.seoTitle || post.title || '',
+        seoDescription: post.seoDescription || post.excerpt || ''
+      }
+    };
+
     setFormData({
-      title: post.title || '',
-      slug: post.slug || '',
-      excerpt: post.excerpt || '',
-      content: post.content || '',
+      baseSlug: post.baseSlug || post.slug || '',
       author: post.author || '',
       category: post.category || 'General',
       tags: post.tags || [],
       featuredImage: post.featuredImage || '',
-      status: 'published',
-      seoTitle: post.seoTitle || post.title || '',
-      seoDescription: post.seoDescription || post.excerpt || '',
-      seoKeywords: post.seoKeywords || []
+      status: post.status || 'published',
+      seoKeywords: post.seoKeywords || [],
+      currentLanguage: post.language || 'en',
+      translations: translations
     });
+
+    setAvailableTranslations(Object.keys(translations));
+    setEditingTranslation(post.language || 'en');
     setImagePreview(post.featuredImage || null);
     setSelectedPost(post);
     setShowEditModal(true);
@@ -242,9 +332,26 @@ const BlogManagement = () => {
     try {
       setLoading(true);
       
+      // Prepare post data in the new format
       const postData = {
-        ...formData,
-        authorId: currentUser?.uid
+        baseSlug: formData.baseSlug,
+        author: formData.author,
+        category: formData.category,
+        tags: formData.tags,
+        featuredImage: formData.featuredImage,
+        status: formData.status,
+        seoKeywords: formData.seoKeywords,
+        translations: formData.translations,
+        authorId: currentUser?.uid,
+        
+        // For backward compatibility, include primary language data at root level
+        title: formData.translations.en?.title || Object.values(formData.translations)[0]?.title || '',
+        slug: formData.translations.en?.slug || Object.values(formData.translations)[0]?.slug || '',
+        excerpt: formData.translations.en?.excerpt || Object.values(formData.translations)[0]?.excerpt || '',
+        content: formData.translations.en?.content || Object.values(formData.translations)[0]?.content || '',
+        seoTitle: formData.translations.en?.seoTitle || Object.values(formData.translations)[0]?.seoTitle || '',
+        seoDescription: formData.translations.en?.seoDescription || Object.values(formData.translations)[0]?.seoDescription || '',
+        language: 'en' // Primary language for backward compatibility
       };
 
       console.log('Saving post with data:', postData);
@@ -400,6 +507,9 @@ const BlogManagement = () => {
                       Category
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Language
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Author
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -437,6 +547,12 @@ const BlogManagement = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {post.category}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <div className="flex items-center space-x-2">
+                          <span>{supportedLanguages.find(lang => lang.code === (post.language || 'en'))?.flag || '🇺🇸'}</span>
+                          <span>{supportedLanguages.find(lang => lang.code === (post.language || 'en'))?.name || 'English'}</span>
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {post.author}
@@ -507,6 +623,11 @@ const BlogManagement = () => {
           uploadingImage={uploadingImage}
           handleImageFileChange={handleImageFileChange}
           handleRemoveImage={handleRemoveImage}
+          availableTranslations={availableTranslations}
+          editingTranslation={editingTranslation}
+          addTranslation={addTranslation}
+          removeTranslation={removeTranslation}
+          switchTranslation={switchTranslation}
         />
       )}
 
@@ -528,22 +649,76 @@ const BlogManagement = () => {
 };
 
 // Blog Post Modal Component
-const BlogPostModal = ({ isOpen, onClose, onSave, formData, setFormData, loading, isEdit, imagePreview, setImagePreview, uploadingImage, handleImageFileChange, handleRemoveImage }) => {
+const BlogPostModal = ({ 
+  isOpen, 
+  onClose, 
+  onSave, 
+  formData, 
+  setFormData, 
+  loading, 
+  isEdit, 
+  imagePreview, 
+  setImagePreview, 
+  uploadingImage, 
+  handleImageFileChange, 
+  handleRemoveImage,
+  availableTranslations,
+  editingTranslation,
+  addTranslation,
+  removeTranslation,
+  switchTranslation
+}) => {
+  // Supported languages (moved inside component)
+  const supportedLanguages = [
+    { code: 'en', name: 'English', flag: '🇺🇸' },
+    { code: 'es', name: 'Spanish', flag: '🇪🇸' },
+    { code: 'fr', name: 'French', flag: '🇫🇷' },
+    { code: 'de', name: 'German', flag: '🇩🇪' },
+    { code: 'ar', name: 'Arabic', flag: '🇸🇦' },
+    { code: 'he', name: 'Hebrew', flag: '🇮🇱' },
+    { code: 'ru', name: 'Russian', flag: '🇷🇺' }
+  ];
   const handleInputChange = (field, value) => {
-    setFormData(prev => {
-      const newData = {
+    // Handle translation-specific fields
+    const translationFields = ['title', 'slug', 'excerpt', 'content', 'seoTitle', 'seoDescription'];
+    
+    if (translationFields.includes(field)) {
+      setFormData(prev => {
+        const newTranslations = {
+          ...prev.translations,
+          [editingTranslation]: {
+            ...prev.translations[editingTranslation],
+            [field]: value
+          }
+        };
+
+        // Auto-generate slug when title changes
+        if (field === 'title' && value) {
+          const baseSlug = generateSlug(value);
+          newTranslations[editingTranslation].slug = editingTranslation === 'en' ? baseSlug : `${baseSlug}-${editingTranslation}`;
+          
+          // Update baseSlug if editing English
+          if (editingTranslation === 'en') {
+            return {
+              ...prev,
+              baseSlug: baseSlug,
+              translations: newTranslations
+            };
+          }
+        }
+
+        return {
+          ...prev,
+          translations: newTranslations
+        };
+      });
+    } else {
+      // Handle base post fields (shared across all languages)
+      setFormData(prev => ({
         ...prev,
         [field]: value
-      };
-      
-      // Auto-generate slug when title changes
-      if (field === 'title' && value) {
-        const autoSlug = generateSlug(value);
-        newData.slug = autoSlug;
-      }
-      
-      return newData;
-    });
+      }));
+    }
   };
 
   const handleTagsChange = (value) => {
@@ -614,6 +789,77 @@ const BlogPostModal = ({ isOpen, onClose, onSave, formData, setFormData, loading
         </div>
         
         <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
+          {/* Translation Management */}
+          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <h3 className="text-lg font-semibold text-blue-900 mb-3">🌍 Language Variants</h3>
+            
+            {/* Language Tabs */}
+            <div className="flex flex-wrap gap-2 mb-4">
+              {availableTranslations.map(langCode => {
+                const lang = supportedLanguages.find(l => l.code === langCode);
+                return (
+                  <button
+                    key={langCode}
+                    onClick={() => switchTranslation(langCode)}
+                    className={`flex items-center space-x-2 px-3 py-2 rounded-full text-sm font-medium transition-colors ${
+                      editingTranslation === langCode
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-white text-blue-600 border border-blue-300 hover:bg-blue-100'
+                    }`}
+                  >
+                    <span>{lang?.flag || '🏳️'}</span>
+                    <span>{lang?.name || langCode.toUpperCase()}</span>
+                    {langCode !== 'en' && availableTranslations.length > 1 && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeTranslation(langCode);
+                        }}
+                        className="ml-1 text-red-500 hover:text-red-700"
+                        title="Remove translation"
+                      >
+                        ×
+                      </button>
+                    )}
+                  </button>
+                );
+              })}
+              
+              {/* Add Translation Button */}
+              <div className="relative">
+                <select
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      addTranslation(e.target.value);
+                      e.target.value = '';
+                    }
+                  }}
+                  className="px-3 py-2 border border-blue-300 rounded-full text-sm bg-white text-blue-600 hover:bg-blue-50"
+                  defaultValue=""
+                >
+                  <option value="" disabled>+ Add Language</option>
+                  {supportedLanguages
+                    .filter(lang => !availableTranslations.includes(lang.code))
+                    .map(lang => (
+                      <option key={lang.code} value={lang.code}>
+                        {lang.flag} {lang.name}
+                      </option>
+                    ))
+                  }
+                </select>
+              </div>
+            </div>
+            
+            <p className="text-sm text-blue-700">
+              Currently editing: <strong>{supportedLanguages.find(l => l.code === editingTranslation)?.flag} {supportedLanguages.find(l => l.code === editingTranslation)?.name}</strong>
+              {availableTranslations.length > 1 && (
+                <span className="ml-2">
+                  • {availableTranslations.length} language{availableTranslations.length > 1 ? 's' : ''} available
+                </span>
+              )}
+            </p>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Basic Information */}
             <div className="space-y-4">
@@ -623,7 +869,7 @@ const BlogPostModal = ({ isOpen, onClose, onSave, formData, setFormData, loading
                 </label>
                 <input
                   type="text"
-                  value={formData.title}
+                  value={formData.translations[editingTranslation]?.title || ''}
                   onChange={(e) => handleInputChange('title', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Enter blog post title"
@@ -636,7 +882,7 @@ const BlogPostModal = ({ isOpen, onClose, onSave, formData, setFormData, loading
                   Excerpt
                 </label>
                 <textarea
-                  value={formData.excerpt}
+                  value={formData.translations[editingTranslation]?.excerpt || ''}
                   onChange={(e) => handleInputChange('excerpt', e.target.value)}
                   rows="3"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -741,6 +987,26 @@ const BlogPostModal = ({ isOpen, onClose, onSave, formData, setFormData, loading
                   <option value="Innovation">Innovation</option>
                 </select>
               </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Language
+                </label>
+                <select
+                  value={formData.language}
+                  onChange={(e) => handleInputChange('language', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  {supportedLanguages.map(lang => (
+                    <option key={lang.code} value={lang.code}>
+                      {lang.flag} {lang.name}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  Primary language for this blog post. English will be used as fallback for other languages.
+                </p>
+              </div>
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -793,7 +1059,7 @@ const BlogPostModal = ({ isOpen, onClose, onSave, formData, setFormData, loading
               Content *
             </label>
             <textarea
-              value={formData.content}
+              value={formData.translations[editingTranslation]?.content || ''}
               onChange={(e) => handleInputChange('content', e.target.value)}
               rows="12"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
@@ -807,12 +1073,18 @@ const BlogPostModal = ({ isOpen, onClose, onSave, formData, setFormData, loading
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                 {/* Headings */}
                 <div>
-                  <h5 className="font-semibold text-blue-800 mb-2">📝 Headings & Structure</h5>
-                  <div className="space-y-1 text-blue-700 font-mono bg-white p-2 rounded">
-                    <div>&lt;h1&gt;Main Title (Auto from title)&lt;/h1&gt;</div>
-                    <div>&lt;h2&gt;Major Section&lt;/h2&gt;</div>
-                    <div>&lt;h3&gt;Subsection&lt;/h3&gt;</div>
-                    <div>&lt;h4&gt;Sub-subsection&lt;/h4&gt;</div>
+                  <h5 className="font-semibold text-blue-800 mb-2">📝 Headings & Typography System</h5>
+                  <div className="space-y-1 text-blue-700 font-mono bg-white p-2 rounded text-xs">
+                    <div className="font-bold text-blue-900 mb-1">Desktop Sizes:</div>
+                    <div>&lt;h1&gt;Main Title - 72px&lt;/h1&gt;</div>
+                    <div>&lt;h2&gt;Major Section - 48px&lt;/h2&gt;</div>
+                    <div>&lt;h3&gt;Subsection - 40px&lt;/h3&gt;</div>
+                    <div>&lt;h4&gt;Sub-subsection - 32px&lt;/h4&gt;</div>
+                    <div>&lt;h5&gt;Minor Heading - 24px&lt;/h5&gt;</div>
+                    <div>&lt;h6&gt;Smallest Heading - 20px&lt;/h6&gt;</div>
+                    <div className="font-bold text-blue-900 mt-2 mb-1">Mobile Sizes (≤767px):</div>
+                    <div>H1: 36px | H2: 28px | H3: 24px</div>
+                    <div>H4: 20px | H5: 18px | H6: 16px</div>
                   </div>
                 </div>
 
@@ -843,21 +1115,37 @@ const BlogPostModal = ({ isOpen, onClose, onSave, formData, setFormData, loading
 
                 {/* Links & Images */}
                 <div>
-                  <h5 className="font-semibold text-blue-800 mb-2">🔗 Links & Images</h5>
-                  <div className="space-y-1 text-blue-700 font-mono bg-white p-2 rounded">
+                  <h5 className="font-semibold text-blue-800 mb-2">🖼️ Images & Media Styling</h5>
+                  <div className="space-y-1 text-blue-700 font-mono bg-white p-2 rounded text-xs">
+                    <div className="font-bold text-blue-900 mb-1">Image Specifications:</div>
+                    <div>&lt;img src="image.jpg" alt="description" /&gt;</div>
+                    <div className="font-bold text-blue-900 mt-2 mb-1">Auto-Applied Styling:</div>
+                    <div>• Rounded corners (12px radius)</div>
+                    <div>• Drop shadow for depth</div>
+                    <div>• Center alignment</div>
+                    <div>• Max width: 800px (desktop)</div>
+                    <div>• Max height: 600px (desktop)</div>
+                    <div>• Max width: 384px (mobile)</div>
+                    <div>• Max height: 300px (mobile)</div>
+                    <div className="font-bold text-blue-900 mt-2 mb-1">Links:</div>
                     <div>&lt;a href="https://example.com"&gt;Link&lt;/a&gt;</div>
-                    <div>&lt;img src="image.jpg" alt="desc" /&gt;</div>
                   </div>
                 </div>
 
                 {/* Blockquotes */}
                 <div>
-                  <h5 className="font-semibold text-blue-800 mb-2">💬 Quotes & Callouts</h5>
-                  <div className="space-y-1 text-blue-700 font-mono bg-white p-2 rounded">
+                  <h5 className="font-semibold text-blue-800 mb-2">💬 Quotes & Callouts Styling</h5>
+                  <div className="space-y-1 text-blue-700 font-mono bg-white p-2 rounded text-xs">
                     <div>&lt;blockquote&gt;</div>
                     <div>&nbsp;&nbsp;&lt;strong&gt;Key Point:&lt;/strong&gt;</div>
                     <div>&nbsp;&nbsp;Important information</div>
                     <div>&lt;/blockquote&gt;</div>
+                    <div className="font-bold text-blue-900 mt-2 mb-1">Auto-Applied Styling:</div>
+                    <div>• Blue left border (4px, cobalt-blue)</div>
+                    <div>• Rounded corners (8px)</div>
+                    <div>• Italic text (18px)</div>
+                    <div>• Left padding for content</div>
+                    <div>• Vertical margins for spacing</div>
                   </div>
                 </div>
 
@@ -875,8 +1163,9 @@ const BlogPostModal = ({ isOpen, onClose, onSave, formData, setFormData, loading
 
                 {/* Tables */}
                 <div className="md:col-span-2">
-                  <h5 className="font-semibold text-blue-800 mb-2">📊 Tables (Mobile-Optimized)</h5>
+                  <h5 className="font-semibold text-blue-800 mb-2">📊 Tables - Elegant & Responsive Styling</h5>
                   <div className="text-blue-700 font-mono bg-white p-2 rounded text-xs">
+                    <div className="font-bold text-blue-900 mb-2">Table Structure:</div>
                     <div>&lt;table&gt;</div>
                     <div>&nbsp;&nbsp;&lt;thead&gt;</div>
                     <div>&nbsp;&nbsp;&nbsp;&nbsp;&lt;tr&gt;</div>
@@ -893,6 +1182,16 @@ const BlogPostModal = ({ isOpen, onClose, onSave, formData, setFormData, loading
                     <div>&nbsp;&nbsp;&nbsp;&nbsp;&lt;/tr&gt;</div>
                     <div>&nbsp;&nbsp;&lt;/tbody&gt;</div>
                     <div>&lt;/table&gt;</div>
+                    
+                    <div className="font-bold text-blue-900 mt-3 mb-1">Auto-Applied Styling:</div>
+                    <div>• Rounded corners (12px) with overflow hidden</div>
+                    <div>• Headers: Cool-black background, white text</div>
+                    <div>• Centered content alignment</div>
+                    <div>• Alternating row colors (light gray)</div>
+                    <div>• Hover effects with smooth transitions</div>
+                    <div>• Responsive padding (desktop: 16px, mobile: 4px)</div>
+                    <div>• Clean borders with selective display</div>
+                    <div>• Full width on desktop, scrollable on mobile</div>
                   </div>
                 </div>
 
@@ -977,16 +1276,122 @@ const BlogPostModal = ({ isOpen, onClose, onSave, formData, setFormData, loading
                 </div>
               </div>
 
+              {/* Complete Typography System */}
+              <div className="mt-4 p-4 bg-indigo-50 border border-indigo-200 rounded">
+                <h5 className="font-semibold text-indigo-800 mb-3">🎯 Complete Typography & Styling System</h5>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Typography Hierarchy */}
+                  <div>
+                    <h6 className="font-semibold text-indigo-700 mb-2">📏 Typography Hierarchy</h6>
+                    <div className="bg-white p-3 rounded border text-xs">
+                      <div className="space-y-1">
+                        <div className="font-bold">Desktop (≥768px):</div>
+                        <div>H1: 32px (1.3 line-height, 700 weight)</div>
+                        <div>H2: 28px (1.3 line-height, 600 weight)</div>
+                        <div>H3: 24px (1.4 line-height, 600 weight)</div>
+                        <div>H4: 22px (1.4 line-height, 500 weight)</div>
+                        <div>H5: 20px (1.5 line-height, 500 weight)</div>
+                        <div>H6: 18px (1.5 line-height, 500 weight)</div>
+                        <div className="font-bold mt-2">Mobile (≤767px):</div>
+                        <div>H1: 26px | H2: 24px | H3: 22px</div>
+                        <div>H4: 20px | H5: 18px | H6: 16px</div>
+                        <div className="font-bold mt-2">Body Text:</div>
+                        <div>Paragraphs: 18px (24px line-height)</div>
+                        <div>Font: Open Sans, -0.25px letter-spacing</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Visual Elements */}
+                  <div>
+                    <h6 className="font-semibold text-indigo-700 mb-2">🎨 Visual Elements Styling</h6>
+                    <div className="bg-white p-3 rounded border text-xs space-y-2">
+                      <div>
+                        <div className="font-bold">Images:</div>
+                        <div>• Max: 800×600px (desktop), 384×300px (mobile)</div>
+                        <div>• 12px rounded corners, drop shadow</div>
+                        <div>• Center aligned, responsive scaling</div>
+                      </div>
+                      <div>
+                        <div className="font-bold">Tables:</div>
+                        <div>• Cool-black headers, white text</div>
+                        <div>• 12px rounded corners, hover effects</div>
+                        <div>• Centered content, alternating rows</div>
+                        <div>• Responsive padding, full-width desktop</div>
+                      </div>
+                      <div>
+                        <div className="font-bold">Blockquotes:</div>
+                        <div>• 4px cobalt-blue left border</div>
+                        <div>• 18px italic text, rounded corners</div>
+                        <div>• Proper spacing and padding</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-4 p-3 bg-indigo-100 rounded">
+                  <h6 className="font-semibold text-indigo-800 mb-2">⚡ Auto-Applied Features</h6>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                    <div>
+                      <div className="font-bold text-indigo-700">Responsive Design:</div>
+                      <div>• Automatic mobile scaling</div>
+                      <div>• Optimized line heights</div>
+                      <div>• Flexible image sizing</div>
+                    </div>
+                    <div>
+                      <div className="font-bold text-indigo-700">Visual Polish:</div>
+                      <div>• Consistent rounded corners</div>
+                      <div>• Subtle shadows and borders</div>
+                      <div>• Smooth hover transitions</div>
+                    </div>
+                    <div>
+                      <div className="font-bold text-indigo-700">Brand Consistency:</div>
+                      <div>• RoamJet color palette</div>
+                      <div>• Open Sans typography</div>
+                      <div>• Professional spacing</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Localization */}
+              <div className="mt-4 p-3 bg-emerald-50 border border-emerald-200 rounded">
+                <h5 className="font-semibold text-emerald-800 mb-2">🌍 Localization & Multi-Language Support</h5>
+                <div className="text-xs text-emerald-700 space-y-2">
+                  <div>
+                    <div className="font-bold">Supported Languages:</div>
+                    <div className="grid grid-cols-2 gap-1 mt-1">
+                      {supportedLanguages.map(lang => (
+                        <div key={lang.code}>{lang.flag} {lang.name} ({lang.code})</div>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="font-bold">How it works:</div>
+                    <ul className="space-y-1 mt-1">
+                      <li>• Select primary language when creating posts</li>
+                      <li>• English serves as fallback for all languages</li>
+                      <li>• Readers see content in their browser language</li>
+                      <li>• If no translation exists, English version is shown</li>
+                      <li>• Each language has separate slug for SEO</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
               {/* Mobile Optimization */}
               <div className="mt-4 p-3 bg-orange-50 border border-orange-200 rounded">
-                <h5 className="font-semibold text-orange-800 mb-2">📱 Mobile Optimization</h5>
+                <h5 className="font-semibold text-orange-800 mb-2">📱 Mobile Optimization Guidelines</h5>
                 <ul className="text-xs text-orange-700 space-y-1">
-                  <li>• <strong>Tables:</strong> Keep to 3-4 columns max for mobile</li>
-                  <li>• <strong>Images:</strong> Always include alt text and use descriptive names</li>
-                  <li>• <strong>Videos:</strong> Use video-container class for responsive embeds</li>
-                  <li>• <strong>Text:</strong> Break long paragraphs into shorter ones</li>
-                  <li>• <strong>Links:</strong> Make link text descriptive (not "click here")</li>
+                  <li>• <strong>Tables:</strong> Keep to 3-4 columns max for mobile readability</li>
+                  <li>• <strong>Images:</strong> Always include descriptive alt text for accessibility</li>
+                  <li>• <strong>Videos:</strong> Use responsive containers for proper scaling</li>
+                  <li>• <strong>Text:</strong> Break long paragraphs into shorter, scannable chunks</li>
+                  <li>• <strong>Links:</strong> Use descriptive link text (avoid "click here")</li>
                   <li>• <strong>Lists:</strong> Use bullet points to break up dense information</li>
+                  <li>• <strong>Headings:</strong> Use proper hierarchy (H2→H3→H4) for structure</li>
+                  <li>• <strong>Spacing:</strong> All elements auto-adjust for mobile viewing</li>
                 </ul>
               </div>
             </div>
@@ -1003,7 +1408,7 @@ const BlogPostModal = ({ isOpen, onClose, onSave, formData, setFormData, loading
           </button>
           <button
             onClick={onSave}
-            disabled={loading || !formData.title || !formData.content}
+            disabled={loading || !formData.translations[editingTranslation]?.title || !formData.translations[editingTranslation]?.content}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
           >
             {loading ? 'Saving...' : (isEdit ? 'Update Post' : 'Create Post')}

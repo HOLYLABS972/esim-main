@@ -1,7 +1,12 @@
+import { NextResponse } from 'next/server';
+
 // Simplified middleware - no redirects to avoid chunk loading issues
 export function middleware(request) {
-  // Just pass through for now to avoid redirect issues
-  return;
+  // Add pathname to headers for language detection in server components
+  const response = NextResponse.next();
+  response.headers.set('x-pathname', request.nextUrl.pathname);
+  
+  return response;
 }
 
 export const config = {

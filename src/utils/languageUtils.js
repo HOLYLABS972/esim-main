@@ -1,37 +1,105 @@
-export const RTL_LANGUAGES = ['ar', 'he'];
+// Language detection and utilities for blog localization
 
-export const isRTL = (locale) => {
-  return RTL_LANGUAGES.includes(locale);
-};
+export const supportedLanguages = [
+  { code: 'en', name: 'English', flag: '🇺🇸' },
+  { code: 'es', name: 'Spanish', flag: '🇪🇸' },
+  { code: 'fr', name: 'French', flag: '🇫🇷' },
+  { code: 'de', name: 'German', flag: '🇩🇪' },
+  { code: 'ar', name: 'Arabic', flag: '🇸🇦' },
+  { code: 'he', name: 'Hebrew', flag: '🇮🇱' },
+  { code: 'ru', name: 'Russian', flag: '🇷🇺' }
+];
 
-export const getLanguageDirection = (locale) => {
-  return isRTL(locale) ? 'rtl' : 'ltr';
-};
+export const supportedLanguageCodes = supportedLanguages.map(lang => lang.code);
 
-export const getLanguageName = (locale) => {
-  const languageNames = {
-    en: 'English',
-    he: 'עברית',
-    ru: 'Русский',
-    ar: 'العربية',
-    de: 'Deutsch',
-    fr: 'Français',
-    es: 'Español'
+/**
+ * Detect current language from URL path
+ * @param {string} pathname - Current pathname (e.g., '/spanish/blog', '/blog', '/french/blog/post-slug')
+ * @returns {string} - Language code (e.g., 'es', 'en', 'fr')
+ */
+export const detectLanguageFromPath = (pathname) => {
+  if (!pathname) return 'en';
+  
+  // Remove leading slash and split path
+  const pathSegments = pathname.replace(/^\//, '').split('/');
+  const firstSegment = pathSegments[0];
+  
+  // Check if first segment matches a language route
+  const languageRoutes = {
+    'spanish': 'es',
+    'french': 'fr', 
+    'german': 'de',
+    'arabic': 'ar',
+    'hebrew': 'he',
+    'russian': 'ru'
   };
   
-  return languageNames[locale] || 'English';
+  return languageRoutes[firstSegment] || 'en';
 };
 
-export const getLanguageFlag = (locale) => {
-  const flags = {
-    en: '🇺🇸',
-    he: '🇮🇱',
-    ru: '🇷🇺',
-    ar: '🇸🇦',
-    de: '🇩🇪',
-    fr: '🇫🇷',
-    es: '🇪🇸'
+/**
+ * Get language name from code
+ * @param {string} code - Language code
+ * @returns {string} - Language name
+ */
+export const getLanguageName = (code) => {
+  const language = supportedLanguages.find(lang => lang.code === code);
+  return language ? language.name : 'English';
+};
+
+/**
+ * Get language flag from code
+ * @param {string} code - Language code
+ * @returns {string} - Language flag emoji
+ */
+export const getLanguageFlag = (code) => {
+  const language = supportedLanguages.find(lang => lang.code === code);
+  return language ? language.flag : '🇺🇸';
+};
+
+/**
+ * Generate localized blog URL
+ * @param {string} slug - Blog post slug
+ * @param {string} language - Language code
+ * @returns {string} - Localized URL
+ */
+export const getLocalizedBlogUrl = (slug, language = 'en') => {
+  if (language === 'en') {
+    return `/blog/${slug}`;
+  }
+  
+  const languageRoutes = {
+    'es': 'spanish',
+    'fr': 'french',
+    'de': 'german', 
+    'ar': 'arabic',
+    'he': 'hebrew',
+    'ru': 'russian'
   };
   
-  return flags[locale] || '🇺🇸';
+  const route = languageRoutes[language];
+  return route ? `/${route}/blog/${slug}` : `/blog/${slug}`;
+};
+
+/**
+ * Generate localized blog list URL
+ * @param {string} language - Language code
+ * @returns {string} - Localized blog list URL
+ */
+export const getLocalizedBlogListUrl = (language = 'en') => {
+  if (language === 'en') {
+    return '/blog';
+  }
+  
+  const languageRoutes = {
+    'es': 'spanish',
+    'fr': 'french',
+    'de': 'german',
+    'ar': 'arabic', 
+    'he': 'hebrew',
+    'ru': 'russian'
+  };
+  
+  const route = languageRoutes[language];
+  return route ? `/${route}/blog` : '/blog';
 };

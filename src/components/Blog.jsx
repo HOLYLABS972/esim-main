@@ -4,11 +4,20 @@ import React, { useState, useEffect } from 'react';
 import { Calendar, User, ArrowRight, Clock, Search, Mail } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { usePathname } from 'next/navigation';
+import { useI18n } from '../contexts/I18nContext';
 import blogService from '../services/blogService';
 import { subscribeToNewsletter } from '../services/newsletterService';
+import { detectLanguageFromPath, getLocalizedBlogUrl } from '../utils/languageUtils';
 import toast from 'react-hot-toast';
 
 const Blog = () => {
+  const pathname = usePathname();
+  const { locale, t } = useI18n();
+  
+  // Fallback to URL-based detection if I18n context doesn't have language
+  const detectedLanguage = locale || detectLanguageFromPath(pathname);
+  
   const [blogPosts, setBlogPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -24,7 +33,7 @@ const Blog = () => {
   useEffect(() => {
     loadBlogPosts();
     loadCategories();
-  }, []);
+  }, [detectedLanguage]);
 
   // Filter posts when search term or category changes
   useEffect(() => {
@@ -34,7 +43,7 @@ const Blog = () => {
   const loadBlogPosts = async () => {
     try {
       setLoading(true);
-      const result = await blogService.getPublishedPosts(20);
+      const result = await blogService.getPublishedPosts(20, null, detectedLanguage);
       setBlogPosts(result.posts);
     } catch (error) {
       console.error('Error loading blog posts:', error);
@@ -128,15 +137,14 @@ const Blog = () => {
           <div className="text-center">
             <h2 className="text-center text-xl font-semibold text-tufts-blue">
               <span>{'{ '}</span>
-              eSIM Insights
+              {t('blog.title', 'eSIM Insights')}
               <span>{' }'}</span>
             </h2>
             <p className="mx-auto mt-12 max-w-4xl text-center text-4xl font-semibold tracking-tight text-eerie-black sm:text-5xl">
-              Stay updated with eSIM technology
+              {t('blog.subtitle', 'Stay updated with eSIM technology')}
             </p>
             <p className="mx-auto mt-6 max-w-2xl text-center text-lg text-cool-black">
-              Discover the latest trends, guides, and insights in eSIM technology 
-              and global connectivity solutions.
+              {t('blog.description', 'Discover the latest trends, guides, and insights in eSIM technology and global connectivity solutions.')}
             </p>
           </div>
         </div>
@@ -150,7 +158,7 @@ const Blog = () => {
               <Search className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
               <input
                 type="text"
-                placeholder="Search blog posts..."
+                placeholder={t('blog.searchPlaceholder', 'Search blog posts...')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -162,7 +170,7 @@ const Blog = () => {
                 onChange={(e) => setSelectedCategory(e.target.value)}
                 className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
-                <option value="all">All Categories</option>
+                <option value="all">{t('blog.allCategories', 'All Categories')}</option>
                 {categories.map(category => (
                   <option key={category} value={category}>{category}</option>
                 ))}
@@ -178,21 +186,21 @@ const Blog = () => {
           {loading ? (
             <div className="text-center py-12">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-              <p className="mt-4 text-gray-600">Loading blog posts...</p>
+              <p className="mt-4 text-gray-600">{t('blog.loadingPosts', 'Loading blog posts...')}</p>
             </div>
           ) : filteredPosts.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-gray-500 text-lg">
                 {searchTerm || selectedCategory !== 'all' 
-                  ? 'No blog posts found matching your criteria' 
-                  : 'No blog posts available yet'
+                  ? t('blog.noPostsFound', 'No blog posts found matching your criteria')
+                  : t('blog.noPostsAvailable', 'No blog posts available yet')
                 }
               </p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredPosts.map((post, index) => (
-              <Link href={`/blog/${post.slug}`} key={post.id}>
+              <Link href={getLocalizedBlogUrl(post.slug, post.language)} key={post.id}>
                 <article className="relative cursor-pointer group transition-transform duration-200 ">
                   <div className="absolute inset-px rounded-xl bg-white"></div>
                   <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
@@ -210,10 +218,15 @@ const Blog = () => {
                         <span className="text-gray-400 text-sm">No image</span>
                       </div>
                     )}
-                    <div className="absolute top-4 left-4">
+                    <div className="absolute top-4 left-4 flex gap-2">
                       <span className="bg-tufts-blue text-white px-3 py-1 rounded-full text-sm font-medium">
                         {post.category}
                       </span>
+                      {post.isFallback && (
+                        <span className="bg-orange-500 text-white px-2 py-1 rounded-full text-xs font-medium">
+                          {post.language?.toUpperCase() || 'EN'}
+                        </span>
+                      )}
                     </div>
                   </div>
                   
