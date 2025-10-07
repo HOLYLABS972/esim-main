@@ -5,6 +5,32 @@
   "outputDirectory": ".next",
   "installCommand": "npm install",
   "framework": "nextjs",
+  "rewrites": [
+    {
+      "source": "/he/:path*",
+      "destination": "/he/:path*"
+    },
+    {
+      "source": "/ar/:path*",
+      "destination": "/ar/:path*"
+    },
+    {
+      "source": "/ru/:path*",
+      "destination": "/ru/:path*"
+    },
+    {
+      "source": "/de/:path*",
+      "destination": "/de/:path*"
+    },
+    {
+      "source": "/fr/:path*",
+      "destination": "/fr/:path*"
+    },
+    {
+      "source": "/es/:path*",
+      "destination": "/es/:path*"
+    }
+  ],
   "headers": [
     {
       "source": "/manifest.json",
@@ -14,6 +40,28 @@
           "value": "*"
         }
       ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "origin-when-cross-origin"
+        }
+      ]
     }
-  ]
+  ],
+  "functions": {
+    "app/**/*.js": {
+      "runtime": "nodejs18.x"
+    }
+  }
 }

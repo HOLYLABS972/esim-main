@@ -4,6 +4,7 @@ const nextConfig = {
     domains: ['firebasestorage.googleapis.com', 'localhost'],
     formats: ['image/webp', 'image/avif'],
   },
+  trailingSlash: false,
   async headers() {
     return [
       {
@@ -30,6 +31,41 @@ const nextConfig = {
       {
         source: '/api/:path*',
         destination: '/api/:path*',
+      },
+    ];
+  },
+  async redirects() {
+    return [
+      // Redirect old language routes to new ones
+      {
+        source: '/hebrew/:path*',
+        destination: '/he/:path*',
+        permanent: true,
+      },
+      {
+        source: '/arabic/:path*',
+        destination: '/ar/:path*',
+        permanent: true,
+      },
+      {
+        source: '/russian/:path*',
+        destination: '/ru/:path*',
+        permanent: true,
+      },
+      {
+        source: '/german/:path*',
+        destination: '/de/:path*',
+        permanent: true,
+      },
+      {
+        source: '/french/:path*',
+        destination: '/fr/:path*',
+        permanent: true,
+      },
+      {
+        source: '/spanish/:path*',
+        destination: '/es/:path*',
+        permanent: true,
       },
     ];
   },
