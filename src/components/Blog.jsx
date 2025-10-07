@@ -192,12 +192,10 @@ const Blog = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredPosts.map((post, index) => (
-              <article
-                key={post.id}
-                className="relative"
-              >
-                <div className="absolute inset-px rounded-xl bg-white"></div>
-                <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
+              <Link href={`/blog/${post.slug}`} key={post.id}>
+                <article className="relative cursor-pointer group transition-transform duration-200 ">
+                  <div className="absolute inset-px rounded-xl bg-white"></div>
+                  <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
                   <div className="relative">
                     {post.featuredImage ? (
                       <Image
@@ -220,11 +218,11 @@ const Blog = () => {
                   </div>
                   
                   <div className="px-6 pt-6 pb-6 flex-1 flex flex-col">
-                    <h2 className="text-xl font-medium tracking-tight text-eerie-black mb-3 line-clamp-2">
+                    <h2 className="text-lg font-semibold tracking-tight text-eerie-black mb-3 line-clamp-2 group-hover:text-tufts-blue transition-colors duration-200">
                       {post.title}
                     </h2>
                     
-                    <p className="text-cool-black mb-4 line-clamp-3 flex-1">
+                    <p className="text-sm text-cool-black mb-4 line-clamp-2 flex-1 leading-relaxed">
                       {post.excerpt}
                     </p>
                     
@@ -243,15 +241,20 @@ const Blog = () => {
                     
                     {/* Tags */}
                     {post.tags && post.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        {post.tags.map((tag, index) => (
+                      <div className="flex flex-wrap gap-1 mb-4 overflow-hidden">
+                        {post.tags.slice(0, 3).map((tag, index) => (
                           <span
                             key={index}
-                            className="bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs font-medium"
+                            className="bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs font-medium truncate max-w-20"
                           >
-                            #{tag}
+                            #{tag.length > 8 ? tag.substring(0, 8) + '...' : tag}
                           </span>
                         ))}
+                        {post.tags.length > 3 && (
+                          <span className="bg-gray-200 text-gray-600 px-2 py-1 rounded-full text-xs font-medium">
+                            +{post.tags.length - 3}
+                          </span>
+                        )}
                       </div>
                     )}
                     
@@ -261,18 +264,16 @@ const Blog = () => {
                         <span>{post.readTime}</span>
                       </div>
                       
-                      <Link
-                        href={`/blog/${post.slug}`}
-                        className="inline-flex items-center space-x-1 text-tufts-blue hover:text-cobalt-blue font-medium transition-colors duration-200"
-                      >
+                      <div className="inline-flex items-center space-x-1 text-tufts-blue group-hover:text-cobalt-blue font-medium transition-colors duration-200">
                         <span>Read More</span>
-                        <ArrowRight className="w-4 h-4" />
-                      </Link>
+                        <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200" />
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div className="pointer-events-none absolute inset-px rounded-xl shadow-sm ring-1 ring-black/5"></div>
-              </article>
+                  </div>
+                  <div className="pointer-events-none absolute inset-px rounded-xl shadow-sm ring-1 ring-black/5 group-hover:ring-tufts-blue/20 transition-all duration-200"></div>
+                </article>
+              </Link>
             ))}
             </div>
           )}

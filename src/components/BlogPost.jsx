@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Head from 'next/head';
 import { Calendar, User, Clock, ArrowLeft, Share2, FolderOpen } from 'lucide-react';
 import blogService from '../services/blogService';
 
@@ -86,13 +87,13 @@ const BlogPost = ({ slug }) => {
     
     switch (platform) {
       case 'twitter':
-        shareUrl = `https://twitter.com/intent/tweet?url=${url}&text=${title}`;
+        shareUrl = `https://twitter.com/intent/tweet?url=${url}&text=${title}&via=roamjet`;
         break;
       case 'facebook':
-        shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${url}`;
+        shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${title}`;
         break;
       case 'linkedin':
-        shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${url}`;
+        shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${url}&title=${title}&summary=${text}`;
         break;
       case 'whatsapp':
         shareUrl = `https://wa.me/?text=${title}%20${url}`;
@@ -104,7 +105,7 @@ const BlogPost = ({ slug }) => {
         return;
     }
     
-    window.open(shareUrl, '_blank', 'width=600,height=400');
+    window.open(shareUrl, '_blank', 'width=600,height=400,scrollbars=yes,resizable=yes');
     setShowShareModal(false);
   };
 
@@ -137,8 +138,60 @@ const BlogPost = ({ slug }) => {
   }
 
 
+  // Generate structured data for SEO
+  const generateStructuredData = () => {
+    if (!post) return null;
+
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.roamjet.net';
+    const postUrl = `${baseUrl}/blog/${slug}`;
+    const imageUrl = post.featuredImage ? 
+      (post.featuredImage.startsWith('http') ? post.featuredImage : `${baseUrl}${post.featuredImage}`) :
+      `${baseUrl}/images/og-image.svg`;
+
+    return {
+      "@context": "https://schema.org",
+      "@type": "BlogPosting",
+      "headline": post.title,
+      "description": post.excerpt || post.seoDescription,
+      "image": imageUrl,
+      "author": {
+        "@type": "Person",
+        "name": post.author || "RoamJet Team"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "RoamJet",
+        "logo": {
+          "@type": "ImageObject",
+          "url": `${baseUrl}/images/logo_icon/logo.png`
+        }
+      },
+      "datePublished": post.publishedAt?.toISOString(),
+      "dateModified": post.updatedAt?.toISOString(),
+      "mainEntityOfPage": {
+        "@type": "WebPage",
+        "@id": postUrl
+      },
+      "articleSection": post.category,
+      "keywords": post.tags?.join(', '),
+      "wordCount": post.content ? post.content.replace(/<[^>]*>/g, '').split(' ').length : 0,
+      "url": postUrl
+    };
+  };
+
   return (
-    <div className="min-h-screen bg-white py-10">
+    <>
+      {post && (
+        <Head>
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify(generateStructuredData())
+            }}
+          />
+        </Head>
+      )}
+      <div className="min-h-screen bg-white py-10">
       {/* Hero Section with Image and Header Overlay */}
       <section className="bg-white">
         <div className="mx-auto max-w-2xl px-4 sm:px-6 lg:max-w-5xl lg:px-8">
@@ -243,7 +296,7 @@ const BlogPost = ({ slug }) => {
                         {post.tags.map((tag, index) => (
                           <span
                             key={index}
-                            className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm font-medium"
+                            className="bg-tufts-blue text-white px-3 py-1 rounded-full text-sm font-medium"
                           >
                             #{tag}
                           </span>
@@ -274,7 +327,7 @@ const BlogPost = ({ slug }) => {
                     
                     <button 
                       onClick={handleShare}
-                      className="flex items-center space-x-2 text-cool-black hover:text-eerie-black transition-colors duration-200"
+                      className="flex items-center space-x-2 text-tufts-blue hover:text-cobalt-blue transition-colors duration-200"
                     >
                       <Share2 className="w-4 h-4" />
                       <span>Share</span>
@@ -291,7 +344,7 @@ const BlogPost = ({ slug }) => {
 
       {/* Content */}
       <section className="bg-white py-8">
-        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
           <div className="bg-white overflow-hidden">
             {/* Article Content */}
             <article className="prose prose-lg prose-slate max-w-none prose-headings:font-semibold prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg prose-p:text-base prose-p:leading-7 prose-img:max-w-full prose-img:h-auto">
@@ -303,12 +356,12 @@ const BlogPost = ({ slug }) => {
             {/* Tags at bottom of post */}
             {post.tags && post.tags.length > 0 && (
               <div className="mt-8 pt-6 border-t border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">Related Tags</h3>
+                <h3 className="text-lg font-semibold text-eerie-black mb-3">Related Tags</h3>
                 <div className="flex flex-wrap gap-2">
                   {post.tags.map((tag, index) => (
                     <span
                       key={index}
-                      className="bg-blue-100 text-blue-800 px-3 py-1 rounded text-sm font-medium"
+                      className="bg-tufts-blue text-white px-3 py-1 rounded text-sm font-medium"
                     >
                       #{tag}
                     </span>
@@ -395,7 +448,8 @@ const BlogPost = ({ slug }) => {
         </div>
       )}
 
-    </div>
+      </div>
+    </>
   );
 };
 

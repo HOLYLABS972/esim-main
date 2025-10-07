@@ -11,6 +11,7 @@
     --cobalt-blue: #1A5798;
     --cool-black: #0A2F64;
     --eerie-black: #1F1F1F;
+    --white: #FFFFFF;
   }
 
   html {
@@ -20,7 +21,7 @@
   
   body {
     @apply text-eerie-black;
-    background: var(--alice-blue);
+    background: var(--white);
     font-family: 'Open Sans', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -62,24 +63,42 @@
     font-family: 'Open Sans', sans-serif;
     color: var(--eerie-black);
   }
-
-  /* Custom scrollbar */
-  ::-webkit-scrollbar {
-    width: 8px;
+  p {
+    font-size: 18px;
+    font-weight: 400;
+    line-height: 24px;
+    letter-spacing: -0.25px;
+    font-family: 'Open Sans', sans-serif;
+    color: var(--eerie-black);
   }
 
-  ::-webkit-scrollbar-track {
-    background: var(--alice-blue);
+  table {
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 24px;
+    letter-spacing: -0.25px;
+    font-family: 'Open Sans', sans-serif;
+    color: var(--eerie-black);
+  }
+  table th {
+    font-size: 16px;
+    background-color: var(--tufts-blue);
+    font-weight: 600;
+    line-height: 24px;
+    letter-spacing: -0.25px;
+    font-family: 'Open Sans', sans-serif;
+    color: var(--white);
+  }
+  table td {
+    font-size: 16px;
+    background-color: var(--white);
+    font-weight: 400;
+    line-height: 24px;
+    letter-spacing: -0.25px;
+    font-family: 'Open Sans', sans-serif;
+    color: var(--eerie-black);
   }
 
-  ::-webkit-scrollbar-thumb {
-    background: var(--jordy-blue);
-    border-radius: 4px;
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    background: var(--tufts-blue);
-  }
 }
 
 @layer components {
@@ -192,11 +211,23 @@
 
   /* Custom styles for rendered blog content */
   .prose table {
-    @apply w-full border-collapse my-6 block overflow-x-auto whitespace-nowrap;
+    @apply w-full my-6 table;
     min-width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border-radius: 12px;
+    overflow: hidden;
+    
   }
 
-  @media (max-width: 768px) {
+  @media (min-width: 768px) {
+    .prose table {
+      @apply w-full;
+      table-layout: auto;
+    }
+  }
+
+  @media (max-width: 767px) {
     .prose table {
       @apply text-sm;
       display: block;
@@ -206,11 +237,29 @@
   }
 
   .prose th, .prose td {
-    @apply border border-gray-300 p-2 text-left;
+    @apply p-3 text-center;
     min-width: 100px;
+    border-right: 1px solid #e5e7eb;
+    border-bottom: 1px solid #e5e7eb;
   }
 
-  @media (max-width: 768px) {
+  .prose th:last-child,
+  .prose td:last-child {
+    border-right: none;
+  }
+
+  .prose tr:last-child td {
+    border-bottom: none;
+  }
+
+  @media (min-width: 768px) {
+    .prose th, .prose td {
+      @apply p-4;
+      min-width: 120px;
+    }
+  }
+
+  @media (max-width: 767px) {
     .prose th, .prose td {
       @apply p-1 text-xs;
       min-width: 80px;
@@ -218,34 +267,44 @@
   }
 
   .prose th {
-    @apply bg-gray-100 font-semibold text-gray-800;
+    @apply font-semibold text-white;
+    background-color: var(--cobalt-blue);
+    color: var(--white);
   }
 
-  .prose tr:nth-child(even) {
-    @apply bg-gray-50;
+  .prose th:first-child {
+    border-top-left-radius: 12px;
+  }
+
+  .prose th:last-child {
+    border-top-right-radius: 12px;
+  }
+
+  .prose tr:last-child td:first-child {
+    border-bottom-left-radius: 12px;
+  }
+
+  .prose tr:last-child td:last-child {
+    border-bottom-right-radius: 12px;
+  }
+
+  .prose tr:nth-child(even) td {
+    background-color: #f9fafb;
+  }
+
+  .prose tr:hover td {
+    background-color: #f3f4f6;
+    transition: background-color 0.2s ease;
   }
 
   .prose blockquote {
-    @apply border-l-4 border-blue-600 bg-blue-50 pl-4 py-2 my-6 text-gray-700 italic;
+    @apply border-l-4 border-cobalt-blue pl-4 py-2 my-6 text-eerie-black text-lg italic rounded-lg;
+    
   }
 
-  .prose img {
-    @apply rounded-xl max-w-full h-auto;
-  }
 
-  @media (max-width: 768px) {
-    .prose img {
-      @apply w-full max-w-sm mx-auto;
-    }
-  }
 
-  /* YouTube iframe responsive */
-  .prose iframe {
-    @apply w-full max-w-full rounded-xl;
-    aspect-ratio: 16/9;
-  }
-
-  @media (max-width: 768px) {
+  @media (max-width: 767px) {
     .prose iframe {
       @apply w-full;
       height: 200px;
@@ -253,7 +312,7 @@
   }
 
   /* General mobile responsiveness for prose content */
-  @media (max-width: 768px) {
+  @media (max-width: 767px) {
     .prose {
       @apply text-sm;
     }
@@ -318,7 +377,7 @@
   }
 
   .shadow-strong {
-    box-shadow: 0px 4px 16px rgba(70, 139, 230, 0.2),
+    box-shadow: 0px 4px 12px rgba(70, 139, 230, 0.2),
                 0px 12px 32px rgba(70, 139, 230, 0.25);
   }
   
