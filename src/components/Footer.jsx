@@ -98,7 +98,7 @@ const Footer = () => {
 
   return (
     <footer className="footer-area relative bg-eerie-black text-eerie-black overflow-hidden">
-      <div className="bg-white rounded-2xl p-8 mt-2 mb-2 mx-2">
+      <div className="bg-white rounded-2xl mt-2 mb-2 mx-2">
       {/* Background Decorative Elements */}
       <div className="footer-area__shape absolute inset-0 pointer-events-none">
         <div className="footer-area__shape-left absolute left-0 top-0 w-32 h-full opacity-5 bg-gradient-to-r from-eerie-black to-transparent"></div>
@@ -127,7 +127,7 @@ const Footer = () => {
                 />
                 <span className="text-2xl font-semibold text-eerie-black ml-2">{getText('footer.brandName', 'RoamJet')}</span>
               </Link>
-              <p className="footer-item__desc text-eerie-black mb-6 leading-relaxed">
+              <p className="footer-item__desc text-eerie-black text-sm mb-6 leading-relaxed">
                 {getText('footer.companyDescription', 'Your trusted partner for global eSIM connectivity. Stay connected worldwide with our reliable data plans.')}
               </p>
               {socialLinks.length > 0 && (
@@ -212,7 +212,7 @@ const Footer = () => {
                       <MapPin className="w-5 h-5" color="white" />
                     </div>
                     <div className="footer-contact-menu__item-content">
-                      <p className="footer-contact__desc text-eerie-black">
+                      <p className="footer-contact__desc text-eerie-black text-sm">
                         {contactInfo.address}
                       </p>
                     </div>
@@ -227,7 +227,7 @@ const Footer = () => {
                     </div>
                     <div className="footer-contact-menu__item-content">
                       <a 
-                        className="footer-contact__desc text-eerie-black hover:text-cobalt-blue transition-colors duration-200" 
+                        className="footer-contact__desc text-eerie-black text-sm hover:text-cobalt-blue transition-colors duration-200" 
                         href={`mailto:${contactInfo.email}`}
                       >
                         {contactInfo.email}
@@ -244,7 +244,7 @@ const Footer = () => {
                     </div>
                     <div className="footer-contact-menu__item-content">
                       <a 
-                        className="footer-contact__desc text-eerie-black hover:text-cobalt-blue transition-colors duration-200" 
+                        className="footer-contact__desc text-eerie-black text-sm hover:text-cobalt-blue transition-colors duration-200" 
                         href="https://t.me/theholylabs"
                       >
                         {contactInfo.phone}

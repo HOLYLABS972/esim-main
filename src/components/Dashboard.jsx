@@ -5,9 +5,10 @@ import { useAuth } from '../contexts/AuthContext';
 import { useI18n } from '../contexts/I18nContext';
 import { collection, query, getDocs, doc, setDoc, getDoc, deleteDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { esimService } from '../services/esimService';
 import { getReferralStats, createReferralCode } from '../services/referralService';
+import { getLanguageDirection, detectLanguageFromPath } from '../utils/languageUtils';
 import toast from 'react-hot-toast';
 
 // Dashboard Components
@@ -23,6 +24,8 @@ import ReferralBottomSheet from './ReferralBottomSheet';
 
 const Dashboard = () => {
   const { currentUser, userProfile, loadUserProfile, loading: authLoading } = useAuth();
+  const { t, locale } = useI18n();
+  const pathname = usePathname();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -47,6 +50,19 @@ const Dashboard = () => {
   
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  // Get current language for RTL detection
+  const getCurrentLanguage = () => {
+    if (locale) return locale;
+    if (typeof window !== 'undefined') {
+      const savedLanguage = localStorage.getItem('roamjet-language');
+      if (savedLanguage) return savedLanguage;
+    }
+    return detectLanguageFromPath(pathname);
+  };
+
+  const currentLanguage = getCurrentLanguage();
+  const isRTL = getLanguageDirection(currentLanguage) === 'rtl';
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -217,7 +233,7 @@ const Dashboard = () => {
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading dashboard...</p>
+          <p className="text-gray-600">{t('dashboard.loadingDashboard', 'Loading dashboard...')}</p>
         </div>
       </div>
     );
@@ -595,7 +611,7 @@ const Dashboard = () => {
       );
       
       console.log('✅ Country info updated successfully');
-      toast.success(`Country info updated: ${countryInfo.name} (${countryInfo.code})`, {
+      toast.success(t('dashboard.countryInfoUpdated', 'Country info updated: {{name}} ({{code}})', { name: countryInfo.name, code: countryInfo.code }), {
         duration: 3000,
         style: {
           background: '#10B981',
@@ -605,7 +621,7 @@ const Dashboard = () => {
       
     } catch (error) {
       console.error('❌ Error updating country info:', error);
-      toast.error(`Failed to update country info: ${error.message}`, {
+      toast.error(t('dashboard.failedToUpdateCountryInfo', 'Failed to update country info: {{error}}', { error: error.message }), {
         duration: 4000,
         style: {
           background: '#EF4444',
@@ -628,7 +644,7 @@ const Dashboard = () => {
       
       if (!iccid) {
         console.log('❌ No ICCID found in order');
-        alert('No ICCID found in this order. Cannot check eSIM details.');
+        alert(t('dashboard.noIccidFound', 'No ICCID found in this order. Cannot check eSIM details.'));
         return;
       }
       
@@ -643,11 +659,11 @@ const Dashboard = () => {
         await updateOrderCountryInfo(selectedOrder, result.data);
       } else {
         console.log('❌ Failed to get eSIM details:', result.error);
-        alert(`Failed to get eSIM details: ${result.error}`);
+        alert(t('dashboard.failedToGetEsimDetails', 'Failed to get eSIM details: {{error}}', { error: result.error }));
       }
     } catch (error) {
       console.error('❌ Error checking eSIM details:', error);
-      alert(`Error checking eSIM details: ${error.message}`);
+      alert(t('dashboard.errorCheckingEsimDetails', 'Error checking eSIM details: {{error}}', { error: error.message }));
     } finally {
       setLoadingEsimDetails(false);
     }
@@ -665,7 +681,7 @@ const Dashboard = () => {
       
       if (!iccid) {
         console.log('❌ No ICCID found in order');
-        alert('No ICCID found in this order. Cannot check eSIM usage.');
+        alert(t('dashboard.noIccidFoundUsage', 'No ICCID found in this order. Cannot check eSIM usage.'));
         return;
       }
       
@@ -677,11 +693,11 @@ const Dashboard = () => {
         console.log('✅ eSIM usage retrieved:', result.data);
       } else {
         console.log('❌ Failed to get eSIM usage:', result.error);
-        alert(`Failed to get eSIM usage: ${result.error}`);
+        alert(t('dashboard.failedToGetEsimUsage', 'Failed to get eSIM usage: {{error}}', { error: result.error }));
       }
     } catch (error) {
       console.error('❌ Error checking eSIM usage:', error);
-      alert(`Error checking eSIM usage: ${error.message}`);
+      alert(t('dashboard.errorCheckingEsimUsage', 'Error checking eSIM usage: {{error}}', { error: error.message }));
     } finally {
       setLoadingEsimUsage(false);
     }
@@ -753,7 +769,7 @@ const Dashboard = () => {
         stack: error.stack
       });
       // Show user-friendly error message
-      alert(`Failed to delete order: ${error.message}`);
+      alert(t('dashboard.failedToDeleteOrder', 'Failed to delete order: {{error}}', { error: error.message }));
     } finally {
       setIsRetrying(false);
     }
@@ -761,7 +777,7 @@ const Dashboard = () => {
 
 
   return (
-    <div className="min-h-screen bg-white py-8">
+    <div className="min-h-screen bg-white py-8" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Access Denied Alert */}
       <AccessDeniedAlert show={searchParams.get('error') === 'access_denied'} />
 

@@ -3,6 +3,8 @@
 import { Suspense } from 'react';
 import dynamic from 'next/dynamic';
 import { useI18n } from '../../contexts/I18nContext';
+import { getLanguageDirection, detectLanguageFromPath } from '../../utils/languageUtils';
+import { usePathname } from 'next/navigation';
 
 const EsimPlans = dynamic(() => import('../EsimPlans'), {
   loading: () => <div className="animate-pulse">Loading plans...</div>,
@@ -11,10 +13,24 @@ const EsimPlans = dynamic(() => import('../EsimPlans'), {
 
 export default function PlansSection() {
   const { t, locale, isLoading } = useI18n();
+  const pathname = usePathname();
+  
+  // Get current language for RTL detection
+  const getCurrentLanguage = () => {
+    if (locale) return locale;
+    if (typeof window !== 'undefined') {
+      const savedLanguage = localStorage.getItem('roamjet-language');
+      if (savedLanguage) return savedLanguage;
+    }
+    return detectLanguageFromPath(pathname);
+  };
+
+  const currentLanguage = getCurrentLanguage();
+  const isRTL = getLanguageDirection(currentLanguage) === 'rtl';
   
   if (isLoading) {
     return (
-      <section className="py-16 bg-white relative overflow-hidden">
+      <section className="py-16 bg-white relative overflow-hidden" dir={isRTL ? 'rtl' : 'ltr'}>
         <div className="container mx-auto px-4 relative z-10">
           <div className="animate-pulse space-y-8">
             <div className="text-center">
@@ -32,7 +48,7 @@ export default function PlansSection() {
   const topPadding = (locale === 'he' || locale === 'ar') ? 'pt-8' : 'py-16';
   
   return (
-    <section id="esim-plans" className={`${topPadding} pb-16 scroll-mt-20 bg-white relative overflow-hidden`}>                                                                                                          
+    <section id="esim-plans" className={`${topPadding} pb-16 scroll-mt-20 bg-white relative overflow-hidden`} dir={isRTL ? 'rtl' : 'ltr'}>                                                                                                          
       <div className="container mx-auto px-4 relative z-10">
         
         {/* Section Header */}
@@ -41,10 +57,10 @@ export default function PlansSection() {
           {t('plans.title')}
           <span>{' }'}</span>
          </h2>
-         <p className="mx-auto mt-12 max-w-4xl text-center text-4xl font-semibold tracking-tight text-eerie-black sm:text-5xl ">                                                                                        
+         <p className="mx-auto mt-12 max-w-4xl text-center text-4xl font-semibold tracking-tight text-eerie-black sm:text-5xl">                                                                                        
             {t('plans.subtitle')}
           </p>
-          <p className="text-eerie-black max-w-3xl mx-auto mt-4">
+          <p className={`text-eerie-black max-w-3xl mx-auto mt-4 ${isRTL ? 'text-right' : 'text-left'}`}>
             {t('plans.description')}
           </p>
         </div>
@@ -54,7 +70,7 @@ export default function PlansSection() {
           <Suspense fallback={
             <div className="text-center py-16">
               <div className="animate-spin rounded-full h-12 w-12 border-b-4 mx-auto" style={{ borderColor: '#9039FF' }}></div>                                                                                         
-              <p className="mt-4 text-eerie-black" style={{
+              <p className={`mt-4 text-eerie-black ${isRTL ? 'text-right' : 'text-left'}`} style={{
                 fontSize: '16px',
                 fontWeight: '400',
                 lineHeight: '160%',

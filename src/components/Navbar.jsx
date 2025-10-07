@@ -236,14 +236,14 @@ const Navbar = ({ hideLanguageSelector = false }) => {
                   {currentUser ? (
                     <>
                       <Link
-                        href="/esim-plans"
+                        href={getLocalizedUrl("/esim-plans")}
                         className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2"
                         onClick={() => setIsMenuOpen(false)}
                       >
                         {t('navbar.plans', 'Plans')}
                       </Link>
                       <Link
-                        href="/dashboard"
+                        href={getLocalizedUrl("/dashboard")}
                         className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2"
                         onClick={() => setIsMenuOpen(false)}
                       >

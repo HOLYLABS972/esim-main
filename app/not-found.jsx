@@ -2,10 +2,33 @@
 
 import Link from 'next/link';
 import { Home, ArrowLeft, Search, RefreshCw } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
+import { useI18n } from '../src/contexts/I18nContext';
+import { detectLanguageFromPath } from '../src/utils/languageUtils';
 
 export default function NotFound() {
   const router = useRouter();
+  const pathname = usePathname();
+  const { t } = useI18n();
+  
+  // Get current language for localized URLs
+  const getCurrentLanguage = () => {
+    if (typeof window !== 'undefined') {
+      const savedLanguage = localStorage.getItem('roamjet-language');
+      if (savedLanguage) return savedLanguage;
+    }
+    return detectLanguageFromPath(pathname);
+  };
+
+  const currentLanguage = getCurrentLanguage();
+
+  // Generate localized URLs
+  const getLocalizedUrl = (path) => {
+    if (currentLanguage === 'en') {
+      return path;
+    }
+    return `/${currentLanguage}${path}`;
+  };
 
   const handleGoBack = () => {
     router.back();
@@ -35,7 +58,7 @@ export default function NotFound() {
           <div className="space-y-3">
             
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-semibold text-eerie-black">
-              Oops! Page Not Found
+              {t('notFound.title', 'Oops! Page Not Found')}
             </h1>
           </div>
 
@@ -50,7 +73,7 @@ export default function NotFound() {
                 className="flex items-center justify-center space-x-2 px-4 py-2 bg-white text-tufts-blue border-2 border-tufts-blue rounded-full font-semibold hover:bg-tufts-blue hover:text-white transition-all duration-200 shadow-md hover:shadow-lg w-full sm:w-auto"
               >
                 <ArrowLeft className="w-4 h-4" />
-                <span>Go Back</span>
+                <span>{t('notFound.goBack', 'Go Back')}</span>
               </button>
 
              
@@ -61,7 +84,7 @@ export default function NotFound() {
           {/* Footer Message */}
           <div className="pt-8">
             <p className="text-sm text-cool-black">
-              Need help? <Link href="/contact" className="text-tufts-blue hover:underline font-medium">Contact our support team</Link>
+              {t('notFound.needHelp', 'Need help?')} <Link href={getLocalizedUrl('/contact')} className="text-tufts-blue hover:underline font-medium">{t('notFound.contactSupport', 'Contact our support team')}</Link>
             </p>
           </div>
         </div>

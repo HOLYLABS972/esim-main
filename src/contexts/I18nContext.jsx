@@ -11,7 +11,17 @@ export const useI18n = () => {
     // Return a fallback context instead of throwing an error
     return {
       locale: 'en',
-      t: (key, fallback) => fallback || key,
+      t: (key, fallback, variables) => {
+        let result = fallback || key;
+        // Handle interpolation even in fallback
+        if (typeof result === 'string' && variables && typeof variables === 'object') {
+          Object.keys(variables).forEach(varKey => {
+            const placeholder = `{{${varKey}}}`;
+            result = result.replace(new RegExp(placeholder, 'g'), variables[varKey]);
+          });
+        }
+        return result;
+      },
       translations: {},
       isLoading: false,
       changeLanguage: async () => {}, // Add fallback changeLanguage function
@@ -139,7 +149,7 @@ export const I18nProvider = ({ children }) => {
     }
   }, [pathname, isInitialized]); // Remove locale from dependencies to avoid loops
 
-  const t = (key, fallback = '') => {
+  const t = (key, fallback = '', variables = {}) => {
     const keys = key.split('.');
     let value = translations;
 
@@ -151,7 +161,17 @@ export const I18nProvider = ({ children }) => {
       }
     }
     
-    return typeof value === 'string' ? value : fallback || key;
+    let result = typeof value === 'string' ? value : fallback || key;
+    
+    // Handle interpolation with variables like {{name}}, {{number}}, etc.
+    if (typeof result === 'string' && variables && typeof variables === 'object') {
+      Object.keys(variables).forEach(varKey => {
+        const placeholder = `{{${varKey}}}`;
+        result = result.replace(new RegExp(placeholder, 'g'), variables[varKey]);
+      });
+    }
+    
+    return result;
   };
 
   const changeLanguage = async (newLocale) => {

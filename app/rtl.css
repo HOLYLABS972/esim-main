@@ -915,3 +915,873 @@
 [dir="rtl"] .activation-section .flex {
   flex-direction: row-reverse;
 }
+
+/* Dashboard RTL Support */
+[dir="rtl"] .dashboard-header {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .dashboard-header .flex {
+  flex-direction: row-reverse !important;
+}
+
+[dir="rtl"] .dashboard-header .space-x-4 > * + * {
+  margin-left: 0 !important;
+  margin-right: 1rem !important;
+}
+
+[dir="rtl"] .dashboard-header .space-x-2 > * + * {
+  margin-left: 0 !important;
+  margin-right: 0.5rem !important;
+}
+
+[dir="rtl"] .dashboard-header h1 {
+  text-align: right !important;
+}
+
+[dir="rtl"] .dashboard-header p {
+  text-align: right !important;
+}
+
+/* Dashboard Cards RTL Support */
+[dir="rtl"] .dashboard-card {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .dashboard-card .flex {
+  flex-direction: row-reverse !important;
+}
+
+[dir="rtl"] .dashboard-card .text-left {
+  text-align: right !important;
+}
+
+[dir="rtl"] .dashboard-card .justify-between {
+  direction: rtl !important;
+}
+
+/* Dashboard Stats Cards */
+[dir="rtl"] .stats-card {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .stats-card .flex {
+  flex-direction: row-reverse !important;
+}
+
+[dir="rtl"] .stats-card .space-x-3 > * + * {
+  margin-left: 0 !important;
+  margin-right: 0.75rem !important;
+}
+
+[dir="rtl"] .stats-card .space-x-4 > * + * {
+  margin-left: 0 !important;
+  margin-right: 1rem !important;
+}
+
+/* Dashboard Recent Orders */
+[dir="rtl"] .recent-orders {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .recent-orders .flex {
+  flex-direction: row-reverse !important;
+}
+
+[dir="rtl"] .recent-orders .text-left {
+  text-align: right !important;
+}
+
+[dir="rtl"] .recent-orders .justify-between {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .recent-orders .space-x-2 > * + * {
+  margin-left: 0 !important;
+  margin-right: 0.5rem !important;
+}
+
+[dir="rtl"] .recent-orders .space-x-3 > * + * {
+  margin-left: 0 !important;
+  margin-right: 0.75rem !important;
+}
+
+[dir="rtl"] .recent-orders .space-x-4 > * + * {
+  margin-left: 0 !important;
+  margin-right: 1rem !important;
+}
+
+/* Dashboard Account Settings */
+[dir="rtl"] .account-settings {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .account-settings .flex {
+  flex-direction: row-reverse !important;
+}
+
+[dir="rtl"] .account-settings .text-left {
+  text-align: right !important;
+}
+
+[dir="rtl"] .account-settings .justify-between {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .account-settings .space-x-2 > * + * {
+  margin-left: 0 !important;
+  margin-right: 0.5rem !important;
+}
+
+[dir="rtl"] .account-settings .space-x-3 > * + * {
+  margin-left: 0 !important;
+  margin-right: 0.75rem !important;
+}
+
+[dir="rtl"] .account-settings .space-x-4 > * + * {
+  margin-left: 0 !important;
+  margin-right: 1rem !important;
+}
+
+/* Dashboard Buttons RTL */
+[dir="rtl"] .btn-primary {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .btn-primary .flex {
+  flex-direction: row-reverse !important;
+}
+
+[dir="rtl"] .btn-secondary {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .btn-secondary .flex {
+  flex-direction: row-reverse !important;
+}
+
+/* Dashboard Grid Layout RTL */
+[dir="rtl"] .dashboard-grid {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .dashboard-grid .grid {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .dashboard-grid .lg\\:grid-cols-2 {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .dashboard-grid .lg\\:grid-cols-3 {
+  direction: rtl !important;
+}
+
+/* Dashboard Modal RTL Support */
+[dir="rtl"] .dashboard-modal {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .dashboard-modal .flex {
+  flex-direction: row-reverse !important;
+}
+
+[dir="rtl"] .dashboard-modal .text-left {
+  text-align: right !important;
+}
+
+[dir="rtl"] .dashboard-modal .justify-between {
+  direction: rtl !important;
+}
+
+/* Dashboard Table RTL Support */
+[dir="rtl"] .dashboard-table {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .dashboard-table .text-left {
+  text-align: right !important;
+}
+
+[dir="rtl"] .dashboard-table th {
+  text-align: right !important;
+}
+
+[dir="rtl"] .dashboard-table td {
+  text-align: right !important;
+}
+
+/* Additional Dashboard RTL Support */
+[dir="rtl"] .min-h-screen {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .py-8 {
+  direction: rtl !important;
+}
+
+/* Dashboard Main Container */
+[dir="rtl"] .dashboard-container {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .dashboard-container .flex {
+  flex-direction: row-reverse !important;
+}
+
+[dir="rtl"] .dashboard-container .space-x-4 > * + * {
+  margin-left: 0 !important;
+  margin-right: 1rem !important;
+}
+
+[dir="rtl"] .dashboard-container .space-x-6 > * + * {
+  margin-left: 0 !important;
+  margin-right: 1.5rem !important;
+}
+
+[dir="rtl"] .dashboard-container .space-x-8 > * + * {
+  margin-left: 0 !important;
+  margin-right: 2rem !important;
+}
+
+/* Dashboard Text Alignment */
+[dir="rtl"] .dashboard-container h1,
+[dir="rtl"] .dashboard-container h2,
+[dir="rtl"] .dashboard-container h3,
+[dir="rtl"] .dashboard-container h4,
+[dir="rtl"] .dashboard-container h5,
+[dir="rtl"] .dashboard-container h6 {
+  text-align: right !important;
+}
+
+[dir="rtl"] .dashboard-container p {
+  text-align: right !important;
+}
+
+[dir="rtl"] .dashboard-container label {
+  text-align: right !important;
+}
+
+[dir="rtl"] .dashboard-container input {
+  text-align: right !important;
+  direction: rtl !important;
+}
+
+[dir="rtl"] .dashboard-container textarea {
+  text-align: right !important;
+  direction: rtl !important;
+}
+
+/* Dashboard Form Elements */
+[dir="rtl"] .dashboard-container .form-input {
+  text-align: right !important;
+  direction: rtl !important;
+}
+
+[dir="rtl"] .dashboard-container .form-label {
+  text-align: right !important;
+}
+
+/* Dashboard Button Alignment */
+[dir="rtl"] .dashboard-container .btn-primary,
+[dir="rtl"] .dashboard-container .btn-secondary {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .dashboard-container .btn-primary .flex,
+[dir="rtl"] .dashboard-container .btn-secondary .flex {
+  flex-direction: row-reverse !important;
+}
+
+/* Dashboard Icon Spacing */
+[dir="rtl"] .dashboard-container .inline {
+  margin-left: 0.5rem !important;
+  margin-right: 0 !important;
+}
+
+[dir="rtl"] .dashboard-container .mr-2 {
+  margin-right: 0 !important;
+  margin-left: 0.5rem !important;
+}
+
+[dir="rtl"] .dashboard-container .ml-2 {
+  margin-left: 0 !important;
+  margin-right: 0.5rem !important;
+}
+
+/* Dashboard Grid Layout */
+[dir="rtl"] .dashboard-container .grid {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .dashboard-container .lg\\:grid-cols-2 {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .dashboard-container .gap-6 {
+  direction: rtl !important;
+}
+
+/* Dashboard Flex Utilities */
+[dir="rtl"] .dashboard-container .justify-between {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .dashboard-container .items-center {
+  direction: rtl !important;
+}
+
+/* Dashboard Spacing Utilities */
+[dir="rtl"] .dashboard-container .space-y-2 > * + * {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .dashboard-container .space-y-4 > * + * {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .dashboard-container .space-y-6 > * + * {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .dashboard-container .space-y-8 > * + * {
+  direction: rtl !important;
+}
+
+/* Dashboard Padding and Margins */
+[dir="rtl"] .dashboard-container .px-6 {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .dashboard-container .px-8 {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .dashboard-container .py-16 {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .dashboard-container .pt-8 {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .dashboard-container .pb-8 {
+  direction: rtl !important;
+}
+
+/* Dashboard Rounded Elements */
+[dir="rtl"] .dashboard-container .rounded-xl {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .dashboard-container .rounded-lg {
+  direction: rtl !important;
+}
+
+/* Dashboard Background Elements */
+[dir="rtl"] .dashboard-container .bg-white {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .dashboard-container .bg-gray-50 {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .dashboard-container .bg-gray-200 {
+  direction: rtl !important;
+}
+
+/* Dashboard Max Width Elements */
+[dir="rtl"] .dashboard-container .max-w-2xl {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .dashboard-container .max-w-7xl {
+  direction: rtl !important;
+}
+
+/* Dashboard Relative and Absolute Positioning */
+[dir="rtl"] .dashboard-container .relative {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .dashboard-container .absolute {
+  direction: rtl !important;
+}
+
+/* Dashboard Shadow and Ring Elements */
+[dir="rtl"] .dashboard-container .shadow-sm {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .dashboard-container .ring-1 {
+  direction: rtl !important;
+}
+
+/* Dashboard Overflow Elements */
+[dir="rtl"] .dashboard-container .overflow-hidden {
+  direction: rtl !important;
+}
+
+/* Dashboard Transition Elements */
+[dir="rtl"] .dashboard-container .transition-colors {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .dashboard-container .duration-200 {
+  direction: rtl !important;
+}
+
+/* Dashboard Hover States */
+[dir="rtl"] .dashboard-container .hover\\:bg-gray-50 {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .dashboard-container .hover\\:bg-cobalt-blue {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .dashboard-container .hover\\:text-cobalt-blue {
+  direction: rtl !important;
+}
+
+/* Dashboard Focus States */
+[dir="rtl"] .dashboard-container .focus\\:ring-2 {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .dashboard-container .focus\\:ring-tufts-blue {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .dashboard-container .focus\\:border-transparent {
+  direction: rtl !important;
+}
+
+/* Dashboard Disabled States */
+[dir="rtl"] .dashboard-container .disabled\\:opacity-50 {
+  direction: rtl !important;
+}
+
+/* Enhanced RTL Support for Dashboard Stats Cards */
+[dir="rtl"] .stats-card {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .stats-card .grid {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .stats-card .md\\:grid-cols-3 {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .stats-card .gap-6 {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .stats-card .relative {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .stats-card .flex {
+  flex-direction: row-reverse !important;
+}
+
+[dir="rtl"] .stats-card .items-center {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .stats-card .justify-between {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .stats-card .space-x-4 > * + * {
+  margin-left: 0 !important;
+  margin-right: 1rem !important;
+}
+
+[dir="rtl"] .stats-card .space-x-reverse > * + * {
+  margin-left: 1rem !important;
+  margin-right: 0 !important;
+}
+
+[dir="rtl"] .stats-card .mr-2 {
+  margin-right: 0 !important;
+  margin-left: 0.5rem !important;
+}
+
+[dir="rtl"] .stats-card .ml-2 {
+  margin-left: 0 !important;
+  margin-right: 0.5rem !important;
+}
+
+[dir="rtl"] .stats-card .text-left {
+  text-align: right !important;
+}
+
+[dir="rtl"] .stats-card .text-right {
+  text-align: left !important;
+}
+
+[dir="rtl"] .stats-card p {
+  text-align: right !important;
+}
+
+[dir="rtl"] .stats-card h1,
+[dir="rtl"] .stats-card h2,
+[dir="rtl"] .stats-card h3,
+[dir="rtl"] .stats-card h4,
+[dir="rtl"] .stats-card h5,
+[dir="rtl"] .stats-card h6 {
+  text-align: right !important;
+}
+
+/* Enhanced RTL Support for Recent Orders */
+[dir="rtl"] .recent-orders {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .recent-orders .flex {
+  flex-direction: row-reverse !important;
+}
+
+[dir="rtl"] .recent-orders .space-x-3 > * + * {
+  margin-left: 0 !important;
+  margin-right: 0.75rem !important;
+}
+
+[dir="rtl"] .recent-orders .space-x-reverse > * + * {
+  margin-left: 0.75rem !important;
+  margin-right: 0 !important;
+}
+
+[dir="rtl"] .recent-orders .space-x-4 > * + * {
+  margin-left: 0 !important;
+  margin-right: 1rem !important;
+}
+
+[dir="rtl"] .recent-orders .space-x-2 > * + * {
+  margin-left: 0 !important;
+  margin-right: 0.5rem !important;
+}
+
+[dir="rtl"] .recent-orders .justify-end {
+  justify-content: flex-start !important;
+}
+
+[dir="rtl"] .recent-orders .justify-start {
+  justify-content: flex-end !important;
+}
+
+[dir="rtl"] .recent-orders .text-left {
+  text-align: right !important;
+}
+
+[dir="rtl"] .recent-orders .text-right {
+  text-align: left !important;
+}
+
+/* Enhanced RTL Support for Account Settings */
+[dir="rtl"] .account-settings {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .account-settings .flex {
+  flex-direction: row-reverse !important;
+}
+
+[dir="rtl"] .account-settings .space-x-3 > * + * {
+  margin-left: 0 !important;
+  margin-right: 0.75rem !important;
+}
+
+[dir="rtl"] .account-settings .space-x-reverse > * + * {
+  margin-left: 0.75rem !important;
+  margin-right: 0 !important;
+}
+
+[dir="rtl"] .account-settings .space-x-2 > * + * {
+  margin-left: 0 !important;
+  margin-right: 0.5rem !important;
+}
+
+[dir="rtl"] .account-settings .text-left {
+  text-align: right !important;
+}
+
+[dir="rtl"] .account-settings .text-right {
+  text-align: left !important;
+}
+
+[dir="rtl"] .account-settings input {
+  text-align: right !important;
+  direction: rtl !important;
+}
+
+[dir="rtl"] .account-settings textarea {
+  text-align: right !important;
+  direction: rtl !important;
+}
+
+[dir="rtl"] .account-settings label {
+  text-align: right !important;
+}
+
+[dir="rtl"] .account-settings .mr-2 {
+  margin-right: 0 !important;
+  margin-left: 0.5rem !important;
+}
+
+[dir="rtl"] .account-settings .ml-2 {
+  margin-left: 0 !important;
+  margin-right: 0.5rem !important;
+}
+
+/* Enhanced RTL Support for Dashboard Header */
+[dir="rtl"] .dashboard-header {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .dashboard-header .flex {
+  flex-direction: row-reverse !important;
+}
+
+[dir="rtl"] .dashboard-header .space-x-4 > * + * {
+  margin-left: 0 !important;
+  margin-right: 1rem !important;
+}
+
+[dir="rtl"] .dashboard-header .space-x-reverse > * + * {
+  margin-left: 1rem !important;
+  margin-right: 0 !important;
+}
+
+[dir="rtl"] .dashboard-header .space-x-2 > * + * {
+  margin-left: 0 !important;
+  margin-right: 0.5rem !important;
+}
+
+[dir="rtl"] .dashboard-header .text-left {
+  text-align: right !important;
+}
+
+[dir="rtl"] .dashboard-header .text-right {
+  text-align: left !important;
+}
+
+[dir="rtl"] .dashboard-header h1,
+[dir="rtl"] .dashboard-header h2,
+[dir="rtl"] .dashboard-header h3 {
+  text-align: right !important;
+}
+
+[dir="rtl"] .dashboard-header p {
+  text-align: right !important;
+}
+
+/* Force RTL direction on all dashboard elements */
+[dir="rtl"] .min-h-screen.py-8 {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .min-h-screen.py-8 * {
+  direction: inherit !important;
+}
+
+/* Override any LTR flex directions in RTL mode */
+[dir="rtl"] .flex:not(.flex-col) {
+  flex-direction: row-reverse !important;
+}
+
+[dir="rtl"] .flex.flex-col {
+  flex-direction: column !important;
+}
+
+/* Ensure proper text alignment for all text elements in RTL */
+[dir="rtl"] p:not(.text-center) {
+  text-align: right !important;
+}
+
+[dir="rtl"] h1:not(.text-center),
+[dir="rtl"] h2:not(.text-center),
+[dir="rtl"] h3:not(.text-center),
+[dir="rtl"] h4:not(.text-center),
+[dir="rtl"] h5:not(.text-center),
+[dir="rtl"] h6:not(.text-center) {
+  text-align: right !important;
+}
+
+[dir="rtl"] label {
+  text-align: right !important;
+}
+
+[dir="rtl"] span:not(.text-center) {
+  text-align: right !important;
+}
+
+/* Fix spacing utilities for RTL */
+[dir="rtl"] .space-x-1 > * + * {
+  margin-left: 0 !important;
+  margin-right: 0.25rem !important;
+}
+
+[dir="rtl"] .space-x-2 > * + * {
+  margin-left: 0 !important;
+  margin-right: 0.5rem !important;
+}
+
+[dir="rtl"] .space-x-3 > * + * {
+  margin-left: 0 !important;
+  margin-right: 0.75rem !important;
+}
+
+[dir="rtl"] .space-x-4 > * + * {
+  margin-left: 0 !important;
+  margin-right: 1rem !important;
+}
+
+[dir="rtl"] .space-x-6 > * + * {
+  margin-left: 0 !important;
+  margin-right: 1.5rem !important;
+}
+
+[dir="rtl"] .space-x-8 > * + * {
+  margin-left: 0 !important;
+  margin-right: 2rem !important;
+}
+
+/* Fix margin utilities for RTL */
+[dir="rtl"] .mr-1 {
+  margin-right: 0 !important;
+  margin-left: 0.25rem !important;
+}
+
+[dir="rtl"] .mr-2 {
+  margin-right: 0 !important;
+  margin-left: 0.5rem !important;
+}
+
+[dir="rtl"] .mr-3 {
+  margin-right: 0 !important;
+  margin-left: 0.75rem !important;
+}
+
+[dir="rtl"] .mr-4 {
+  margin-right: 0 !important;
+  margin-left: 1rem !important;
+}
+
+[dir="rtl"] .ml-1 {
+  margin-left: 0 !important;
+  margin-right: 0.25rem !important;
+}
+
+[dir="rtl"] .ml-2 {
+  margin-left: 0 !important;
+  margin-right: 0.5rem !important;
+}
+
+[dir="rtl"] .ml-3 {
+  margin-left: 0 !important;
+  margin-right: 0.75rem !important;
+}
+
+[dir="rtl"] .ml-4 {
+  margin-left: 0 !important;
+  margin-right: 1rem !important;
+}
+
+/* eSIM Plans Component RTL Support */
+[dir="rtl"] .esim-plan-card {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .esim-plan-card .text-center {
+  text-align: center !important;
+}
+
+[dir="rtl"] .esim-plan-card .text-left {
+  text-align: right !important;
+}
+
+[dir="rtl"] .esim-plan-card__content.text-center {
+  text-align: center !important;
+}
+
+[dir="rtl"] .esim-plan-card__content.text-left {
+  text-align: right !important;
+}
+
+[dir="rtl"] .esim-plan-card__title {
+  text-align: center !important;
+}
+
+[dir="rtl"] .esim-plan-card__price {
+  text-align: center !important;
+}
+
+/* Mobile eSIM plan cards */
+[dir="rtl"] .esim-plan-card .flex {
+  flex-direction: row-reverse !important;
+}
+
+[dir="rtl"] .esim-plan-card .space-x-4 > * + * {
+  margin-left: 0 !important;
+  margin-right: 1rem !important;
+}
+
+/* Country flag display - keep centered */
+[dir="rtl"] .country-flag-display {
+  text-align: center !important;
+}
+
+[dir="rtl"] .country-flag-emoji {
+  text-align: center !important;
+}
+
+[dir="rtl"] .country-code-avatar {
+  text-align: center !important;
+}
+
+/* Price display alignment */
+[dir="rtl"] .esim-plan-card__price .text-left {
+  text-align: right !important;
+}
+
+[dir="rtl"] .esim-plan-card__price .text-center {
+  text-align: center !important;
+}
+
+/* Search box RTL support */
+[dir="rtl"] .search-box-field__input {
+  text-align: right !important;
+  direction: rtl !important;
+}
+
+[dir="rtl"] .search-box-field__icon {
+  left: 1rem !important;
+  right: auto !important;
+}
+
+/* Tab content RTL support */
+[dir="rtl"] .tab-content {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .tab-pane {
+  direction: rtl !important;
+}
+
+/* Grid layout RTL support for eSIM plans */
+[dir="rtl"] .grid.grid-cols-2,
+[dir="rtl"] .grid.lg\\:grid-cols-3,
+[dir="rtl"] .grid.xl\\:grid-cols-4 {
+  direction: rtl !important;
+}
+
+/* Ensure proper spacing in mobile layout */
+[dir="rtl"] .esim-plan-card .ml-2 {
+  margin-left: 0 !important;
+  margin-right: 0.5rem !important;
+}

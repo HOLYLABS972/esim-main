@@ -276,38 +276,17 @@ const EsimPlans = () => {
   const handleCountrySelect = async (country) => {
     const platform = detectPlatform();
     
-    // Landing pages: Force users to download app
-    if (!isPlansPage) {
-      // For mobile users, open platform-specific app store link
-      if (platform.isMobile && platform.downloadUrl) {
-        console.log('📱 Mobile user on landing - Opening app store:', platform.downloadUrl);
-        window.open(platform.downloadUrl, '_blank');
-        return;
-      }
-      
-      // For desktop users, scroll to download app section
-      console.log('🖥️ Desktop user on landing - Scrolling to download section');
-      const downloadSection = document.getElementById('how-it-works');
-      if (downloadSection) {
-        downloadSection.scrollIntoView({ behavior: 'smooth' });
-      } else {
-        // Fallback to router push if element not found
-        router.push('/#how-it-works');
-      }
-      return;
-    }
-    
-    // Plans page: Handle actual plan selection
-    
-    // Check if user is logged in first
+    // Check if user is logged in first for all cases
     if (!currentUser) {
-      // Non-logged users: redirect to app download regardless of platform
+      // Non-logged users: redirect to app download regardless of platform or page
       if (platform.isMobile && platform.downloadUrl) {
+        console.log('📱 Non-logged mobile user - Opening app store:', platform.downloadUrl);
         window.open(platform.downloadUrl, '_blank');
         return;
       }
       
       // Desktop non-logged users: scroll to download section
+      console.log('🖥️ Non-logged desktop user - Scrolling to download section');
       const downloadSection = document.getElementById('how-it-works');
       if (downloadSection) {
         downloadSection.scrollIntoView({ behavior: 'smooth' });
@@ -318,14 +297,18 @@ const EsimPlans = () => {
     }
     
     // Logged-in users (both mobile and desktop): open bottom sheet with plans
-    console.log('🛒 Logged-in user making purchase:', { platform: platform.isMobile ? 'mobile' : 'desktop', country: country.name });
+    console.log('🛒 Logged-in user making purchase:', { 
+      platform: platform.isMobile ? 'mobile' : 'desktop', 
+      country: country.name,
+      page: isPlansPage ? 'plans-page' : 'landing-page'
+    });
     setShowCheckoutModal(true);
+    setLoadingPlans(true);
     await loadAvailablePlansForCountry(country.code);
   };
 
   // Load available plans for a specific country
   const loadAvailablePlansForCountry = async (countryCode) => {
-    setLoadingPlans(true);
     try {
       // Query for plans that include this country
       const plansQuery = query(
