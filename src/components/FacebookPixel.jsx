@@ -15,6 +15,7 @@ const FacebookPixel = () => {
       }
 
       // Facebook Pixel Code
+      /* eslint-disable @typescript-eslint/no-unused-expressions */
       (function(f, b, e, v, n, t, s) {
         if (f.fbq) return;
         n = f.fbq = function() {
@@ -31,6 +32,7 @@ const FacebookPixel = () => {
         s = b.getElementsByTagName(e)[0];
         s.parentNode.insertBefore(t, s);
       })(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
+      /* eslint-enable @typescript-eslint/no-unused-expressions */
 
       // Initialize the pixel with your Pixel ID
       window.fbq('init', '1421838312138067');
