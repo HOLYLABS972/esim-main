@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, Lock, Eye, Database, UserCheck } from 'lucide-react';
+import { Shield, Lock, Eye, Database, UserCheck, Mail, MessageSquare } from 'lucide-react';
 
 const PrivacyPolicy = () => {
   const sections = [
@@ -46,6 +46,32 @@ const PrivacyPolicy = () => {
         "Opt-out of marketing communications",
         "Data portability and export options"
       ]
+    },
+    {
+      icon: Mail,
+      title: "Email Marketing Communications",
+      content: [
+        "We use your email address to send promotional content, newsletters, and special offers",
+        "You can opt-out of marketing emails via the unsubscribe link in each email",
+        "We use email service providers to manage and send marketing campaigns",
+        "We track email open rates and click-through rates to improve our communications",
+        "Your email address will never be sold or shared with third parties for their marketing",
+        "Transactional emails (receipts, eSIM delivery) are necessary and cannot be opted out",
+        "We respect all opt-out requests and process them within 10 business days"
+      ]
+    },
+    {
+      icon: MessageSquare,
+      title: "SMS and Text Messaging",
+      content: [
+        "By providing your phone number, you consent to receive SMS messages from us",
+        "We send order confirmations, eSIM activation codes, and promotional offers via SMS",
+        "Standard message and data rates may apply from your mobile carrier",
+        "You can opt-out of SMS messages by replying STOP to any message",
+        "We do not share your phone number with third parties for marketing purposes",
+        "SMS messages are sent through secure third-party SMS gateway providers",
+        "Message frequency varies based on your account activity and preferences"
+      ]
     }
   ];
 
@@ -70,7 +96,7 @@ const PrivacyPolicy = () => {
             <div className="flex items-center justify-center mt-8">
               <Shield className="w-8 h-8 text-tufts-blue mr-2" />
               <p className="text-sm text-cool-black">
-                Last updated: December 15, 2024
+                Last updated: October 8, 2025
               </p>
             </div>
           </div>

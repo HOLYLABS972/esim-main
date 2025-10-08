@@ -1,5 +1,5 @@
 import React from 'react';
-import { FileText, Users, CreditCard, Shield, AlertTriangle, Scale, RefreshCw, Smartphone, Globe, Lock, UserCheck } from 'lucide-react';
+import { FileText, Users, CreditCard, Shield, AlertTriangle, Scale, RefreshCw, Smartphone, Globe, Lock, UserCheck, MessageSquare, Mail } from 'lucide-react';
 import Link from 'next/link';
 
 const TermsOfService = () => {
@@ -92,6 +92,34 @@ const TermsOfService = () => {
         "Technical support is available for activation issues, but no monetary refunds are provided",
         "In exceptional circumstances, we may provide service credits at our sole discretion"
       ]
+    },
+    {
+      icon: MessageSquare,
+      title: "9. SMS and Text Message Communications",
+      content: [
+        "By providing your phone number, you consent to receive SMS/text messages from RoamJet",
+        "Message frequency varies based on your account activity and service updates",
+        "Message and data rates may apply based on your mobile carrier's plan",
+        "Text STOP to opt-out of SMS communications at any time",
+        "Text HELP for customer support assistance via SMS",
+        "We may send transactional messages (order confirmations, eSIM activation codes) even if you opt-out of marketing",
+        "Carriers are not liable for delayed or undelivered messages",
+        "We reserve the right to modify or discontinue SMS services with notice"
+      ]
+    },
+    {
+      icon: Mail,
+      title: "10. Email Marketing and Communications",
+      content: [
+        "By providing your email address, you consent to receive promotional and marketing emails from RoamJet",
+        "We may send you newsletters, special offers, product updates, and travel tips",
+        "Email frequency may vary but typically ranges from weekly to monthly communications",
+        "You can unsubscribe from marketing emails at any time by clicking the 'Unsubscribe' link in any email",
+        "Transactional emails (receipts, eSIM delivery, account notifications) cannot be opted out of",
+        "We will not sell, rent, or share your email address with third parties for their marketing purposes",
+        "Your email preferences can be managed in your account settings",
+        "Even after unsubscribing from marketing emails, we may still send service-related communications"
+      ]
     }
   ];
 
@@ -116,7 +144,7 @@ const TermsOfService = () => {
             <div className="flex items-center justify-center mt-8">
               <FileText className="w-8 h-8 text-tufts-blue mr-2" />
               <p className="text-sm text-cool-black">
-                Effective Date: January 1, 2025 | Last Updated: December 15, 2024
+                Effective Date: January 1, 2025 | Last Updated: October 8, 2025
               </p>
             </div>
           </div>
@@ -212,7 +240,7 @@ const TermsOfService = () => {
             <div className="absolute inset-px rounded-xl bg-white"></div>
             <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
               <div className="px-8 pt-8 pb-8">
-                <h2 className="text-2xl font-medium tracking-tight text-eerie-black mb-4">9. Device Compatibility and Technical Requirements</h2>
+                <h2 className="text-2xl font-medium tracking-tight text-eerie-black mb-4">11. Device Compatibility and Technical Requirements</h2>
                 <div className="space-y-4 text-cool-black">
                   <p>
                     Our eSIM services require compatible devices and software. You are responsible for ensuring 
@@ -243,7 +271,7 @@ const TermsOfService = () => {
               <div className="px-8 pt-8 pb-8">
                 <div className="flex items-center mb-4">
                   <Scale className="w-8 h-8 text-tufts-blue mr-3" />
-                  <h2 className="text-2xl font-medium tracking-tight text-eerie-black">10. Limitation of Liability and Disclaimers</h2>
+                  <h2 className="text-2xl font-medium tracking-tight text-eerie-black">12. Limitation of Liability and Disclaimers</h2>
                 </div>
                 <div className="space-y-4 text-cool-black">
                   <p>
@@ -275,7 +303,7 @@ const TermsOfService = () => {
             <div className="absolute inset-px rounded-xl bg-white"></div>
             <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
               <div className="px-8 pt-8 pb-8">
-                <h2 className="text-2xl font-medium tracking-tight text-eerie-black mb-4">11. Governing Law and Dispute Resolution</h2>
+                <h2 className="text-2xl font-medium tracking-tight text-eerie-black mb-4">13. Governing Law and Dispute Resolution</h2>
                 <div className="space-y-4 text-cool-black">
                   <p>
                     <strong>Governing Law:</strong> These Terms are governed by and construed in accordance with 
@@ -305,7 +333,7 @@ const TermsOfService = () => {
             <div className="absolute inset-px rounded-xl bg-white"></div>
             <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
               <div className="px-8 pt-8 pb-8">
-                <h2 className="text-2xl font-medium tracking-tight text-eerie-black mb-4">12. Contact Information</h2>
+                <h2 className="text-2xl font-medium tracking-tight text-eerie-black mb-4">14. Contact Information</h2>
                 <div className="space-y-4 text-cool-black">
                   <p>
                     If you have any questions about these Terms of Service or need to contact us regarding 
