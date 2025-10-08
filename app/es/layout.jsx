@@ -35,3 +35,5 @@ export const metadata = {
 export default function SpanishLayout({ children }) {
   return children;
 }
+
+
