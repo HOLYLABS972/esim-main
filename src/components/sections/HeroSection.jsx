@@ -22,29 +22,18 @@ export default function HeroSection() {
   const handleDownloadApp = () => {
     const platform = detectPlatform();
     
-    // Track AppsFlyer event
-    if (typeof window !== 'undefined' && window.AF) {
-      try {
-        window.AF('pba', 'event', {
-          eventType: 'EVENT',
-          eventName: 'af_app_download_click',
-          eventValue: {
-            platform: platform.isMobile ? (platform.isIOS ? 'iOS' : 'Android') : 'Desktop',
-            source: 'hero_section',
-            af_content_type: 'download_button'
-          }
-        });
-        console.log('AppsFlyer: Tracked download button click');
-      } catch (error) {
-        console.error('AppsFlyer tracking error:', error);
-      }
-    }
-    
-    // For mobile users, open platform-specific app store link
-    if (platform.isMobile && platform.downloadUrl) {
+    // Use AppsFlyer OneLink URL if available
+    if (typeof window !== 'undefined' && window.APPSFLYER_ONELINK_URL) {
+      console.log('Opening AppsFlyer OneLink URL');
+      window.open(window.APPSFLYER_ONELINK_URL, '_blank');
+    } 
+    // Fallback to platform-specific app store links
+    else if (platform.isMobile && platform.downloadUrl) {
+      console.log('Opening platform-specific store');
       window.open(platform.downloadUrl, '_blank');
-    } else {
-      // For desktop users, scroll to download section
+    } 
+    // For desktop users, scroll to download section
+    else {
       const appLinksSection = document.querySelector('[id="AppLinksSection"]');
       if (appLinksSection) {
         appLinksSection.scrollIntoView({ behavior: 'smooth' });
