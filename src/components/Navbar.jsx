@@ -7,8 +7,8 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useI18n } from '../contexts/I18nContext';
 import { useAuth } from '../contexts/AuthContext';
 import LanguageSelector from './LanguageSelector';
-import { detectPlatform } from '../utils/platformDetection';
 import { detectLanguageFromPath, getLocalizedBlogListUrl } from '../utils/languageUtils';
+import { trackCustomFacebookEvent } from '../utils/facebookPixel';
 
 const Navbar = ({ hideLanguageSelector = false }) => {
   const { t, locale } = useI18n();
@@ -43,17 +43,18 @@ const Navbar = ({ hideLanguageSelector = false }) => {
   };
 
   const handleDownloadApp = () => {
-    const platform = detectPlatform();
+    // Track with Facebook Pixel
+    trackCustomFacebookEvent('DownloadAppClick', {
+      source: 'mobile_menu',
+      content_type: 'download_button'
+    });
     
-    // For mobile users, open platform-specific app store link
-    if (platform.isMobile && platform.downloadUrl) {
-      window.open(platform.downloadUrl, '_blank');
+    // OneLink handles platform detection automatically
+    if (typeof window !== 'undefined' && window.APPSFLYER_ONELINK_URL) {
+      console.log('Opening AppsFlyer OneLink from mobile menu');
+      window.open(window.APPSFLYER_ONELINK_URL, '_blank');
     } else {
-      // For desktop users, scroll to download section
-      const appLinksSection = document.querySelector('[id="AppLinksSection"]');
-      if (appLinksSection) {
-        appLinksSection.scrollIntoView({ behavior: 'smooth' });
-      }
+      console.warn('OneLink URL not ready yet');
     }
   };
   const [isVisible, setIsVisible] = useState(true);
