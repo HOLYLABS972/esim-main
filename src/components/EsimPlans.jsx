@@ -274,19 +274,17 @@ const EsimPlans = () => {
   }, [searchTerm, countries, searchResults]);
 
   const handleCountrySelect = async (country) => {
-    const platform = detectPlatform();
-    
     // Check if user is logged in first for all cases
     if (!currentUser) {
-      // Non-logged users: redirect to app download regardless of platform or page
-      if (platform.isMobile && platform.downloadUrl) {
-        console.log('📱 Non-logged mobile user - Opening app store:', platform.downloadUrl);
-        window.open(platform.downloadUrl, '_blank');
+      // Non-logged users: use OneLink for smart routing
+      if (typeof window !== 'undefined' && window.APPSFLYER_ONELINK_URL) {
+        console.log('📱 Non-logged user - Opening AppsFlyer OneLink');
+        window.open(window.APPSFLYER_ONELINK_URL, '_blank');
         return;
       }
       
-      // Desktop non-logged users: scroll to download section
-      console.log('🖥️ Non-logged desktop user - Scrolling to download section');
+      // Fallback: scroll to download section if OneLink not ready
+      console.log('🖥️ Non-logged user - OneLink not ready, scrolling to download section');
       const downloadSection = document.getElementById('how-it-works');
       if (downloadSection) {
         downloadSection.scrollIntoView({ behavior: 'smooth' });
@@ -298,7 +296,6 @@ const EsimPlans = () => {
     
     // Logged-in users (both mobile and desktop): open bottom sheet with plans
     console.log('🛒 Logged-in user making purchase:', { 
-      platform: platform.isMobile ? 'mobile' : 'desktop', 
       country: country.name,
       page: isPlansPage ? 'plans-page' : 'landing-page'
     });

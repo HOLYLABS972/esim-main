@@ -3,7 +3,7 @@
 import { useI18n } from '../../contexts/I18nContext';
 import Image from 'next/image';
 import Link from 'next/link';
-import { detectPlatform } from '../../utils/platformDetection';
+import { trackCustomFacebookEvent } from '../../utils/facebookPixel';
 
 export default function HeroSection() {
   const { t, isLoading, locale } = useI18n();
@@ -20,24 +20,18 @@ export default function HeroSection() {
   };
 
   const handleDownloadApp = () => {
-    const platform = detectPlatform();
+    // Track with Facebook Pixel
+    trackCustomFacebookEvent('DownloadAppClick', {
+      source: 'hero_section',
+      content_type: 'download_button'
+    });
     
-    // Use AppsFlyer OneLink URL if available
+    // OneLink handles platform detection automatically
     if (typeof window !== 'undefined' && window.APPSFLYER_ONELINK_URL) {
-      console.log('Opening AppsFlyer OneLink URL');
+      console.log('Opening AppsFlyer OneLink - smart routing to correct store');
       window.open(window.APPSFLYER_ONELINK_URL, '_blank');
-    } 
-    // Fallback to platform-specific app store links
-    else if (platform.isMobile && platform.downloadUrl) {
-      console.log('Opening platform-specific store');
-      window.open(platform.downloadUrl, '_blank');
-    } 
-    // For desktop users, scroll to download section
-    else {
-      const appLinksSection = document.querySelector('[id="AppLinksSection"]');
-      if (appLinksSection) {
-        appLinksSection.scrollIntoView({ behavior: 'smooth' });
-      }
+    } else {
+      console.warn('OneLink URL not ready yet');
     }
   };
   
