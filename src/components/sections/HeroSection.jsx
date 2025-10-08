@@ -10,6 +10,14 @@ export default function HeroSection() {
   // Check if current locale is RTL
   const isRTL = locale === 'ar' || locale === 'he';
   
+  // Generate localized URLs
+  const getLocalizedUrl = (path) => {
+    if (locale === 'en') {
+      return path;
+    }
+    return `/${locale}${path}`;
+  };
+  
   if (isLoading) {
     return (
       <div className="bg-white min-h-screen flex flex-col">
@@ -103,7 +111,7 @@ export default function HeroSection() {
             <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-x-6 px-4 sm:px-0">
               <button
                 onClick={() => {
-                  window.location.href = '/esim-plans';
+                  window.location.href = getLocalizedUrl('/esim-plans');
                 }}
                 className="btn-primary w-full sm:w-auto"
               >
