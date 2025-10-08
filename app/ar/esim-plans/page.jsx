@@ -1,20 +1,8 @@
+'use client';
+
 import React from 'react';
 import Script from 'next/script';
 import EsimPlans from '../../../src/components/EsimPlans';
-
-export const metadata = {
-  title: 'خطط eSIM - اختر خطتك المثالية',
-  description: 'تصفح مجموعتنا الكاملة من خطط بيانات eSIM لأكثر من 200 دولة. تسعير فوري مع تفعيل فوري.',
-  keywords: ['خطط eSIM', 'بيانات دولية', 'eSIM رخيص', 'بيانات السفر'],
-  openGraph: {
-    title: 'خطط eSIM - اختر خطتك المثالية',
-    description: 'تصفح مجموعتنا الكاملة من خطط بيانات eSIM لأكثر من 200 دولة. تسعير فوري مع تفعيل فوري.',
-    url: '/ar/esim-plans',
-  },
-  alternates: {
-    canonical: '/ar/esim-plans',
-  },
-};
 
 export default function EsimPlansPage() {
   return (
