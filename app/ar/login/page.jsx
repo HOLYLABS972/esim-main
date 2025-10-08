@@ -7,3 +7,5 @@ export default function ArabicLoginPage() {
     </div>
   );
 }
+
+

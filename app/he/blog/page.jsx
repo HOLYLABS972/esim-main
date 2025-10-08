@@ -18,3 +18,5 @@ export const metadata = {
 export default function HebrewBlogPage() {
   return <Blog />;
 }
+
+

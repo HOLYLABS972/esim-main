@@ -16,3 +16,5 @@ export const metadata = {
 export default function FrenchLayout({ children }) {
   return children;
 }
+
+

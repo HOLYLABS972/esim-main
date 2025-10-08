@@ -34,3 +34,5 @@ export const metadata = {
 export default function HebrewLayout({ children }) {
   return children;
 }
+
+
