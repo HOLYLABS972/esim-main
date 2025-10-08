@@ -713,7 +713,7 @@ const ConfigurationManagement = () => {
                 ) : (
                   <>
                     <Play className="w-4 h-4 mr-2" />
-                    Test Notification
+                    Run Campaign
                   </>
                 )}
               </button>
