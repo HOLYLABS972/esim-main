@@ -1,12 +1,14 @@
 'use client';
 
 import { useI18n } from '../../contexts/I18nContext';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { trackCustomFacebookEvent } from '../../utils/facebookPixel';
 
 export default function HeroSection() {
   const { t, isLoading, locale } = useI18n();
+  const router = useRouter();
   
   // Check if current locale is RTL
   const isRTL = locale === 'ar' || locale === 'he';
@@ -134,7 +136,7 @@ export default function HeroSection() {
               </button>
               <button
                 onClick={() => {
-                  window.location.href = getLocalizedUrl('/esim-plans');
+                  router.push(getLocalizedUrl('/esim-plans'));
                 }}
                 className="btn-secondary w-full sm:w-auto"
               >

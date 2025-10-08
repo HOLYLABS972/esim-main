@@ -54,7 +54,7 @@ const Contact = () => {
   // Hardcoded contact information
   const contactInfo = {
     email: 'support@roamjet.net',
-    phone: '+447366891452',
+    phone: '+1 778 907 7638',
     address: '275 New North Road Islington # 1432, London, N1 7AA, United Kingdom',
     companyName: 'Holylabs Ltd'
   };
