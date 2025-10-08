@@ -1,19 +1,8 @@
 {
-  "version": 2,
-  "name": "esim-app",
-  "buildCommand": "npm run build",
-  "outputDirectory": ".next",
-  "installCommand": "npm install",
-  "framework": "nextjs",
-  "headers": [
+  "crons": [
     {
-      "source": "/manifest.json",
-      "headers": [
-        {
-          "key": "Access-Control-Allow-Origin",
-          "value": "*"
-        }
-      ]
+      "path": "/api/cron/daily-notification",
+      "schedule": "0 10 * * *"
     }
   ]
 }

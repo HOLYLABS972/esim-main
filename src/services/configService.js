@@ -264,6 +264,69 @@ class ConfigService {
     }
   }
 
+  // Get OpenRouter API configuration (for AI-generated content)
+  async getOpenRouterConfig() {
+    try {
+      // First try to get from Firestore config tab
+      const configRef = doc(db, 'config', 'openrouter');
+      const configDoc = await getDoc(configRef);
+      
+      if (configDoc.exists()) {
+        const configData = configDoc.data();
+        if (configData.api_key) {
+          console.log('✅ OpenRouter API key loaded from Firestore');
+          return {
+            apiKey: configData.api_key,
+            model: configData.model || 'openai/gpt-3.5-turbo',
+            baseUrl: 'https://openrouter.ai/api/v1',
+            maxTokens: configData.max_tokens || 150,
+            temperature: configData.temperature || 0.7,
+            siteName: configData.site_name || 'RoamJet',
+            siteUrl: configData.site_url || 'https://esim.roamjet.net'
+          };
+        }
+      }
+      
+      // Fallback to environment variable
+      const envKey = process.env.OPENROUTER_API_KEY;
+      if (envKey) {
+        console.log('✅ OpenRouter API key loaded from environment variable');
+        return {
+          apiKey: envKey,
+          model: process.env.OPENROUTER_MODEL || 'openai/gpt-3.5-turbo',
+          baseUrl: 'https://openrouter.ai/api/v1',
+          maxTokens: parseInt(process.env.OPENROUTER_MAX_TOKENS) || 150,
+          temperature: parseFloat(process.env.OPENROUTER_TEMPERATURE) || 0.7,
+          siteName: process.env.OPENROUTER_SITE_NAME || 'RoamJet',
+          siteUrl: process.env.OPENROUTER_SITE_URL || 'https://esim.roamjet.net'
+        };
+      }
+      
+      // No API key found
+      console.log('⚠️ No OpenRouter API key found');
+      return {
+        apiKey: null,
+        model: 'openai/gpt-3.5-turbo',
+        baseUrl: 'https://openrouter.ai/api/v1',
+        maxTokens: 150,
+        temperature: 0.7,
+        siteName: 'RoamJet',
+        siteUrl: 'https://esim.roamjet.net'
+      };
+    } catch (error) {
+      console.error('❌ Error loading OpenRouter configuration:', error);
+      return {
+        apiKey: null,
+        model: 'openai/gpt-3.5-turbo',
+        baseUrl: 'https://openrouter.ai/api/v1',
+        maxTokens: 150,
+        temperature: 0.7,
+        siteName: 'RoamJet',
+        siteUrl: 'https://roamjet.com'
+      };
+    }
+  }
+
   // Clear cache
   clearCache() {
     this.cache.clear();

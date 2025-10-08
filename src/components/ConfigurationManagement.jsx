@@ -18,7 +18,11 @@ import {
   CheckCircle,
   Info,
   Save,
-  CreditCard
+  CreditCard,
+  Brain,
+  Bell,
+  Clock,
+  Play
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -52,6 +56,21 @@ const ConfigurationManagement = () => {
   });
   const [savingVersion, setSavingVersion] = useState(false);
 
+  // OpenRouter Configuration
+  const [openRouterConfig, setOpenRouterConfig] = useState({
+    api_key: '',
+    model: 'openai/gpt-3.5-turbo',
+    max_tokens: 150,
+    temperature: 0.7,
+    site_name: 'RoamJet',
+    site_url: 'https://esim.roamjet.net'
+  });
+  const [savingOpenRouter, setSavingOpenRouter] = useState(false);
+
+  // Notification Automation
+  const [testingNotification, setTestingNotification] = useState(false);
+  const [lastNotificationResult, setLastNotificationResult] = useState(null);
+
   // Load configuration on component mount
   useEffect(() => {
     if (currentUser) {
@@ -60,6 +79,7 @@ const ConfigurationManagement = () => {
       loadMarkupPercentage();
       loadVersionConfig();
       loadStripeConfig();
+      loadOpenRouterConfig();
     }
   }, [currentUser]);
 
@@ -417,6 +437,108 @@ const ConfigurationManagement = () => {
     }));
   };
 
+  // OpenRouter Configuration Functions
+  const loadOpenRouterConfig = async () => {
+    try {
+      const openRouterConfigRef = doc(db, 'config', 'openrouter');
+      const openRouterConfigDoc = await getDoc(openRouterConfigRef);
+      
+      if (openRouterConfigDoc.exists()) {
+        const data = openRouterConfigDoc.data();
+        setOpenRouterConfig(prev => ({
+          ...prev,
+          api_key: data.api_key || '',
+          model: data.model || 'openai/gpt-3.5-turbo',
+          max_tokens: data.max_tokens || 150,
+          temperature: data.temperature || 0.7,
+          site_name: data.site_name || 'RoamJet',
+          site_url: data.site_url || 'https://esim.roamjet.net'
+        }));
+        console.log('✅ Loaded OpenRouter configuration from Firebase');
+      } else {
+        console.log('📝 No OpenRouter configuration found in Firebase');
+      }
+    } catch (error) {
+      console.error('❌ Error loading OpenRouter configuration:', error);
+      toast.error(`Error loading OpenRouter configuration: ${error.message}`);
+    }
+  };
+
+  const saveOpenRouterConfig = async () => {
+    try {
+      setSavingOpenRouter(true);
+      
+      // Validate API key
+      if (!openRouterConfig.api_key.trim()) {
+        toast.error('Please enter your OpenRouter API key');
+        return;
+      }
+
+      if (!openRouterConfig.api_key.startsWith('sk-or-v1-')) {
+        toast.error('OpenRouter API key should start with sk-or-v1-');
+        return;
+      }
+
+      const configData = {
+        api_key: openRouterConfig.api_key.trim(),
+        model: openRouterConfig.model,
+        max_tokens: parseInt(openRouterConfig.max_tokens) || 150,
+        temperature: parseFloat(openRouterConfig.temperature) || 0.7,
+        site_name: openRouterConfig.site_name || 'RoamJet',
+        site_url: openRouterConfig.site_url || 'https://esim.roamjet.net',
+        updated_at: serverTimestamp(),
+        updated_by: currentUser?.uid || 'admin'
+      };
+
+      await setDoc(doc(db, 'config', 'openrouter'), configData, { merge: true });
+      
+      toast.success('OpenRouter configuration saved successfully!');
+      console.log('✅ OpenRouter configuration saved to Firebase');
+    } catch (error) {
+      console.error('❌ Error saving OpenRouter configuration:', error);
+      toast.error(`Error saving OpenRouter configuration: ${error.message}`);
+    } finally {
+      setSavingOpenRouter(false);
+    }
+  };
+
+  const handleOpenRouterConfigChange = (field, value) => {
+    setOpenRouterConfig(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  // Test daily notification manually
+  const testDailyNotification = async () => {
+    try {
+      setTestingNotification(true);
+      setLastNotificationResult(null);
+      
+      toast.loading('Testing AI notification generation...', { id: 'test-notification' });
+      
+      const response = await fetch('/api/cron/daily-notification', {
+        method: 'POST'
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        setLastNotificationResult(result);
+        toast.success(`✅ Notification sent to ${result.stats?.success || 0} users!`, { id: 'test-notification' });
+        console.log('Test result:', result);
+      } else {
+        throw new Error(result.error || 'Failed to send test notification');
+      }
+    } catch (error) {
+      console.error('❌ Test notification error:', error);
+      toast.error(`Error: ${error.message}`, { id: 'test-notification' });
+      setLastNotificationResult({ error: error.message });
+    } finally {
+      setTestingNotification(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -526,6 +648,140 @@ const ConfigurationManagement = () => {
                 )}
                 {savingStripe ? 'Saving...' : 'Save Stripe Key'}
               </button>
+            </div>
+          </div>
+        </div>
+
+        {/* OpenRouter AI & Automated Notifications */}
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <h2 className="text-xl font-semibold mb-4 flex items-center">
+            <Brain className="text-purple-600 mr-2" />
+            AI Notifications (OpenRouter)
+          </h2>
+          
+          <div className="space-y-4">
+            {/* API Key Input */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                OpenRouter API Key
+              </label>
+              <input
+                type="text"
+                value={openRouterConfig.api_key}
+                onChange={(e) => handleOpenRouterConfigChange('api_key', e.target.value)}
+                placeholder="sk-or-v1-..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm font-mono"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Get your free API key at{' '}
+                <a 
+                  href="https://openrouter.ai/keys" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-purple-600 hover:underline font-medium"
+                >
+                  openrouter.ai/keys
+                </a>
+              </p>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-wrap gap-3">
+              <button
+                onClick={saveOpenRouterConfig}
+                disabled={savingOpenRouter || !openRouterConfig.api_key.trim()}
+                className="flex items-center px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white rounded-lg transition-colors text-sm"
+              >
+                {savingOpenRouter ? (
+                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Save className="w-4 h-4 mr-2" />
+                )}
+                {savingOpenRouter ? 'Saving...' : 'Save Configuration'}
+              </button>
+
+              <button
+                onClick={testDailyNotification}
+                disabled={testingNotification || !openRouterConfig.api_key}
+                className="flex items-center px-4 py-2 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-400 text-white rounded-lg transition-colors text-sm"
+              >
+                {testingNotification ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    <Play className="w-4 h-4 mr-2" />
+                    Test Notification
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Last Test Result */}
+            {lastNotificationResult && (
+              <div className={`border rounded-lg p-4 ${
+                lastNotificationResult.error 
+                  ? 'bg-red-50 border-red-200' 
+                  : 'bg-green-50 border-green-200'
+              }`}>
+                <h3 className="text-sm font-semibold mb-2 flex items-center">
+                  {lastNotificationResult.error ? (
+                    <>
+                      <AlertTriangle className="w-4 h-4 text-red-600 mr-2" />
+                      <span className="text-red-900">Test Failed</span>
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="w-4 h-4 text-green-600 mr-2" />
+                      <span className="text-green-900">Test Successful!</span>
+                    </>
+                  )}
+                </h3>
+                {lastNotificationResult.error ? (
+                  <p className="text-sm text-red-700">{lastNotificationResult.error}</p>
+                ) : (
+                  <div className="space-y-2 text-sm">
+                    <div className="bg-white rounded p-3 border border-green-200">
+                      <p className="font-semibold text-green-900 mb-1">
+                        {lastNotificationResult.generated?.title || 'Generated Message'}
+                      </p>
+                      <p className="text-green-800">
+                        {lastNotificationResult.generated?.body || 'No message generated'}
+                      </p>
+                    </div>
+                    <div className="text-green-700">
+                      <div>✅ Sent: {lastNotificationResult.stats?.success || 0} users</div>
+                      {lastNotificationResult.stats?.failed > 0 && (
+                        <div>❌ Failed: {lastNotificationResult.stats.failed} users</div>
+                      )}
+                      <div className="text-xs text-green-600 mt-1">
+                        {lastNotificationResult.timestamp}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Quick Setup Instructions */}
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <h3 className="text-sm font-semibold text-gray-800 mb-2">
+                ⚙️ Cron Setup
+              </h3>
+              <p className="text-xs text-gray-600 mb-2">
+                <strong>Vercel:</strong> Auto-enabled via vercel.json (deploy to activate)
+              </p>
+              <p className="text-xs text-gray-600 mb-2">
+                <strong>Other platforms:</strong> Schedule daily POST to:
+              </p>
+              <code className="block bg-white p-2 rounded text-xs break-all border">
+                https://esim.roamjet.net/api/cron/daily-notification
+              </code>
+              <p className="text-xs text-gray-500 mt-2">
+                Use <a href="https://cron-job.org" target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:underline">cron-job.org</a> (free) or GitHub Actions
+              </p>
             </div>
           </div>
         </div>
