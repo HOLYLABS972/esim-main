@@ -201,13 +201,6 @@ const Navbar = ({ hideLanguageSelector = false }) => {
             {/* Centered menu items */}
             <div className="flex flex-col items-center justify-center min-h-[calc(100vh-120px)] p-6">
               <div className="space-y-8 text-center">
-                {/* Language Selector */}
-                {!hideLanguageSelector && (
-                  <div className="mb-4">
-                    <LanguageSelector />
-                  </div>
-                )}
-                
                 {/* Main Navigation Group */}
                 <div className="p-4 w-full max-w-xs">
                   <button

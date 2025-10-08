@@ -3,7 +3,6 @@
 import { useI18n } from '../../contexts/I18nContext';
 import Image from 'next/image';
 import Link from 'next/link';
-import { detectPlatform } from '../../utils/platformDetection';
 
 export default function HeroSection() {
   const { t, isLoading, locale } = useI18n();
@@ -29,20 +28,6 @@ export default function HeroSection() {
       </div>
     );
   }
-  const handleDownloadApp = () => {
-    const platform = detectPlatform();
-    
-    // For mobile users, open platform-specific app store link
-    if (platform.isMobile && platform.downloadUrl) {
-      window.open(platform.downloadUrl, '_blank');
-    } else {
-      // For desktop users, scroll to download section
-      const appLinksSection = document.querySelector('[id="AppLinksSection"]');
-      if (appLinksSection) {
-        appLinksSection.scrollIntoView({ behavior: 'smooth' });
-      }
-    }
-  };
 
   return (
     <div className="bg-white min-h-screen ">
@@ -117,16 +102,10 @@ export default function HeroSection() {
             </p>
             <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-x-6 px-4 sm:px-0">
               <button
-                onClick={handleDownloadApp}
-                className="btn-primary w-full sm:w-auto"
-              >
-                {t('hero.downloadApp')}
-              </button>
-              <button
                 onClick={() => {
                   window.location.href = '/esim-plans';
                 }}
-                className="btn-secondary w-full sm:w-auto"
+                className="btn-primary w-full sm:w-auto"
               >
                 {t('hero.exploreTariffs')}
               </button>
