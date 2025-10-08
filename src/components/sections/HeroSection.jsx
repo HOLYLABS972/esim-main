@@ -4,7 +4,6 @@ import { useI18n } from '../../contexts/I18nContext';
 import Image from 'next/image';
 import Link from 'next/link';
 import { detectPlatform } from '../../utils/platformDetection';
-import { trackCustomFacebookEvent } from '../../utils/facebookPixel';
 
 export default function HeroSection() {
   const { t, isLoading, locale } = useI18n();
@@ -23,11 +22,23 @@ export default function HeroSection() {
   const handleDownloadApp = () => {
     const platform = detectPlatform();
     
-    // Track Facebook Pixel event
-    trackCustomFacebookEvent('DownloadAppClick', {
-      platform: platform.isMobile ? (platform.isIOS ? 'iOS' : 'Android') : 'Desktop',
-      source: 'hero_section'
-    });
+    // Track AppsFlyer event
+    if (typeof window !== 'undefined' && window.AF) {
+      try {
+        window.AF('pba', 'event', {
+          eventType: 'EVENT',
+          eventName: 'af_app_download_click',
+          eventValue: {
+            platform: platform.isMobile ? (platform.isIOS ? 'iOS' : 'Android') : 'Desktop',
+            source: 'hero_section',
+            af_content_type: 'download_button'
+          }
+        });
+        console.log('AppsFlyer: Tracked download button click');
+      } catch (error) {
+        console.error('AppsFlyer tracking error:', error);
+      }
+    }
     
     // For mobile users, open platform-specific app store link
     if (platform.isMobile && platform.downloadUrl) {
