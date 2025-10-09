@@ -13,6 +13,7 @@
   },
   "hero": {
     "announcement": "Maintenant disponible dans plus de 200 pays dans le monde.",
+    "countriesAvailable": "Maintenant disponible dans plus de 200 pays",
     "stayConnected": "Restez connecté",
     "noMatterWhere": "peu importe où vous êtes",
     "with": "avec",
@@ -90,6 +91,10 @@
   },
   "search": {
     "destinationPlaceholder": "Recherchez votre destination (ex: France, Allemagne, États-Unis)",
+    "heroPlaceholder": "Recherchez votre destination... (ex: France, États-Unis, Thaïlande)",
+    "popularDestinations": "Populaire:",
+    "searchingFor": "Recherche de:",
+    "clearSearch": "Effacer",
     "packagesPlaceholder": "Rechercher des forfaits, pays ou descriptions...",
     "blogPlaceholder": "Rechercher dans les articles de blog...",
     "emailPlaceholder": "Entrez votre email",

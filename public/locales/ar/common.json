@@ -13,6 +13,7 @@
   },
   "hero": {
     "announcement": "متاح الآن في أكثر من 200 دولة حول العالم.",
+    "countriesAvailable": "متاح الآن في أكثر من 200 دولة",
     "stayConnected": "ابق متصلاً",
     "noMatterWhere": "بغض النظر عن مكان وجودك",
     "with": "مع",
@@ -88,6 +89,10 @@
   },
   "search": {
     "destinationPlaceholder": "ابحث عن وجهتك (مثل فرنسا، ألمانيا، الولايات المتحدة)",
+    "heroPlaceholder": "ابحث عن وجهتك... (مثل فرنسا، الولايات المتحدة، تايلاند)",
+    "popularDestinations": "الأكثر شعبية:",
+    "searchingFor": "البحث عن:",
+    "clearSearch": "مسح",
     "packagesPlaceholder": "ابحث في الحزم أو البلدان أو الأوصاف...",
     "blogPlaceholder": "ابحث في منشورات المدونة...",
     "emailPlaceholder": "أدخل بريدك الإلكتروني",

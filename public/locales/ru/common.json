@@ -13,6 +13,7 @@
   },
   "hero": {
     "announcement": "Доступно в более чем 200 странах",
+    "countriesAvailable": "Доступно в более чем 200 странах",
     "stayConnected": "Оставайтесь",
     "noMatterWhere": "на связи где бы вы ни были",
     "with": "с",
@@ -88,6 +89,10 @@
   },
   "search": {
     "destinationPlaceholder": "Найдите свое направление (например, Франция, Германия, США)",
+    "heroPlaceholder": "Найдите свое направление... (например, Франция, США, Таиланд)",
+    "popularDestinations": "Популярные:",
+    "searchingFor": "Поиск:",
+    "clearSearch": "Очистить",
     "packagesPlaceholder": "Поиск пакетов, стран или описаний...",
     "blogPlaceholder": "Поиск в записях блога...",
     "emailPlaceholder": "Введите ваш email",

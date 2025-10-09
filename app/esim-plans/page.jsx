@@ -3,6 +3,7 @@
 import React from 'react';
 import Script from 'next/script';
 import EsimPlans from '../../src/components/EsimPlans';
+import CountrySearchBar from '../../src/components/CountrySearchBar';
 
 export default function EsimPlansPage() {
   return (
@@ -13,10 +14,13 @@ export default function EsimPlansPage() {
             <h1 className="text-4xl font-bold text-gray-900 mb-4">
               Choose Your eSIM Plan
             </h1>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-8">
               Browse our complete selection of eSIM data plans for 200+ countries. 
               Real-time pricing with instant activation.
             </p>
+            
+            {/* Search Bar */}
+            <CountrySearchBar showCountryCount={true} />
           </div>
           
           <EsimPlans />

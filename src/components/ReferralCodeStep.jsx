@@ -102,6 +102,11 @@ const ReferralCodeStep = () => {
     
     localStorage.setItem('pendingUserData', JSON.stringify(userData));
     
+    // Save English as preferred language
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('roamjet-language', 'en');
+    }
+    
     if (isGoogleSignup) {
       // For Google signup, complete the signup process
       try {
@@ -142,6 +147,11 @@ const ReferralCodeStep = () => {
       };
       
       localStorage.setItem('pendingUserData', JSON.stringify(userData));
+      
+      // Save English as preferred language
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('roamjet-language', 'en');
+      }
       
       toast.success('Referral code applied successfully!');
       

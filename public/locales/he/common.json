@@ -13,6 +13,7 @@
   },
   "hero": {
     "announcement": "כעת זמין ביותר מ-200 מדינות ברחבי העולם.",
+    "countriesAvailable": "כעת זמין ביותר מ-200 מדינות",
     "stayConnected": "הישאר מחובר",
     "noMatterWhere": "לא משנה איפה אתה",
     "with": "עם",
@@ -88,6 +89,10 @@
   },
   "search": {
     "destinationPlaceholder": "חפש את היעד שלך (למשל צרפת, גרמניה, ארצות הברית)",
+    "heroPlaceholder": "חפש את היעד שלך... (למשל צרפת, ארה\"ב, תאילנד)",
+    "popularDestinations": "פופולרי:",
+    "searchingFor": "מחפש:",
+    "clearSearch": "נקה",
     "packagesPlaceholder": "חפש חבילות, מדינות או תיאורים...",
     "blogPlaceholder": "חפש בפוסטים של הבלוג...",
     "emailPlaceholder": "הכנס את האימייל שלך",

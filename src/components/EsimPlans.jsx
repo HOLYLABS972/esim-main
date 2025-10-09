@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { Search } from 'lucide-react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useAuth } from '../contexts/AuthContext';
 import PlanSelectionBottomSheet from './PlanSelectionBottomSheet';
 import { getCountriesWithPricing } from '../services/plansService';
@@ -43,13 +43,16 @@ const EsimPlans = () => {
   const { currentUser } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   
   // Determine if this is the dedicated plans page or landing page
-  const isPlansPage = pathname === '/esim-plans';
-  const [searchTerm, setSearchTerm] = useState('');
+  const isPlansPage = pathname === '/esim-plans' || pathname.includes('/esim-plans');
+  
+  // Get search term from URL params
+  const urlSearchTerm = searchParams.get('search') || '';
+  const [searchTerm, setSearchTerm] = useState(urlSearchTerm);
   const [countries, setCountries] = useState([]);
   const [filteredCountries, setFilteredCountries] = useState([]);
-  const [showAllCountries, setShowAllCountries] = useState(false);
   const [platformInfo, setPlatformInfo] = useState(null);
   
   // Plan selection and checkout state
@@ -64,6 +67,14 @@ const EsimPlans = () => {
   
   // Simplified state - no sorting or grouping
   const [groupByDays, setGroupByDays] = useState(false); // Disable grouping by days
+
+  // Sync search term with URL params
+  useEffect(() => {
+    const urlSearch = searchParams.get('search') || '';
+    if (urlSearch !== searchTerm) {
+      setSearchTerm(urlSearch);
+    }
+  }, [searchParams]);
 
   // Platform detection and authentication check
   useEffect(() => {
@@ -260,9 +271,37 @@ const EsimPlans = () => {
     return discountedPrice;
   };
 
-  // Simple filter function - no sorting or grouping
+  // Simple filter function with priority countries for plans page
   const filterCountries = (countriesList) => {
-    return [...countriesList]; // Return countries as-is, already sorted by price from Firebase
+    // Priority countries for plans page
+    const priorityCountries = [
+      'United States', 'USA', 'South Korea', 'Korea', 'Japan', 
+      'Belgium', 'Spain', 'Canada', 'Portugal', 'Thailand'
+    ];
+    
+    if (isPlansPage && !searchTerm) {
+      // Separate priority countries and others
+      const priority = [];
+      const others = [];
+      
+      countriesList.forEach(country => {
+        const isPriority = priorityCountries.some(pc => 
+          country.name.toLowerCase().includes(pc.toLowerCase()) ||
+          pc.toLowerCase().includes(country.name.toLowerCase())
+        );
+        
+        if (isPriority) {
+          priority.push(country);
+        } else {
+          others.push(country);
+        }
+      });
+      
+      // Return priority countries first, then others
+      return [...priority, ...others];
+    }
+    
+    return [...countriesList]; // Return countries as-is for other cases
   };
 
 
@@ -339,40 +378,24 @@ const EsimPlans = () => {
     <>
       <section className="destination py-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Header */}
-          <div className="destination-top mb-8">
-
-          {/* Search Box */}
-          <div className="search-box max-w-md mx-auto mb-8">
-            <div className="search-box-field relative">
-              <input
-                className="search-box-field__input w-full px-4 py-3 pr-12 border border-jordy-blue rounded-full focus:ring-2 focus:ring-tufts-blue focus:border-transparent"
-                type="text"
-                placeholder={t('search.destinationPlaceholder', 'Search your destination (e.g., France, Germany, United States)')}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              <span className="search-box-field__icon absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400">
-                {isSearching ? (
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-tufts-blue"></div>
-                ) : (
-                  <Search className="w-5 h-5" />
-                )}
+          
+          {/* Active Search Badge */}
+          {searchTerm && (
+            <div className="mb-6 flex justify-center items-center gap-3">
+              <span className="text-sm text-gray-600">
+                {t('search.searchingFor', 'Searching for:')} <span className="font-semibold text-cobalt-blue">{searchTerm}</span>
               </span>
+              <button
+                onClick={() => {
+                  setSearchTerm('');
+                  router.push(pathname);
+                }}
+                className="text-xs px-3 py-1 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-800 transition-colors"
+              >
+                {t('search.clearSearch', 'Clear')}
+              </button>
             </div>
-            {searchTerm && (
-              <div className="text-center mt-2 text-sm text-gray-500">
-                {isSearching ? (
-                  t('search.searching', 'Searching...')
-                ) : searchTerm.length < 2 ? (
-                  t('search.typeToSearch', 'Type at least 2 characters to search')
-                ) : null}
-              </div>
-            )}
-          </div>
-
-
-        </div>
+          )}
 
         {/* Local eSIMs Content */}
         <div className="tab-content">
@@ -387,7 +410,7 @@ const EsimPlans = () => {
                 <>
                   {/* Desktop Grid Layout */}
                   <div className="hidden sm:grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-center">
-                    {(showAllCountries || searchTerm ? filteredCountries : filteredCountries.slice(0, 8)).map((country, index) => (
+                    {(isPlansPage || searchTerm ? filteredCountries : filteredCountries.slice(0, 8)).map((country, index) => (
                       <div
                         key={country.id}
                         className="col-span-1"
@@ -438,21 +461,21 @@ const EsimPlans = () => {
                     ))}
                   </div>
                   
-                  {/* Show All Button for Desktop */}
-                  {!searchTerm && filteredCountries.length > 8 && (
+                  {/* Show All Button for Desktop - Only on Landing Page */}
+                  {!isPlansPage && !searchTerm && filteredCountries.length > 8 && (
                     <div className="hidden sm:block text-center mt-8">
                       <button
-                        onClick={() => setShowAllCountries(!showAllCountries)}
+                        onClick={() => router.push('/esim-plans')}
                         className="btn-primary px-8 py-3 text-white font-semibold rounded-full hover:bg-tufts-blue transition-all duration-200 shadow-lg"
                       >
-                        {showAllCountries ? 'Show Less' : 'Show All'}
+                        Show All
                       </button>
                     </div>
                   )}
                   
                   {/* Mobile List Layout */}
                   <div className="sm:hidden space-y-3">
-                    {(showAllCountries || searchTerm ? filteredCountries : filteredCountries.slice(0, 8)).map((country, index) => (
+                    {(isPlansPage || searchTerm ? filteredCountries : filteredCountries.slice(0, 8)).map((country, index) => (
                       <button
                         key={country.id}
                         className="esim-plan-card w-full bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 p-4 text-left border border-gray-100 hover:border-blue-200 flex items-center space-x-4"
@@ -502,14 +525,14 @@ const EsimPlans = () => {
                     ))}
                   </div>
                   
-                  {/* Show All Button for Mobile */}
-                  {!searchTerm && filteredCountries.length > 8 && (
+                  {/* Show All Button for Mobile - Only on Landing Page */}
+                  {!isPlansPage && !searchTerm && filteredCountries.length > 8 && (
                     <div className="sm:hidden text-center mt-8">
                       <button
-                        onClick={() => setShowAllCountries(!showAllCountries)}
+                        onClick={() => router.push('/esim-plans')}
                         className="btn-primary px-8 py-3 text-white font-semibold rounded-full hover:bg-tufts-blue transition-all duration-200 shadow-lg"
                       >
-                        {showAllCountries ? 'Show Less' : 'Show All'}
+                        Show All
                       </button>
                     </div>
                   )}

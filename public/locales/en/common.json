@@ -13,6 +13,7 @@
   },
   "hero": {
     "announcement": "Now available in 200+ countries worldwide.",
+    "countriesAvailable": "Now available in 200+ countries",
     "stayConnected": "Stay connected",
     "noMatterWhere": "no matter where you are",
     "with": "with",
@@ -105,6 +106,10 @@
   },
   "search": {
     "destinationPlaceholder": "Search your destination (e.g., France, Germany, United States)",
+    "heroPlaceholder": "Search for your destination... (e.g., France, USA, Thailand)",
+    "popularDestinations": "Popular:",
+    "searchingFor": "Searching for:",
+    "clearSearch": "Clear",
     "packagesPlaceholder": "Search packages, countries, or descriptions...",
     "blogPlaceholder": "Search blog posts...",
     "emailPlaceholder": "Enter your email",

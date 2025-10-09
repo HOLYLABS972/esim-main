@@ -19,6 +19,15 @@ const Navbar = ({ hideLanguageSelector = false }) => {
 
   // Detect current language from multiple sources
   const getCurrentLanguage = () => {
+    // For logged-in users, always use English
+    if (currentUser) {
+      // Ensure localStorage is set to English for authenticated users
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('roamjet-language', 'en');
+      }
+      return 'en';
+    }
+    
     // First try I18n context
     if (locale) return locale;
     

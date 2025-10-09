@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { trackCustomFacebookEvent } from '../../utils/facebookPixel';
+import CountrySearchBar from '../CountrySearchBar';
 
 export default function HeroSection() {
   const { t, isLoading, locale } = useI18n();
@@ -71,11 +72,9 @@ export default function HeroSection() {
         </div>
 
         <div className="mx-auto max-w-5xl py-6 sm:py-12 lg:py-24  justify-center">
-          {/* Announcement Banner */}
-          <div className="mb-6 sm:mb-8 flex justify-center">
-            <div className={`relative rounded-full px-3 py-1 text-xs sm:text-sm/6 text-gray-600 ring-1 ring-jordy-blue/30 hover:ring-tufts-blue/50 bg-white/80 backdrop-blur-sm shadow-lg shadow-cobalt-blue text-center ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
-              {t('hero.announcement')}
-            </div>
+          {/* Country Search Bar */}
+          <div className="mb-8 sm:mb-12">
+            <CountrySearchBar showCountryCount={true} />
           </div>
 
           {/* Main Content */}  
@@ -127,20 +126,12 @@ export default function HeroSection() {
             <p className="mx-auto max-w-4xl py-6 text-base sm:text-lg lg:text-xl font-medium text-pretty text-gray-600 px-4 sm:px-0">
               {t('hero.description')}
             </p>
-            <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-x-6 px-4 sm:px-0">
+            <div className="mt-8 sm:mt-10 flex items-center justify-center px-4 sm:px-0">
               <button
                 onClick={handleDownloadApp}
                 className="btn-primary w-full sm:w-auto"
               >
                 {t('hero.downloadApp')}
-              </button>
-              <button
-                onClick={() => {
-                  router.push(getLocalizedUrl('/esim-plans'));
-                }}
-                className="btn-secondary w-full sm:w-auto"
-              >
-                {t('hero.exploreTariffs')}
               </button>
             </div>
           </div>

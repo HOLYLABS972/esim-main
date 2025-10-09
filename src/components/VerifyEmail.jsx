@@ -70,7 +70,12 @@ const VerifyEmail = () => {
       setVerificationComplete(true);
       toast.success('Account created and email verified successfully!');
       
-      // Redirect to dashboard
+      // Save English as preferred language
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('roamjet-language', 'en');
+      }
+      
+      // Redirect to English dashboard
       setTimeout(() => {
         router.push('/dashboard');
       }, 2000);

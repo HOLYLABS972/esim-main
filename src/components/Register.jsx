@@ -69,7 +69,12 @@ const Register = () => {
       
       if (result.pending) {
         toast.success(t('auth.register.accountCreated', 'Account created! Please check your email for verification code.'));
+        // Always use English for verify-email page
         router.push(`/verify-email?email=${encodeURIComponent(email)}&name=${encodeURIComponent(displayName)}`);
+        // Save English as preferred language
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('roamjet-language', 'en');
+        }
       }
     } catch (error) {
       console.error('Registration error:', error);
