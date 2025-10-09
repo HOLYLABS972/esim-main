@@ -10,18 +10,17 @@ const CountrySearchBar = ({ onSearch, showCountryCount = true }) => {
   const router = useRouter();
   const [searchValue, setSearchValue] = useState('');
 
-  const getLocalizedUrl = (path) => {
-    if (locale === 'en') {
-      return path;
-    }
-    return `/${locale}${path}`;
-  };
-
   const handleSearch = (e) => {
     e.preventDefault();
+    
+    // Force English language for search
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('roamjet-language', 'en');
+    }
+    
     if (searchValue.trim()) {
-      // Navigate to plans page with search query
-      const searchUrl = `${getLocalizedUrl('/esim-plans')}?search=${encodeURIComponent(searchValue.trim())}`;
+      // Always use English URL for search
+      const searchUrl = `/esim-plans?search=${encodeURIComponent(searchValue.trim())}`;
       router.push(searchUrl);
       
       // Also call onSearch callback if provided
@@ -29,8 +28,8 @@ const CountrySearchBar = ({ onSearch, showCountryCount = true }) => {
         onSearch(searchValue.trim());
       }
     } else {
-      // Just navigate to plans page if no search term
-      router.push(getLocalizedUrl('/esim-plans'));
+      // Always navigate to English plans page
+      router.push('/esim-plans');
     }
   };
 
@@ -55,7 +54,7 @@ const CountrySearchBar = ({ onSearch, showCountryCount = true }) => {
             onChange={handleInputChange}
             onKeyPress={handleKeyPress}
             placeholder={`🌍 ${t('hero.countriesAvailable', 'Now available in 200+ countries')}`}
-            className="w-full px-6 py-4 sm:py-5 pr-14 sm:pr-16 text-base sm:text-lg border-2 border-jordy-blue rounded-full focus:ring-4 focus:ring-tufts-blue/30 focus:border-tufts-blue transition-all duration-300 shadow-xl hover:shadow-2xl bg-white/95 backdrop-blur-sm placeholder:text-gray-500 placeholder:font-medium"
+            className="w-full px-6 py-4 sm:py-5 pr-14 sm:pr-16 text-base sm:text-lg border-2 border-gray-200 rounded-full focus:outline-none focus:border-cobalt-blue focus:ring-2 focus:ring-cobalt-blue/20 transition-all duration-300 shadow-lg hover:shadow-xl bg-white/90 backdrop-blur-md placeholder:text-gray-500 placeholder:font-medium"
           />
           <button
             type="submit"
@@ -77,8 +76,13 @@ const CountrySearchBar = ({ onSearch, showCountryCount = true }) => {
               type="button"
               onClick={() => {
                 setSearchValue(country);
+                // Force English language
+                if (typeof window !== 'undefined') {
+                  localStorage.setItem('roamjet-language', 'en');
+                }
                 setTimeout(() => {
-                  const searchUrl = `${getLocalizedUrl('/esim-plans')}?search=${encodeURIComponent(country)}`;
+                  // Always use English URL
+                  const searchUrl = `/esim-plans?search=${encodeURIComponent(country)}`;
                   router.push(searchUrl);
                 }, 100);
               }}
