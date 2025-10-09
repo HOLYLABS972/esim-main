@@ -72,7 +72,6 @@ const CountrySearchBar = ({ onSearch, showCountryCount = true }) => {
         
         {/* Search Suggestions */}
         <div className="mt-3 flex flex-wrap justify-center gap-2 px-2">
-          <span className="text-xs sm:text-sm text-gray-500">{t('search.popularDestinations', 'Popular:')}</span>
           {['France', 'USA', 'Thailand', 'Japan', 'Spain'].map((country) => (
             <button
               key={country}
