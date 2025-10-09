@@ -232,7 +232,7 @@ const Blog = () => {
                       </span>
                       {post.isFallback && (
                         <span className="bg-orange-500 text-white px-2 py-1 rounded-full text-sm font-medium">
-                          {post.language?.toUpperCase() || 'EN'} {post.isFallback ? 'Fallback' : 'Version'}
+                          English
                         </span>
                       )}
                     </div>
