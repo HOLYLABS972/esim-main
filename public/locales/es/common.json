@@ -112,8 +112,11 @@
     "countries": "Países",
     "startingFrom": "Desde",
     "averagePrice": "Precio promedio",
-    "fromPrice": "Desde ${price}",
-    "noPlansAvailable": "No hay planes disponibles"
+    "showAll": "Mostrar todo",
+    "showLess": "Mostrar menos"
+  },
+  "discount": {
+    "get35Off": "Obtén 35% DE DESCUENTO"
   },
   "language": {
     "select": "Seleccionar idioma",

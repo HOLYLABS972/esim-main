@@ -113,7 +113,12 @@
     "startingFrom": "החל מ-",
     "averagePrice": "מחיר ממוצע",
     "fromPrice": "החל מ-${price}",
-    "noPlansAvailable": "אין תוכניות זמינות"
+    "noPlansAvailable": "אין תוכניות זמינות",
+    "showAll": "הצג הכל",
+    "showLess": "הצג פחות"
+  },
+  "discount": {
+    "get35Off": "קבל 35% הנחה"
   },
   "language": {
     "select": "בחר שפה",

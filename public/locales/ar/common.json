@@ -113,7 +113,12 @@
     "startingFrom": "بدءاً من",
     "averagePrice": "متوسط السعر",
     "fromPrice": "بدءاً من ${price}",
-    "noPlansAvailable": "لا توجد خطط متاحة"
+    "noPlansAvailable": "لا توجد خطط متاحة",
+    "showAll": "عرض الكل",
+    "showLess": "عرض أقل"
+  },
+  "discount": {
+    "get35Off": "احصل على خصم 35%"
   },
   "language": {
     "select": "اختر اللغة",

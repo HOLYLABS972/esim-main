@@ -115,7 +115,12 @@
     "startingFrom": "À partir de",
     "averagePrice": "Prix moyen",
     "fromPrice": "À partir de ${price}",
-    "noPlansAvailable": "Aucun plan disponible"
+    "noPlansAvailable": "Aucun plan disponible",
+    "showAll": "Tout afficher",
+    "showLess": "Afficher moins"
+  },
+  "discount": {
+    "get35Off": "Obtenez 35% DE RÉDUCTION"
   },
   "language": {
     "select": "Sélectionner la langue",

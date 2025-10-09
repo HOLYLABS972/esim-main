@@ -9,6 +9,9 @@ const CountrySearchBar = ({ onSearch, showCountryCount = true }) => {
   const { t, locale } = useI18n();
   const router = useRouter();
   const [searchValue, setSearchValue] = useState('');
+  
+  // Check if current locale is RTL
+  const isRTL = locale === 'ar' || locale === 'he';
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -44,7 +47,7 @@ const CountrySearchBar = ({ onSearch, showCountryCount = true }) => {
   };
 
   return (
-    <div className="w-full max-w-3xl mx-auto px-4">
+    <div className="w-full max-w-3xl mx-auto px-4" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Search Bar */}
       <form onSubmit={handleSearch} className="relative">
         <div className="relative group">
@@ -54,11 +57,11 @@ const CountrySearchBar = ({ onSearch, showCountryCount = true }) => {
             onChange={handleInputChange}
             onKeyPress={handleKeyPress}
             placeholder={`🌍 ${t('hero.countriesAvailable', 'Now available in 200+ countries')}`}
-            className="w-full px-6 py-4 sm:py-5 pr-14 sm:pr-16 text-base sm:text-lg border-2 border-gray-200 rounded-full focus:outline-none focus:border-cobalt-blue focus:ring-2 focus:ring-cobalt-blue/20 transition-all duration-300 shadow-lg hover:shadow-xl bg-white/90 backdrop-blur-md placeholder:text-gray-500 placeholder:font-medium"
+            className={`w-full px-6 py-4 sm:py-5 ${isRTL ? 'pl-14 sm:pl-16 pr-6' : 'pr-14 sm:pr-16 pl-6'} text-base sm:text-lg border-2 border-gray-200 rounded-full focus:outline-none focus:border-cobalt-blue focus:ring-2 focus:ring-cobalt-blue/20 transition-all duration-300 shadow-lg hover:shadow-xl bg-white/90 backdrop-blur-md placeholder:text-gray-500 placeholder:font-medium ${isRTL ? 'text-right' : 'text-left'}`}
           />
           <button
             type="submit"
-            className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 bg-white/80 backdrop-blur-md hover:bg-white/95 border-2 border-cobalt-blue/30 hover:border-cobalt-blue p-3 sm:p-3.5 rounded-full transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-cobalt-blue/50 shadow-lg"
+            className={`absolute ${isRTL ? 'left-2 sm:left-3' : 'right-2 sm:right-3'} top-1/2 transform -translate-y-1/2 bg-white/80 backdrop-blur-md hover:bg-white/95 border-2 border-cobalt-blue/30 hover:border-cobalt-blue p-3 sm:p-3.5 rounded-full transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-cobalt-blue/50 shadow-lg`}
             aria-label="Search"
           >
             <svg className="w-5 h-5 sm:w-6 sm:h-6 text-cobalt-blue" fill="currentColor" viewBox="0 0 20 20">

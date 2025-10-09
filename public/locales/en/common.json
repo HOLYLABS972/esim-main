@@ -61,6 +61,9 @@
     "showAll": "Show All",
     "showLess": "Show Less"
   },
+  "discount": {
+    "get35Off": "Get 35% OFF"
+  },
   "activation": {
     "downloads": "Downloads",
     "appAvailable": "Our App Available for both iOS and Android devices.",

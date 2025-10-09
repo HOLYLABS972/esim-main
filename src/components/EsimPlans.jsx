@@ -468,7 +468,7 @@ const EsimPlans = () => {
                         onClick={() => router.push('/esim-plans')}
                         className="btn-primary px-8 py-3 text-white font-semibold rounded-full hover:bg-tufts-blue transition-all duration-200 shadow-lg"
                       >
-                        Show All
+                        {t('plans.showAll', 'Show All')}
                       </button>
                     </div>
                   )}
@@ -532,7 +532,7 @@ const EsimPlans = () => {
                         onClick={() => router.push('/esim-plans')}
                         className="btn-primary px-8 py-3 text-white font-semibold rounded-full hover:bg-tufts-blue transition-all duration-200 shadow-lg"
                       >
-                        Show All
+                        {t('plans.showAll', 'Show All')}
                       </button>
                     </div>
                   )}

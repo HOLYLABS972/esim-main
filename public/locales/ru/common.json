@@ -113,7 +113,12 @@
     "startingFrom": "От",
     "averagePrice": "Средняя цена",
     "fromPrice": "От ${price}",
-    "noPlansAvailable": "Планы недоступны"
+    "noPlansAvailable": "Планы недоступны",
+    "showAll": "Показать все",
+    "showLess": "Показать меньше"
+  },
+  "discount": {
+    "get35Off": "Получите скидку 35%"
   },
   "language": {
     "select": "Выберите язык",
