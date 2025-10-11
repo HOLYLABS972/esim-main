@@ -10,6 +10,26 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useI18n } from '../contexts/I18nContext';
 import { getLanguageDirection, detectLanguageFromPath } from '../utils/languageUtils';
 
+// Helper function to validate if a flag emoji is valid (not broken/invalid)
+const isValidFlagEmoji = (emoji) => {
+  if (!emoji) return false;
+  
+  // Check if it's the earth emoji (default fallback) - we allow this
+  if (emoji === '🌍' || emoji === '🌎' || emoji === '🌏') return true;
+  
+  // Flag emojis are composed of two regional indicator symbols (🇦-🇿)
+  // They should be exactly 4 bytes (2 code points)
+  const codePoints = Array.from(emoji).map(char => char.codePointAt(0));
+  
+  // Valid flag emojis have exactly 2 regional indicator code points
+  // Regional indicators range from 0x1F1E6 (🇦) to 0x1F1FF (🇿)
+  if (codePoints.length !== 2) return false;
+  
+  const isRegionalIndicator = (cp) => cp >= 0x1F1E6 && cp <= 0x1F1FF;
+  
+  return codePoints.every(isRegionalIndicator);
+};
+
 const PlanCard = ({ plan, isSelected, onClick, index, hasReferralDiscount, referralSettings, regularSettings }) => {
   const { t, locale } = useI18n();
   const pathname = usePathname();

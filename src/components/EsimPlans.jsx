@@ -15,6 +15,26 @@ import { detectPlatform, shouldRedirectToDownload, isMobileDevice } from '../uti
 import { mobileCountries, getCountryName } from '../data/mobileCountries';
 import { esimService } from '../services/esimService';
 
+// Helper function to validate if a flag emoji is valid (not broken/invalid)
+const isValidFlagEmoji = (emoji) => {
+  if (!emoji) return false;
+  
+  // Check if it's the earth emoji (default fallback) - we allow this
+  if (emoji === '🌍' || emoji === '🌎' || emoji === '🌏') return true;
+  
+  // Flag emojis are composed of two regional indicator symbols (🇦-🇿)
+  // They should be exactly 4 bytes (2 code points)
+  const codePoints = Array.from(emoji).map(char => char.codePointAt(0));
+  
+  // Valid flag emojis have exactly 2 regional indicator code points
+  // Regional indicators range from 0x1F1E6 (🇦) to 0x1F1FF (🇿)
+  if (codePoints.length !== 2) return false;
+  
+  const isRegionalIndicator = (cp) => cp >= 0x1F1E6 && cp <= 0x1F1FF;
+  
+  return codePoints.every(isRegionalIndicator);
+};
+
 // Helper function to get flag emoji from country code
 const getFlagEmoji = (countryCode) => {
   if (!countryCode || countryCode.length !== 2) return '🌍';
@@ -24,13 +44,34 @@ const getFlagEmoji = (countryCode) => {
     return '🌍';
   }
   
+  // Special cases for regions/territories that don't have standard flags
+  const specialCases = {
+    'XK': '🌍', // Kosovo
+    'CW': '🌍', // Curaçao  
+    'BQ': '🌍', // Caribbean Netherlands
+    'SX': '🌍', // Sint Maarten
+    'SS': '🌍', // South Sudan (sometimes not supported)
+  };
+  
+  if (specialCases[countryCode.toUpperCase()]) {
+    return specialCases[countryCode.toUpperCase()];
+  }
+  
   try {
     const codePoints = countryCode
       .toUpperCase()
       .split('')
       .map(char => 127397 + char.charCodeAt());
     
-    return String.fromCodePoint(...codePoints);
+    const emoji = String.fromCodePoint(...codePoints);
+    
+    // Validate the generated emoji
+    if (!isValidFlagEmoji(emoji)) {
+      console.warn(`⚠️ Invalid flag emoji generated for code: ${countryCode}`);
+      return '🌍';
+    }
+    
+    return emoji;
   } catch (error) {
     console.warn('Invalid country code: ' + countryCode, error);
     return '🌍';
@@ -151,14 +192,49 @@ const EsimPlans = () => {
         const enhancedCountries = firebaseCountries.map(country => {
           const designData = getCountryDesignData(country.code);
           
+          // Get display name with proper fallback chain
+          let displayName = country.name; // Start with Firebase name
+          
+          // Try to get translated name from country.translations
+          if (country.translations?.[locale]) {
+            displayName = country.translations[locale];
+          }
+          // Fallback to mobileCountries translations
+          else if (designData) {
+            const translatedName = getCountryName(country.code, locale);
+            if (translatedName) {
+              displayName = translatedName;
+            }
+          }
+          
+          // If displayName is still a 2-letter code, use designData name or keep original
+          if (displayName && displayName.length === 2 && displayName === displayName.toUpperCase()) {
+            console.warn(`⚠️ Country ${country.code} has code as name, using fallback`);
+            displayName = designData?.name || country.name || displayName;
+          }
+          
+          // Use Firebase photo if available, otherwise use designData photo
+          const photoUrl = country.photo || designData?.photo || null;
+          
+          // Get and validate flag emoji
+          let flagEmoji = designData?.flagEmoji || country.flag || getFlagEmoji(country.code);
+          
+          // Validate the flag emoji - if invalid, use earth emoji
+          if (!isValidFlagEmoji(flagEmoji)) {
+            console.warn(`⚠️ Invalid flag emoji for ${country.code} (${country.name}): "${flagEmoji}" - using 🌍`);
+            flagEmoji = '🌍';
+          }
+          
           return {
             ...country,
-            // Use design data flag emoji if available, otherwise generate it
-            flagEmoji: designData?.flagEmoji || country.flag || getFlagEmoji(country.code),
-            // Use translated name if available, otherwise use country name
-            displayName: country.translations?.[locale] || getCountryName(country.code, locale) || country.name,
+            // Use validated flag emoji
+            flagEmoji: flagEmoji,
+            // Use calculated display name
+            displayName: displayName,
             // Keep original name
             originalName: country.name,
+            // Use best available photo URL
+            photo: photoUrl,
             // Add design status
             hasDesignData: !!designData
           };
@@ -169,17 +245,16 @@ const EsimPlans = () => {
         
         console.log('✅ Enhanced countries with design data');
         console.log('🔍 Total enhanced countries:', enhancedCountries.length);
-        console.log('🔍 Sample enhanced data:', enhancedCountries.slice(0, 3).map(c => ({ 
+        console.log('🔍 Sample enhanced data:', enhancedCountries.slice(0, 5).map(c => ({ 
           code: c.code,
           name: c.name,
           displayName: c.displayName,
-          flagEmoji: c.flagEmoji,
-          photo: c.photo,
+          flagEmoji: c.flagEmoji ? '✅' : '❌',
+          photo: c.photo ? '✅ ' + (c.photo.includes('firebasestorage') ? 'Firebase' : 'CDN') : '❌',
           minPrice: c.minPrice,
           planCount: c.planCount,
           hasDesignData: c.hasDesignData,
-          status: c.status,
-          isActive: c.isActive
+          status: c.status
         })));
         
         // For now, show all active countries (even without prices)
@@ -519,6 +594,15 @@ const EsimPlans = () => {
                               src={country.photo} 
                               alt={country.displayName || country.name}
                               className="w-16 h-16 mx-auto rounded-full object-cover border-2 border-gray-200"
+                              onError={(e) => {
+                                // On image load error, hide the image and show flag emoji instead
+                                console.warn(`⚠️ Failed to load photo for ${country.code}: ${country.photo}`);
+                                e.target.style.display = 'none';
+                                const parent = e.target.parentElement;
+                                if (parent && country.flagEmoji) {
+                                  parent.innerHTML = `<span class="country-flag-emoji text-5xl">${country.flagEmoji}</span>`;
+                                }
+                              }}
                             />
                           ) : country.flagEmoji ? (
                             <span className="country-flag-emoji text-5xl">
@@ -593,6 +677,15 @@ const EsimPlans = () => {
                               src={country.photo} 
                               alt={country.displayName || country.name}
                               className="w-12 h-12 rounded-full object-cover border-2 border-gray-200"
+                              onError={(e) => {
+                                // On image load error, hide the image and show flag emoji instead
+                                console.warn(`⚠️ Failed to load photo for ${country.code}: ${country.photo}`);
+                                e.target.style.display = 'none';
+                                const parent = e.target.parentElement;
+                                if (parent && country.flagEmoji) {
+                                  parent.innerHTML = `<span class="country-flag-emoji text-3xl">${country.flagEmoji}</span>`;
+                                }
+                              }}
                             />
                           ) : country.flagEmoji ? (
                             <span className="country-flag-emoji text-3xl">
