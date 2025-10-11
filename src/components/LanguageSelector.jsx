@@ -101,7 +101,8 @@ const LanguageSelector = () => {
     ];
     
     for (const prefix of languagePrefixes) {
-      if (cleanPath.startsWith(prefix)) {
+      // Make sure we match the exact language prefix followed by / or end of string
+      if (cleanPath === prefix || cleanPath.startsWith(prefix + '/')) {
         cleanPath = cleanPath.substring(prefix.length) || '/';
         break;
       }

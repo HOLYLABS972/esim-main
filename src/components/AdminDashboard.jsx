@@ -58,6 +58,7 @@ import BlogManagement from './BlogManagement';
 import AdminEsimManagement from './AdminEsimManagement';
 import ConfigurationManagement from './ConfigurationManagement';
 import CountriesManagement from './CountriesManagement';
+import CountryManagement from './CountryManagement';
 import PlansManagement from './PlansManagement';
 import NotificationsManagement from './NotificationsManagement';
 import LinksManagement from './LinksManagement';
@@ -933,7 +934,8 @@ const AdminDashboard = () => {
             {/* Main Navigation Items */}
             {[
               { id: 'config', label: 'API Configuration', icon: Settings, permission: canManageConfig },
-              { id: 'countries', label: 'Countries', icon: Globe, permission: canManageCountries },
+              { id: 'countries', label: 'Countries (Legacy)', icon: Globe, permission: canManageCountries },
+              { id: 'country-management', label: 'Country Management', icon: MapPin, permission: canManageCountries },
               { id: 'plans', label: 'Plans Management', icon: Smartphone, permission: canManagePlans },
               { id: 'esim', label: 'eSIM Management', icon: Activity, permission: canManagePlans },
               { id: 'logs', label: 'Application Logs', icon: FileText, permission: canManageContactRequests },
@@ -1070,7 +1072,8 @@ const AdminDashboard = () => {
             <h2 className="text-xl font-semibold text-gray-900">
               {[
                 { id: 'config', label: 'API Configuration' },
-                { id: 'countries', label: 'Countries' },
+                { id: 'countries', label: 'Countries (Legacy)' },
+                { id: 'country-management', label: 'Country Management' },
                 { id: 'plans', label: 'Plans Management' },
                 { id: 'esim', label: 'eSIM Management' },
                 { id: 'requests', label: 'Contact Requests' },
@@ -1151,14 +1154,14 @@ const AdminDashboard = () => {
                       <p className="text-sm text-gray-600">Manage API keys and environment</p>
                     </button>
                     <button
-                      onClick={() => setActiveTab('countries')}
+                      onClick={() => setActiveTab('country-management')}
                       className="p-4 border border-gray-200 rounded-lg hover:border-green-300 hover:bg-green-50 transition-all duration-200"
                     >
-                      <Globe className="w-8 h-8 text-green-600 mb-2" />
-                      <p className="font-medium">Manage Countries</p>
-                      <p className="text-sm text-gray-600">View and manage country plans</p>
+                      <MapPin className="w-8 h-8 text-green-600 mb-2" />
+                      <p className="font-medium">Country Management</p>
+                      <p className="text-sm text-gray-600">Manage countries, translations, photos & pricing</p>
                       <p className="text-xs text-green-600 font-medium mt-1">
-                        Manage countries
+                        Enhanced country management
                       </p>
                     </button>
                   </div>
@@ -1171,9 +1174,14 @@ const AdminDashboard = () => {
               <ConfigurationManagement />
             )}
 
-            {/* Countries Tab */}
+            {/* Countries Tab (Legacy) */}
             {activeTab === 'countries' && canManageCountries && (
               <CountriesManagement />
+            )}
+
+            {/* Country Management Tab (New) */}
+            {activeTab === 'country-management' && canManageCountries && (
+              <CountryManagement />
             )}
 
             {/* Plans Management Tab */}

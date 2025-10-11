@@ -12,7 +12,8 @@ import { getCountriesWithPricing } from '../services/plansService';
 import { getRegularSettings } from '../services/settingsService';
 import { useI18n } from '../contexts/I18nContext';
 import { detectPlatform, shouldRedirectToDownload, isMobileDevice } from '../utils/platformDetection';
-import { getMobileCountries, getCountryName } from '../data/mobileCountries';
+import { mobileCountries, getCountryName } from '../data/mobileCountries';
+import { esimService } from '../services/esimService';
 
 // Helper function to get flag emoji from country code
 const getFlagEmoji = (countryCode) => {
@@ -34,6 +35,30 @@ const getFlagEmoji = (countryCode) => {
     console.warn('Invalid country code: ' + countryCode, error);
     return '🌍';
   }
+};
+
+// Helper function to get country design data (flag, translations) from mobileCountries.js
+const getCountryDesignData = (countryCode) => {
+  return mobileCountries.find(country => country.code === countryCode) || null;
+};
+
+// Helper function to merge Airalo data with design data
+const mergeCountryData = (airaloCountries, locale) => {
+  return airaloCountries.map(airaloCountry => {
+    const designData = getCountryDesignData(airaloCountry.code);
+    
+    return {
+      ...airaloCountry,
+      // Use design data flag emoji if available, otherwise generate it
+      flagEmoji: designData?.flagEmoji || getFlagEmoji(airaloCountry.code),
+      // Use translated name if available, otherwise use Airalo name
+      displayName: getCountryName(airaloCountry.code, locale) || airaloCountry.name,
+      // Keep original Airalo data
+      originalName: airaloCountry.name,
+      // Add design status (for future filtering if needed)
+      hasDesignData: !!designData
+    };
+  });
 };
 
 
@@ -101,49 +126,107 @@ const EsimPlans = () => {
     fetchDiscountSettings();
   }, []);
 
-  // Fetch countries - use hardcoded for landing pages, Firebase for dedicated plans page
+  // Fetch countries - from Firebase countries collection (managed via Country Management)
   const { data: countriesData, isLoading: countriesLoading, error: countriesError } = useQuery({
-    queryKey: ['countries-with-pricing', isPlansPage],
+    queryKey: ['countries-with-pricing', locale],
     queryFn: async () => {
-      // Landing pages: Always use hardcoded countries
-      if (!isPlansPage) {
-        console.log('🏠 Landing page - Using hardcoded countries');
-        const mobileCountries = getMobileCountries();
-        
-        // Sort by minimum price (cheapest first)
-        mobileCountries.sort((a, b) => a.minPrice - b.minPrice);
-        
-        console.log('✅ USING HARDCODED COUNTRIES FOR LANDING');
-        return mobileCountries;
-      }
-      
-      // Plans page: Always use Firebase data
       try {
-        console.log('📊 Plans page - Fetching real Firebase data...');
-        const countriesWithPricing = await getCountriesWithPricing();
+        console.log('🌍 Fetching countries from Firebase...');
         
-        // Filter to show only countries with plans (minPrice < 999 indicates real data)
-        const countriesWithRealPricing = countriesWithPricing.filter(country => 
-          country.minPrice < 999 && country.plansCount > 0
+        // Fetch countries from Firebase (these have plan counts and prices from Country Management)
+        const countriesQuery = query(
+          collection(db, 'countries'),
+          where('status', '==', 'active')
         );
         
-        // Sort by minimum price (cheapest first)
-        countriesWithRealPricing.sort((a, b) => a.minPrice - b.minPrice);
+        const countriesSnapshot = await getDocs(countriesQuery);
+        const firebaseCountries = countriesSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
         
-        console.log('✅ USING REAL FIREBASE DATA FOR PLANS PAGE');
-        console.log('Real data sample prices:', countriesWithRealPricing.slice(0, 5).map(c => ({ 
-          name: c.name, 
-          minPrice: c.minPrice 
+        console.log('📊 Fetched', firebaseCountries.length, 'countries from Firebase');
+        
+        // Merge with design data (translations, flags, etc.)
+        const enhancedCountries = firebaseCountries.map(country => {
+          const designData = getCountryDesignData(country.code);
+          
+          return {
+            ...country,
+            // Use design data flag emoji if available, otherwise generate it
+            flagEmoji: designData?.flagEmoji || country.flag || getFlagEmoji(country.code),
+            // Use translated name if available, otherwise use country name
+            displayName: country.translations?.[locale] || getCountryName(country.code, locale) || country.name,
+            // Keep original name
+            originalName: country.name,
+            // Add design status
+            hasDesignData: !!designData
+          };
+        });
+        
+        // Sort by minimum price (cheapest first)
+        enhancedCountries.sort((a, b) => (a.minPrice || 999) - (b.minPrice || 999));
+        
+        console.log('✅ Enhanced countries with design data');
+        console.log('🔍 Total enhanced countries:', enhancedCountries.length);
+        console.log('🔍 Sample enhanced data:', enhancedCountries.slice(0, 3).map(c => ({ 
+          code: c.code,
+          name: c.name,
+          displayName: c.displayName,
+          flagEmoji: c.flagEmoji,
+          photo: c.photo,
+          minPrice: c.minPrice,
+          planCount: c.planCount,
+          hasDesignData: c.hasDesignData,
+          status: c.status,
+          isActive: c.isActive
         })));
-        return countriesWithRealPricing;
+        
+        // For now, show all active countries (even without prices)
+        // This allows users to see countries before they're synced
+        const activeCountries = enhancedCountries.filter(c => {
+          const isActive = c.status === 'active' || c.isActive === true;
+          const hasPrice = c.minPrice && c.minPrice > 0;
+          const hasPlans = c.planCount && c.planCount > 0;
+          
+          if (!isActive) {
+            console.log(`❌ Country ${c.code}: inactive`);
+            return false;
+          }
+          
+          if (!hasPrice && !hasPlans) {
+            console.log(`⚠️ Country ${c.code}: active but no price/plans yet (needs sync)`);
+          } else {
+            console.log(`✅ Country ${c.code}: active with ${c.planCount || 0} plans, min price $${c.minPrice || 0}`);
+          }
+          
+          return isActive; // Show all active countries
+        });
+        
+        console.log('✅ Filtered to', activeCountries.length, 'active countries (some may need sync)');
+        
+        return activeCountries;
       } catch (error) {
-        console.error('❌ FIREBASE ERROR:', error);
-        return []; // Return empty array when Firebase fails
+        console.error('❌ FIREBASE FETCH ERROR:', error);
+        
+        // Fallback: Use design data only (for development/offline)
+        console.log('🔄 Falling back to design data only');
+        const fallbackCountries = mobileCountries
+          .filter(country => country.status === 'active')
+          .map(country => ({
+            ...country,
+            displayName: getCountryName(country.code, locale) || country.name,
+            originalName: country.name,
+            hasDesignData: true,
+            isFallback: true
+          }));
+        
+        return fallbackCountries;
       }
     },
-    retry: 1,
+    retry: 2,
     staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 15 * 60 * 1000, // 15 minutes
   });
 
 
@@ -166,7 +249,7 @@ const EsimPlans = () => {
     }
   }, [countriesData, countriesError, countriesLoading]);
 
-  // Search function - uses hardcoded countries for landing, Firebase for plans page
+  // Search function - searches through enhanced Airalo data
   const searchCountries = async (term) => {
     if (!term || term.length < 2) {
       setSearchResults([]);
@@ -176,65 +259,33 @@ const EsimPlans = () => {
 
     setIsSearching(true);
     try {
-      // Landing pages: Use hardcoded countries
-      if (!isPlansPage) {
-        console.log('🏠 Landing search - Using hardcoded countries:', term);
-        const mobileCountries = getMobileCountries();
-        const searchResults = mobileCountries.filter(country => 
-          country.name.toLowerCase().includes(term.toLowerCase()) ||
-          country.code.toLowerCase().includes(term.toLowerCase())
-        );
-        setSearchResults(searchResults);
-        setIsSearching(false);
-        return;
-      }
+      console.log('🔍 Searching enhanced countries for:', term);
       
-      console.log('📊 Plans page search - Using Firebase:', term);
-      
-      // Plans page: Search in Firebase
-      const querySnapshot = await getDocs(collection(db, 'countries'));
-      const firebaseResults = [];
-      
-      for (const doc of querySnapshot.docs) {
-        const countryData = { id: doc.id, ...doc.data() };
+      // Search through the already loaded enhanced countries data
+      if (countries && countries.length > 0) {
+        const searchResults = countries.filter(country => {
+          const searchLower = term.toLowerCase();
+          return (
+            // Search in display name (translated)
+            country.displayName?.toLowerCase().includes(searchLower) ||
+            // Search in original name (from Airalo)
+            country.originalName?.toLowerCase().includes(searchLower) ||
+            // Search in country code
+            country.code?.toLowerCase().includes(searchLower) ||
+            // Search in regular name field (fallback)
+            country.name?.toLowerCase().includes(searchLower)
+          );
+        });
         
-        // Check if country name matches search term
-        if (countryData.name.toLowerCase().includes(term.toLowerCase())) {
-          // Get plans for this country using country_codes array
-          const plansQuery = query(collection(db, 'dataplans'), where('country_codes', 'array-contains', countryData.code));
-          const plansSnapshot = await getDocs(plansQuery);
-          const plans = plansSnapshot.docs.map(planDoc => planDoc.data());
-          
-          // Filter out plans with invalid prices and calculate minimum
-          const validPrices = plans
-            .map(plan => parseFloat(plan.price))
-            .filter(price => !isNaN(price) && price > 0);
-          
-          const minPrice = validPrices.length > 0 
-            ? Math.min(...validPrices)
-            : null; // Use null instead of 999 fallback
-          
-          // Debug logging
-          console.log(`🔍 Search result for ${countryData.name}:`, {
-            plansFound: plans.length,
-            validPrices: validPrices.length,
-            minPrice: minPrice,
-            allPrices: plans.map(p => p.price)
-          });
-          
-          firebaseResults.push({
-            ...countryData,
-            minPrice: minPrice,
-            flagEmoji: getFlagEmoji(countryData.code)
-          });
-        }
+        console.log('✅ Found', searchResults.length, 'matching countries');
+        setSearchResults(searchResults);
+      } else {
+        console.log('⚠️ No countries data available for search');
+        setSearchResults([]);
       }
-      
-      console.log('Firebase search results:', firebaseResults.length);
-      setSearchResults(firebaseResults);
       
     } catch (error) {
-      console.error('Search error:', error);
+      console.error('❌ Search error:', error);
       setSearchResults([]);
     }
     setIsSearching(false);
@@ -254,16 +305,11 @@ const EsimPlans = () => {
     return () => clearTimeout(timeoutId);
   }, [searchTerm]);
 
-  // Helper function to calculate discounted price
+  // Helper function to calculate discounted price (now using real Airalo prices)
   const calculateDiscountedPrice = (originalPrice) => {
     if (!originalPrice || originalPrice <= 0) return originalPrice;
     
-    // For landing pages, the price is already discounted in hardcoded data
-    if (!isPlansPage) {
-      return originalPrice; // Return the already discounted price
-    }
-    
-    // For plans page, apply discount from settings
+    // Apply discount from settings to real Airalo prices
     const discountPercentage = regularSettings.discountPercentage || 10;
     const minimumPrice = regularSettings.minimumPrice || 0.5;
     
@@ -273,10 +319,10 @@ const EsimPlans = () => {
 
   // Simple filter function with priority countries for plans page
   const filterCountries = (countriesList) => {
-    // Priority countries for plans page
-    const priorityCountries = [
-      'United States', 'USA', 'South Korea', 'Korea', 'Japan', 
-      'Belgium', 'Spain', 'Canada', 'Portugal', 'Thailand'
+    // Priority country codes for plans page
+    const priorityCountryCodes = [
+      'US', 'KR', 'JP', 'BE', 'ES', 'CA', 'PT', 'TH', 
+      'GB', 'DE', 'FR', 'IT', 'AU', 'SG'
     ];
     
     if (isPlansPage && !searchTerm) {
@@ -285,10 +331,12 @@ const EsimPlans = () => {
       const others = [];
       
       countriesList.forEach(country => {
-        const isPriority = priorityCountries.some(pc => 
-          country.name.toLowerCase().includes(pc.toLowerCase()) ||
-          pc.toLowerCase().includes(country.name.toLowerCase())
-        );
+        const isPriority = priorityCountryCodes.includes(country.code) ||
+          priorityCountryCodes.some(pc => 
+            country.displayName?.toLowerCase().includes(pc.toLowerCase()) ||
+            country.originalName?.toLowerCase().includes(pc.toLowerCase()) ||
+            country.name?.toLowerCase().includes(pc.toLowerCase())
+          );
         
         if (isPriority) {
           priority.push(country);
@@ -375,9 +423,44 @@ const EsimPlans = () => {
 
 
   return (
-    <>
-      <section className="destination py-0">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-white pt-3 lg:pt-6">
+      {/* Header Section */}
+      <section className="bg-white">
+        <div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8 mt-12">
+          <div className="text-center">
+            <h2 className="text-center text-lg lg:text-xl font-semibold text-tufts-blue">
+              <span>{'{ '}</span>
+              {t('plans.title', 'eSIM Plans')}
+              <span>{' }'}</span>
+            </h2>
+            <p className="mx-auto mt-12 max-w-4xl text-center text-2xl lg:text-3xl font-semibold tracking-tight text-eerie-black sm:text-5xl">
+              {t('plans.subtitle', 'Choose your perfect eSIM plan')}
+            </p>
+            <p className="mx-auto mt-6 max-w-2xl text-center text-sm lg:text-base text-cool-black">
+              {t('plans.description', 'Connect instantly with our global eSIM plans. No physical SIM card needed, just scan and go.')}
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Search and Filter Section */}
+      <section className="bg-white">
+        <div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8 mt-3 lg:mt-6">
+          {/* Search Bar - Only show on plans page */}
+          {isPlansPage && (
+            <div className="flex flex-col md:flex-row gap-3 lg:gap-4 mb-6 lg:mb-8">
+              <div className="flex-1 relative">
+                <Search className="absolute left-4 top-4 w-5 h-5 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder={t('plans.searchPlaceholder', 'Search countries...')}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 lg:py-3 border-0 shadow-lg rounded-full border-4 border-gray-200/40 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+          )}
           
           {/* Active Search Badge */}
           {searchTerm && (
@@ -396,93 +479,122 @@ const EsimPlans = () => {
               </button>
             </div>
           )}
+        </div>
+      </section>
 
-        {/* Local eSIMs Content */}
-        <div className="tab-content">
-          <div className="tab-pane fade show active">
-              {/* Loading state for countries */}
-              {countriesLoading && countries.length === 0 ? (
-                <div className="flex justify-center items-center min-h-64">
-                  <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-tufts-blue"></div>
-                  <p className="ml-4 text-gray-600">{t('plans.loadingPlans', 'Loading countries...')}</p>
-                </div>
-              ) : (
-                <>
-                  {/* Desktop Grid Layout */}
-                  <div className="hidden sm:grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-center">
-                    {(isPlansPage || searchTerm ? filteredCountries : filteredCountries.slice(0, 8)).map((country, index) => (
-                      <div
-                        key={country.id}
-                        className="col-span-1"
-                      >
-                        <div className="relative">
-                          <button
-                            className="esim-plan-card w-full bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 text-left border border-gray-100 hover:border-blue-200"
-                            onClick={() => handleCountrySelect(country)}
-                          >
-                            <div className="country-flag-display text-center mb-4">
-                              {country.flagEmoji ? (
-                                <span className="country-flag-emoji text-5xl">
-                                  {country.flagEmoji}
-                                </span>
-                              ) : (
-                                <div className="country-code-avatar w-16 h-16 mx-auto bg-tufts-blue rounded-full flex items-center justify-center">
-                                  <span className="text-blue-600 font-bold text-lg">
-                                    {country.code || '??'}
-                                  </span>
-                                </div>
-                              )}
-                            </div>
-
-                            <div className="esim-plan-card__content text-center">
-                              <h5 className="esim-plan-card__title text-lg font-semibold text-gray-900 mb-2">
-                                {getCountryName(country.code, locale) || country.name}
-                              </h5>
-                              <span className="esim-plan-card__price text-tufts-blue font-medium">
-                                {country.minPrice ? (() => {
-                                  const discountedPrice = calculateDiscountedPrice(country.minPrice);
-                                  const originalPrice = country.originalPrice || country.minPrice;
-                                  const hasDiscount = discountedPrice < originalPrice;
-                                  return hasDiscount ? (
-                                    <div className="text-center">
-                                      <span className="text-lg font-semibold text-green-600">${discountedPrice.toFixed(2)}</span>
-                                      <span className="text-sm text-gray-500 line-through ml-2">${originalPrice.toFixed(2)}</span>
-                                    </div>
-                                  ) : (
-                                    t('plans.fromPrice', `From $${country.minPrice.toFixed(2)}`).replace('${price}', `$${country.minPrice.toFixed(2)}`)
-                                  );
-                                })() : t('plans.noPlansAvailable', 'No plans available')}
+      {/* Countries Grid Section */}
+      <section className="bg-white pb-12 lg:pb-16">
+        <div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8">
+          {/* Loading state for countries */}
+          {countriesLoading && countries.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-10 w-10 lg:h-12 lg:w-12 shadow-lg mx-auto"></div>
+              <p className="mt-4 text-gray-600">{t('plans.loadingPlans', 'Loading countries...')}</p>
+            </div>
+          ) : filteredCountries.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-500 text-sm lg:text-base">
+                {searchTerm 
+                  ? t('plans.noCountriesFound', 'No countries found matching your search')
+                  : t('plans.noCountriesAvailable', 'No countries available yet')
+                }
+              </p>
+            </div>
+          ) : (
+            <>
+              {/* Desktop Grid Layout */}
+              <div className="hidden sm:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-6">
+                {(isPlansPage || searchTerm ? filteredCountries : filteredCountries.slice(0, 8)).map((country, index) => (
+                  <button
+                    key={country.id}
+                    className="relative cursor-pointer group transition-transform duration-200"
+                    onClick={() => handleCountrySelect(country)}
+                  >
+                    <div className="absolute inset-px rounded-xl bg-white shadow-lg border-2 border-gray-200/50"></div>
+                    <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
+                      <div className="px-6 pt-6 pb-6 flex-1 flex flex-col">
+                        <div className="country-flag-display text-center mb-4">
+                          {country.photo ? (
+                            <img 
+                              src={country.photo} 
+                              alt={country.displayName || country.name}
+                              className="w-16 h-16 mx-auto rounded-full object-cover border-2 border-gray-200"
+                            />
+                          ) : country.flagEmoji ? (
+                            <span className="country-flag-emoji text-5xl">
+                              {country.flagEmoji}
+                            </span>
+                          ) : (
+                            <div className="country-code-avatar w-16 h-16 mx-auto bg-tufts-blue rounded-full flex items-center justify-center">
+                              <span className="text-white font-bold text-lg">
+                                {country.code || '??'}
                               </span>
                             </div>
-                          </button>
-                        
+                          )}
+                        </div>
+
+                        <div className="esim-plan-card__content text-center flex-1 flex flex-col justify-between">
+                          <h5 className="esim-plan-card__title text-lg lg:text-xl font-semibold tracking-tight text-eerie-black mb-3 line-clamp-2 group-hover:text-tufts-blue transition-colors duration-200">
+                            {country.displayName || country.name}
+                          </h5>
+                          <div className="esim-plan-card__price text-tufts-blue font-medium">
+                            {country.minPrice ? (() => {
+                              const discountedPrice = calculateDiscountedPrice(country.minPrice);
+                              const originalPrice = country.originalPrice || country.minPrice;
+                              const hasDiscount = discountedPrice < originalPrice;
+                              return hasDiscount ? (
+                                <div className="text-center">
+                                  <span className="text-lg font-semibold text-green-600">${discountedPrice.toFixed(2)}</span>
+                                  <span className="text-sm text-gray-500 line-through ml-2">${originalPrice.toFixed(2)}</span>
+                                </div>
+                              ) : (
+                                <span className="text-lg font-semibold text-tufts-blue">
+                                  {t('plans.fromPrice', `From $${country.minPrice.toFixed(2)}`).replace('${price}', `$${country.minPrice.toFixed(2)}`)}
+                                </span>
+                              );
+                            })() : (
+                              <span className="text-sm text-gray-500">{t('plans.noPlansAvailable', 'No plans available')}</span>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                  
-                  {/* Show All Button for Desktop - Only on Landing Page */}
-                  {!isPlansPage && !searchTerm && filteredCountries.length > 8 && (
-                    <div className="hidden sm:block text-center mt-8">
-                      <button
-                        onClick={() => router.push('/esim-plans')}
-                        className="btn-primary px-8 py-3 text-white font-semibold rounded-full hover:bg-tufts-blue transition-all duration-200 shadow-lg"
-                      >
-                        {t('plans.showAll', 'Show All')}
-                      </button>
                     </div>
-                  )}
-                  
-                  {/* Mobile List Layout */}
-                  <div className="sm:hidden space-y-3">
-                    {(isPlansPage || searchTerm ? filteredCountries : filteredCountries.slice(0, 8)).map((country, index) => (
-                      <button
-                        key={country.id}
-                        className="esim-plan-card w-full bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 p-4 text-left border border-gray-100 hover:border-blue-200 flex items-center space-x-4"
-                        onClick={() => handleCountrySelect(country)}
-                      >
+                    <div className="pointer-events-none absolute inset-px rounded-xl"></div>
+                  </button>
+                ))}
+              </div>
+              
+              {/* Show All Button for Desktop - Only on Landing Page */}
+              {!isPlansPage && !searchTerm && filteredCountries.length > 8 && (
+                <div className="hidden sm:block text-center mt-8">
+                  <button
+                    onClick={() => router.push('/esim-plans')}
+                    className="btn-primary px-8 py-3 text-white font-semibold rounded-full hover:bg-tufts-blue transition-all duration-200 shadow-lg"
+                  >
+                    {t('plans.showAll', 'Show All')}
+                  </button>
+                </div>
+              )}
+              
+              {/* Mobile List Layout */}
+              <div className="sm:hidden space-y-3">
+                {(isPlansPage || searchTerm ? filteredCountries : filteredCountries.slice(0, 8)).map((country, index) => (
+                  <button
+                    key={country.id}
+                    className="relative cursor-pointer group transition-transform duration-200 w-full"
+                    onClick={() => handleCountrySelect(country)}
+                  >
+                    <div className="absolute inset-px rounded-xl bg-white shadow-lg border-2 border-gray-200/50"></div>
+                    <div className="relative flex h-full overflow-hidden rounded-xl">
+                      <div className="px-4 pt-4 pb-4 flex items-center space-x-4 w-full">
                         <div className="country-flag-display flex-shrink-0">
-                          {country.flagEmoji ? (
+                          {country.photo ? (
+                            <img 
+                              src={country.photo} 
+                              alt={country.displayName || country.name}
+                              className="w-12 h-12 rounded-full object-cover border-2 border-gray-200"
+                            />
+                          ) : country.flagEmoji ? (
                             <span className="country-flag-emoji text-3xl">
                               {country.flagEmoji}
                             </span>
@@ -496,10 +608,10 @@ const EsimPlans = () => {
                         </div>
 
                         <div className="esim-plan-card__content flex-1 text-left">
-                          <h5 className="esim-plan-card__title text-base font-semibold text-gray-900 mb-1">
-                            {getCountryName(country.code, locale) || country.name}
+                          <h5 className="esim-plan-card__title text-base font-semibold tracking-tight text-eerie-black mb-1 group-hover:text-tufts-blue transition-colors duration-200">
+                            {country.displayName || country.name}
                           </h5>
-                          <span className="esim-plan-card__price text-tufts-blue font-medium text-sm">
+                          <div className="esim-plan-card__price text-tufts-blue font-medium text-sm">
                             {country.minPrice ? (() => {
                               const discountedPrice = calculateDiscountedPrice(country.minPrice);
                               const originalPrice = country.originalPrice || country.minPrice;
@@ -513,49 +625,46 @@ const EsimPlans = () => {
                                 t('plans.fromPrice', `From $${country.minPrice.toFixed(2)}`).replace('${price}', `$${country.minPrice.toFixed(2)}`)
                               );
                             })() : t('plans.noPlansAvailable', 'No plans available')}
-                          </span>
+                          </div>
                         </div>
                         
                         <div className="flex-shrink-0">
-                          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-5 h-5 text-gray-400 group-hover:text-tufts-blue transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                           </svg>
                         </div>
-                      </button>
-                    ))}
-                  </div>
-                  
-                  {/* Show All Button for Mobile - Only on Landing Page */}
-                  {!isPlansPage && !searchTerm && filteredCountries.length > 8 && (
-                    <div className="sm:hidden text-center mt-8">
-                      <button
-                        onClick={() => router.push('/esim-plans')}
-                        className="btn-primary px-8 py-3 text-white font-semibold rounded-full hover:bg-tufts-blue transition-all duration-200 shadow-lg"
-                      >
-                        {t('plans.showAll', 'Show All')}
-                      </button>
+                      </div>
                     </div>
-                  )}
-                </>
+                    <div className="pointer-events-none absolute inset-px rounded-xl"></div>
+                  </button>
+                ))}
+              </div>
+              
+              {/* Show All Button for Mobile - Only on Landing Page */}
+              {!isPlansPage && !searchTerm && filteredCountries.length > 8 && (
+                <div className="sm:hidden text-center mt-8">
+                  <button
+                    onClick={() => router.push('/esim-plans')}
+                    className="btn-primary px-8 py-3 text-white font-semibold rounded-full hover:bg-tufts-blue transition-all duration-200 shadow-lg"
+                  >
+                    {t('plans.showAll', 'Show All')}
+                  </button>
+                </div>
               )}
-          </div>
+            </>
+          )}
         </div>
+      </section>
 
-
-
-        {/* Empty State */}
-      </div>
-    </section>
-
-    {/* Plan Selection Bottom Sheet */}
-    <PlanSelectionBottomSheet
-      isOpen={showCheckoutModal}
-      onClose={() => setShowCheckoutModal(false)}
-      availablePlans={availablePlans}
-      loadingPlans={loadingPlans}
-      filteredCountries={filteredCountries}
-    />
-    </>
+      {/* Plan Selection Bottom Sheet */}
+      <PlanSelectionBottomSheet
+        isOpen={showCheckoutModal}
+        onClose={() => setShowCheckoutModal(false)}
+        availablePlans={availablePlans}
+        loadingPlans={loadingPlans}
+        filteredCountries={filteredCountries}
+      />
+    </div>
   );
 };
 

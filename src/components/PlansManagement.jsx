@@ -5,6 +5,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { collection, query, where, getDocs, getDoc, doc, updateDoc, deleteDoc, writeBatch, addDoc, setDoc, serverTimestamp, orderBy } from 'firebase/firestore';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { db } from '../firebase/config';
+import { esimService } from '../services/esimService';
+import { getSettings, getReferralSettings, getRegularSettings } from '../services/settingsService';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Smartphone,
@@ -67,9 +69,23 @@ const PlansManagement = () => {
   const [selectedCountry, setSelectedCountry] = useState('');
   const [availableCountries, setAvailableCountries] = useState([]);
   
+  // Airalo data state
+  const [airaloPlans, setAiraloPlans] = useState([]);
+  const [airaloCountries, setAiraloCountries] = useState([]);
+  const [loadingAiralo, setLoadingAiralo] = useState(false);
+  
+  // Discount settings state
+  const [discountSettings, setDiscountSettings] = useState({
+    referral: { discountPercentage: 35, minimumPrice: 0.5, transactionCommissionPercentage: 15 },
+    regular: { discountPercentage: 25, minimumPrice: 0.5 }
+  });
+  
   // Price editing state
   const [editingPrices, setEditingPrices] = useState({});
   const [pendingPriceChanges, setPendingPriceChanges] = useState({});
+  
+  // Data source toggle
+  const [dataSource, setDataSource] = useState('firebase'); // 'firebase' or 'airalo'
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -79,18 +95,21 @@ const PlansManagement = () => {
   useEffect(() => {
     if (currentUser) {
       loadAllPlans();
+      loadDiscountSettings();
     }
   }, [currentUser]);
 
   // Filter plans based on search and country
   useEffect(() => {
-    let filtered = [...allPlans];
+    const plansToFilter = dataSource === 'airalo' ? airaloPlans : allPlans;
+    let filtered = [...plansToFilter];
 
     // Filter by search term
     if (searchTerm.trim()) {
       filtered = filtered.filter(plan => 
         plan.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         plan.operator?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        plan.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (plan.country_codes || plan.country_ids || []).some(code => 
           code.toLowerCase().includes(searchTerm.toLowerCase())
         )
@@ -101,14 +120,15 @@ const PlansManagement = () => {
     if (selectedCountry) {
       filtered = filtered.filter(plan => 
         (plan.country_codes || []).includes(selectedCountry) ||
-        (plan.country_ids || []).includes(selectedCountry)
+        (plan.country_ids || []).includes(selectedCountry) ||
+        plan.country_code === selectedCountry
       );
     }
 
     setFilteredPlans(filtered);
     // Reset to page 1 when filters change
     setCurrentPage(1);
-  }, [allPlans, searchTerm, selectedCountry]);
+  }, [allPlans, airaloPlans, searchTerm, selectedCountry, dataSource]);
 
   // Plans Management Functions
   const loadAllPlans = async () => {
@@ -147,6 +167,70 @@ const PlansManagement = () => {
     }
   };
 
+  // Load discount settings from Firebase
+  const loadDiscountSettings = async () => {
+    try {
+      console.log('📊 Loading discount settings...');
+      const [referralSettings, regularSettings] = await Promise.all([
+        getReferralSettings(),
+        getRegularSettings()
+      ]);
+      
+      setDiscountSettings({
+        referral: referralSettings,
+        regular: regularSettings
+      });
+      
+      console.log('✅ Loaded discount settings:', {
+        referral: referralSettings,
+        regular: regularSettings
+      });
+    } catch (error) {
+      console.error('❌ Error loading discount settings:', error);
+      toast.error('Error loading discount settings');
+    }
+  };
+
+  // Load Airalo plans and countries
+  const loadAiraloData = async () => {
+    try {
+      setLoadingAiralo(true);
+      console.log('🌍 Loading Airalo data...');
+      
+      const result = await esimService.fetchPlans();
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to fetch Airalo data');
+      }
+      
+      setAiraloPlans(result.plans || []);
+      setAiraloCountries(result.countries || []);
+      
+      console.log('✅ Loaded Airalo data:', {
+        plans: result.plans?.length || 0,
+        countries: result.countries?.length || 0
+      });
+      
+      toast.success(`Loaded ${result.plans?.length || 0} Airalo plans from ${result.countries?.length || 0} countries`);
+    } catch (error) {
+      console.error('❌ Error loading Airalo data:', error);
+      toast.error(`Error loading Airalo data: ${error.message}`);
+    } finally {
+      setLoadingAiralo(false);
+    }
+  };
+
+  // Calculate discounted prices
+  const calculateDiscountedPrice = (originalPrice, discountType = 'regular') => {
+    if (!originalPrice || originalPrice <= 0) return originalPrice;
+    
+    const settings = discountSettings[discountType] || discountSettings.regular;
+    const discountPercentage = settings.discountPercentage || 0;
+    const minimumPrice = settings.minimumPrice || 0.5;
+    
+    const discountedPrice = Math.max(minimumPrice, originalPrice * (100 - discountPercentage) / 100);
+    return discountedPrice;
+  };
 
   const updatePlanPrice = async (planId, newPrice) => {
     try {
@@ -239,6 +323,73 @@ const PlansManagement = () => {
 
   return (
     <div className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
+      {/* Data Source Toggle and Controls */}
+      <div className="bg-white rounded-xl shadow-lg p-6">
+        <div className="flex flex-col gap-4">
+          {/* Data Source Toggle */}
+          <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+            <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <span className="text-sm font-medium text-gray-700">Data Source:</span>
+              <div className="flex bg-gray-100 rounded-lg p-1">
+                <button
+                  onClick={() => setDataSource('firebase')}
+                  className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                    dataSource === 'firebase'
+                      ? 'bg-white text-gray-900 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  Firebase ({allPlans.length})
+                </button>
+                <button
+                  onClick={() => setDataSource('airalo')}
+                  className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                    dataSource === 'airalo'
+                      ? 'bg-white text-gray-900 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  Airalo ({airaloPlans.length})
+                </button>
+              </div>
+            </div>
+            
+            {/* Discount Settings Display */}
+            <div className={`flex items-center gap-4 text-sm ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <div className="bg-blue-50 px-3 py-1 rounded-full">
+                <span className="text-blue-700 font-medium">Referral: {discountSettings.referral.discountPercentage}%</span>
+              </div>
+              <div className="bg-green-50 px-3 py-1 rounded-full">
+                <span className="text-green-700 font-medium">Regular: {discountSettings.regular.discountPercentage}%</span>
+              </div>
+              <div className="bg-purple-50 px-3 py-1 rounded-full">
+                <span className="text-purple-700 font-medium">Commission: {discountSettings.referral.transactionCommissionPercentage || 15}%</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Load Airalo Button */}
+          {dataSource === 'airalo' && (
+            <div className="flex justify-center">
+              <button
+                onClick={loadAiraloData}
+                disabled={loadingAiralo}
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {loadingAiralo ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Loading Airalo Data...
+                  </>
+                ) : (
+                  'Load Airalo Data'
+                )}
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Search Bar and Filters */}
       <div className="bg-white rounded-xl shadow-lg p-6">
         <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 ${isRTL ? 'sm:flex-row-reverse' : ''}`}>
@@ -255,7 +406,7 @@ const PlansManagement = () => {
           </div>
           <div className={`flex gap-4 items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
             <span className={`text-sm text-gray-600 ${isRTL ? 'text-right' : 'text-left'}`}>
-              {t('plansManagement.countries', 'Countries')}: {availableCountries.length}
+              {t('plansManagement.countries', 'Countries')}: {dataSource === 'airalo' ? airaloCountries.length : availableCountries.length}
             </span>
             <select
               value={selectedCountry}
@@ -264,10 +415,10 @@ const PlansManagement = () => {
               style={{ textAlign: isRTL ? 'right' : 'left', direction: isRTL ? 'rtl' : 'ltr' }}
             >
               <option value="">{t('plansManagement.allCountries', 'All Countries')}</option>
-              {availableCountries.length > 0 ? (
-                availableCountries.map(country => (
-                  <option key={country} value={country}>
-                    {getFlagEmoji(country)} {country}
+              {(dataSource === 'airalo' ? airaloCountries : availableCountries).length > 0 ? (
+                (dataSource === 'airalo' ? airaloCountries : availableCountries).map(country => (
+                  <option key={dataSource === 'airalo' ? country.code : country} value={dataSource === 'airalo' ? country.code : country}>
+                    {getFlagEmoji(dataSource === 'airalo' ? country.code : country)} {dataSource === 'airalo' ? country.name : country}
                   </option>
                 ))
               ) : (
@@ -305,7 +456,7 @@ const PlansManagement = () => {
                   {t('plansManagement.countries', 'Countries')}
                 </th>
                           <th className={`px-6 py-3 ${isRTL ? 'text-right' : 'text-left'} text-xs font-medium text-gray-500 uppercase tracking-wider`}>
-                            {t('plansManagement.price', 'Price')}
+                            {dataSource === 'airalo' ? 'Original / Discounted Price' : t('plansManagement.price', 'Price')}
                           </th>
                           <th className={`px-6 py-3 ${isRTL ? 'text-right' : 'text-left'} text-xs font-medium text-gray-500 uppercase tracking-wider`}>
                             {t('plansManagement.actions', 'Actions')}
@@ -325,11 +476,16 @@ const PlansManagement = () => {
                         </div>
                         <div className={`${isRTL ? 'mr-4' : 'ml-4'}`}>
                           <div className={`text-sm font-medium text-gray-900 ${isRTL ? 'text-right' : 'text-left'}`}>
-                            {plan.name || t('plansManagement.unnamedPlan', 'Unnamed Plan')}
+                            {plan.name || plan.title || t('plansManagement.unnamedPlan', 'Unnamed Plan')}
                           </div>
-                          {plan.operator && (
+                          {(plan.operator || plan.brand) && (
                             <div className={`text-sm text-gray-500 ${isRTL ? 'text-right' : 'text-left'}`}>
-                              {plan.operator}
+                              {plan.operator || plan.brand}
+                            </div>
+                          )}
+                          {dataSource === 'airalo' && (
+                            <div className={`text-xs text-blue-600 ${isRTL ? 'text-right' : 'text-left'}`}>
+                              Airalo Plan
                             </div>
                           )}
                         </div>
@@ -337,88 +493,138 @@ const PlansManagement = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className={`text-sm text-gray-900 font-mono bg-gray-100 px-2 py-1 rounded ${isRTL ? 'text-right' : 'text-left'}`}>
-                        {plan.slug || t('plansManagement.noSlug', 'No slug')}
+                        {plan.slug || plan.id || t('plansManagement.noSlug', 'No slug')}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className={`text-sm text-gray-900 ${isRTL ? 'text-right' : 'text-left'}`}>
-                        {(plan.capacity === -1 || plan.capacity === 0 || plan.capacity === 'Unlimited') ? t('plansManagement.unlimited', 'Unlimited') : `${plan.capacity} GB`}
+                        {dataSource === 'airalo' ? (
+                          plan.data === 'Unlimited' || plan.data === -1 ? 
+                            t('plansManagement.unlimited', 'Unlimited') : 
+                            `${plan.data} ${plan.data_unit || 'GB'}`
+                        ) : (
+                          (plan.capacity === -1 || plan.capacity === 0 || plan.capacity === 'Unlimited') ? 
+                            t('plansManagement.unlimited', 'Unlimited') : 
+                            `${plan.capacity} GB`
+                        )}
                       </div>
                       <div className={`text-sm text-gray-500 ${isRTL ? 'text-right' : 'text-left'}`}>
-                        {plan.period ? t('plansManagement.days', '{{days}} days', { days: plan.period }) : t('plansManagement.notAvailable', 'N/A')}
+                        {dataSource === 'airalo' ? (
+                          plan.validity ? `${plan.validity} ${plan.validity_unit || 'days'}` : t('plansManagement.notAvailable', 'N/A')
+                        ) : (
+                          plan.period ? t('plansManagement.days', '{{days}} days', { days: plan.period }) : t('plansManagement.notAvailable', 'N/A')
+                        )}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex flex-wrap gap-1">
-                        {(plan.country_codes || plan.country_ids || []).length > 0 ? (
-                          <>
-                            {(plan.country_codes || plan.country_ids || []).slice(0, 3).map((code, index) => (
-                              <span key={index} className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                {getFlagEmoji(code)}
-                              </span>
-                            ))}
-                            {(plan.country_codes || plan.country_ids || []).length > 3 && (
-                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                +{(plan.country_codes || plan.country_ids || []).length - 3}
-                              </span>
-                            )}
-                          </>
+                        {dataSource === 'airalo' ? (
+                          plan.country_code ? (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                              {getFlagEmoji(plan.country_code)} {plan.country_code}
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                              🌍 Global
+                            </span>
+                          )
                         ) : (
-                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                            🌍
-                          </span>
+                          (plan.country_codes || plan.country_ids || []).length > 0 ? (
+                            <>
+                              {(plan.country_codes || plan.country_ids || []).slice(0, 3).map((code, index) => (
+                                <span key={index} className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                  {getFlagEmoji(code)}
+                                </span>
+                              ))}
+                              {(plan.country_codes || plan.country_ids || []).length > 3 && (
+                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                  +{(plan.country_codes || plan.country_ids || []).length - 3}
+                                </span>
+                              )}
+                            </>
+                          ) : (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                              🌍
+                            </span>
+                          )
                         )}
                       </div>
                     </td>
                               <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="flex items-center space-x-2">
-                                  {editingPrices[plan.id] ? (
-                                    <input
-                                      type="number"
-                                      value={pendingPriceChanges[plan.id] !== undefined ? pendingPriceChanges[plan.id] : (plan.price || 0)}
-                                      onChange={(e) => handlePriceChange(plan.id, e.target.value)}
-                                      className="w-20 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                      step="0.01"
-                                      min="0"
-                                      autoFocus
-                                    />
-                                  ) : (
-                                    <div
-                                      onClick={() => startEditingPrice(plan.id)}
-                                      className="w-20 px-2 py-1 text-sm text-gray-900 cursor-pointer hover:text-blue-600 transition-colors"
-                                    >
-                                      {plan.price || 0}
+                                {dataSource === 'airalo' ? (
+                                  // Airalo pricing with discounts
+                                  <div className="space-y-1">
+                                    <div className="text-sm font-medium text-gray-900">
+                                      ${(plan.price || 0).toFixed(2)} <span className="text-xs text-gray-500">(Original)</span>
                                     </div>
-                                  )}
-                                  {editingPrices[plan.id] && (
-                                    <div className="flex space-x-1">
-                                      <button
-                                        onClick={() => savePriceChange(plan.id)}
-                                        disabled={loading}
-                                        className="px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 disabled:opacity-50"
-                                      >
-                                        {t('plansManagement.save', 'Save')}
-                                      </button>
-                                      <button
-                                        onClick={() => cancelPriceChange(plan.id)}
-                                        disabled={loading}
-                                        className="px-2 py-1 bg-gray-600 text-white text-xs rounded hover:bg-gray-700 disabled:opacity-50"
-                                      >
-                                        {t('plansManagement.cancel', 'Cancel')}
-                                      </button>
+                                    <div className="text-xs space-y-1">
+                                      <div className="text-green-600">
+                                        Regular: ${calculateDiscountedPrice(plan.price, 'regular').toFixed(2)} 
+                                        <span className="text-gray-500 ml-1">(-{discountSettings.regular.discountPercentage}%)</span>
+                                      </div>
+                                      <div className="text-blue-600">
+                                        Referral: ${calculateDiscountedPrice(plan.price, 'referral').toFixed(2)} 
+                                        <span className="text-gray-500 ml-1">(-{discountSettings.referral.discountPercentage}%)</span>
+                                      </div>
                                     </div>
-                                  )}
-                                </div>
+                                  </div>
+                                ) : (
+                                  // Firebase pricing (editable)
+                                  <div className="flex items-center space-x-2">
+                                    {editingPrices[plan.id] ? (
+                                      <input
+                                        type="number"
+                                        value={pendingPriceChanges[plan.id] !== undefined ? pendingPriceChanges[plan.id] : (plan.price || 0)}
+                                        onChange={(e) => handlePriceChange(plan.id, e.target.value)}
+                                        className="w-20 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        step="0.01"
+                                        min="0"
+                                        autoFocus
+                                      />
+                                    ) : (
+                                      <div
+                                        onClick={() => startEditingPrice(plan.id)}
+                                        className="w-20 px-2 py-1 text-sm text-gray-900 cursor-pointer hover:text-blue-600 transition-colors"
+                                      >
+                                        ${(plan.price || 0).toFixed(2)}
+                                      </div>
+                                    )}
+                                    {editingPrices[plan.id] && (
+                                      <div className="flex space-x-1">
+                                        <button
+                                          onClick={() => savePriceChange(plan.id)}
+                                          disabled={loading}
+                                          className="px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 disabled:opacity-50"
+                                        >
+                                          {t('plansManagement.save', 'Save')}
+                                        </button>
+                                        <button
+                                          onClick={() => cancelPriceChange(plan.id)}
+                                          disabled={loading}
+                                          className="px-2 py-1 bg-gray-600 text-white text-xs rounded hover:bg-gray-700 disabled:opacity-50"
+                                        >
+                                          {t('plansManagement.cancel', 'Cancel')}
+                                        </button>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <button
-                                  onClick={() => deletePlan(plan.id, plan.name || 'Unnamed Plan')}
-                                  disabled={loading}
-                                  className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                  title="Delete plan"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
+                                {dataSource === 'firebase' ? (
+                                  <button
+                                    onClick={() => deletePlan(plan.id, plan.name || 'Unnamed Plan')}
+                                    disabled={loading}
+                                    className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                    title="Delete plan"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                ) : (
+                                  <div className="text-xs text-gray-400 italic">
+                                    Read-only
+                                  </div>
+                                )}
                               </td>
                   </tr>
                 ))
