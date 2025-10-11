@@ -156,7 +156,7 @@ export default function RootLayout({ children }) {
           <LanguageWrapper>
             <div className="bg-white">
               <ConditionalNavbar />
-              <main className="pt-16">
+              <main className="pt-">
                 {children}
               </main>
               <ConditionalFooter />

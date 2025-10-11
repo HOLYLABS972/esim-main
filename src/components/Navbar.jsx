@@ -213,24 +213,31 @@ const Navbar = ({ hideLanguageSelector = false }) => {
             <div className="flex flex-col justify-center min-h-[60vh]">
               <div className="">
                 {/* Main Navigation Group */}
-                <div className=" w-full max-w-sm">
+                <div className=" w-full">
                   
                   <button
-                    onClick={() => {
-                      handleDownloadApp();
-                      setIsMenuOpen(false);
-                    }}
-                    className="flex items-center justify-center text-xl font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 mb-4 w-full bg-transparent border-none cursor-pointer"
-                  > 
-                    <Download className="w-5 h-5 mx-2" />                    
+                        onClick={() => {
+                          handleDownloadApp();
+                          setIsMenuOpen(false);
+                        }}
+                        className="flex items-center justify-center text-xl font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 mb-4 w-full bg-transparent border-none cursor-pointer"
+                      >
                     {t('navbar.downloadApp', 'Download App')} 
                   </button>
+                  <Link
+                        href={getLocalizedUrl("/esim-plans")}
+                        className="flex items-center justify-center text-xl font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 mb-4"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                     
+                        {t('navbar.plans', 'Plans')}
+                      </Link>
                   <Link
                     href={getLocalizedUrl('/contact')}
                     className="flex items-center justify-center text-xl font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 mb-4"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    <MessageCircle className="w-5 h-5 mx-2" />
+          
                     {t('navbar.contactUs', 'Contact Us')}
                   </Link>
                   <Link
@@ -238,25 +245,18 @@ const Navbar = ({ hideLanguageSelector = false }) => {
                     className="flex items-center justify-center text-xl font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 mb-4"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    <BookOpen className="w-5 h-5 mx-2" />
                     {t('navbar.blog', 'Blog')}
                   </Link>
+                  
                   {currentUser ? (
                     <>
-                      <Link
-                        href={getLocalizedUrl("/esim-plans")}
-                        className="flex items-center justify-center text-xl font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 mb-4"
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        <Package className="w-5 h-5 mx-2" />
-                        {t('navbar.plans', 'Plans')}
-                      </Link>
+                     
                       <Link
                         href={getLocalizedUrl("/dashboard")}
                         className="flex items-center justify-center text-xl font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 mb-4"
                         onClick={() => setIsMenuOpen(false)}
                       >
-                        <LayoutDashboard className="w-5 h-5 mx-2" />
+                      
                         {t('navbar.dashboard', 'Dashboard')}
                       </Link>
                       <button
@@ -266,7 +266,7 @@ const Navbar = ({ hideLanguageSelector = false }) => {
                         }}
                         className="flex items-center justify-center w-full text-xl font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 mb-4"
                       >
-                        <LogOut className="w-5 h-5 mx-2" />
+                        
                         {t('navbar.logout', 'Logout')}
                       </button>
                     </>
@@ -276,7 +276,7 @@ const Navbar = ({ hideLanguageSelector = false }) => {
                       className="flex items-center justify-center text-xl font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 mb-4"
                       onClick={() => setIsMenuOpen(false)}
                     >
-                      <LogIn className="w-5 h-5 mx-2" />
+                      
                       {t('navbar.login', 'Login')}
                     </Link>
                   )}
