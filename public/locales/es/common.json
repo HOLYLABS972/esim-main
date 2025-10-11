@@ -385,6 +385,7 @@
     "checkUsageAndStatus": "Verificar Uso y Estado",
     "openInAppleEsim": "Abrir en Apple eSIM",
     "downloadQrCode": "Descargar Código QR",
+    "uses": "Usos",
     "roles": {
       "customer": "Cliente",
       "admin": "Administrador",

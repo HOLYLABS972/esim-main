@@ -111,13 +111,13 @@ const AccountSettings = ({ currentUser, userProfile, onLoadUserProfile }) => {
 
   return (
     <section className="bg-white py-8 sm:py-12 lg:py-16 account-settings" dir={isRTL ? 'rtl' : 'ltr'}>
-      <div className="mx-auto max-w-2xl px-4 sm:px-6 lg:max-w-7xl lg:px-8">
+      <div className="mx-auto max-w-2xl px-4 lg:max-w-7xl lg:px-8">
         <div className="relative">
-          <div className="absolute inset-px rounded-xl bg-white"></div>
+          <div className="absolute inset-px rounded-xl border-2 border-gray-200/50 shadow-xl shadow-gray-200/50 bg-white"></div>
           <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
-            <div className="px-4 pt-4 pb-4 sm:px-6 sm:pt-6 sm:pb-6 md:px-8 md:pt-8 md:pb-8">
-              <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-3' : 'space-x-3'} mb-6 sm:mb-8`}>
-                <Settings className="w-5 h-5 sm:w-6 sm:h-6 text-tufts-blue" />
+            <div className="px-4 pt-6 pb-6 md:px-8 md:pt-8 md:pb-8">
+              <div className={`flex ${isRTL ? 'flex-row-reverse' : ''} mb-6 sm:mb-8`}>
+                <Settings className={`w-6 h-6 text-tufts-blue ${isRTL ? 'ml-2' : 'mr-2'}`} />
                 <h2 className={`text-lg sm:text-xl lg:text-2xl font-medium tracking-tight text-eerie-black ${isRTL ? 'text-right' : 'text-left'}`}>
                   {t('dashboard.accountSettings', 'Account Settings')}
                 </h2>
@@ -133,8 +133,17 @@ const AccountSettings = ({ currentUser, userProfile, onLoadUserProfile }) => {
                     {/* Email */}
                     <div className="space-y-2">
                       <label className={`block text-xs sm:text-sm font-medium text-cool-black ${isRTL ? 'text-right' : 'text-left'}`}>
-                        <Mail className={`w-3 h-3 sm:w-4 sm:h-4 inline ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                        {t('dashboard.emailAddress', 'Email Address')}
+                        {isRTL ? (
+                          <>
+                            {t('dashboard.emailAddress', 'Email Address')}
+                            <Mail className="w-3 h-3 sm:w-4 sm:h-4 inline ml-2" />
+                          </>
+                        ) : (
+                          <>
+                            <Mail className="w-3 h-3 sm:w-4 sm:h-4 inline mr-2" />
+                            {t('dashboard.emailAddress', 'Email Address')}
+                          </>
+                        )}
                       </label>
                       <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 bg-gray-50 rounded-lg space-y-2 sm:space-y-0 ${isRTL ? 'sm:flex-row-reverse' : ''}`}>
                         <span className="text-eerie-black text-sm break-all">{currentUser.email}</span>
@@ -147,8 +156,17 @@ const AccountSettings = ({ currentUser, userProfile, onLoadUserProfile }) => {
                     {/* Name */}
                     <div className="space-y-2">
                       <label className={`block text-xs sm:text-sm font-medium text-cool-black ${isRTL ? 'text-right' : 'text-left'}`}>
-                        <User className={`w-3 h-3 sm:w-4 sm:h-4 inline ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                        {t('dashboard.displayName', 'Display Name')}
+                        {isRTL ? (
+                          <>
+                            {t('dashboard.displayName', 'Display Name')}
+                            <User className="w-3 h-3 sm:w-4 sm:h-4 inline ml-2" />
+                          </>
+                        ) : (
+                          <>
+                            <User className="w-3 h-3 sm:w-4 sm:h-4 inline mr-2" />
+                            {t('dashboard.displayName', 'Display Name')}
+                          </>
+                        )}
                       </label>
                       {editingName ? (
                         <div className={`flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 ${isRTL ? 'sm:space-x-reverse sm:space-x-2' : 'sm:space-x-2'}`}>
@@ -192,8 +210,17 @@ const AccountSettings = ({ currentUser, userProfile, onLoadUserProfile }) => {
                     {/* Phone Number */}
                     <div className="space-y-2">
                       <label className={`block text-xs sm:text-sm font-medium text-cool-black ${isRTL ? 'text-right' : 'text-left'}`}>
-                        <Phone className={`w-3 h-3 sm:w-4 sm:h-4 inline ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                        {t('dashboard.phoneNumber', 'Phone Number')}
+                        {isRTL ? (
+                          <>
+                            {t('dashboard.phoneNumber', 'Phone Number')}
+                            <Phone className="w-3 h-3 sm:w-4 sm:h-4 inline ml-2" />
+                          </>
+                        ) : (
+                          <>
+                            <Phone className="w-3 h-3 sm:w-4 sm:h-4 inline mr-2" />
+                            {t('dashboard.phoneNumber', 'Phone Number')}
+                          </>
+                        )}
                       </label>
                       {editingPhone ? (
                         <div className={`flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 ${isRTL ? 'sm:space-x-reverse sm:space-x-2' : 'sm:space-x-2'}`}>
@@ -273,8 +300,17 @@ const AccountSettings = ({ currentUser, userProfile, onLoadUserProfile }) => {
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                     <div className="space-y-2">
                       <label className={`block text-xs sm:text-sm font-medium text-cool-black ${isRTL ? 'text-right' : 'text-left'}`}>
-                        <Key className={`w-3 h-3 sm:w-4 sm:h-4 inline ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                        {t('dashboard.password', 'Password')}
+                        {isRTL ? (
+                          <>
+                            {t('dashboard.password', 'Password')}
+                            <Key className="w-3 h-3 sm:w-4 sm:h-4 inline ml-2" />
+                          </>
+                        ) : (
+                          <>
+                            <Key className="w-3 h-3 sm:w-4 sm:h-4 inline mr-2" />
+                            {t('dashboard.password', 'Password')}
+                          </>
+                        )}
                       </label>
                       <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 bg-gray-50 rounded-lg space-y-2 sm:space-y-0 ${isRTL ? 'sm:flex-row-reverse' : ''}`}>
                         <span className="text-eerie-black text-sm">••••••••</span>

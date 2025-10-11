@@ -376,6 +376,7 @@
     "checkUsageAndStatus": "Check Usage & Status",
     "openInAppleEsim": "Open in Apple eSIM",
     "downloadQrCode": "Download QR Code",
+    "uses": "Uses",
     "roles": {
       "customer": "Customer",
       "admin": "Admin",

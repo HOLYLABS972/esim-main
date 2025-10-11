@@ -273,7 +273,7 @@ const Footer = () => {
           <div className="text-center">
             <div className="bottom-footer-text text-eerie-black">
               &copy; {currentYear} <Link href="/" className="text-cobalt-blue hover:text-cobalt-blue transition-colors duration-200">{getText('footer.brandName', 'RoamJet')}</Link>. 
-              {getText('footer.allRightsReserved', ' All rights reserved.')}
+              {getText('footer.allRightsReserved', ' All rights reserved. ')}
             </div>
           </div>
         </div>
