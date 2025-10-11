@@ -779,9 +779,20 @@ const Dashboard = () => {
 
 
   return (
-    <div className="min-h-screen bg-white py-4" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen bg-white py-4 mt-2" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Access Denied Alert */}
       <AccessDeniedAlert show={searchParams.get('error') === 'access_denied'} />
+      <section className="bg-white">
+        <div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8 mt-12">
+          <div className="text-center">
+            <h2 className="text-center text-lg lg:text-xl font-semibold text-tufts-blue">
+              <span>{'{ '}</span>
+              {t('dashboard.title', 'Dashboard')}
+              <span>{' }'}</span>
+            </h2>
+          </div>
+        </div>
+      </section>
 
       {/* Header Section */}
       <DashboardHeader 

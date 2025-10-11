@@ -233,10 +233,10 @@ const Contact = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white py-6 " dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen bg-white  " dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Header Section */}
       <section className="bg-white">
-        <div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8 mt-8">
+        <div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8 mt-12">
           <div className="text-center">
             <h2 className="text-center text-lg lg:text-xl font-semibold text-tufts-blue">
               <span>{'{ '}</span>

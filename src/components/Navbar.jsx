@@ -210,8 +210,8 @@ const Navbar = ({ hideLanguageSelector = false }) => {
             </div>
             
             {/* Centered menu items */}
-            <div className="flex flex-col items-center justify-center min-h-[60vh]">
-              <div className="space-y-6 text-center">
+            <div className="flex flex-col justify-center min-h-[60vh]">
+              <div className="">
                 {/* Main Navigation Group */}
                 <div className=" w-full max-w-sm">
                   

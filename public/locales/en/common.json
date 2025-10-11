@@ -178,7 +178,7 @@
     "addBankAccountDesc": "Add your bank account details to withdraw your earnings"
   },
   "blog": {
-    "title": "eSIM Insights",
+    "title": "Blog",
     "subtitle": "Stay updated with eSIM technology",
     "description": "Discover the latest trends, guides, and insights in eSIM technology and global connectivity solutions.",
     "searchPlaceholder": "Search blog posts...",
@@ -308,6 +308,7 @@
     "actions": "Actions"
   },
   "dashboard": {
+    "title": "Dashboard",
     "loadingDashboard": "Loading dashboard...",
     "welcomeBack": "Welcome back, {{name}}!",
     "manageOrders": "Manage your eSIM orders and account settings",

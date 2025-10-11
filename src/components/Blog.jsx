@@ -142,11 +142,11 @@ const Blog = () => {
     <div className="min-h-screen bg-white pt-3 lg:pt-6">
       {/* Header Section */}
       <section className="bg-white">
-        <div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8 mt-8">
+        <div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8 mt-12">
           <div className="text-center">
             <h2 className="text-center text-lg lg:text-xl font-semibold text-tufts-blue">
               <span>{'{ '}</span>
-              {t('blog.title', 'eSIM Insights')}
+              {t('blog.title', 'Blog')}
               <span>{' }'}</span>
             </h2>
             <p className="mx-auto mt-12 max-w-4xl text-center text-2xl lg:text-3xl font-semibold tracking-tight text-eerie-black sm:text-5xl">
