@@ -129,7 +129,9 @@
     "showLess": "Weniger anzeigen"
   },
   "discount": {
-    "get35Off": "Erhalten Sie 35% RABATT"
+    "get35Off": "Erhalten Sie 35% RABATT",
+    "copied": "Rabattcode OCTOBER35 kopiert! 35% Rabatt auf Ihren Einkauf!",
+    "copyFailed": "Fehler beim Kopieren des Codes. Bitte versuchen Sie es erneut."
   },
   "language": {
     "select": "Sprache auswählen",
@@ -238,6 +240,39 @@
     "welcomeMessage": "Willkommen bei RoamJet - Ihre globale eSIM-Lösung",
     "trustedByThousands": "Vertraut von Tausenden von Reisenden weltweit"
   },
+  "QRCodeModal": {
+    "esimQrCode": "eSIM QR-Code",
+    "qrCodeImageFromAiralo": "QR-Code-Bild von Airalo",
+    "realQrCodeFromAiralo": "Echter QR-Code von Airalo (Zellplan hinzufügen)",
+    "qrData": "QR-Daten: {{data}}...",
+    "directAppleInstallationLink": "Direkter Apple-eSIM-Installationslink",
+    "appleEsimInstallation": "Apple-eSIM-Installation",
+    "qrCodeBeingGenerated": "QR-Code wird generiert...",
+    "clickGenerateQrCodeToTryAgain": "Klicken Sie auf \"QR-Code generieren\", um es erneut zu versuchen",
+    "actions": "Aktionen"
+  },
+  "dashboard": {
+    "checkingEsimDetails": "eSIM-Details werden überprüft...",
+    "checkEsimDetailsInApi": "eSIM-Details in API überprüfen",
+    "checkingUsage": "Nutzung wird überprüft...",
+    "checkUsageAndStatus": "Nutzung & Status überprüfen",
+    "openInAppleEsim": "In Apple eSIM öffnen",
+    "downloadQrCode": "QR-Code herunterladen"
+  },
+  "accountSettings": {
+    "accountSettings": "Kontoeinstellungen",
+    "email": "E-Mail-Adresse",
+    "phone": "Telefonnummer",
+    "name": "Name",
+    "saveChanges": "Änderungen speichern",
+    "cancel": "Abbrechen",
+    "updateSuccess": "Änderungen erfolgreich gespeichert!",
+    "updateFailed": "Fehler beim Speichern der Änderungen",
+    "password": "Passwort",
+    "passwordPlaceholder": "Geben Sie Ihr Passwort ein",
+    "passwordConfirm": "Passwort bestätigen",
+    "passwordConfirmPlaceholder": "Geben Sie Ihr Passwort erneut ein"
+  },
   "contact": {
     "title": "Kontakt aufnehmen",
     "subtitle": "Wir helfen Ihnen bei allen eSIM-Bedürfnissen",
@@ -339,6 +374,27 @@
     "resetPassword": "Passwort zurücksetzen",
     "passwordResetInfo": "Wir senden Ihnen einen Link zum Zurücksetzen des Passworts an Ihre E-Mail-Adresse",
     "accountRole": "Kontorolle",
+    "phoneUpdatedSuccessfully": "Telefonnummer erfolgreich aktualisiert",
+    "failedToUpdatePhone": "Fehler beim Aktualisieren der Telefonnummer",
+    "passwordResetEmailSent": "Passwort-Reset-E-Mail gesendet! Überprüfen Sie Ihren Posteingang.",
+    "failedToSendPasswordReset": "Fehler beim Senden der Passwort-Reset-E-Mail",
+    "esimQrCode": "eSIM QR-Code",
+    "realQrCodeFromAiralo": "✅ Echter QR-Code von Airalo (Mobilfunkplan hinzufügen)",
+    "qrData": "QR-Daten: {{data}}...",
+    "qrCodeImageFromAiralo": "✅ QR-Code-Bild von Airalo",
+    "appleEsimInstallation": "Apple eSIM-Installation",
+    "directAppleInstallationLink": "✅ Direkter Apple-Installationslink",
+    "installEsim": "eSIM installieren",
+    "qrCodeBeingGenerated": "QR-Code wird generiert...",
+    "noQrCodeAvailable": "Kein QR-Code verfügbar",
+    "clickGenerateQrCodeToTryAgain": "Klicken Sie auf \"QR-Code generieren\", um es erneut zu versuchen",
+    "actions": "Aktionen",
+    "checkingEsimDetails": "eSIM-Details werden überprüft...",
+    "checkEsimDetailsInApi": "eSIM-Details in API überprüfen",
+    "checkingUsage": "Nutzung wird überprüft...",
+    "checkUsageAndStatus": "Nutzung und Status überprüfen",
+    "openInAppleEsim": "In Apple eSIM öffnen",
+    "downloadQrCode": "QR-Code herunterladen",
     "roles": {
       "customer": "Kunde",
       "admin": "Administrator",

@@ -51,12 +51,10 @@ const Login = () => {
       setLoading(true);
       await login(email, password);
       toast.success(t('auth.login.loginSuccessful', 'Login successful!'));
-      // Always redirect to English dashboard
-      router.push('/dashboard');
-      // Save English as preferred language
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('roamjet-language', 'en');
-      }
+      // Get current language and redirect to appropriate dashboard
+      const currentLanguage = locale || detectLanguageFromPath(pathname) || 'en';
+      const dashboardUrl = currentLanguage === 'en' ? '/dashboard' : `/${currentLanguage}/dashboard`;
+      router.push(dashboardUrl);
     } catch (error) {
       console.error('Login error:', error);
       toast.error(error.message || t('auth.login.loginFailed', 'Failed to login'));
@@ -70,12 +68,10 @@ const Login = () => {
       setLoading(true);
       await signInWithGoogle();
       toast.success(t('auth.login.googleSignInSuccessful', 'Signed in with Google successfully!'));
-      // Always redirect to English dashboard
-      router.push('/dashboard');
-      // Save English as preferred language
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('roamjet-language', 'en');
-      }
+      // Get current language and redirect to appropriate dashboard
+      const currentLanguage = locale || detectLanguageFromPath(pathname) || 'en';
+      const dashboardUrl = currentLanguage === 'en' ? '/dashboard' : `/${currentLanguage}/dashboard`;
+      router.push(dashboardUrl);
     } catch (error) {
       console.error('Google sign-in error:', error);
       toast.error(error.message || t('auth.login.googleSignInFailed', 'Failed to sign in with Google'));

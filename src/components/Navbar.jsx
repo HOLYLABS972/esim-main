@@ -113,7 +113,7 @@ const Navbar = ({ hideLanguageSelector = false }) => {
     <header className={`navbar-header fixed w-full top-0 transition-transform duration-300 ${
       isVisible ? 'translate-y-0' : '-translate-y-full'
     }`} style={{ zIndex: 9999 }}>
-      <div className="bg-white/80 shadow-sm shadow-white/30 backdrop-blur-sm w-full">
+      <div className="bg-white/80 shadow-sm shadow-white/30 backdrop-blur-xl w-full">
       <nav aria-label="Global" className="mx-auto flex max-w-7xl items-center justify-between p-2 lg:px-8">
         <div className="flex lg:flex-1">
           <Link href={getLocalizedUrl("/")} className="-m-1.5 p-1.5 flex items-center ">
@@ -121,9 +121,9 @@ const Navbar = ({ hideLanguageSelector = false }) => {
             <img
               src="/images/logo_icon/logo.png"
               alt="Roam Jet Logo"
-              className="h-8 w-auto hidden sm:block"
+              className="h-6 w-auto hidden sm:block"
             />
-            <span className="ml-2 text-xl font-semibold text-gray-900">{t('navbar.logo', 'RoamJet')}</span>
+            <span className="ml-1 text-lg sm:text-xl font-semibold text-gray-900">{t('navbar.logo', 'RoamJet')}</span>
           </Link>
         </div>
         
@@ -182,7 +182,7 @@ const Navbar = ({ hideLanguageSelector = false }) => {
       {isMenuOpen && mounted && createPortal(
         <div className="lg:hidden" style={{ zIndex: 99999, position: 'fixed', inset: 0 }}>
           <div 
-            className="fixed inset-0 w-full h-full overflow-y-auto bg-white/80 backdrop-blur-sm" 
+            className="fixed inset-0 w-full h-full overflow-y-auto bg-white/80 backdrop-blur-xl" 
             style={{ zIndex: 99999 }}
           >
             {/* Header with logo and close button */}
@@ -193,9 +193,9 @@ const Navbar = ({ hideLanguageSelector = false }) => {
                 <img
                   src="/images/logo_icon/logo.png"
                   alt="RoamJet Logo"
-                  className="h-8 w-auto"
+                  className="h-6 w-auto"
                 />
-                <span className="mx-2 text-xl font-bold text-gray-900 hidden sm:block">RoamJet</span>
+                <span className="mx-2 text-lg sm:text-xl font-bold text-gray-900 hidden sm:block">RoamJet</span>
               </Link>
               <button
                 type="button"
@@ -211,7 +211,7 @@ const Navbar = ({ hideLanguageSelector = false }) => {
             
             {/* Centered menu items */}
             <div className="flex flex-col items-center justify-center min-h-[60vh]">
-              <div className="space-y-4 text-center">
+              <div className="space-y-6 text-center">
                 {/* Main Navigation Group */}
                 <div className=" w-full max-w-sm">
                   
@@ -220,14 +220,14 @@ const Navbar = ({ hideLanguageSelector = false }) => {
                       handleDownloadApp();
                       setIsMenuOpen(false);
                     }}
-                    className="flex items-center text-left text-xl   font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 mb-2 w-full bg-transparent border-none cursor-pointer"
+                    className="flex items-center justify-center text-xl font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 mb-4 w-full bg-transparent border-none cursor-pointer"
                   > 
                     <Download className="w-5 h-5 mx-2" />                    
                     {t('navbar.downloadApp', 'Download App')} 
                   </button>
                   <Link
                     href={getLocalizedUrl('/contact')}
-                    className="flex items-center text-left text-xl font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 mb-2"
+                    className="flex items-center justify-center text-xl font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 mb-4"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     <MessageCircle className="w-5 h-5 mx-2" />
@@ -235,7 +235,7 @@ const Navbar = ({ hideLanguageSelector = false }) => {
                   </Link>
                   <Link
                     href={getLocalizedBlogListUrl(currentLanguage)}
-                    className="flex items-center text-left text-xl font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 mb-2"
+                    className="flex items-center justify-center text-xl font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 mb-4"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     <BookOpen className="w-5 h-5 mx-2" />
@@ -245,7 +245,7 @@ const Navbar = ({ hideLanguageSelector = false }) => {
                     <>
                       <Link
                         href={getLocalizedUrl("/esim-plans")}
-                        className="flex items-center text-left text-xl font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 mb-2"
+                        className="flex items-center justify-center text-xl font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 mb-4"
                         onClick={() => setIsMenuOpen(false)}
                       >
                         <Package className="w-5 h-5 mx-2" />
@@ -253,7 +253,7 @@ const Navbar = ({ hideLanguageSelector = false }) => {
                       </Link>
                       <Link
                         href={getLocalizedUrl("/dashboard")}
-                        className="flex items-center text-left text-xl font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 mb-2"
+                        className="flex items-center justify-center text-xl font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 mb-4"
                         onClick={() => setIsMenuOpen(false)}
                       >
                         <LayoutDashboard className="w-5 h-5 mx-2" />
@@ -264,7 +264,7 @@ const Navbar = ({ hideLanguageSelector = false }) => {
                           handleLogout();
                           setIsMenuOpen(false);
                         }}
-                        className="flex items-center text-left w-full text-xl font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 mb-2"
+                        className="flex items-center justify-center w-full text-xl font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 mb-4"
                       >
                         <LogOut className="w-5 h-5 mx-2" />
                         {t('navbar.logout', 'Logout')}
@@ -273,7 +273,7 @@ const Navbar = ({ hideLanguageSelector = false }) => {
                   ) : (
                     <Link
                       href={getLocalizedUrl('/login')}
-                      className="flex items-center text-left text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 mb-2"
+                      className="flex items-center justify-center text-xl font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 mb-4"
                       onClick={() => setIsMenuOpen(false)}
                     >
                       <LogIn className="w-5 h-5 mx-2" />

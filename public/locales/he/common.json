@@ -128,8 +128,21 @@
     "showAll": "הצג הכל",
     "showLess": "הצג פחות"
   },
+  "QRCodeModal": {
+    "esimQrCode": "eSIM QR Code",
+    "qrCodeImageFromAiralo": "QR Code Image from Airalo",
+    "realQrCodeFromAiralo": "Real QR Code from Airalo (Add Cellular Plan)",
+    "qrData": "QR Data: {{data}}...",
+    "directAppleInstallationLink": "Direct Apple Installation Link",
+    "appleEsimInstallation": "Apple eSIM Installation",
+    "qrCodeBeingGenerated": "QR code is being generated...",
+    "clickGenerateQrCodeToTryAgain": "Click \"Generate QR Code\" to try again",
+    "actions": "Actions"
+  },
   "discount": {
-    "get35Off": "קבל 35% הנחה"
+    "get35Off": "קבל 35% הנחה",
+    "copied": "קוד הנחה OCTOBER35 הועתק! 35% הנחה על הרכישה שלך!",
+    "copyFailed": "שגיאה בהעתקת הקוד. אנא נסה שוב."
   },
   "language": {
     "select": "בחר שפה",
@@ -339,6 +352,27 @@
     "resetPassword": "איפוס סיסמה",
     "passwordResetInfo": "נשלח לך קישור לאיפוס סיסמה לכתובת האימייל שלך",
     "accountRole": "תפקיד בחשבון",
+    "phoneUpdatedSuccessfully": "מספר הטלפון עודכן בהצלחה",
+    "failedToUpdatePhone": "נכשל בעדכון מספר הטלפון",
+    "passwordResetEmailSent": "נשלח אימייל לאיפוס סיסמה! בדקו את תיבת הדואר שלכם.",
+    "failedToSendPasswordReset": "נכשל בשליחת אימייל לאיפוס סיסמה",
+    "esimQrCode": "קוד QR של eSIM",
+    "realQrCodeFromAiralo": "✅ קוד QR אמיתי מ-Airalo (הוסף תוכנית סלולרית)",
+    "qrData": "נתוני QR: {{data}}...",
+    "qrCodeImageFromAiralo": "✅ תמונת קוד QR מ-Airalo",
+    "appleEsimInstallation": "התקנת eSIM של Apple",
+    "directAppleInstallationLink": "✅ קישור התקנה ישיר של Apple",
+    "installEsim": "התקן eSIM",
+    "qrCodeBeingGenerated": "קוד QR נוצר...",
+    "noQrCodeAvailable": "אין קוד QR זמין",
+    "clickGenerateQrCodeToTryAgain": "לחצו על \"צור קוד QR\" כדי לנסות שוב",
+    "actions": "פעולות",
+    "checkingEsimDetails": "בודק פרטי eSIM...",
+    "checkEsimDetailsInApi": "בדוק פרטי eSIM ב-API",
+    "checkingUsage": "בודק שימוש...",
+    "checkUsageAndStatus": "בדוק שימוש וסטטוס",
+    "openInAppleEsim": "פתח ב-Apple eSIM",
+    "downloadQrCode": "הורד קוד QR",
     "roles": {
       "customer": "לקוח",
       "admin": "מנהל",

@@ -41,6 +41,17 @@
       "countries": "200+ países",
       "worldwide": "Cobertura mundial"
     },
+    "QRCodeModal": {
+      "esimQrCode": "eSIM QR Code",
+      "qrCodeImageFromAiralo": "QR Code Image from Airalo",
+      "realQrCodeFromAiralo": "Real QR Code from Airalo (Add Cellular Plan)",
+      "qrData": "QR Data: {{data}}...",
+      "directAppleInstallationLink": "Direct Apple Installation Link",
+      "appleEsimInstallation": "Apple eSIM Installation",
+      "qrCodeBeingGenerated": "QR code is being generated...",
+      "clickGenerateQrCodeToTryAgain": "Click \"Generate QR Code\" to try again",
+      "actions": "Actions"
+    },
     "instantActivation": {
       "title": "Activación instantánea",
       "description": "Conéctate inmediatamente con nuestra activación de código QR. Sin esperas, sin retrasos.",
@@ -127,7 +138,9 @@
     "showLess": "Mostrar menos"
   },
   "discount": {
-    "get35Off": "Obtén 35% DE DESCUENTO"
+    "get35Off": "Obtén 35% DE DESCUENTO",
+    "copied": "¡Código de descuento OCTOBER35 copiado! ¡35% de descuento en tu compra!",
+    "copyFailed": "Error al copiar el código. Por favor, inténtalo de nuevo."
   },
   "language": {
     "select": "Seleccionar idioma",
@@ -236,6 +249,20 @@
     "welcomeMessage": "Bienvenido a RoamJet - Tu solución eSIM global",
     "trustedByThousands": "Confiado por miles de viajeros en todo el mundo"
   },
+  "accountSettings": {
+    "accountSettings": "Configuración de cuenta",
+    "email": "Dirección de correo electrónico",
+    "phone": "Número de teléfono",
+    "name": "Nombre",
+    "saveChanges": "Guardar cambios",
+    "cancel": "Cancelar",
+    "updateSuccess": "¡Cambios guardados exitosamente!",
+    "updateFailed": "Error al guardar los cambios",
+    "password": "Contraseña",
+    "passwordPlaceholder": "Ingresa tu contraseña",
+    "passwordConfirm": "Confirmar contraseña",
+    "passwordConfirmPlaceholder": "Ingresa tu contraseña nuevamente"
+  },
   "contact": {
     "title": "Ponte en contacto",
     "subtitle": "Estamos aquí para ayudarte con todas tus necesidades de eSIM",
@@ -337,6 +364,27 @@
     "resetPassword": "Restablecer contraseña",
     "passwordResetInfo": "Enviaremos un enlace para restablecer la contraseña a tu dirección de correo electrónico",
     "accountRole": "Rol de cuenta",
+    "phoneUpdatedSuccessfully": "Número de teléfono actualizado exitosamente",
+    "failedToUpdatePhone": "Error al actualizar el número de teléfono",
+    "passwordResetEmailSent": "¡Correo de restablecimiento de contraseña enviado! Revisa tu bandeja de entrada.",
+    "failedToSendPasswordReset": "Error al enviar el correo de restablecimiento de contraseña",
+    "esimQrCode": "Código QR eSIM",
+    "realQrCodeFromAiralo": "✅ Código QR Real de Airalo (Agregar Plan Celular)",
+    "qrData": "Datos QR: {{data}}...",
+    "qrCodeImageFromAiralo": "✅ Imagen de Código QR de Airalo",
+    "appleEsimInstallation": "Instalación eSIM de Apple",
+    "directAppleInstallationLink": "✅ Enlace de Instalación Directa de Apple",
+    "installEsim": "Instalar eSIM",
+    "qrCodeBeingGenerated": "El código QR se está generando...",
+    "noQrCodeAvailable": "No hay código QR disponible",
+    "clickGenerateQrCodeToTryAgain": "Haz clic en \"Generar Código QR\" para intentar de nuevo",
+    "actions": "Acciones",
+    "checkingEsimDetails": "Verificando Detalles eSIM...",
+    "checkEsimDetailsInApi": "Verificar Detalles eSIM en API",
+    "checkingUsage": "Verificando Uso...",
+    "checkUsageAndStatus": "Verificar Uso y Estado",
+    "openInAppleEsim": "Abrir en Apple eSIM",
+    "downloadQrCode": "Descargar Código QR",
     "roles": {
       "customer": "Cliente",
       "admin": "Administrador",

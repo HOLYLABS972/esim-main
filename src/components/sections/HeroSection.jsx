@@ -83,13 +83,13 @@ export default function HeroSection() {
           {/* Main Content */}  
           
           <div className="text-center">
-            <h1 className="text-3xl sm:text-3xl lg:text-4xl xl:text-5xl font-semibold text-balance text-gray-600 relative">
+            <h1 className="text-3xl sm:text-3xl lg:text-4xl xl:text-5xl font-semibold text-balance text-gray-600 relative mt-6">
               {/* Mobile Layout */}
-              <div className="block sm:hidden mt-6">
+              <div className="block sm:hidden">
                 <div className="flex items-center justify-center ">
                   <span className="text-eerie-black font-semibold">{t('hero.stayConnected')}</span>
                   <span className="inline-block transform -rotate-12 pointer-events-none mx-1">
-                    <div className="w-10 h-10 lg:w-12 lg:h-12 bg-white border-3 lg:border-4 border-cobalt-blue rounded-xl shadow-lg shadow-cool-black flex items-center justify-center">
+                    <div className="w-10 h-10 lg:w-12 lg:h-12 bg-white border-1 border-cobalt-blue border-opacity-50 rounded-xl shadow-lg shadow-cool-black flex items-center justify-center">
                       <Image src="/images/logo_icon/sx.png" alt="Globe" width={32} height={32} className="w-8 h-8 lg:w-10 lg:h-10" />
                     </div>
                   </span> 
@@ -106,11 +106,11 @@ export default function HeroSection() {
               </div>
               
               {/* Desktop Layout */}
-              <div className="hidden sm:flex flex-wrap items-center justify-center gap-3 lg:gap-4 max-w-4xl mx-auto">
+              <div className="hidden sm:flex flex-wrap items-center justify-center gap-3 lg:gap-4 max-w-4xl mx-auto mt-32">
                 <span>
                   <span className="text-eerie-black font-semibold">{t('hero.stayConnected')} </span> 
                   <span className="inline-block transform -rotate-12 pointer-events-none mr-2">
-                    <div className="w-12 h-12 lg:w-16 lg:h-16 bg-white border-3 lg:border-4 border-cobalt-blue rounded-xl shadow-lg shadow-cool-black flex items-center justify-center">
+                    <div className="w-12 h-12 lg:w-14 lg:h-14 bg-white border-2 border-cobalt-blue border-opacity-50 rounded-xl shadow-lg shadow-blue-200/50 flex items-center justify-center">
                       <Image src="/images/logo_icon/sx.png" alt="Globe" width={48} height={48} className="w-10 h-10 lg:w-12 lg:h-12" />
                     </div>
                   </span> 
@@ -118,8 +118,8 @@ export default function HeroSection() {
                 </span>
                 <span>{t('hero.noMatterWhere')} <span className="text-eerie-black font-semibold">{t('hero.with')}</span></span>
                 
-                <div className="w-12 h-12 lg:w-14 lg:h-14 bg-alice-blue border-3 lg:border-4 border-alice-blue rounded-2xl shadow-lg shadow-cobalt-blue flex items-center justify-center rotate-6">
-                  <Image src="/images/logo_icon/ioslogo.png" alt="iOS Logo" width={48} height={48} className="w-10 h-10 lg:w-12 lg:h-12 rounded-xl" />
+                <div className="w-12 h-12 bg-alice-blue border-2 border-alice-blue border-opacity-50 rounded-2xl shadow-lg shadow-cobalt-blue/50 flex items-center justify-center rotate-6">
+                  <Image src="/images/logo_icon/ioslogo.png" alt="iOS Logo" width={48} height={48} className="w-10 h-10 rounded-xl" />
                 </div>
                   
                 <span className="text-eerie-black font-semibold mb-4">Roam<span className="text-cobalt-blue font-semibold">Jet</span></span>

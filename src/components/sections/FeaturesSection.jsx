@@ -55,14 +55,7 @@ export default function FeaturesSection() {
          <p className="mx-auto mt-6 sm:mt-12 max-w-4xl text-center text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-semibold tracking-tight text-eerie-black">
           {t('features.subtitle')}
         </p>
-        <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-x-6 px-4 sm:px-0">
-        <button
-                onClick={handleCopyDiscountCode}
-                className="btn-secondary w-full sm:w-auto flex items-center justify-center gap-2"
-              ><Copy className="w-5 h-5 mr-2" />
-                {t('features.get35Off', '35% OFF')}
-              </button>
-        </div>
+        
         <div className="mt-8 sm:mt-10 lg:mt-16 grid gap-4 lg:grid-cols-3 lg:grid-rows-2">
           {/* Global Coverage - Large left card */}
           <div className="relative lg:row-span-2">

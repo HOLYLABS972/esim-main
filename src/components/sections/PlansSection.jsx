@@ -5,11 +5,26 @@ import dynamic from 'next/dynamic';
 import { useI18n } from '../../contexts/I18nContext';
 import { getLanguageDirection, detectLanguageFromPath } from '../../utils/languageUtils';
 import { usePathname } from 'next/navigation';
+import { Copy } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const EsimPlans = dynamic(() => import('../EsimPlans'), {
   loading: () => <div className="animate-pulse">Loading plans...</div>,
   ssr: false
 });
+
+export const handleCopyDiscountCode = async (t) => {
+  const discountCode = 'OCTOBER35';
+  try {
+    await navigator.clipboard.writeText(discountCode);
+    toast.success(t('discount.copied', 'Discount code OCTOBER35 copied! 35% off your purchase!'), {
+      duration: 4000,
+      icon: '🎉',
+    });
+  } catch (err) {
+    toast.error(t('discount.copyFailed', 'Failed to copy code. Please try again.'));
+  }
+};
 
 export default function PlansSection() {
   const { t, locale, isLoading } = useI18n();
@@ -57,6 +72,14 @@ export default function PlansSection() {
           {t('plans.title')}
           <span>{' }'}</span>
          </h2>
+         <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-x-6 px-4 sm:px-0">
+        <button
+                onClick={() => handleCopyDiscountCode(t)}
+                className="btn-secondary w-full sm:w-auto flex items-center justify-center gap-2"
+              ><Copy className="w-5 h-5 mr-2" />
+                {t('discount.get35Off', '35% OFF')}
+              </button>
+        </div>
          <p className="mx-auto mt-12 max-w-4xl text-center text-2xl lg:text-3xl font-semibold tracking-tight text-eerie-black sm:text-5xl">                                                                                        
             {t('plans.subtitle')}
           </p>

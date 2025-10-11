@@ -23,32 +23,25 @@ const StatsCards = ({ orders, activeOrders, referralStats }) => {
   const isRTL = getLanguageDirection(currentLanguage) === 'rtl';
 
   return (
-    <section className="bg-white py-8 stats-card" dir={isRTL ? 'rtl' : 'ltr'}>
-      <div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <section className="bg-white py-4 stats-card" dir={isRTL ? 'rtl' : 'ltr'}>
+      <div className="mx-auto max-w-2xl px-4 sm:px-6 lg:max-w-7xl lg:px-8 py-2 lg:py-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
           {/* Total Orders Card */}
           <div className="relative">
             <div className="absolute inset-px rounded-xl bg-white"></div>
             <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
-              <div className="px-8 pt-8 pb-8">
-                <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <div>
-                    <p className={`text-lg font-medium text-cool-black ${isRTL ? 'text-right' : 'text-left'}`}>
+              <div className="px-4 pt-4 pb-4 sm:px-6 sm:pt-6 sm:pb-6 md:px-8 md:pt-8 md:pb-8">
+                <div className={`flex flex-col items-left text-left md:items-start md:text-left ${isRTL ? 'md:items-end md:text-right' : ''}`}>
+                  <div className="w-full">
+                    <p className={`text-base sm:text-base font-medium text-cool-black mb-2`}>
                       {t('dashboard.totalOrders', 'Total Orders')}
-                    </p>
-                    <p className={`text-2xl font-bold text-eerie-black mt-2 flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
-                      {isRTL ? (
-                        <>
-                          {orders.length}
-                          <Globe className="w-6 h-6 text-tufts-blue ml-2" />
-                        </>
-                      ) : (
-                        <>
-                          <Globe className="w-6 h-6 text-tufts-blue mr-2" />
-                          {orders.length}
-                        </>
-                      )}
-                    </p>
+                    </p>  
+                    <div className={`flex items-left text-left md:justify-start ${isRTL ? 'md:justify-end md:flex-row-reverse' : ''}`}>
+                      <Globe className="w-6 h-6 text-tufts-blue mr-2" />
+                      <span className="text-2xl sm:text-3xl font-bold text-eerie-black">
+                        {orders.length}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -60,25 +53,18 @@ const StatsCards = ({ orders, activeOrders, referralStats }) => {
           <div className="relative">
             <div className="absolute inset-px rounded-xl bg-white"></div>
             <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
-              <div className="px-8 pt-8 pb-8">
-                <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <div>
-                    <p className={`text-lg font-medium text-cool-black ${isRTL ? 'text-right' : 'text-left'}`}>
+              <div className="px-4 pt-4 pb-4 sm:px-6 sm:pt-6 sm:pb-6 md:px-8 md:pt-8 md:pb-8">
+                <div className={`flex flex-col items-left text-left md:items-start md:text-left ${isRTL ? 'md:items-end md:text-right' : ''}`}>
+                  <div className="w-full">
+                    <p className={`text-base sm:text-base font-medium text-cool-black mb-2`}>
                       {t('dashboard.activeEsims', 'Active eSIMs')}
                     </p>
-                    <p className={`text-2xl font-bold text-cool-black mt-2 flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
-                      {isRTL ? (
-                        <>
-                          {activeOrders.length}
-                          <QrCode className="w-6 h-6 text-tufts-blue ml-2" />
-                        </>
-                      ) : (
-                        <>
-                          <QrCode className="w-6 h-6 text-tufts-blue mr-2" />
-                          {activeOrders.length}
-                        </>
-                      )}
-                    </p>
+                    <div className={`flex items-left text-left md:justify-start ${isRTL ? 'md:justify-end md:flex-row-reverse' : ''}`}>
+                      <QrCode className="w-6 h-6 text-tufts-blue mr-2" />
+                      <span className="text-2xl sm:text-3xl font-bold text-cool-black">
+                        {activeOrders.length}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -93,37 +79,35 @@ const StatsCards = ({ orders, activeOrders, referralStats }) => {
           >
             <div className="absolute inset-px rounded-xl bg-white group-hover:bg-gray-50 transition-colors"></div>
             <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
-              <div className="px-8 pt-8 pb-8">
-                <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <div>
-                    <p className={`text-lg font-medium text-cool-black ${isRTL ? 'text-right' : 'text-left'}`}>
+              <div className="px-4 pt-4 pb-4 sm:px-6 sm:pt-6 sm:pb-6 md:px-8 md:pt-8 md:pb-8">
+                <div className={`flex flex-col items-left text-left md:items-start md:text-left ${isRTL ? 'md:items-end md:text-right' : ''}`}>
+                  <div className="w-full">
+                    <p className={`text-base sm:text-base font-medium text-cool-black mb-2`}>
                       {t('dashboard.yourPerformance', 'Your Performance')}
                     </p>
                    
-                    <div className={`flex items-center mt-2 ${isRTL ? 'space-x-reverse space-x-4' : 'space-x-4'}`}>
-                      <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
-                        {isRTL ? (
-                          <>
-                            <p className="text-2xl font-bold text-cool-black">${referralStats.totalEarnings.toFixed(2)}</p>
-                            <Wallet className="w-6 h-6 text-tufts-blue ml-2" />
-                          </>
-                        ) : (
-                          <>
-                            <Wallet className="w-6 h-6 text-tufts-blue mr-2" />
-                            <p className="text-2xl font-bold text-cool-black">${referralStats.totalEarnings.toFixed(2)}</p>
-                          </>
-                        )}
+                    <div className={`flex flex-col items-left text-left md:items-start ${isRTL ? 'md:items-end' : ''} space-y-2`}>
+                      <div className={`flex items-left text-left md:justify-start ${isRTL ? 'md:justify-end md:flex-row-reverse' : ''}`}>
+                        <Wallet className="w-6 h-6 text-tufts-blue mr-2" />
+                        <span className="text-2xl sm:text-3xl font-bold text-cool-black">
+                          ${referralStats.totalEarnings.toFixed(2)}
+                        </span>
                       </div>
-                      <p className={`text-xs text-cool-black ${isRTL ? 'text-right' : 'text-left'}`}>
+                      
+                      <p className={`text-xs sm:text-xs text-cool-black`}>
                         {t('dashboard.totalEarnings', 'Total Earnings')}
                       </p>
+                      
                       {(referralStats.usageCount || 0) > 0 && (
-                        <div className={`${isRTL ? 'border-r border-gray-200 pr-4' : 'border-l border-gray-200 pl-4'}`}>
-                          <p className="text-2xl font-bold text-cool-black">{Math.floor(referralStats.usageCount || 0)}</p>
+                        <div className="flex items-left text-left md:justify-start">
+                          <span className="text-base sm:text-base font-bold text-cool-black">
+                            {Math.floor(referralStats.usageCount || 0)} uses
+                          </span>
                         </div>
                       )}
                     </div>
-                    <p className={`text-xs text-tufts-blue mt-2 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>
+                    
+                    <p className={`text-xs sm:text-xs text-tufts-blue mt-3 font-medium text-left md:text-left ${isRTL ? 'md:text-right' : ''}`}>
                       {isRTL ? 
                         `← ${t('dashboard.tapToJoinAffiliate', 'Tap to join affiliate program')}` : 
                         `${t('dashboard.tapToJoinAffiliate', 'Tap to join affiliate program')} →`

@@ -12,7 +12,7 @@ import { getCountriesWithPricing } from '../services/plansService';
 import { getRegularSettings } from '../services/settingsService';
 import { useI18n } from '../contexts/I18nContext';
 import { detectPlatform, shouldRedirectToDownload, isMobileDevice } from '../utils/platformDetection';
-import { getMobileCountries } from '../data/mobileCountries';
+import { getMobileCountries, getCountryName } from '../data/mobileCountries';
 
 // Helper function to get flag emoji from country code
 const getFlagEmoji = (countryCode) => {
@@ -39,7 +39,7 @@ const getFlagEmoji = (countryCode) => {
 
 
 const EsimPlans = () => {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { currentUser } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
@@ -436,7 +436,7 @@ const EsimPlans = () => {
 
                             <div className="esim-plan-card__content text-center">
                               <h5 className="esim-plan-card__title text-lg font-semibold text-gray-900 mb-2">
-                                {country.name}
+                                {getCountryName(country.code, locale) || country.name}
                               </h5>
                               <span className="esim-plan-card__price text-tufts-blue font-medium">
                                 {country.minPrice ? (() => {
@@ -497,7 +497,7 @@ const EsimPlans = () => {
 
                         <div className="esim-plan-card__content flex-1 text-left">
                           <h5 className="esim-plan-card__title text-base font-semibold text-gray-900 mb-1">
-                            {country.name}
+                            {getCountryName(country.code, locale) || country.name}
                           </h5>
                           <span className="esim-plan-card__price text-tufts-blue font-medium text-sm">
                             {country.minPrice ? (() => {

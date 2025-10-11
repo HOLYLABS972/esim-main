@@ -128,7 +128,9 @@
     "showLess": "عرض أقل"
   },
   "discount": {
-    "get35Off": "احصل على خصم 35%"
+    "get35Off": "احصل على خصم 35%",
+    "copied": "تم نسخ كود الخصم OCTOBER35! خصم 35% على مشترياتك!",
+    "copyFailed": "فشل في نسخ الكود. يرجى المحاولة مرة أخرى."
   },
   "language": {
     "select": "اختر اللغة",
@@ -237,6 +239,40 @@
     "welcomeMessage": "مرحباً بك في RoamJet - حل eSIM العالمي الخاص بك",
     "trustedByThousands": "موثوق من قبل آلاف المسافرين حول العالم"
   },
+  "dashboard": {
+    "checkingEsimDetails": "يتم فحص تفاصيل eSIM...",
+    "checkEsimDetailsInApi": "فحص تفاصيل eSIM في API",
+    "checkingUsage": "يتم فحص الاستخدام...",
+    "checkUsageAndStatus": "فحص الاستخدام والحالة",
+    "openInAppleEsim": "فتح في Apple eSIM",
+    "downloadQrCode": "تحميل الرمز QR"
+  },
+  "QRCodeModal": {
+    
+    "esimQrCode": "رمز QR eSIM",
+    "qrCodeImageFromAiralo": "صورة الرمز QR من Airalo",
+    "realQrCodeFromAiralo": "الرمز QR الحقيقي من Airalo (إضافة خطة خلوية)",
+    "qrData": "بيانات الرمز QR: {{data}}...",
+    "directAppleInstallationLink": "رابط التثبيت المباشر لل-eSIM على Apple",
+    "appleEsimInstallation": "تثبيت ال-eSIM على Apple",
+    "qrCodeBeingGenerated": "يتم إنشاء الرمز QR...",
+    "clickGenerateQrCodeToTryAgain": "اضغط \"إنشاء رمز QR\" للمحاولة مرة أخرى",
+    "actions": "الإجراءات"
+  },
+  "accountSettings": {
+    "accountSettings": "إعدادات الحساب",
+    "email": "البريد الإلكتروني",
+    "phone": "الهاتف",
+    "name": "الاسم",
+    "saveChanges": "حفظ التغييرات",
+    "cancel": "إلغاء",
+    "updateSuccess": "تم تحديث البيانات بنجاح!",
+    "updateFailed": "فشل في تحديث البيانات",
+    "password": "كلمة المرور",
+    "passwordPlaceholder": "أدخل كلمة المرور",
+    "passwordConfirm": "تأكيد كلمة المرور",
+    "passwordConfirmPlaceholder": "أدخل تأكيد كلمة المرور"
+  },
   "contact": {
     "title": "تواصل معنا",
     "subtitle": "نحن هنا لمساعدتك في جميع احتياجاتك من التواصل",
@@ -338,6 +374,27 @@
     "resetPassword": "إعادة تعيين كلمة المرور",
     "passwordResetInfo": "سنرسل لك رابط إعادة تعيين كلمة المرور إلى عنوان بريدك الإلكتروني",
     "accountRole": "دور الحساب",
+    "phoneUpdatedSuccessfully": "تم تحديث رقم الهاتف بنجاح",
+    "failedToUpdatePhone": "فشل في تحديث رقم الهاتف",
+    "passwordResetEmailSent": "تم إرسال بريد إعادة تعيين كلمة المرور! تحقق من صندوق الوارد الخاص بك.",
+    "failedToSendPasswordReset": "فشل في إرسال بريد إعادة تعيين كلمة المرور",
+    "esimQrCode": "رمز QR لـ eSIM",
+    "realQrCodeFromAiralo": "✅ رمز QR حقيقي من Airalo (إضافة خطة خلوية)",
+    "qrData": "بيانات QR: {{data}}...",
+    "qrCodeImageFromAiralo": "✅ صورة رمز QR من Airalo",
+    "appleEsimInstallation": "تثبيت eSIM من Apple",
+    "directAppleInstallationLink": "✅ رابط التثبيت المباشر من Apple",
+    "installEsim": "تثبيت eSIM",
+    "qrCodeBeingGenerated": "يتم إنشاء رمز QR...",
+    "noQrCodeAvailable": "لا يوجد رمز QR متاح",
+    "clickGenerateQrCodeToTryAgain": "انقر على \"إنشاء رمز QR\" للمحاولة مرة أخرى",
+    "actions": "الإجراءات",
+    "checkingEsimDetails": "فحص تفاصيل eSIM...",
+    "checkEsimDetailsInApi": "فحص تفاصيل eSIM في API",
+    "checkingUsage": "فحص الاستخدام...",
+    "checkUsageAndStatus": "فحص الاستخدام والحالة",
+    "openInAppleEsim": "فتح في Apple eSIM",
+    "downloadQrCode": "تحميل رمز QR",
     "roles": {
       "customer": "عميل",
       "admin": "مدير",

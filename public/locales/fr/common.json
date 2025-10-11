@@ -57,6 +57,17 @@
       "operatingSystem": "Android 12+, iOS 15+"
     }
   },
+  "QRCodeModal": {
+    "esimQrCode": "eSIM QR Code",
+    "qrCodeImageFromAiralo": "QR Code Image from Airalo",
+    "realQrCodeFromAiralo": "Real QR Code from Airalo (Add Cellular Plan)",
+    "qrData": "QR Data: {{data}}...",
+    "directAppleInstallationLink": "Direct Apple Installation Link",
+    "appleEsimInstallation": "Apple eSIM Installation",
+    "qrCodeBeingGenerated": "QR code is being generated...",
+    "clickGenerateQrCodeToTryAgain": "Click \"Generate QR Code\" to try again",
+    "actions": "Actions"
+  },
   "activation": {
     "downloads": "Téléchargements",
     "appAvailable": "Notre application est disponible pour les appareils iOS et Android.",
@@ -131,7 +142,9 @@
     "showLess": "Afficher moins"
   },
   "discount": {
-    "get35Off": "Obtenez 35% DE RÉDUCTION"
+    "get35Off": "Obtenez 35% DE RÉDUCTION",
+    "copied": "Code de réduction OCTOBER35 copié ! 35% de réduction sur votre achat !",
+    "copyFailed": "Échec de la copie du code. Veuillez réessayer."
   },
   "language": {
     "select": "Sélectionner la langue",
@@ -341,6 +354,27 @@
     "resetPassword": "Réinitialiser le mot de passe",
     "passwordResetInfo": "Nous enverrons un lien de réinitialisation du mot de passe à votre adresse e-mail",
     "accountRole": "Rôle du compte",
+    "phoneUpdatedSuccessfully": "Numéro de téléphone mis à jour avec succès",
+    "failedToUpdatePhone": "Échec de la mise à jour du numéro de téléphone",
+    "passwordResetEmailSent": "E-mail de réinitialisation du mot de passe envoyé ! Vérifiez votre boîte de réception.",
+    "failedToSendPasswordReset": "Échec de l'envoi de l'e-mail de réinitialisation du mot de passe",
+    "esimQrCode": "Code QR eSIM",
+    "realQrCodeFromAiralo": "✅ Vrai Code QR d'Airalo (Ajouter Plan Cellulaire)",
+    "qrData": "Données QR : {{data}}...",
+    "qrCodeImageFromAiralo": "✅ Image Code QR d'Airalo",
+    "appleEsimInstallation": "Installation eSIM Apple",
+    "directAppleInstallationLink": "✅ Lien d'Installation Directe Apple",
+    "installEsim": "Installer eSIM",
+    "qrCodeBeingGenerated": "Le code QR est en cours de génération...",
+    "noQrCodeAvailable": "Aucun code QR disponible",
+    "clickGenerateQrCodeToTryAgain": "Cliquez sur \"Générer Code QR\" pour réessayer",
+    "actions": "Actions",
+    "checkingEsimDetails": "Vérification des Détails eSIM...",
+    "checkEsimDetailsInApi": "Vérifier les Détails eSIM dans l'API",
+    "checkingUsage": "Vérification de l'Utilisation...",
+    "checkUsageAndStatus": "Vérifier l'Utilisation et le Statut",
+    "openInAppleEsim": "Ouvrir dans Apple eSIM",
+    "downloadQrCode": "Télécharger le Code QR",
     "roles": {
       "customer": "Client",
       "admin": "Administrateur",

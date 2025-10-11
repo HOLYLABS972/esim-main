@@ -156,12 +156,12 @@ const LanguageSelector = () => {
       console.log('LanguageSelector: changeLanguage completed');
     }
     
-    // Always redirect to the landing page (homepage) for the selected language
-    const landingPage = language.code === 'en' ? '/' : `/${language.code}`;
-    console.log('LanguageSelector: Navigating to landing page:', landingPage);
+    // Get the localized path for the current page instead of always going to homepage
+    const localizedPath = getLocalizedPath(language.code, pathname);
+    console.log('LanguageSelector: Navigating to localized path:', localizedPath);
     
-    // Navigate to the landing page
-    router.push(landingPage);
+    // Navigate to the same page but in the new language
+    router.push(localizedPath);
   };
 
   return (

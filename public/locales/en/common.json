@@ -73,7 +73,9 @@
     "showLess": "Show Less"
   },
   "discount": {
-    "get35Off": "Get 35% OFF"
+    "get35Off": "Get 35% OFF",
+    "copied": "Discount code OCTOBER35 copied! 35% off your purchase!",
+    "copyFailed": "Failed to copy code. Please try again."
   },
   "activation": {
     "downloads": "Downloads",
@@ -294,6 +296,17 @@
       "deleteEsimAnswer": "Go to your device's cellular settings, select the eSIM plan you want to remove, and choose 'Delete eSIM' or 'Remove Plan'. This will permanently delete the eSIM from your device."
     }
   },
+  "QRCodeModal": {
+    "esimQrCode": "eSIM QR Code",
+    "qrCodeImageFromAiralo": "QR Code Image from Airalo",
+    "realQrCodeFromAiralo": "Real QR Code from Airalo (Add Cellular Plan)",
+    "qrData": "QR Data: {{data}}...",
+    "directAppleInstallationLink": "Direct Apple Installation Link",
+    "appleEsimInstallation": "Apple eSIM Installation",
+    "qrCodeBeingGenerated": "QR code is being generated...",
+    "clickGenerateQrCodeToTryAgain": "Click \"Generate QR Code\" to try again",
+    "actions": "Actions"
+  },
   "dashboard": {
     "loadingDashboard": "Loading dashboard...",
     "welcomeBack": "Welcome back, {{name}}!",
@@ -342,6 +355,27 @@
     "resetPassword": "Reset Password",
     "passwordResetInfo": "We'll send a password reset link to your email address",
     "accountRole": "Account Role",
+    "phoneUpdatedSuccessfully": "Phone number updated successfully",
+    "failedToUpdatePhone": "Failed to update phone number",
+    "passwordResetEmailSent": "Password reset email sent! Check your inbox.",
+    "failedToSendPasswordReset": "Failed to send password reset email",
+    "esimQrCode": "eSIM QR Code",
+    "realQrCodeFromAiralo": "✅ Real QR Code from Airalo (Add Cellular Plan)",
+    "qrData": "QR Data: {{data}}...",
+    "qrCodeImageFromAiralo": "✅ QR Code Image from Airalo",
+    "appleEsimInstallation": "Apple eSIM Installation",
+    "directAppleInstallationLink": "✅ Direct Apple Installation Link",
+    "installEsim": "Install eSIM",
+    "qrCodeBeingGenerated": "QR code is being generated...",
+    "noQrCodeAvailable": "No QR code available",
+    "clickGenerateQrCodeToTryAgain": "Click \"Generate QR Code\" to try again",
+    "actions": "Actions",
+    "checkingEsimDetails": "Checking eSIM Details...",
+    "checkEsimDetailsInApi": "Check eSIM Details in API",
+    "checkingUsage": "Checking Usage...",
+    "checkUsageAndStatus": "Check Usage & Status",
+    "openInAppleEsim": "Open in Apple eSIM",
+    "downloadQrCode": "Download QR Code",
     "roles": {
       "customer": "Customer",
       "admin": "Admin",

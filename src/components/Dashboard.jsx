@@ -223,9 +223,11 @@ const Dashboard = () => {
   // Redirect to login if user is not authenticated
   useEffect(() => {
     if (!authLoading && !currentUser) {
-      router.push('/login');
+      // Get the appropriate login URL for the current language
+      const loginUrl = currentLanguage === 'en' ? '/login' : `/${currentLanguage}/login`;
+      router.push(loginUrl);
     }
-  }, [authLoading, currentUser, router]);
+  }, [authLoading, currentUser, router, currentLanguage]);
 
   // Show loading spinner while auth is loading
   if (authLoading) {
@@ -777,7 +779,7 @@ const Dashboard = () => {
 
 
   return (
-    <div className="min-h-screen bg-white py-8" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen bg-white py-4" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Access Denied Alert */}
       <AccessDeniedAlert show={searchParams.get('error') === 'access_denied'} />
 
@@ -786,6 +788,7 @@ const Dashboard = () => {
         currentUser={currentUser}
         userProfile={userProfile}
         onShowReferralSheet={() => setShowReferralSheet(true)}
+       
       />
 
       {/* Stats Cards */}
