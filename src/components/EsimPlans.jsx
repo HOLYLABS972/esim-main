@@ -15,26 +15,6 @@ import { detectPlatform, shouldRedirectToDownload, isMobileDevice } from '../uti
 import { mobileCountries, getCountryName } from '../data/mobileCountries';
 import { esimService } from '../services/esimService';
 
-// Helper function to validate if a flag emoji is valid (not broken/invalid)
-const isValidFlagEmoji = (emoji) => {
-  if (!emoji) return false;
-  
-  // Check if it's the earth emoji (default fallback) - we allow this
-  if (emoji === '🌍' || emoji === '🌎' || emoji === '🌏') return true;
-  
-  // Flag emojis are composed of two regional indicator symbols (🇦-🇿)
-  // They should be exactly 4 bytes (2 code points)
-  const codePoints = Array.from(emoji).map(char => char.codePointAt(0));
-  
-  // Valid flag emojis have exactly 2 regional indicator code points
-  // Regional indicators range from 0x1F1E6 (🇦) to 0x1F1FF (🇿)
-  if (codePoints.length !== 2) return false;
-  
-  const isRegionalIndicator = (cp) => cp >= 0x1F1E6 && cp <= 0x1F1FF;
-  
-  return codePoints.every(isRegionalIndicator);
-};
-
 // Helper function to get flag emoji from country code
 const getFlagEmoji = (countryCode) => {
   if (!countryCode || countryCode.length !== 2) return '🌍';
@@ -44,19 +24,6 @@ const getFlagEmoji = (countryCode) => {
     return '🌍';
   }
   
-  // Special cases for regions/territories that don't have standard flags
-  const specialCases = {
-    'XK': '🌍', // Kosovo
-    'CW': '🌍', // Curaçao  
-    'BQ': '🌍', // Caribbean Netherlands
-    'SX': '🌍', // Sint Maarten
-    'SS': '🌍', // South Sudan (sometimes not supported)
-  };
-  
-  if (specialCases[countryCode.toUpperCase()]) {
-    return specialCases[countryCode.toUpperCase()];
-  }
-  
   try {
     const codePoints = countryCode
       .toUpperCase()
@@ -64,13 +31,7 @@ const getFlagEmoji = (countryCode) => {
       .map(char => 127397 + char.charCodeAt());
     
     const emoji = String.fromCodePoint(...codePoints);
-    
-    // Validate the generated emoji
-    if (!isValidFlagEmoji(emoji)) {
-      console.warn(`⚠️ Invalid flag emoji generated for code: ${countryCode}`);
-      return '🌍';
-    }
-    
+    // Return the emoji (even if it might not render properly - we'll handle that in the component)
     return emoji;
   } catch (error) {
     console.warn('Invalid country code: ' + countryCode, error);
@@ -192,49 +153,40 @@ const EsimPlans = () => {
         const enhancedCountries = firebaseCountries.map(country => {
           const designData = getCountryDesignData(country.code);
           
-          // Get display name with proper fallback chain
-          let displayName = country.name; // Start with Firebase name
+          // Get display name with smart fallback logic
+          let displayName = country.name;
           
-          // Try to get translated name from country.translations
-          if (country.translations?.[locale]) {
-            displayName = country.translations[locale];
-          }
-          // Fallback to mobileCountries translations
-          else if (designData) {
-            const translatedName = getCountryName(country.code, locale);
-            if (translatedName) {
-              displayName = translatedName;
-            }
-          }
+          // Check if the name is just a 2-letter country code (uppercase)
+          const isCountryCode = displayName && 
+                                displayName.length === 2 && 
+                                displayName === displayName.toUpperCase() &&
+                                displayName === country.code;
           
-          // If displayName is still a 2-letter code, use designData name or keep original
-          if (displayName && displayName.length === 2 && displayName === displayName.toUpperCase()) {
-            console.warn(`⚠️ Country ${country.code} has code as name, using fallback`);
-            displayName = designData?.name || country.name || displayName;
-          }
-          
-          // Use Firebase photo if available, otherwise use designData photo
-          const photoUrl = country.photo || designData?.photo || null;
-          
-          // Get and validate flag emoji
-          let flagEmoji = designData?.flagEmoji || country.flag || getFlagEmoji(country.code);
-          
-          // Validate the flag emoji - if invalid, use earth emoji
-          if (!isValidFlagEmoji(flagEmoji)) {
-            console.warn(`⚠️ Invalid flag emoji for ${country.code} (${country.name}): "${flagEmoji}" - using 🌍`);
-            flagEmoji = '🌍';
+          if (isCountryCode || !displayName) {
+            // Name is missing or is just a code - use better fallbacks
+            console.warn(`⚠️ Country ${country.code} has code as name ("${displayName}"), using fallbacks`);
+            
+            // Try translated name first
+            displayName = country.translations?.[locale] || 
+                         // Try getting name from mobileCountries.js
+                         getCountryName(country.code, locale) ||
+                         // Try designData name
+                         designData?.name ||
+                         // Last resort: use the code
+                         country.code;
+          } else {
+            // Name looks good, but prefer translation if available
+            displayName = country.translations?.[locale] || displayName;
           }
           
           return {
             ...country,
-            // Use validated flag emoji
-            flagEmoji: flagEmoji,
+            // Use design data flag emoji if available, otherwise generate it
+            flagEmoji: designData?.flagEmoji || country.flag || getFlagEmoji(country.code),
             // Use calculated display name
             displayName: displayName,
             // Keep original name
             originalName: country.name,
-            // Use best available photo URL
-            photo: photoUrl,
             // Add design status
             hasDesignData: !!designData
           };
@@ -243,14 +195,29 @@ const EsimPlans = () => {
         // Sort by minimum price (cheapest first)
         enhancedCountries.sort((a, b) => (a.minPrice || 999) - (b.minPrice || 999));
         
+        // Remove duplicates by country code - keep the one with the best price
+        const uniqueCountries = [];
+        const seenCodes = new Set();
+        
+        for (const country of enhancedCountries) {
+          if (!seenCodes.has(country.code)) {
+            seenCodes.add(country.code);
+            uniqueCountries.push(country);
+          } else {
+            console.warn(`⚠️ Duplicate country code found: ${country.code} (${country.name}) - skipping duplicate`);
+          }
+        }
+        
         console.log('✅ Enhanced countries with design data');
         console.log('🔍 Total enhanced countries:', enhancedCountries.length);
-        console.log('🔍 Sample enhanced data:', enhancedCountries.slice(0, 5).map(c => ({ 
+        console.log('🔍 After deduplication:', uniqueCountries.length);
+        console.log('🔍 Sample enhanced data:', uniqueCountries.slice(0, 3).map(c => ({ 
+          id: c.id,
           code: c.code,
           name: c.name,
           displayName: c.displayName,
-          flagEmoji: c.flagEmoji ? '✅' : '❌',
-          photo: c.photo ? '✅ ' + (c.photo.includes('firebasestorage') ? 'Firebase' : 'CDN') : '❌',
+          flagEmoji: c.flagEmoji,
+          photo: c.photo,
           minPrice: c.minPrice,
           planCount: c.planCount,
           hasDesignData: c.hasDesignData,
@@ -259,26 +226,17 @@ const EsimPlans = () => {
         
         // For now, show all active countries (even without prices)
         // This allows users to see countries before they're synced
-        const activeCountries = enhancedCountries.filter(c => {
+        const activeCountries = uniqueCountries.filter(c => {
           const isActive = c.status === 'active' || c.isActive === true;
-          const hasPrice = c.minPrice && c.minPrice > 0;
-          const hasPlans = c.planCount && c.planCount > 0;
           
           if (!isActive) {
-            console.log(`❌ Country ${c.code}: inactive`);
             return false;
           }
           
-          if (!hasPrice && !hasPlans) {
-            console.log(`⚠️ Country ${c.code}: active but no price/plans yet (needs sync)`);
-          } else {
-            console.log(`✅ Country ${c.code}: active with ${c.planCount || 0} plans, min price $${c.minPrice || 0}`);
-          }
-          
-          return isActive; // Show all active countries
+          return true; // Show all active countries
         });
         
-        console.log('✅ Filtered to', activeCountries.length, 'active countries (some may need sync)');
+        console.log('✅ Filtered to', activeCountries.length, 'active countries');
         
         return activeCountries;
       } catch (error) {
@@ -385,8 +343,20 @@ const EsimPlans = () => {
     if (!originalPrice || originalPrice <= 0) return originalPrice;
     
     // Apply discount from settings to real Airalo prices
-    const discountPercentage = regularSettings.discountPercentage || 10;
-    const minimumPrice = regularSettings.minimumPrice || 0.5;
+    const discountPercentage = regularSettings?.discountPercentage || 0;
+    const minimumPrice = regularSettings?.minimumPrice || 0.5;
+    
+    console.log('💰 Price calculation:', {
+      originalPrice,
+      discountPercentage,
+      minimumPrice,
+      regularSettings
+    });
+    
+    // If no discount, return original price
+    if (discountPercentage === 0) {
+      return originalPrice;
+    }
     
     const discountedPrice = Math.max(minimumPrice, originalPrice * (100 - discountPercentage) / 100);
     return discountedPrice;
@@ -589,31 +559,27 @@ const EsimPlans = () => {
                     <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
                       <div className="px-6 pt-6 pb-6 flex-1 flex flex-col">
                         <div className="country-flag-display text-center mb-4">
-                          {country.photo ? (
+                          {country.photo && country.photo.includes('firebasestorage') ? (
                             <img 
                               src={country.photo} 
                               alt={country.displayName || country.name}
                               className="w-16 h-16 mx-auto rounded-full object-cover border-2 border-gray-200"
                               onError={(e) => {
-                                // On image load error, hide the image and show flag emoji instead
+                                // If Firebase photo fails to load, hide it and show emoji
                                 console.warn(`⚠️ Failed to load photo for ${country.code}: ${country.photo}`);
                                 e.target.style.display = 'none';
+                                // Replace with emoji
                                 const parent = e.target.parentElement;
-                                if (parent && country.flagEmoji) {
-                                  parent.innerHTML = `<span class="country-flag-emoji text-5xl">${country.flagEmoji}</span>`;
+                                if (parent) {
+                                  const emoji = getFlagEmoji(country.code);
+                                  parent.innerHTML = `<span class="country-flag-emoji text-5xl">${emoji}</span>`;
                                 }
                               }}
                             />
-                          ) : country.flagEmoji ? (
-                            <span className="country-flag-emoji text-5xl">
-                              {country.flagEmoji}
-                            </span>
                           ) : (
-                            <div className="country-code-avatar w-16 h-16 mx-auto bg-tufts-blue rounded-full flex items-center justify-center">
-                              <span className="text-white font-bold text-lg">
-                                {country.code || '??'}
-                              </span>
-                            </div>
+                            <span className="country-flag-emoji text-5xl">
+                              {getFlagEmoji(country.code)}
+                            </span>
                           )}
                         </div>
 
@@ -622,21 +588,11 @@ const EsimPlans = () => {
                             {country.displayName || country.name}
                           </h5>
                           <div className="esim-plan-card__price text-tufts-blue font-medium">
-                            {country.minPrice ? (() => {
-                              const discountedPrice = calculateDiscountedPrice(country.minPrice);
-                              const originalPrice = country.originalPrice || country.minPrice;
-                              const hasDiscount = discountedPrice < originalPrice;
-                              return hasDiscount ? (
-                                <div className="text-center">
-                                  <span className="text-lg font-semibold text-green-600">${discountedPrice.toFixed(2)}</span>
-                                  <span className="text-sm text-gray-500 line-through ml-2">${originalPrice.toFixed(2)}</span>
-                                </div>
-                              ) : (
-                                <span className="text-lg font-semibold text-tufts-blue">
-                                  {t('plans.fromPrice', `From $${country.minPrice.toFixed(2)}`).replace('${price}', `$${country.minPrice.toFixed(2)}`)}
-                                </span>
-                              );
-                            })() : (
+                            {country.minPrice && country.minPrice > 0 ? (
+                              <span className="text-lg font-semibold text-tufts-blue">
+                                {t('plans.fromPrice', `From $${country.minPrice.toFixed(2)}`).replace('${price}', `$${country.minPrice.toFixed(2)}`)}
+                              </span>
+                            ) : (
                               <span className="text-sm text-gray-500">{t('plans.noPlansAvailable', 'No plans available')}</span>
                             )}
                           </div>
@@ -672,31 +628,27 @@ const EsimPlans = () => {
                     <div className="relative flex h-full overflow-hidden rounded-xl">
                       <div className="px-4 pt-4 pb-4 flex items-center space-x-4 w-full">
                         <div className="country-flag-display flex-shrink-0">
-                          {country.photo ? (
+                          {country.photo && country.photo.includes('firebasestorage') ? (
                             <img 
                               src={country.photo} 
                               alt={country.displayName || country.name}
                               className="w-12 h-12 rounded-full object-cover border-2 border-gray-200"
                               onError={(e) => {
-                                // On image load error, hide the image and show flag emoji instead
+                                // If Firebase photo fails to load, hide it and show emoji
                                 console.warn(`⚠️ Failed to load photo for ${country.code}: ${country.photo}`);
                                 e.target.style.display = 'none';
+                                // Replace with emoji
                                 const parent = e.target.parentElement;
-                                if (parent && country.flagEmoji) {
-                                  parent.innerHTML = `<span class="country-flag-emoji text-3xl">${country.flagEmoji}</span>`;
+                                if (parent) {
+                                  const emoji = getFlagEmoji(country.code);
+                                  parent.innerHTML = `<span class="country-flag-emoji text-3xl">${emoji}</span>`;
                                 }
                               }}
                             />
-                          ) : country.flagEmoji ? (
-                            <span className="country-flag-emoji text-3xl">
-                              {country.flagEmoji}
-                            </span>
                           ) : (
-                            <div className="country-code-avatar w-10 h-10 bg-tufts-blue rounded-full flex items-center justify-center">
-                              <span className="text-white font-bold text-sm">
-                                {country.code || '??'}
-                              </span>
-                            </div>
+                            <span className="country-flag-emoji text-3xl">
+                              {getFlagEmoji(country.code)}
+                            </span>
                           )}
                         </div>
 
@@ -705,19 +657,11 @@ const EsimPlans = () => {
                             {country.displayName || country.name}
                           </h5>
                           <div className="esim-plan-card__price text-tufts-blue font-medium text-sm">
-                            {country.minPrice ? (() => {
-                              const discountedPrice = calculateDiscountedPrice(country.minPrice);
-                              const originalPrice = country.originalPrice || country.minPrice;
-                              const hasDiscount = discountedPrice < originalPrice;
-                              return hasDiscount ? (
-                                <div className="text-left">
-                                  <span className="text-sm font-semibold text-green-600">${discountedPrice.toFixed(2)}</span>
-                                  <span className="text-xs text-gray-500 line-through ml-2">${originalPrice.toFixed(2)}</span>
-                                </div>
-                              ) : (
-                                t('plans.fromPrice', `From $${country.minPrice.toFixed(2)}`).replace('${price}', `$${country.minPrice.toFixed(2)}`)
-                              );
-                            })() : t('plans.noPlansAvailable', 'No plans available')}
+                            {country.minPrice && country.minPrice > 0 ? (
+                              t('plans.fromPrice', `From $${country.minPrice.toFixed(2)}`).replace('${price}', `$${country.minPrice.toFixed(2)}`)
+                            ) : (
+                              t('plans.noPlansAvailable', 'No plans available')
+                            )}
                           </div>
                         </div>
                         
