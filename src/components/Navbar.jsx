@@ -115,12 +115,12 @@ const Navbar = ({ hideLanguageSelector = false }) => {
       <div className="bg-white/80 shadow-sm shadow-white/30 backdrop-blur-sm w-full">
       <nav aria-label="Global" className="mx-auto flex max-w-7xl items-center justify-between p-2 lg:px-8">
         <div className="flex lg:flex-1">
-          <Link href={getLocalizedUrl("/")} className="-m-1.5 p-1.5 flex items-center">
-            <span className="sr-only">RoamJet Plans</span>
+          <Link href={getLocalizedUrl("/")} className="-m-1.5 p-1.5 flex items-center ">
+            <span className="sr-only">RoamJet</span>
             <img
               src="/images/logo_icon/logo.png"
-              alt="Roam Jet Plans Logo"
-              className="h-8 w-auto"
+              alt="Roam Jet Logo"
+              className="h-8 w-auto hidden sm:block"
             />
             <span className="ml-2 text-xl font-semibold text-gray-900">{t('navbar.logo', 'RoamJet')}</span>
           </Link>
@@ -188,13 +188,13 @@ const Navbar = ({ hideLanguageSelector = false }) => {
             <div className="flex items-center justify-between p-6">
               <Link href={getLocalizedUrl("/")} className="
                flex items-center" onClick={() => setIsMenuOpen(false)}>
-                <span className="sr-only">RoamJet Plans</span>
+                <span className="sr-only">RoamJet</span>
                 <img
                   src="/images/logo_icon/logo.png"
-                  alt="RoamJet Plans Logo"
+                  alt="RoamJet Logo"
                   className="h-8 w-auto"
                 />
-                <span className="ml-2 text-xl font-bold text-gray-900">RoamJet</span>
+                <span className="mx-2 text-xl font-bold text-gray-900 hidden sm:block">RoamJet</span>
               </Link>
               <button
                 type="button"
@@ -209,7 +209,7 @@ const Navbar = ({ hideLanguageSelector = false }) => {
             </div>
             
             {/* Centered menu items */}
-            <div className="flex flex-col items-center justify-center min-h-[calc(100vh-120px)] p-6">
+            <div className="flex flex-col items-center justify-center mt-20">
               <div className="space-y-8 text-center">
                 {/* Main Navigation Group */}
                 <div className="p-4 w-full max-w-xs">

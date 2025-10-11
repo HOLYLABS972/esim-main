@@ -64,7 +64,7 @@ export default function HeroSection() {
   }
 
   return (
-    <div className="bg-white min-h-screen ">
+    <div className="bg-white min-h-screen  ">
       <div className="relative isolate">
         {/* Top Gradient Blob */}
         <div aria-hidden="true" className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80">
@@ -77,7 +77,7 @@ export default function HeroSection() {
           ></div>
         </div>
 
-        <div className="mx-auto max-w-7xl py-6 sm:py-6 lg:py-16  justify-center">
+        <div className="mx-auto pt-32 max-w-7xl py-6 sm:py-6 lg:py-16  justify-center">
           
 
           {/* Main Content */}  
@@ -122,14 +122,14 @@ export default function HeroSection() {
                   <Image src="/images/logo_icon/ioslogo.png" alt="iOS Logo" width={48} height={48} className="w-10 h-10 lg:w-12 lg:h-12 rounded-xl" />
                 </div>
                   
-                <span className="text-eerie-black font-semibold">Roam<span className="text-cobalt-blue font-semibold">Jet</span></span>
+                <span className="text-eerie-black font-semibold mb-4">Roam<span className="text-cobalt-blue font-semibold">Jet</span></span>
               </div>
             </h1>
-            <p className="text-center mt-6 px-8 mx-auto max-w-4xl text-base text-xs lg:text-sm text-pretty text-gray-500">
+            <p className="text-center my-4 lg px-8 mx-auto max-w-4xl text-base text-xs lg:text-sm text-pretty text-gray-500">
               {t('hero.description')}
             </p>
               
-            <p className="mx-auto max-w-4xl mt-6 text-base sm:text-lg lg:text-xl font-medium text-pretty text-gray-600 px-4 sm:px-0">
+            <p className="mx-auto max-w-4xl mt-4 text-base sm:text-lg lg:text-xl font-medium text-pretty text-gray-600 px-4 sm:px-0">
             <CountrySearchBar showCountryCount={true} />
             </p>
             <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-x-6 px-4 sm:px-0">
@@ -141,9 +141,9 @@ export default function HeroSection() {
               </button>
               <button
                 onClick={handleCopyDiscountCode}
-                className="btn-secondary w-full sm:w-auto flex items-center justify-center gap-2"
+                className="btn-secondary w-full sm:w-auto flex items-center justify-center gap-2 hidden sm:flex"
               ><Copy className="w-5 h-5 mr-2" />
-                {t('discount.get35Off', '35% OFF')}
+                {t('hero.get35Off', '35% OFF')}
               </button>
             </div>
           </div>

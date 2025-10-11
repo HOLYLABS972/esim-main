@@ -15,14 +15,14 @@
     "announcement": "Ahora disponible en más de 200 países en todo el mundo.",
     "countriesAvailable": "Ahora disponible en más de 200 países",
     "stayConnected": "Mantente conectado",
-    "noMatterWhere": "sin importar dónde estés",
-    "with": "con",
-    "description": "RoamJet: eSIM global para viajeros, nómadas digitales y mochileros. Compra planes de datos móviles internacionales instantáneos para más de 200 países. Sin cargos de roaming, sin SIM física necesaria. Instala eSIM de viaje en línea en minutos, activa en el extranjero en segundos.",
+    "noMatterWhere": "sin importar dónde",
+    "with": "estés con",
+    "description": "eSIM global para viajeros, nómadas digitales y mochileros. Sin cargos de roaming, sin SIM física necesaria.",
     "downloadApp": "Descargar aplicación",
     "exploreTariffs": "Explorar tarifas",
     "popularCountries": {
       "france": "🇫🇷 Francia",
-      "usa": "🇺🇸 EE.UU.",
+      "usa": "🇺🇸 Estados Unidos",
       "thailand": "🇹🇭 Tailandia",
       "japan": "🇯🇵 Japón",
       "spain": "🇪🇸 España",
@@ -34,6 +34,7 @@
   "features": {
     "title": "Conéctate globalmente",
     "subtitle": "Todo lo que necesitas para la conectividad global",
+    "get35Off": "Obtén 35% DE DESCUENTO",
     "globalCoverage": {
       "title": "Cobertura global",
       "description": "Mantente conectado en más de 200 países con nuestra extensa cobertura de red eSIM en todo el mundo.",

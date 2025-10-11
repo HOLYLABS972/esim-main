@@ -17,7 +17,7 @@
     "stayConnected": "תשארו מחוברים",
     "noMatterWhere": "לא משנה איפה אתם",
     "with": "עם",
-    "description": "RoamJet: eSIM גלובלי למטיילים, נומאדים דיגיטליים ותרמילאים. קנה תוכניות נתונים ניידים בינלאומיות מיידיות ל-200+ מדינות. אין צורך בסים פיזיים. התקן את eSIM המטייל באינטרנט במשך מספר דקות, הפעל בחוץ בשניות.",
+    "description": "eSIM גלובלי למטיילים, נומאדים דיגיטליים ותרמילאים. אין צורך בסים פיזיים. התקן את eSIM המטייל באינטרנט במשך מספר דקות, הפעל בחוץ בשניות.",
     "downloadApp": "הורד אפליקציה",
     "exploreTariffs": "הצג תוכניות",
     "popularCountries": {
@@ -27,12 +27,14 @@
       "japan": "🇯🇵 יפן",
       "spain": "🇪🇸 ספרד",
       "china": "🇨🇳 סין",
-      "brazil": "🇧🇷 ברזיל"
+      "brazil": "🇧🇷 ברזיל",
+      "india": "🇮🇳 סין"
     }
   },
   "features": {
     "title": "התחבר גלובלית",
     "subtitle": "כל מה שאתה צריך לחיבור גלובלי",
+    "get35Off": "קבל 35% הנחה",
     "globalCoverage": {
       "title": "כיסוי גלובלי",
       "description": "הישאר מחובר ביותר מ-200 מדינות עם כיסוי רשת ה-eSIM הנרחב שלנו ברחבי העולם.",

@@ -15,9 +15,9 @@
     "announcement": "Now available in 200+ countries worldwide.",
     "countriesAvailable": "Now available in 200+ countries",
     "stayConnected": "Stay connected",
-    "noMatterWhere": " no matter where you are",
-    "with": "with",
-    "description": "RoamJet: Global eSIM for travelers, digital nomads, and backpackers. Buy instant international mobile data plans for 200+ countries. No roaming fees, no physical SIM cards needed.",
+    "noMatterWhere": " no matter where you ",
+    "with": "are with",
+    "description": "Global eSIM for travelers, digital nomads, and backpackers. No roaming fees, no physical SIM cards needed.",
     "downloadApp": "Download App",
     "exploreTariffs": "Explore Tariffs",
     "exploreBlog": "Explore Blog",
@@ -35,6 +35,7 @@
   "features": {
     "title": "Connect globally",
     "subtitle": "Perfect eSIM solution for backpackers, travelers, and digital nomads worldwide",
+    "get35Off": "Get 35% OFF",
     "globalCoverage": {
       "title": "Global Coverage",
       "description": "Stay connected in 200+ countries with our extensive eSIM network coverage worldwide. Perfect for backpackers exploring multiple destinations and digital nomads working remotely.",
