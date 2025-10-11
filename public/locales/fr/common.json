@@ -19,7 +19,17 @@
     "with": "avec",
     "description": "RoamJet: eSIM mondial pour les voyageurs, les nomades numériques et les randonneurs. Achetez des plans de données mobiles internationales instantanées pour plus de 200 pays. Pas de frais de roaming, pas de SIM physique nécessaire. Installez eSIM de voyage en ligne en quelques minutes, activez à l'étranger en quelques secondes.",
     "downloadApp": "Télécharger l'application",
-    "exploreTariffs": "Explorer les tarifs"
+    "exploreTariffs": "Explorer les tarifs",
+    "popularCountries": {
+      "france": "🇫🇷 France",
+      "usa": "🇺🇸 États-Unis",
+      "thailand": "🇹🇭 Thaïlande",
+      "japan": "🇯🇵 Japon",
+      "spain": "🇪🇸 Espagne",
+      "china": "🇨🇳 Chine",
+        "brazil": "🇧🇷 Brésil",
+      "india": "🇮🇳 Inde"
+    }
   },
   "features": {
     "title": "Connectez-vous globalement",

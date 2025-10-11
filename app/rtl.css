@@ -33,6 +33,11 @@
   text-align: center !important;
 }
 
+/* Override for hero section - keep it centered */
+[dir="rtl"] .text-center h1 {
+  text-align: center !important;
+}
+
 [dir="rtl"] p {
   text-align: right !important;
 }
@@ -889,6 +894,19 @@
   flex-direction: row-reverse;
 }
 
+/* Keep hero title centered in RTL languages */
+[dir="rtl"] .hero-section h1 {
+  text-align: center !important;
+}
+
+[dir="rtl"] .hero-section .text-center {
+  text-align: center !important;
+}
+
+[dir="rtl"] .hero-section .text-center h1 {
+  text-align: center !important;
+}
+
 /* Features section RTL adjustments */
 [dir="rtl"] .features-section {
   direction: rtl;
@@ -1598,18 +1616,32 @@
   flex-direction: column !important;
 }
 
-/* Ensure proper text alignment for all text elements in RTL */
-[dir="rtl"] p:not(.text-center) {
-  text-align: right !important;
+
+/* Hero section specific overrides - keep centered */
+[dir="rtl"] .text-center h1.text-3xl,
+[dir="rtl"] .text-center h1.sm\\:text-3xl,
+[dir="rtl"] .text-center h1.lg\\:text-4xl,
+[dir="rtl"] .text-center h1.xl\\:text-5xl {
+  text-align: center !important;
 }
 
-[dir="rtl"] h1:not(.text-center),
-[dir="rtl"] h2:not(.text-center),
-[dir="rtl"] h3:not(.text-center),
-[dir="rtl"] h4:not(.text-center),
-[dir="rtl"] h5:not(.text-center),
-[dir="rtl"] h6:not(.text-center) {
-  text-align: right !important;
+/* More specific overrides for hero section */
+[dir="rtl"] .text-center h1.text-3xl.sm\\:text-3xl.lg\\:text-4xl.xl\\:text-5xl {
+  text-align: center !important;
+}
+
+[dir="rtl"] .text-center h1.font-semibold {
+  text-align: center !important;
+}
+
+[dir="rtl"] .text-center h1.text-balance {
+  text-align: center !important;
+}
+
+/* Ultimate override for hero title */
+[dir="rtl"] .text-center h1.text-3xl.sm\\:text-3xl.lg\\:text-4xl.xl\\:text-5xl.font-semibold.text-balance {
+  text-align: center !important;
+  direction: ltr !important;
 }
 
 [dir="rtl"] label {
@@ -1784,4 +1816,22 @@
 [dir="rtl"] .esim-plan-card .ml-2 {
   margin-left: 0 !important;
   margin-right: 0.5rem !important;
+}
+
+/* FINAL OVERRIDE: Hero section title must stay centered in RTL */
+[dir="rtl"] div.text-center h1 {
+  text-align: center !important;
+  direction: ltr !important;
+}
+
+[dir="rtl"] .text-center > h1 {
+  text-align: center !important;
+  direction: ltr !important;
+}
+
+/* Specific to hero section container */
+[dir="rtl"] .mx-auto.max-w-7xl h1.text-center,
+[dir="rtl"] .mx-auto.max-w-7xl .text-center h1 {
+  text-align: center !important;
+  direction: ltr !important;
 }

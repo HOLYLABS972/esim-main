@@ -70,27 +70,41 @@ const CountrySearchBar = ({ onSearch, showCountryCount = true }) => {
         
         {/* Search Suggestions */}
         <div className="mt-3 flex flex-wrap justify-center gap-2 px-2">
-          {['France', 'USA', 'Thailand', 'Japan', 'Spain'].map((country) => (
-            <button
-              key={country}
-              type="button"
-              onClick={() => {
-                setSearchValue(country);
-                // Force English language
-                if (typeof window !== 'undefined') {
-                  localStorage.setItem('roamjet-language', 'en');
-                }
-                setTimeout(() => {
-                  // Always use English URL
-                  const searchUrl = `/esim-plans?search=${encodeURIComponent(country)}`;
-                  router.push(searchUrl);
-                }, 100);
-              }}
-              className="text-xs sm:text-sm px-3 py-1 rounded-full bg-white/60 hover:bg-cobalt-blue/10 border border-jordy-blue/30 hover:border-cobalt-blue transition-all duration-200 text-gray-700 hover:text-cobalt-blue font-medium"
-            >
-              {country}
-            </button>
-          ))}
+          {['france', 'usa', 'thailand', 'japan', 'spain', 'china', 'brazil', 'india'].map((countryKey) => {
+            const displayName = t(`hero.popularCountries.${countryKey}`, countryKey);
+            // Extract English name for search (remove emoji and get the English equivalent)
+            const searchName = countryKey === 'france' ? 'France' :
+                              countryKey === 'usa' ? 'USA' :
+                              countryKey === 'thailand' ? 'Thailand' :
+                              countryKey === 'japan' ? 'Japan' :
+                              countryKey === 'spain' ? 'Spain' :
+                              countryKey === 'china' ? 'China' :
+                              countryKey === 'brazil' ? 'Brazil' :
+                              countryKey === 'india' ? 'India' :
+                              countryKey;
+            
+            return (
+              <button
+                key={countryKey}
+                type="button"
+                onClick={() => {
+                  setSearchValue(searchName);
+                  // Force English language
+                  if (typeof window !== 'undefined') {
+                    localStorage.setItem('roamjet-language', 'en');
+                  }
+                  setTimeout(() => {
+                    // Always use English URL
+                    const searchUrl = `/esim-plans?search=${encodeURIComponent(searchName)}`;
+                    router.push(searchUrl);
+                  }, 100);
+                }}
+                className="text-xs sm:text-sm px-3 py-1 rounded-full bg-white/60 hover:bg-cobalt-blue/10 border-2 border-blue-200/30 hover:border-blue-200/60 transition-all duration-200 text-gray-700 hover:text-cobalt-blue font-medium hover:shadow-lg hover:shadow-blue-200/60 hover:scale-103"
+              >
+                {displayName}
+              </button>
+            );
+          })}
         </div>
       </form>
     </div>

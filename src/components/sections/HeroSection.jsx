@@ -6,6 +6,8 @@ import Image from 'next/image';
 import { trackCustomFacebookEvent } from '../../utils/facebookPixel';
 import CountrySearchBar from '../CountrySearchBar';
 import toast from 'react-hot-toast';
+import { Download } from 'lucide-react';
+import { Copy } from 'lucide-react';
 
 export default function HeroSection() {
   const { t, isLoading, locale } = useI18n();
@@ -63,7 +65,7 @@ export default function HeroSection() {
 
   return (
     <div className="bg-white min-h-screen ">
-      <div className="relative isolate px-6 lg:px-8 flex-1 flex flex-col">
+      <div className="relative isolate">
         {/* Top Gradient Blob */}
         <div aria-hidden="true" className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80">
           <div 
@@ -75,7 +77,7 @@ export default function HeroSection() {
           ></div>
         </div>
 
-        <div className="mx-auto max-w-5xl py-6 sm:py-12 lg:py-24  justify-center">
+        <div className="mx-auto max-w-7xl py-6 sm:py-6 lg:py-16  justify-center">
           
 
           {/* Main Content */}  
@@ -83,14 +85,16 @@ export default function HeroSection() {
           <div className="text-center">
             <h1 className="text-3xl sm:text-3xl lg:text-4xl xl:text-5xl font-semibold text-balance text-gray-600 relative">
               {/* Mobile Layout */}
-              <div className="block sm:hidden ">
+              <div className="block sm:hidden mt-6">
                 <div className="flex items-center justify-center ">
                   <span className="text-eerie-black font-semibold">{t('hero.stayConnected')}</span>
-                  <span className="transform -rotate-12 pointer-events-none">
-                    
+                  <span className="inline-block transform -rotate-12 pointer-events-none mx-1">
+                    <div className="w-10 h-10 lg:w-12 lg:h-12 bg-white border-3 lg:border-4 border-cobalt-blue rounded-xl shadow-lg shadow-cool-black flex items-center justify-center">
+                      <Image src="/images/logo_icon/sx.png" alt="Globe" width={32} height={32} className="w-8 h-8 lg:w-10 lg:h-10" />
+                    </div>
                   </span> 
                 </div>
-                <div>{t('hero.noMatterWhere')}</div>
+                <div className="text-center">{t('hero.noMatterWhere')}</div>
                 <div className="flex items-center justify-center">
                   <span className="text-eerie-black font-semibold">{t('hero.with')}</span>
                   <div className="w-10 h-10 bg-alice-blue border-2 border-alice-blue rounded-xl shadow-lg flex items-center justify-center rotate-6">
@@ -102,7 +106,7 @@ export default function HeroSection() {
               </div>
               
               {/* Desktop Layout */}
-              <div className="hidden sm:flex flex-wrap items-center justify-center gap-3 lg:gap-4">
+              <div className="hidden sm:flex flex-wrap items-center justify-center gap-3 lg:gap-4 max-w-4xl mx-auto">
                 <span>
                   <span className="text-eerie-black font-semibold">{t('hero.stayConnected')} </span> 
                   <span className="inline-block transform -rotate-12 pointer-events-none mr-2">
@@ -112,7 +116,7 @@ export default function HeroSection() {
                   </span> 
                   {t('hero.noMatterWhere').split(' ')[0]} 
                 </span>
-                <span>{t('hero.noMatterWhere').split(' ').slice(1).join(' ')} <span className="text-eerie-black font-semibold">{t('hero.with')}</span></span>
+                <span>{t('hero.noMatterWhere')} <span className="text-eerie-black font-semibold">{t('hero.with')}</span></span>
                 
                 <div className="w-12 h-12 lg:w-14 lg:h-14 bg-alice-blue border-3 lg:border-4 border-alice-blue rounded-2xl shadow-lg shadow-cobalt-blue flex items-center justify-center rotate-6">
                   <Image src="/images/logo_icon/ioslogo.png" alt="iOS Logo" width={48} height={48} className="w-10 h-10 lg:w-12 lg:h-12 rounded-xl" />
@@ -121,7 +125,7 @@ export default function HeroSection() {
                 <span className="text-eerie-black font-semibold">Roam<span className="text-cobalt-blue font-semibold">Jet</span></span>
               </div>
             </h1>
-            <p className="mx-auto max-w-4xl mt-8 text-base text-sm font-medium text-pretty text-gray-600 px-4 sm:px-0">
+            <p className="text-center mt-6 px-8 mx-auto max-w-4xl text-base text-xs lg:text-sm text-pretty text-gray-500">
               {t('hero.description')}
             </p>
               
@@ -131,18 +135,15 @@ export default function HeroSection() {
             <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-x-6 px-4 sm:px-0">
               <button
                 onClick={handleDownloadApp}
-                className="btn-primary w-full sm:w-auto"
-              >
+                className="btn-primary w-full sm:w-auto flex items-center justify-center gap-2"
+              ><Download className="w-5 h-5 mr-2" />
                 {t('hero.downloadApp')}
               </button>
               <button
                 onClick={handleCopyDiscountCode}
                 className="btn-secondary w-full sm:w-auto flex items-center justify-center gap-2"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                </svg>
-                {t('discount.get35Off', 'Get 35% OFF')}
+              ><Copy className="w-5 h-5 mr-2" />
+                {t('discount.get35Off', '35% OFF')}
               </button>
             </div>
           </div>
