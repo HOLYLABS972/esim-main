@@ -30,7 +30,7 @@ export default function PlansSection() {
   
   if (isLoading) {
     return (
-      <section className="py-16 bg-white relative overflow-hidden" dir={isRTL ? 'rtl' : 'ltr'}>
+      <section className="py-12 lg:py-16 bg-white relative overflow-hidden" dir={isRTL ? 'rtl' : 'ltr'}>
         <div className="container mx-auto px-4 relative z-10">
           <div className="animate-pulse space-y-8">
             <div className="text-center">
@@ -45,22 +45,22 @@ export default function PlansSection() {
   }
   
   // Reduce top padding for Hebrew and Arabic since Features section is hidden
-  const topPadding = (locale === 'he' || locale === 'ar') ? 'pt-8' : 'py-16';
+  const topPadding = (locale === 'he' || locale === 'ar') ? 'pt-8' : 'py-12 lg:py-16';
   
   return (
-    <section id="esim-plans" className={`${topPadding} pb-16 scroll-mt-20 bg-white relative overflow-hidden`} dir={isRTL ? 'rtl' : 'ltr'}>                                                                                                          
+    <section id="esim-plans" className={`${topPadding} pb-12 lg:pb-16 scroll-mt-20 bg-white relative overflow-hidden`} dir={isRTL ? 'rtl' : 'ltr'}>                                                                                                          
       <div className="container mx-auto px-4 relative z-10">
         
         {/* Section Header */}
-        <div className="text-center mb-16 max-w-4xl mx-auto">
-        <h2 className="text-center text-xl font-semibold text-tufts-blue"> <span>{'{ '}</span>
+        <div className="text-center mb-8 lg:mb-16 max-w-4xl mx-auto">
+        <h2 className="text-center text-lg lg:text-xl font-semibold text-tufts-blue"> <span>{'{ '}</span>
           {t('plans.title')}
           <span>{' }'}</span>
          </h2>
-         <p className="mx-auto mt-12 max-w-4xl text-center text-4xl font-semibold tracking-tight text-eerie-black sm:text-5xl">                                                                                        
+         <p className="mx-auto mt-12 max-w-4xl text-center text-2xl lg:text-3xl font-semibold tracking-tight text-eerie-black sm:text-5xl">                                                                                        
             {t('plans.subtitle')}
           </p>
-          <p className={`text-eerie-black max-w-3xl mx-auto mt-4 ${isRTL ? 'text-right' : 'text-left'}`}>
+          <p className={`text-eerie-black max-w-3xl mx-auto mt-4 items-center text-center text-sm lg:text-base ${isRTL ? 'text-right' : 'text-left'}`}>
             {t('plans.description')}
           </p>
         </div>

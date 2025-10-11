@@ -73,40 +73,33 @@ export default function ActivationSection() {
         ></div>
       </div>
 
-    
-
-      
-
       <div className="relative isolate">
-        {/* First Section - Activation Process */}
-        
 
-       
         {/* Second Section - App Downloads */}
-        <div className="container mx-auto px-4 relative z-10 pt-16 pb-16" id="AppLinksSection">
+        <div className="container mx-auto px-4 relative z-10 pt-12 pb-12" id="AppLinksSection">
           {/* Section Header */}
-          <div className="text-center mb-16">
-            <h2 className="text-center text-xl font-semibold text-alice-blue"> 
+          <div className="text-center mb-8 lg:mb-12">
+            <h2 className="text-center text-lg lg:text-xl font-semibold text-alice-blue"> 
               <span>{'{ '}</span>
               {t('activation.downloads')}
               <span>{' }'}</span>
             </h2>
-            <p className="mx-auto mt-12 max-w-4xl text-center text-4xl font-semibold tracking-tight text-white sm:text-5xl">
+            <p className="mx-auto mt-12 max-w-4xl text-center text-2xl lg:text-3xl font-semibold tracking-tight text-white sm:text-5xl">
               {t('activation.appAvailable')}
             </p>
           </div>
 
           {/* App Download Section with Phone Image */}
           <div className="max-w-6xl mx-auto">
-            <div className="bg-white/10 backdrop-blur-sm rounded-3xl p-8 lg:p-12 shadow-2xl">
-              <div className="grid lg:grid-cols-2 gap-8 items-center">
+            <div className="bg-white/10 backdrop-blur-sm rounded-3xl p-6 lg:p-12 shadow-2xl">
+              <div className="grid lg:grid-cols-2 gap-4 lg:gap-6 items-center">
                 {/* Phone Image - Left Side */}
                 <div className="flex justify-center lg:justify-start">
-                  <div className="relative max-w-sm">
+                  <div className="relative max-w-md lg:max-w-sm">
                     <Image
                       src="/images/logo_icon/phones.png"
                       alt="Mobile App on iPhone and Android"
-                      width={400}
+                      width={300}
                       height={300}
                       className="w-full h-auto"
                     />
@@ -114,16 +107,16 @@ export default function ActivationSection() {
                 </div>
                 
                 {/* App Store Links - Right Side */}
-                <div className="text-center lg:text-left space-y-6">
-                  <h3 className="text-3xl font-semibold text-white mb-4">
+                <div className="text-center lg:text-left space-y-4 lg:space-y-6">
+                  <h3 className="text-2xl lg:text-3xl font-semibold text-white mb-4">
                     {t('activation.downloadOurApp')}
                   </h3>
-                  <p className="text-white/90 text-lg leading-relaxed mb-8">
+                  <p className="text-white/90 text-base lg:text-lg leading-relaxed mb-4 lg:mb-8">
                     {t('activation.appDescription')}
                   </p>
                   
                   {/* App Store Buttons */}
-                  <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                  <div className="flex flex-col sm:flex-row gap-3 lg:gap-4 justify-center lg:justify-start">
                     {loading ? (
                       <div className="text-white">{t('activation.loadingAppLinks')}</div>
                     ) : (
@@ -173,45 +166,50 @@ export default function ActivationSection() {
             </div>
           </div>
         </div>
-      <div className="mx-auto max-w-7xl  pb-12">
-       <h2 className="text-center text-xl font-semibold text-alice-blue"> <span>{'{ '}</span>
+      <div className="mx-auto max-w-7xl  pb-6 lg:pb-12">
+       <h2 className="text-center text-lg lg:text-xl font-semibold text-alice-blue"> <span>{'{ '}</span>
             {t('activation.activationProcess')}
           <span>{' }'}</span>
          </h2>
-          <div className="relative isolate overflow-hidden bg-eerie-black px-6 pt-8  sm:rounded-3xl sm:px-16 md:pt-12 lg:flex lg:gap-x-20 lg:px-24 lg:pt-0">
+          <div className="relative isolate overflow-hidden bg-eerie-black px-6 pt-4 lg:pt-8  sm:rounded-3xl sm:px-16 md:pt-12 lg:flex lg:gap-x-20 lg:px-24 lg:pt-0">
             
             {/* Content Section */}
             
-            <div className="mx-auto max-w-md text-center lg:mx-0 lg:flex-auto lg:py-16 lg:text-left">
-              <h3 className="mt-6 text-xl text-pretty text-white">
+            <div className="mx-auto max-w-md text-start lg:mx-0 lg:flex-auto lg:py-8 lg:py-16 lg:text-left">
+              <h3 className="mt-6 text-lg lg:text-xl text-pretty text-center text-white">
                 {t('activation.followSteps')}
               </h3>
               
               {/* Step-by-step Instructions */}
-              <div className="mt-12 space-y-8">
+              <div className="mt-6 lg:mt-12 space-y-4 lg:space-y-8">
                 {/* Step 1 */}
-                <div className="flex items-start space-x-4">
+                <div className="flex items-start space-x-4 rtl:space-x-reverse rtl:items-end">
                   <div className="flex-shrink-0">
-                    <div className="w-10 h-10 bg-cobalt-blue rounded-full flex items-center justify-center">
+                    <div className="w-8 lg:w-10 h-8 lg:h-10 bg-cobalt-blue rounded-full flex items-center justify-center">
                       <span className="text-white font-bold text-lg">1</span>
                     </div>
                   </div>
-                  <div>
-                    <h3 className="text-xl font-semibold text-white mb-2">{t('activation.step1.title')}</h3>
-                    <p className="text-gray-300">{t('activation.step1.description')}</p>
+                  <div className="rtl:text-right">
+                    <h3 className="text-base lg:text-lg font-semibold text-white mb-2">{t('activation.step1.title')}</h3>
+                    <p className="text-gray-300 text-sm lg:text-base">{t('activation.step1.description').split('\n').map((line, index) => (
+                        <span key={index}>
+                          {line}
+                          {index < t('activation.step1.description').split('\n').length - 1 && <br />}
+                        </span>
+                      ))}</p>
                   </div>
                 </div>
 
                 {/* Step 2 */}
-                <div className="flex items-start space-x-4">
+                <div className="flex items-start space-x-4 rtl:space-x-reverse rtl:flex-row-reverse">
                   <div className="flex-shrink-0">
-                    <div className="w-10 h-10 bg-cobalt-blue rounded-full flex items-center justify-center">
+                    <div className="w-8 lg:w-10 h-8 lg:h-10 bg-cobalt-blue rounded-full flex items-center justify-center">
                       <span className="text-white font-bold text-lg">2</span>
                     </div>
                   </div>
-                  <div>
-                    <h3 className="text-xl font-semibold text-white mb-2">{t('activation.step2.title')}</h3>
-                    <p className="text-gray-300">
+                  <div className="rtl:text-right">
+                    <h3 className="text-base lg:text-lg font-semibold text-white mb-2">{t('activation.step2.title')}</h3>
+                    <p className="text-gray-300 text-sm lg:text-base">
                       {t('activation.step2.description').split('\n').map((line, index) => (
                         <span key={index}>
                           {line}
@@ -223,35 +221,45 @@ export default function ActivationSection() {
                 </div>
 
                 {/* Step 3 */}
-                <div className="flex items-start space-x-4">
+                <div className="flex items-start space-x-4 rtl:space-x-reverse rtl:flex-row-reverse">
                   <div className="flex-shrink-0">
-                    <div className="w-10 h-10 bg-cobalt-blue rounded-full flex items-center justify-center">
+                    <div className="w-8 lg:w-10 h-8 lg:h-10 bg-cobalt-blue rounded-full flex items-center justify-center">
                       <span className="text-white font-bold text-lg">3</span>
                     </div>
                   </div>
-                  <div>
-                    <h3 className="text-xl font-semibold text-white mb-2">{t('activation.step3.title')}</h3>
-                    <p className="text-gray-300">{t('activation.step3.description')}</p>
+                  <div className="rtl:text-right">
+                    <h3 className="text-base lg:text-lg font-semibold text-white mb-2">{t('activation.step3.title')}</h3>
+                    <p className="text-gray-300 text-sm lg:text-base">{t('activation.step3.description').split('\n').map((line, index) => (
+                        <span key={index}>
+                          {line}
+                          {index < t('activation.step3.description').split('\n').length - 1 && <br />}
+                        </span>
+                      ))}</p>
                   </div>
                 </div>
 
                 {/* Step 4 */}
-                <div className="flex items-start space-x-4">
+                <div className="flex items-start space-x-4 rtl:space-x-reverse rtl:flex-row-reverse">
                   <div className="flex-shrink-0">
-                    <div className="w-10 h-10 bg-cobalt-blue rounded-full flex items-center justify-center">
+                    <div className="w-8 lg:w-10 h-8 lg:h-10 bg-cobalt-blue rounded-full flex items-center justify-center">
                       <span className="text-white font-bold text-lg">✓</span>
                     </div>
                   </div>
-                  <div>
-                    <h3 className="text-xl font-semibold text-white mb-2">{t('activation.step4.title')}</h3>
-                    <p className="text-gray-300">{t('activation.step4.description')}</p>
+                  <div className="rtl:text-right">
+                    <h3 className="text-base lg:text-lg font-semibold text-white mb-2">{t('activation.step4.title')}</h3>
+                    <p className="text-gray-300 text-sm lg:text-base">{t('activation.step4.description').split('\n').map((line, index) => (
+                        <span key={index}>
+                          {line}
+                          {index < t('activation.step4.description').split('\n').length - 1 && <br />}
+                        </span>
+                      ))}</p>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Image Section - Right Column */}
-            <div className="relative mt-16 h-80 lg:mb-0">
+            <div className="relative mt-12 lg:mt-16 h-80 lg:mb-0">
               <div className="flex justify-end lg:justify-end">
                 <div className="max-w-md lg:max-w-lg xl:max-w-xl">
                   <Image 

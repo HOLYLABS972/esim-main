@@ -238,15 +238,15 @@ const Contact = () => {
       <section className="bg-white">
         <div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8">
           <div className="text-center">
-            <h2 className="text-center text-xl font-semibold text-tufts-blue">
+            <h2 className="text-center text-lg lg:text-xl font-semibold text-tufts-blue">
               <span>{'{ '}</span>
               {t('contact.title', 'Get in touch')}
               <span>{' }'}</span>
             </h2>
-            <p className="mx-auto mt-12 max-w-4xl text-center text-4xl font-semibold tracking-tight text-eerie-black sm:text-5xl">
+            <p className="mx-auto mt-12 max-w-4xl text-center text-2xl lg:text-3xl font-semibold tracking-tight text-eerie-black sm:text-5xl">
               {t('contact.subtitle', "We're here to help with all your eSIM needs")}
             </p>
-            <p className="mx-auto mt-6 max-w-2xl text-center text-lg text-cool-black mb-5">
+            <p className="mx-auto mt-6 max-w-2xl text-center text-sm lg:text-base text-cool-black mb-5">
               {t('contact.description', 'Get in touch with our team for support, questions, or partnerships. We\'re here to help with all your connectivity needs.')}
             </p>
           </div>
@@ -261,9 +261,9 @@ const Contact = () => {
             <div className="relative">
               <div className="absolute inset-px rounded-xl bg-white"></div>
               <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
-                <div className="px-8 pt-8 pb-8">
+                <div className="px-6 lg:px-8 pt-6 lg:pt-8 pb-6 lg:pb-8">
                   <h2 
-                    className="text-2xl font-medium tracking-tight text-eerie-black mb-6"
+                    className="text-lg lg:text-xl font-medium tracking-tight text-eerie-black mb-6"
                     style={{ textAlign: isRTL ? 'right' : 'left' }}
                   >
                     {t('contact.sendMessage', 'Send us a Message')}
@@ -272,7 +272,7 @@ const Contact = () => {
                     <div>
                       <label 
                         htmlFor="name" 
-                        className="block text-sm font-medium text-cool-black mb-2"
+                        className="block text-sm lg:text-base font-medium text-cool-black mb-2"
                         style={{ textAlign: isRTL ? 'right' : 'left' }}
                       >
                         {t('contact.fullName', 'Full Name')}
@@ -300,7 +300,7 @@ const Contact = () => {
                     <div>
                       <label 
                         htmlFor="email" 
-                        className="block text-sm font-medium text-cool-black mb-2"
+                        className="block text-sm lg:text-base font-medium text-cool-black mb-2"
                         style={{ textAlign: isRTL ? 'right' : 'left' }}
                       >
                         {t('contact.emailAddress', 'Email Address')}
@@ -329,7 +329,7 @@ const Contact = () => {
                     <div>
                       <label 
                         htmlFor="message" 
-                        className="block text-sm font-medium text-cool-black mb-2"
+                        className="block text-sm lg:text-base font-medium text-cool-black mb-2"
                         style={{ textAlign: isRTL ? 'right' : 'left' }}
                       >
                         {t('contact.message', 'Message')}
@@ -379,14 +379,14 @@ const Contact = () => {
 
 
             {/* Office Information */}
-            <div className="space-y-8">
+            <div className="space-y-6 lg:space-y-8">
               <div className="relative">
                 <div className="absolute inset-px rounded-xl bg-white"></div>
                 <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
-                  <div className="px-8 pt-8 pb-8">
-                    <div className={`flex items-center mb-6 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <div className="px-6 lg:px-8 pt-6 lg:pt-8 pb-6 lg:pb-8">
+                    <div className={`flex items-center mb-3 lg:mb-6 ${isRTL ? 'flex-row-reverse' : ''}`}>
                       <Building className={`w-8 h-8 text-tufts-blue ${isRTL ? 'ml-3' : 'mr-3'}`} />
-                      <h2 className={`text-2xl font-medium tracking-tight text-eerie-black ${isRTL ? 'text-right' : 'text-left'}`}>{t('contact.ourOffice', 'Our Office')}</h2>
+                      <h2 className={`text-lg lg:text-xl font-medium tracking-tight text-eerie-black ${isRTL ? 'text-right' : 'text-left'}`}>{t('contact.ourOffice', 'Our Office')}</h2>
                     </div>
                 
                     {(() => {
@@ -396,22 +396,22 @@ const Contact = () => {
                       }
                       
                       return (
-                        <div className="space-y-4">
+                        <div className="space-y-3 lg:space-y-6">
                           <div>
-                            <h3 className={`text-lg font-medium text-eerie-black mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>
+                            <h3 className={`text-lg lg:text-xl font-medium text-eerie-black mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>
                               {office.companyName}
                             </h3>
-                            <div className="space-y-2 text-cool-black">
+                            <div className="space-y-2 text-cool-black text-sm lg:text-base">
                               {office.address && office.address.trim() !== '' && (
                                 <p className={`flex items-start ${isRTL ? 'flex-row-reverse text-right' : 'text-left'}`}>
                                   <MapPin className={`w-5 h-5 mt-0.5 text-tufts-blue flex-shrink-0 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                                  <span>{office.address}</span>
+                                  <span className="text-sm lg:text-base">{office.address}</span>
                                 </p>
                               )}
                               {office.phone && office.phone.trim() !== '' && (
                                 <p className={`flex items-center ${isRTL ? 'flex-row-reverse text-right' : 'text-left'}`}>
                                   <Phone className={`w-5 h-5 text-tufts-blue ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                                  <a href="https://t.me/theholylabs" className="text-tufts-blue hover:text-cobalt-blue transition-colors duration-200">
+                                  <a href="https://t.me/theholylabs" className="text-tufts-blue text-sm lg:text-base hover:text-cobalt-blue transition-colors duration-200">
                                     {office.phone}
                                   </a>
                                 </p>
@@ -419,7 +419,7 @@ const Contact = () => {
                               {office.email && office.email.trim() !== '' && (
                                 <p className={`flex items-center ${isRTL ? 'flex-row-reverse text-right' : 'text-left'}`}>
                                   <Mail className={`w-5 h-5 text-tufts-blue ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                                  <a href={`mailto:${office.email}`} className="text-tufts-blue hover:text-cobalt-blue transition-colors duration-200">
+                                  <a href={`mailto:${office.email}`} className="text-tufts-blue text-sm lg:text-base hover:text-cobalt-blue transition-colors duration-200">
                                     {office.email}
                                   </a>
                                 </p>
@@ -438,12 +438,12 @@ const Contact = () => {
               <div className="relative">
                 <div className="absolute inset-px rounded-xl bg-white"></div>
                 <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
-                  <div className="px-8 pt-8 pb-8">
-                    <div className={`flex items-center mb-6 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <div className="px-6 lg:px-8 pt-6 lg:pt-8 pb-6 lg:pb-8">
+                    <div className={`flex items-center mb-4 lg:mb-6 ${isRTL ? 'flex-row-reverse' : ''}`}>
                       <Clock className={`w-8 h-8 text-tufts-blue ${isRTL ? 'ml-3' : 'mr-3'}`} />
-                      <h3 className={`text-xl font-medium tracking-tight text-eerie-black ${isRTL ? 'text-right' : 'text-left'}`}>{t('contact.businessHours', 'Business Hours')}</h3>
+                      <h3 className={`text-lg lg:text-xl font-medium tracking-tight text-eerie-black ${isRTL ? 'text-right' : 'text-left'}`}>{t('contact.businessHours', 'Business Hours')}</h3>
                     </div>
-                    <div className="space-y-3 text-cool-black">
+                    <div className="space-y-3 text-cool-black text-sm lg:text-base">
                       {Object.entries(businessHours).map(([day, hours]) => {
                         const dayName = day.charAt(0).toUpperCase() + day.slice(1);
                         const isClosed = hours.closed;
@@ -471,18 +471,18 @@ const Contact = () => {
       </section>
 
       {/* FAQ Section */}
-      <section className="bg-white py-16">
+      <section className="bg-white py-12 lg:py-16">
         <div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-center text-xl font-semibold text-tufts-blue">
+            <h2 className="text-center text-lg lg:text-xl font-semibold text-tufts-blue">
               <span>{'{ '}</span>
               {t('contact.helpCenter', 'Help Center')}
               <span>{' }'}</span>
             </h2>
-            <p className="mx-auto mt-6 max-w-4xl text-center text-3xl font-semibold tracking-tight text-eerie-black sm:text-4xl">
+            <p className="mx-auto mt-6 max-w-4xl text-center text-2xl lg:text-3xl font-semibold tracking-tight text-eerie-black sm:text-4xl">
               {t('contact.faqTitle', 'Frequently Asked Questions')}
             </p>
-            <p className="mx-auto mt-4 max-w-2xl text-center text-lg text-cool-black">
+            <p className="mx-auto mt-4 max-w-2xl text-center text-sm lg:text-base text-cool-black">
               {t('contact.faqDescription', 'Find quick answers to common questions about our eSIM services')}
             </p>
           </div>
@@ -497,15 +497,15 @@ const Contact = () => {
                 >
                   <div className="absolute inset-px rounded-xl bg-white"></div>
                   <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
-                    <div className="px-8 pt-8 pb-8">
-                      <div className={`flex items-center mb-6 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <div className="px-6 lg:px-8 pt-6 lg:pt-8 pb-6 lg:pb-8">
+                      <div className={`flex items-center mb-3 lg:mb-6 ${isRTL ? 'flex-row-reverse' : ''}`}>
                         <div className={`w-12 h-12 bg-tufts-blue/10 rounded-xl flex items-center justify-center ${isRTL ? 'ml-4' : 'mr-4'}`}>
                           <CategoryIcon className="w-6 h-6 text-tufts-blue" />
                         </div>
-                        <h3 className={`text-xl font-medium tracking-tight text-eerie-black ${isRTL ? 'text-right' : 'text-left'}`}>{category.title}</h3>
+                        <h3 className={`text-lg lg:text-xl font-medium tracking-tight text-eerie-black ${isRTL ? 'text-right' : 'text-left'}`}>{category.title}</h3>
                       </div>
                       
-                      <div className="space-y-3">
+                      <div className="space-y-3 lg:space-y-6">
                         {category.faqs.map((faq, faqIndex) => {
                           const isOpen = openFaq === `${categoryIndex}-${faqIndex}`;
                           return (
@@ -522,7 +522,7 @@ const Contact = () => {
                                 )}
                               </button>
                               {isOpen && (
-                                <div className="px-4 pb-3">
+                                <div className="px-4 pb-3 lg:pb-6">
                                   <p className={`text-cool-black leading-relaxed text-sm ${isRTL ? 'text-right' : 'text-left'}`}>{faq.answer}</p>
                                 </div>
                               )}

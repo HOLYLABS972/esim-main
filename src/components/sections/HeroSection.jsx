@@ -139,12 +139,7 @@ export default function HeroSection() {
               ><Download className="w-5 h-5 mr-2" />
                 {t('hero.downloadApp')}
               </button>
-              <button
-                onClick={handleCopyDiscountCode}
-                className="btn-secondary w-full sm:w-auto flex items-center justify-center gap-2 hidden sm:flex"
-              ><Copy className="w-5 h-5 mr-2" />
-                {t('hero.get35Off', '35% OFF')}
-              </button>
+              
             </div>
           </div>
 

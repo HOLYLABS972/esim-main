@@ -9,6 +9,7 @@ import { useAuth } from '../contexts/AuthContext';
 import LanguageSelector from './LanguageSelector';
 import { detectLanguageFromPath, getLocalizedBlogListUrl } from '../utils/languageUtils';
 import { trackCustomFacebookEvent } from '../utils/facebookPixel';
+import { Download, MessageCircle, BookOpen, Package, LayoutDashboard, LogOut, LogIn } from 'lucide-react';
 
 const Navbar = ({ hideLanguageSelector = false }) => {
   const { t, locale } = useI18n();
@@ -209,47 +210,53 @@ const Navbar = ({ hideLanguageSelector = false }) => {
             </div>
             
             {/* Centered menu items */}
-            <div className="flex flex-col items-center justify-center mt-20">
-              <div className="space-y-8 text-center">
+            <div className="flex flex-col items-center justify-center min-h-[60vh]">
+              <div className="space-y-4 text-center">
                 {/* Main Navigation Group */}
-                <div className="p-4 w-full max-w-xs">
+                <div className=" w-full max-w-sm">
+                  
                   <button
                     onClick={() => {
                       handleDownloadApp();
                       setIsMenuOpen(false);
                     }}
-                    className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2 w-full bg-transparent border-none cursor-pointer"
-                  >
-                    {t('navbar.downloadApp', 'Download App')}
+                    className="flex items-center text-left text-xl   font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 mb-2 w-full bg-transparent border-none cursor-pointer"
+                  > 
+                    <Download className="w-5 h-5 mx-2" />                    
+                    {t('navbar.downloadApp', 'Download App')} 
                   </button>
                   <Link
                     href={getLocalizedUrl('/contact')}
-                    className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2"
+                    className="flex items-center text-left text-xl font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 mb-2"
                     onClick={() => setIsMenuOpen(false)}
                   >
+                    <MessageCircle className="w-5 h-5 mx-2" />
                     {t('navbar.contactUs', 'Contact Us')}
                   </Link>
                   <Link
                     href={getLocalizedBlogListUrl(currentLanguage)}
-                    className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2"
+                    className="flex items-center text-left text-xl font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 mb-2"
                     onClick={() => setIsMenuOpen(false)}
                   >
+                    <BookOpen className="w-5 h-5 mx-2" />
                     {t('navbar.blog', 'Blog')}
                   </Link>
                   {currentUser ? (
                     <>
                       <Link
                         href={getLocalizedUrl("/esim-plans")}
-                        className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2"
+                        className="flex items-center text-left text-xl font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 mb-2"
                         onClick={() => setIsMenuOpen(false)}
                       >
+                        <Package className="w-5 h-5 mx-2" />
                         {t('navbar.plans', 'Plans')}
                       </Link>
                       <Link
                         href={getLocalizedUrl("/dashboard")}
-                        className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2"
+                        className="flex items-center text-left text-xl font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 mb-2"
                         onClick={() => setIsMenuOpen(false)}
                       >
+                        <LayoutDashboard className="w-5 h-5 mx-2" />
                         {t('navbar.dashboard', 'Dashboard')}
                       </Link>
                       <button
@@ -257,17 +264,19 @@ const Navbar = ({ hideLanguageSelector = false }) => {
                           handleLogout();
                           setIsMenuOpen(false);
                         }}
-                        className="block w-full text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2"
+                        className="flex items-center text-left w-full text-xl font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 mb-2"
                       >
+                        <LogOut className="w-5 h-5 mx-2" />
                         {t('navbar.logout', 'Logout')}
                       </button>
                     </>
                   ) : (
                     <Link
                       href={getLocalizedUrl('/login')}
-                      className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2"
+                      className="flex items-center text-left text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 mb-2"
                       onClick={() => setIsMenuOpen(false)}
                     >
+                      <LogIn className="w-5 h-5 mx-2" />
                       {t('navbar.login', 'Login')}
                     </Link>
                   )}
