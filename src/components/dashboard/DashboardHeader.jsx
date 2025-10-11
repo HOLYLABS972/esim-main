@@ -21,7 +21,7 @@ const DashboardHeader = ({ currentUser, userProfile, onShowReferralSheet }) => {
   const currentLanguage = getCurrentLanguage();
   const isRTL = getLanguageDirection(currentLanguage) === 'rtl';
   return (
-    <section className="bg-white py-2 lg:py-4 mt-10 lg:mt-16" dir={isRTL ? 'rtl' : 'ltr'}>
+    <section className="bg-white py-2 lg:py-2 mt-10 lg:mt-16" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="mx-auto max-w-2xl px-4 lg:max-w-7xl lg:px-8 py-2 lg:py-4">
         <div className="relative">
           <div className="absolute inset-px rounded-xl border-2 border-gray-200/50 shadow-xl shadow-gray-200/50 bg-white"></div>
@@ -41,7 +41,7 @@ const DashboardHeader = ({ currentUser, userProfile, onShowReferralSheet }) => {
                   >
                   
                   <div>
-                    <h1 className={`text-2xl sm:text-3xl font-medium tracking-tight text-eerie-black text-left ${isRTL ? 'md:text-right' : ''}`}>
+                    <h1 className={`text-2xl sm:text-3xl font-medium tracking-tight text-eerie-black text-left ${isRTL ? 'text-right' : ''}`}>
                         {t('dashboard.welcomeBack', 'Welcome back, {{name}}!', { name: currentUser.displayName || currentUser.email })}
                     </h1>
                     <p className={`text-cool-black mt-2 text-sm sm:text-base text-left ${isRTL ? 'text-right' : ''}`}>

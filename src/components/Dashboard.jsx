@@ -812,8 +812,7 @@ const Dashboard = () => {
         onLoadUserProfile={loadUserProfile}
       />
 
-      {/* Spacing after dashboard */}
-      <div className="h-20"></div>
+   
 
       {/* QR Code Modal */}
       <QRCodeModal 

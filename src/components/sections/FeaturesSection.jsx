@@ -46,7 +46,7 @@ export default function FeaturesSection() {
   }
   
   return (
-    <div className="features-section hidden md:block bg-white py-16 sm:py-24 lg:py-32">
+    <div className="features-section hidden md:block bg-white py-8 sm:py-16 lg:py-24">
       <div className="mx-auto max-w-2xl px-4 sm:px-6 lg:max-w-7xl lg:px-8">
         <h2 className="text-center text-lg sm:text-xl font-semibold text-tufts-blue"> <span>{'{ '}</span>
           {t('features.title')}

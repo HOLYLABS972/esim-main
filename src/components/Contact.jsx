@@ -233,10 +233,10 @@ const Contact = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white py-6" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen bg-white py-6 " dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Header Section */}
       <section className="bg-white">
-        <div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8">
+        <div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8 mt-8">
           <div className="text-center">
             <h2 className="text-center text-lg lg:text-xl font-semibold text-tufts-blue">
               <span>{'{ '}</span>
@@ -255,12 +255,12 @@ const Contact = () => {
 
       {/* Contact Form and Office Info */}
       <section className="bg-white">
-        <div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-6" style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
+        <div className="mx-auto max-w-2xl px-4 lg:max-w-7xl lg:px-8">
+          <div className="grid lg:grid-cols-2 gap-4" style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
             {/* Contact Form */}
             <div className="relative">
               <div className="absolute inset-px rounded-xl bg-white"></div>
-              <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
+              <div className="relative flex h-full flex-col overflow-hidden rounded-xl border-4 border-gray-200/50 shadow-xl shadow-gray-200/50">
                 <div className="px-6 lg:px-8 pt-6 lg:pt-8 pb-6 lg:pb-8">
                   <h2 
                     className="text-lg lg:text-xl font-medium tracking-tight text-eerie-black mb-6"
@@ -382,7 +382,7 @@ const Contact = () => {
             <div className="space-y-6 lg:space-y-8">
               <div className="relative">
                 <div className="absolute inset-px rounded-xl bg-white"></div>
-                <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
+                <div className="relative flex h-full flex-col overflow-hidden rounded-xl border-4 border-gray-200/50 shadow-xl shadow-gray-200/50">
                   <div className="px-6 lg:px-8 pt-6 lg:pt-8 pb-6 lg:pb-8">
                     <div className={`flex items-center mb-3 lg:mb-6 ${isRTL ? 'flex-row-reverse' : ''}`}>
                       <Building className={`w-8 h-8 text-tufts-blue ${isRTL ? 'ml-3' : 'mr-3'}`} />
@@ -437,7 +437,7 @@ const Contact = () => {
               {/* Business Hours */}
               <div className="relative">
                 <div className="absolute inset-px rounded-xl bg-white"></div>
-                <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
+                <div className="relative flex h-full flex-col overflow-hidden rounded-xl border-4 border-gray-200/50 shadow-xl shadow-gray-200/50">
                   <div className="px-6 lg:px-8 pt-6 lg:pt-8 pb-6 lg:pb-8">
                     <div className={`flex items-center mb-4 lg:mb-6 ${isRTL ? 'flex-row-reverse' : ''}`}>
                       <Clock className={`w-8 h-8 text-tufts-blue ${isRTL ? 'ml-3' : 'mr-3'}`} />
@@ -471,15 +471,15 @@ const Contact = () => {
       </section>
 
       {/* FAQ Section */}
-      <section className="bg-white py-12 lg:py-16">
-        <div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8">
+      <section className="bg-white py-12 lg:py-16 ">
+        <div className="mx-auto max-w-2xl px-4 lg:max-w-7xl lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-center text-lg lg:text-xl font-semibold text-tufts-blue">
+            <h2 className="text-center text-base lg:text-lg font-semibold text-tufts-blue">
               <span>{'{ '}</span>
               {t('contact.helpCenter', 'Help Center')}
               <span>{' }'}</span>
             </h2>
-            <p className="mx-auto mt-6 max-w-4xl text-center text-2xl lg:text-3xl font-semibold tracking-tight text-eerie-black sm:text-4xl">
+            <p className="mx-auto mt-6 max-w-4xl text-center text-2xl lg:text-3xl font-semibold tracking-tight text-eerie-black sm:text-3xl">
               {t('contact.faqTitle', 'Frequently Asked Questions')}
             </p>
             <p className="mx-auto mt-4 max-w-2xl text-center text-sm lg:text-base text-cool-black">
@@ -487,7 +487,7 @@ const Contact = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6" style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4" style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
             {faqCategories.map((category, categoryIndex) => {
               const CategoryIcon = category.icon;
               return (
@@ -496,8 +496,8 @@ const Contact = () => {
                   className="relative"
                 >
                   <div className="absolute inset-px rounded-xl bg-white"></div>
-                  <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
-                    <div className="px-6 lg:px-8 pt-6 lg:pt-8 pb-6 lg:pb-8">
+                  <div className="relative flex h-full flex-col overflow-hidden rounded-xl border-4 border-gray-200/50 shadow-xl shadow-gray-200/50 ">
+                    <div className="px-4 lg:px-6 pt-6 lg:pt-8 pb-6 lg:pb-8">
                       <div className={`flex items-center mb-3 lg:mb-6 ${isRTL ? 'flex-row-reverse' : ''}`}>
                         <div className={`w-12 h-12 bg-tufts-blue/10 rounded-xl flex items-center justify-center ${isRTL ? 'ml-4' : 'mr-4'}`}>
                           <CategoryIcon className="w-6 h-6 text-tufts-blue" />

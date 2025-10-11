@@ -6,10 +6,10 @@ const AffiliateHeader = ({ onBack }) => {
   const { t } = useI18n();
 
   return (
-    <div className="flex items-center space-x-3 sm:space-x-4">
+    <div className="flex items-center space-x-3 sm:space-x-4 justify-start">
       <button
         onClick={onBack}
-        className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
+        className="p-1.5 sm:p-2 rounded-full transition-colors flex-shrink-0"
       >
         <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 text-cool-black" />
       </button>

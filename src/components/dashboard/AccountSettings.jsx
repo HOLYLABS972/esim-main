@@ -110,15 +110,15 @@ const AccountSettings = ({ currentUser, userProfile, onLoadUserProfile }) => {
   };
 
   return (
-    <section className="bg-white py-8 sm:py-12 lg:py-16 account-settings" dir={isRTL ? 'rtl' : 'ltr'}>
+    <section className="bg-white py-4 sm:py-8 lg:py-12 account-settings" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="mx-auto max-w-2xl px-4 lg:max-w-7xl lg:px-8">
         <div className="relative">
           <div className="absolute inset-px rounded-xl border-2 border-gray-200/50 shadow-xl shadow-gray-200/50 bg-white"></div>
           <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
             <div className="px-4 pt-6 pb-6 md:px-8 md:pt-8 md:pb-8">
-              <div className={`flex ${isRTL ? 'flex-row-reverse' : ''} mb-6 sm:mb-8`}>
-                <Settings className={`w-6 h-6 text-tufts-blue ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                <h2 className={`text-lg sm:text-xl lg:text-2xl font-medium tracking-tight text-eerie-black ${isRTL ? 'text-right' : 'text-left'}`}>
+              <div className={`flex flex-row mb-6 sm:mb-8 items-start justify-start`}>
+                <Settings className={`w-6 h-6 text-tufts-blue ${isRTL ? 'hidden' : 'mr-2'}`} />
+                <h2 className={`text-lg sm:text-xl lg:text-2xl font-medium tracking-tight text-eerie-black items-start`}>
                   {t('dashboard.accountSettings', 'Account Settings')}
                 </h2>
               </div>
@@ -126,13 +126,13 @@ const AccountSettings = ({ currentUser, userProfile, onLoadUserProfile }) => {
               <div className="space-y-6 sm:space-y-8">
                 {/* Personal Information */}
                 <div>
-                  <h3 className={`text-base sm:text-lg font-medium text-eerie-black mb-3 sm:mb-4 ${isRTL ? 'text-right' : 'text-left'}`}>
-                    {t('dashboard.personalInformation', 'Personal Information')}
+                  <h3 className={`text-base sm:text-lg font-medium text-eerie-black mb-3 sm:mb-4 items-start text-left`}>
+                    {t('dashboard.personalInformation', 'Personal Information')} 
                   </h3>
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                     {/* Email */}
                     <div className="space-y-2">
-                      <label className={`block text-xs sm:text-sm font-medium text-cool-black ${isRTL ? 'text-right' : 'text-left'}`}>
+                      <label className={`block text-xs sm:text-sm font-medium text-cool-black items-start text-left`}>
                         {isRTL ? (
                           <>
                             {t('dashboard.emailAddress', 'Email Address')}
@@ -145,7 +145,7 @@ const AccountSettings = ({ currentUser, userProfile, onLoadUserProfile }) => {
                           </>
                         )}
                       </label>
-                      <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 bg-gray-50 rounded-lg space-y-2 sm:space-y-0 ${isRTL ? 'sm:flex-row-reverse' : ''}`}>
+                      <div className={`flex flex-col flex-row justify-between p-3 bg-gray-50 rounded-lg space-y-2 sm:space-y-0`}>
                         <span className="text-eerie-black text-sm break-all">{currentUser.email}</span>
                         <span className="text-xs text-cool-black bg-gray-200 px-2 py-1 rounded self-start sm:self-auto">
                           {t('dashboard.verified', 'Verified')}
@@ -155,7 +155,7 @@ const AccountSettings = ({ currentUser, userProfile, onLoadUserProfile }) => {
 
                     {/* Name */}
                     <div className="space-y-2">
-                      <label className={`block text-xs sm:text-sm font-medium text-cool-black ${isRTL ? 'text-right' : 'text-left'}`}>
+                      <label className={`block text-xs sm:text-sm font-medium text-cool-black items-start text-left`}>
                         {isRTL ? (
                           <>
                             {t('dashboard.displayName', 'Display Name')}
@@ -169,7 +169,7 @@ const AccountSettings = ({ currentUser, userProfile, onLoadUserProfile }) => {
                         )}
                       </label>
                       {editingName ? (
-                        <div className={`flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 ${isRTL ? 'sm:space-x-reverse sm:space-x-2' : 'sm:space-x-2'}`}>
+                        <div className={`flex flex-col flex-row space-y-2 sm:space-y-0`}>
                           <input
                             type="text"
                             value={newName}
@@ -178,7 +178,7 @@ const AccountSettings = ({ currentUser, userProfile, onLoadUserProfile }) => {
                             placeholder={t('dashboard.enterYourName', 'Enter your name')}
                             style={{ direction: isRTL ? 'rtl' : 'ltr' }}
                           />
-                          <div className={`flex ${isRTL ? 'space-x-reverse space-x-2' : 'space-x-2'}`}>
+                          <div className={`flex space-x-2`}>
                             <button
                               onClick={handleUpdateName}
                               disabled={isUpdating}
@@ -195,7 +195,7 @@ const AccountSettings = ({ currentUser, userProfile, onLoadUserProfile }) => {
                           </div>
                         </div>
                       ) : (
-                        <div className={`flex items-center justify-between p-3 bg-gray-50 rounded-lg ${isRTL ? 'flex-row-reverse' : ''}`}>
+                        <div className={`flex flex-col flex-row justify-between p-3 bg-gray-50 rounded-lg`}>
                           <span className="text-eerie-black text-sm">{currentUser.displayName || t('dashboard.notSet', 'Not set')}</span>
                           <button
                             onClick={() => setEditingName(true)}
@@ -209,7 +209,7 @@ const AccountSettings = ({ currentUser, userProfile, onLoadUserProfile }) => {
 
                     {/* Phone Number */}
                     <div className="space-y-2">
-                      <label className={`block text-xs sm:text-sm font-medium text-cool-black ${isRTL ? 'text-right' : 'text-left'}`}>
+                      <label className={`block text-xs sm:text-sm font-medium text-cool-black items-start text-left`}>
                         {isRTL ? (
                           <>
                             {t('dashboard.phoneNumber', 'Phone Number')}
@@ -223,7 +223,7 @@ const AccountSettings = ({ currentUser, userProfile, onLoadUserProfile }) => {
                         )}
                       </label>
                       {editingPhone ? (
-                        <div className={`flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 ${isRTL ? 'sm:space-x-reverse sm:space-x-2' : 'sm:space-x-2'}`}>
+                        <div className={`flex flex-col flex-row space-y-2 sm:space-y-0`}>
                           <input
                             type="tel"
                             value={newPhone}
@@ -232,7 +232,7 @@ const AccountSettings = ({ currentUser, userProfile, onLoadUserProfile }) => {
                             placeholder={t('dashboard.enterYourPhone', 'Enter your phone number')}
                             style={{ direction: isRTL ? 'rtl' : 'ltr' }}
                           />
-                          <div className={`flex ${isRTL ? 'space-x-reverse space-x-2' : 'space-x-2'}`}>
+                          <div className={`flex space-x-2`}>
                             <button
                               onClick={handleUpdatePhone}
                               disabled={isUpdating}
@@ -249,7 +249,7 @@ const AccountSettings = ({ currentUser, userProfile, onLoadUserProfile }) => {
                           </div>
                         </div>
                       ) : (
-                        <div className={`flex items-center justify-between p-3 bg-gray-50 rounded-lg ${isRTL ? 'flex-row-reverse' : ''}`}>
+                        <div className={`flex flex-col flex-row justify-between p-3 bg-gray-50 rounded-lg`}>
                           <span className="text-eerie-black text-sm">{userProfile?.phoneNumber || t('dashboard.notSet', 'Not set')}</span>
                           <button
                             onClick={() => setEditingPhone(true)}
@@ -263,7 +263,7 @@ const AccountSettings = ({ currentUser, userProfile, onLoadUserProfile }) => {
 
                     {/* Account Info */}
                     <div className="space-y-2">
-                      <label className={`block text-sm font-medium text-cool-black ${isRTL ? 'text-right' : 'text-left'}`}>
+                      <label className={`block text-sm font-medium text-cool-black items-start text-left`}>
                         {t('dashboard.accountCreated', 'Account Created')}
                       </label>
                       <div className="p-3 bg-gray-50 rounded-lg">
@@ -294,12 +294,12 @@ const AccountSettings = ({ currentUser, userProfile, onLoadUserProfile }) => {
 
                 {/* Security */}
                 <div>
-                  <h3 className={`text-base sm:text-lg font-medium text-eerie-black mb-3 sm:mb-4 ${isRTL ? 'text-right' : 'text-left'}`}>
+                  <h3 className={`text-base sm:text-lg font-medium text-eerie-black mb-3 sm:mb-4 items-start text-left`}>
                     {t('dashboard.security', 'Security')}
                   </h3>
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                     <div className="space-y-2">
-                      <label className={`block text-xs sm:text-sm font-medium text-cool-black ${isRTL ? 'text-right' : 'text-left'}`}>
+                      <label className={`block text-xs sm:text-sm font-medium text-cool-black items-start text-left`}>
                         {isRTL ? (
                           <>
                             {t('dashboard.password', 'Password')}
@@ -312,8 +312,8 @@ const AccountSettings = ({ currentUser, userProfile, onLoadUserProfile }) => {
                           </>
                         )}
                       </label>
-                      <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 bg-gray-50 rounded-lg space-y-2 sm:space-y-0 ${isRTL ? 'sm:flex-row-reverse' : ''}`}>
-                        <span className="text-eerie-black text-sm">••••••••</span>
+                      <div className={`flex flex-col flex-row justify-between p-3 bg-gray-50 rounded-lg space-y-2 sm:space-y-0 ${isRTL ? 'sm:flex-row-reverse' : ''}`}>
+                        <span className="text-eerie-black text-sm mb-2">••••••••</span>
                         <button
                           onClick={handlePasswordReset}
                           disabled={isSendingReset}
@@ -322,13 +322,13 @@ const AccountSettings = ({ currentUser, userProfile, onLoadUserProfile }) => {
                           {isSendingReset ? t('dashboard.sending', 'Sending...') : t('dashboard.resetPassword', 'Reset Password')}
                         </button>
                       </div>
-                      <p className={`text-xs text-cool-black ${isRTL ? 'text-right' : 'text-left'}`}>
+                      <p className={`text-xs text-cool-black items-start text-left`}>
                         {t('dashboard.passwordResetInfo', "We'll send a password reset link to your email address")}
                       </p>
                     </div>
 
                     <div className="space-y-2">
-                      <label className={`block text-xs sm:text-sm font-medium text-cool-black ${isRTL ? 'text-right' : 'text-left'}`}>
+                      <label className={`block text-xs sm:text-sm font-medium text-cool-black items-start text-left`}>
                         {t('dashboard.accountRole', 'Account Role')}
                       </label>
                       <div className="p-3 bg-gray-50 rounded-lg">
