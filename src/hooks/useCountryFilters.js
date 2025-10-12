@@ -9,9 +9,29 @@ const regionMapping = {
   oceania: ['AU', 'NZ', 'FJ', 'PG', 'NC', 'PF', 'SB', 'VU', 'WS', 'TO', 'KI', 'FM', 'MH', 'PW', 'NR', 'TV', 'CK', 'NU', 'TK', 'WF', 'AS', 'GU', 'MP', 'UM']
 };
 
+// Popular tourist destinations with high eSIM usage
 const popularCountryCodes = [
-  'US', 'GB', 'FR', 'DE', 'IT', 'ES', 'CA', 'AU', 'JP', 'KR', 
-  'SG', 'TH', 'PT', 'NL', 'BE', 'CH', 'AT', 'SE', 'NO', 'DK'
+  'US',  // United States
+  'ES',  // Spain
+  'FR',  // France
+  'IT',  // Italy
+  'GB',  // United Kingdom
+  'NL',  // Netherlands
+  'BR',  // Brazil
+  'IN',  // India
+  'CN',  // China
+  'TH',  // Thailand
+  'JP',  // Japan
+  'AU',  // Australia
+  'DE',  // Germany
+  'CA',  // Canada
+  'SG',  // Singapore
+  'MX',  // Mexico
+  'TR',  // Turkey
+  'AE',  // United Arab Emirates
+  'PT',  // Portugal
+  'GR',  // Greece
+  
 ];
 
 export const useCountryFilters = (countries) => {
@@ -81,18 +101,8 @@ export const useCountryFilters = (countries) => {
     
     // Filter by selected region
     if (selectedRegion === 'popular') {
-      const popular = [];
-      const others = [];
-      
-      countriesList.forEach(country => {
-        if (popularCountryCodes.includes(country.code)) {
-          popular.push(country);
-        } else {
-          others.push(country);
-        }
-      });
-      
-      return [...popular, ...others];
+      // Only show countries that are in the popular list
+      return countriesList.filter(country => popularCountryCodes.includes(country.code));
     } else if (selectedRegion !== 'all') {
       const regionCodes = regionMapping[selectedRegion] || [];
       return countriesList.filter(country => regionCodes.includes(country.code));

@@ -64,7 +64,7 @@ const CountrySearchBar = ({ onSearch, showCountryCount = true }) => {
             className={`absolute ${isRTL ? 'left-2 sm:left-3' : 'right-2 sm:right-3'} top-1/2 transform -translate-y-1/2 bg-white/80 backdrop-blur-md p-1 rounded-full transition-all duration-300 hover:scale-105 outline-none focus:ring-2 focus:ring-blue-200/20 shadow-lg shadow-gray-200/50`}
             aria-label="Search"
           >
-            <Search className="w-5 h-5 sm:w-6 sm:h-6 text-gray-400" />
+            <Search className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
           </button>
         </div>
         

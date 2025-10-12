@@ -63,30 +63,9 @@ export default function PlansSection() {
   const topPadding = (locale === 'he' || locale === 'ar') ? 'pt-8' : 'py-12 lg:py-16';
   
   return (
-    <section id="esim-plans" className={`${topPadding} pb-12 lg:pb-16 scroll-mt-20 bg-white relative overflow-hidden`} dir={isRTL ? 'rtl' : 'ltr'}>                                                                                                          
-      <div className="container mx-auto px-4 relative z-10">
-        
-        {/* Section Header */}
-        <div className="text-center mb-8 lg:mb-16 max-w-4xl mx-auto">
-        <h2 className="text-center text-lg lg:text-xl font-semibold text-tufts-blue"> <span>{'{ '}</span>
-          {t('plans.title')}
-          <span>{' }'}</span>
-         </h2>
-         <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-x-6 px-4 sm:px-0">
-        <button
-                onClick={() => handleCopyDiscountCode(t)}
-                className="btn-secondary w-full sm:w-auto flex items-center justify-center gap-2"
-              ><Copy className="w-5 h-5 mr-2" />
-                {t('discount.get35Off', '35% OFF')}
-              </button>
-        </div>
-         <p className="mx-auto mt-12 max-w-4xl text-center text-2xl lg:text-3xl font-semibold tracking-tight text-eerie-black sm:text-5xl">                                                                                        
-            {t('plans.subtitle')}
-          </p>
-          <p className={`text-eerie-black max-w-3xl mx-auto mt-4 items-center text-center text-sm lg:text-base ${isRTL ? 'text-right' : 'text-left'}`}>
-            {t('plans.description')}
-          </p>
-        </div>
+    <section id="esim-plans" className={`${topPadding} pb-12 lg:pb-16 scroll-mt-16 bg-white relative overflow-hidden`} dir={isRTL ? 'rtl' : 'ltr'}>                                                                                                          
+      <div className="container mx-auto relative z-10">
+       
 
         {/* Plans Component */}
         <div>

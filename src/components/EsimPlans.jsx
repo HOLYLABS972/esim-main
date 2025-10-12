@@ -219,6 +219,7 @@ const EsimPlans = () => {
             referralSettings={referralSettings}
             regularSettings={regularSettings}
             isLoading={countriesLoading}
+            selectedRegion={selectedRegion}
           />
         </div>
       </section>

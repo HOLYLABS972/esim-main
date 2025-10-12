@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useI18n } from '../contexts/I18nContext';
 import CountryCard from './CountryCard';
@@ -13,14 +13,29 @@ const CountriesGrid = ({
   userProfile,
   referralSettings,
   regularSettings,
-  isLoading 
+  isLoading,
+  selectedRegion
 }) => {
   const { t } = useI18n();
   const router = useRouter();
+  const [showAll, setShowAll] = useState(false);
+
+  // Reset showAll when region changes
+  useEffect(() => {
+    setShowAll(false);
+  }, [selectedRegion]);
 
   // Determine how many countries to show
-  const displayedCountries = isPlansPage || searchTerm ? countries : countries.slice(0, 8);
-  const showShowAllButton = !isPlansPage && !searchTerm && countries.length > 8;
+  // Desktop: 4 rows × 4 columns = 16 countries
+  // Mobile: 4 rows × 2 columns = 8 countries
+  const desktopLimit = 16;
+  const mobileLimit = 8;
+  
+  const shouldLimitCountries = !searchTerm && (selectedRegion === 'all' || !isPlansPage);
+  const displayedCountriesDesktop = (shouldLimitCountries && !showAll) ? countries.slice(0, desktopLimit) : countries;
+  const displayedCountriesMobile = (shouldLimitCountries && !showAll) ? countries.slice(0, mobileLimit) : countries;
+  
+  const showShowAllButton = shouldLimitCountries && !showAll && countries.length > desktopLimit;
 
   if (isLoading && countries.length === 0) {
     return (
@@ -48,7 +63,7 @@ const CountriesGrid = ({
     <>
       {/* Desktop Grid Layout */}
       <div className="hidden sm:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-        {displayedCountries.map((country) => (
+        {displayedCountriesDesktop.map((country) => (
           <CountryCard
             key={country.id}
             country={country}
@@ -61,11 +76,11 @@ const CountriesGrid = ({
         ))}
       </div>
       
-      {/* Show All Button for Desktop - Only on Landing Page */}
+      {/* Show All Button for Desktop */}
       {showShowAllButton && (
         <div className="hidden sm:block text-center mt-8">
           <button
-            onClick={() => router.push('/esim-plans')}
+            onClick={() => setShowAll(true)}
             className="btn-primary px-8 py-3 text-white font-semibold rounded-full hover:bg-tufts-blue transition-all duration-200 shadow-lg"
           >
             {t('plans.showAll', 'Show All')}
@@ -75,7 +90,7 @@ const CountriesGrid = ({
       
       {/* Mobile List Layout */}
       <div className="sm:hidden grid grid-cols-2 gap-4">
-        {displayedCountries.map((country) => (
+        {displayedCountriesMobile.map((country) => (
           <CountryCard
             key={country.id}
             country={country}
@@ -88,11 +103,11 @@ const CountriesGrid = ({
         ))}
       </div>
       
-      {/* Show All Button for Mobile - Only on Landing Page */}
+      {/* Show All Button for Mobile */}
       {showShowAllButton && (
         <div className="sm:hidden text-center mt-8">
           <button
-            onClick={() => router.push('/esim-plans')}
+            onClick={() => setShowAll(true)}
             className="btn-primary px-8 py-3 text-white font-semibold rounded-full hover:bg-tufts-blue transition-all duration-200 shadow-lg"
           >
             {t('plans.showAll', 'Show All')}

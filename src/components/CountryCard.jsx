@@ -128,12 +128,12 @@ const CountryCard = ({
       <div className={isMobile ? "px-3 py-3" : "px-5 py-5"}>
         {/* Country Name with Badge - Desktop Only */}
         {!isMobile && (
-          <div className=" gap-2 mb-3">
+          <div className="flex items-center text-start gap-2 mb-3">
             <p className={`${desktopNameSize} font-semibold text-gray-900 line-clamp-2 group-hover:text-tufts-blue transition-colors duration-200 flex-1`}>
               {country.displayName || country.name}
             </p>
             {showBadge && (
-              <div className="flex bg-cobalt-blue rounded-full px-2 py-1 items-center gap-1 flex-shrink-0">
+              <div className="flex bg-cobalt-blue rounded-full px-2 py-1">
                 <span className="text-xs text-white font-medium whitespace-nowrap">
                   Save {badgePercent}%
                 </span>

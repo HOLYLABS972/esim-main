@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Globe, Star, Check, DollarSign, SortAsc, Smartphone } from 'lucide-react';
+import { Globe, Star, Check, DollarSign, SortAsc, Smartphone, Wifi, Clock, Shield } from 'lucide-react';
 import BottomSheet from './BottomSheet';
 import { useAuth } from '../contexts/AuthContext';
 import { getReferralSettings, getRegularSettings } from '../services/settingsService';
@@ -32,143 +32,114 @@ const PlanCard = ({ plan, isSelected, onClick, index, hasReferralDiscount, refer
   
   let discountedPrice, hasDiscount, discountPercentage;
   
-  if (hasReferralDiscount) {
-    // User has referral code - use ONLY referral discount
-    discountPercentage = referralSettings?.discountPercentage || 17;
-    const minimumPrice = referralSettings?.minimumPrice || 0.5;
+  if (hasReferralDiscount && referralSettings) {
+    discountPercentage = referralSettings.discountPercentage;
+    const minimumPrice = referralSettings.minimumPrice;
     discountedPrice = Math.max(minimumPrice, originalPrice * (100 - discountPercentage) / 100);
     hasDiscount = discountedPrice < originalPrice;
-  } else {
-    // User has no referral code - use regular discount
-    discountPercentage = regularSettings?.discountPercentage || 10;
-    const minimumPrice = regularSettings?.minimumPrice || 0.5;
+  } else if (regularSettings) {
+    discountPercentage = regularSettings.discountPercentage;
+    const minimumPrice = regularSettings.minimumPrice;
     discountedPrice = Math.max(minimumPrice, originalPrice * (100 - discountPercentage) / 100);
     hasDiscount = discountedPrice < originalPrice;
   }
-  
-  console.log('💳 PlanCard calculation:', {
-    planName: plan.name,
-    originalPrice,
-    discountPercentage,
-    hasReferralDiscount,
-    discountedPrice,
-    hasDiscount,
-    referralSettings,
-    regularSettings
-  });
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.1 }}
-      className={`relative p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:border-green-300 hover:shadow-md ${
-        isSelected 
-          ? 'border-green-500 bg-green-50 shadow-lg' 
-          : 'border-gray-200 bg-white'
-      }`}
-      onClick={onClick}
-    >
-      {/* Popular Badge */}
-      {plan.popular && (
-        <div className={`absolute -top-2 ${isRTL ? '-left-2' : '-right-2'} bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs px-2 py-1 rounded-full font-medium`}>
-          <Star size={12} className={`inline ${isRTL ? 'ml-1' : 'mr-1'}`} />
-          {t('planSelection.popular', 'Popular')}
-        </div>
-      )}
+    <div className="relative" onClick={onClick}>
+      <div className="absolute inset-px rounded-xl border-2 border-gray-200/50 shadow-xl shadow-gray-200/50 bg-white hover:border-tufts-blue/30 transition-all duration-200 cursor-pointer"></div>
+      <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
+        <div className="px-4 pt-4 pb-4 md:px-6 md:pt-6 md:pb-6">
+          <div className={`flex flex-col gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+            {/* Plan Header */}
+            <div className={`flex items-start justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <div className={`flex items-start gap-3 flex-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <div className="flex-shrink-0 bg-tufts-blue/10 p-3 rounded-xl">
+                  <Wifi className="w-6 h-6 text-tufts-blue" />
+                </div>
+                <div className="flex-1">
+                  <h3 className={`font-semibold text-eerie-black text-lg tracking-tight ${isRTL ? 'text-right' : 'text-left'}`}>
+                    {plan.name}
+                  </h3>
+                  {plan.description && (
+                    <p className={`text-sm text-cool-black mt-1 ${isRTL ? 'text-right' : 'text-left'}`}>
+                      {plan.description}
+                    </p>
+                  )}
+                  {plan.country_codes && plan.country_codes.length > 0 && (
+                    <div className={`flex items-center mt-2 gap-1 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
+                      <span className="text-lg">
+                        {plan.country_codes.map(code => {
+                          if (!code || code.length !== 2 || code.includes('-')) return '🌍';
+                          try {
+                            const codePoints = code.toUpperCase().split('').map(char => 127397 + char.charCodeAt());
+                            return String.fromCodePoint(...codePoints);
+                          } catch (error) {
+                            return '🌍';
+                          }
+                        }).join(' ')}
+                      </span>
+                      <span className={`text-xs text-gray-500 ${isRTL ? 'text-right' : 'text-left'}`}>
+                        {plan.country_codes.length > 1 ? t('planSelection.countries', '{{count}} countries', { count: plan.country_codes.length }) : plan.country_codes[0]}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              {/* Price Section */}
+              <div className={`flex flex-col items-end ${isRTL ? 'items-start' : ''}`}>
+                {hasDiscount ? (
+                  <div className={`flex flex-col ${isRTL ? 'items-start' : 'items-end'}`}>
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xl font-bold text-green-600">${discountedPrice.toFixed(2)}</span>
+                      {hasDiscount && (
+                        <div className="flex bg-cobalt-blue rounded-full px-2 py-1">
+                          <span className="text-xs text-white font-medium whitespace-nowrap">
+                            Save {discountPercentage}%
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    <span className="text-sm text-gray-500 line-through">${originalPrice.toFixed(2)}</span>
+                  </div>
+                ) : (
+                  <span className="text-2xl font-bold text-eerie-black">${originalPrice.toFixed(2)}</span>
+                )}
+                <span className="text-xs text-gray-500 mt-1">{plan.currency || 'USD'}</span>
+              </div>
+            </div>
 
-      {/* Hot Deal Badge */}
-      {hasDiscount && (
-        <div className={`absolute -top-2 ${isRTL ? '-right-2' : '-left-2'} bg-gradient-to-r from-red-500 to-orange-500 text-white text-xs px-2 py-1 rounded-full font-medium`}>
-          <DollarSign size={12} className={`inline ${isRTL ? 'ml-1' : 'mr-1'}`} />
-          {t('planSelection.hotDeal', 'Hot Deal')}
-        </div>
-      )}
+            {/* Plan Details Grid */}
+            <div className="grid grid-cols-2 gap-3 mt-2">
+              <div className="bg-gray-50 rounded-lg p-3">
+                <div className="text-xs text-gray-600 mb-1">{t('planSelection.data', 'Data')}</div>
+                <div className="font-semibold text-eerie-black">{plan.data} {plan.dataUnit}</div>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-3">
+                <div className="text-xs text-gray-600 mb-1">{t('planSelection.validity', 'Validity')}</div>
+                <div className="font-semibold text-eerie-black">{plan.period || plan.duration || 'N/A'} days</div>
+              </div>
+            </div>
 
-      {/* Plan Header */}
-      <div className={`flex items-start justify-between mb-3 ${isRTL ? 'flex-row-reverse' : ''}`} dir={isRTL ? 'rtl' : 'ltr'}>
-        <div className={`flex items-start ${isRTL ? 'space-x-reverse space-x-4' : 'space-x-4'}`}>
-          <div className="flex-shrink-0 bg-blue-100 p-3 rounded-xl">
-            <svg 
-              className="w-8 h-8 text-blue-600" 
-              fill="currentColor" 
-              viewBox="0 0 24 24"
-            >
-              <path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zM4 6h16v12H4V6zm2 3h4v2H6V9zm6 0h4v2h-4V9zm-6 4h4v2H6v-2zm6 0h4v2h-4v-2z"/>
-            </svg>
-          </div>
-          <div>
-            <h3 className={`font-semibold text-gray-900 text-lg ${isRTL ? 'text-right' : 'text-left'}`}>{plan.name}</h3>
-            <p className={`text-sm text-gray-600 ${isRTL ? 'text-right' : 'text-left'}`}>{plan.description}</p>
-            {plan.country_codes && plan.country_codes.length > 0 && (
-              <div className={`flex items-center mt-1 ${isRTL ? 'space-x-reverse space-x-1' : 'space-x-1'}`}>
-                <span className="text-lg">
-                  {plan.country_codes.map(code => {
-                    if (!code || code.length !== 2 || code.includes('-')) {
-                      return '🌍';
-                    }
-                    try {
-                      const codePoints = code.toUpperCase().split('').map(char => 127397 + char.charCodeAt());
-                      return String.fromCodePoint(...codePoints);
-                    } catch (error) {
-                      return '🌍';
-                    }
-                  }).join(' ')}
-                </span>
-                <span className={`text-xs text-gray-500 ${isRTL ? 'text-right' : 'text-left'}`}>
-                  {plan.country_codes.length > 1 ? t('planSelection.countries', '{{count}} countries', { count: plan.country_codes.length }) : plan.country_codes[0]}
-                </span>
+            {/* Plan Benefits */}
+            {plan.benefits && plan.benefits.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {plan.benefits.slice(0, 3).map((benefit, idx) => (
+                  <span
+                    key={idx}
+                    className="inline-flex items-center px-2 py-1 bg-green-50 text-green-700 text-xs rounded-full border border-green-200"
+                  >
+                    <Check size={12} className={`${isRTL ? 'ml-1' : 'mr-1'}`} />
+                    {benefit}
+                  </span>
+                ))}
               </div>
             )}
           </div>
         </div>
-        <div className={isRTL ? 'text-left' : 'text-right'}>
-          {hasDiscount ? (
-            <div>
-              <div className="text-2xl font-bold text-red-600">${discountedPrice.toFixed(2)}</div>
-              <div className="text-sm text-gray-500 line-through">${originalPrice.toFixed(2)}</div>
-              <div className="text-xs text-red-600 font-medium">
-                {t('planSelection.save', 'Save ${{amount}}!', { amount: (originalPrice - discountedPrice).toFixed(2) })}
-              </div>
-            </div>
-          ) : (
-            <div className="text-2xl font-bold text-green-600">${originalPrice.toFixed(2)}</div>
-          )}
-          <div className="text-xs text-gray-500">{plan.currency || 'USD'}</div>
-        </div>
       </div>
-
-      {/* Plan Features */}
-      <div className="space-y-2 mb-4">
-        <div className={`flex items-center text-sm text-gray-700 ${isRTL ? 'text-right' : 'text-left'}`}>
-          <span>{plan.data} {plan.dataUnit}</span>
-        </div>
-        {plan.speed && (
-          <div className={`flex items-center text-sm text-gray-700 ${isRTL ? 'text-right' : 'text-left'}`}>
-            <span>{t('planSelection.upTo', 'Up to {{speed}}', { speed: plan.speed })}</span>
-          </div>
-        )}
-      </div>
-
-      {/* Plan Benefits */}
-      {plan.benefits && plan.benefits.length > 0 && (
-        <div className="border-t border-gray-100 pt-3">
-          <div className="flex flex-wrap gap-2">
-            {plan.benefits.map((benefit, idx) => (
-              <span
-                key={idx}
-                className="inline-flex items-center px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full"
-              >
-                <Check size={12} className={`${isRTL ? 'ml-1' : 'mr-1'}`} />
-                {benefit}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-
-
-    </motion.div>
+      <div className="pointer-events-none absolute inset-px rounded-xl shadow-sm ring-1 ring-black/5"></div>
+    </div>
   );
 };
 
@@ -326,54 +297,65 @@ const PlanSelectionBottomSheet = ({
       onClose={onClose}
       title={t('planSelection.chooseYourPlan', 'Choose Your Plan')}
       maxHeight="85vh"
+      variant="center"
     >
-      <div className="p-6" dir={isRTL ? 'rtl' : 'ltr'}>
+      <div className="p-4 lg:p-6" dir={isRTL ? 'rtl' : 'ltr'}>
 
         {/* Available Plans or Countries */}
         {loadingPlans ? (
           <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
-            <p className={`text-gray-600 ${isRTL ? 'text-right' : 'text-left'}`}>{t('planSelection.loadingPlans', 'Loading available plans...')}</p>
-            <p className={`text-sm text-gray-500 ${isRTL ? 'text-right' : 'text-left'}`}>{t('planSelection.pleaseWait', 'Please wait while we fetch the best options for you')}</p>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-tufts-blue mx-auto mb-4"></div>
+            <p className={`text-eerie-black font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{t('planSelection.loadingPlans', 'Loading available plans...')}</p>
+            <p className={`text-sm text-cool-black mt-2 ${isRTL ? 'text-right' : 'text-left'}`}>{t('planSelection.pleaseWait', 'Please wait while we fetch the best options for you')}</p>
           </div>
         ) : availablePlans.length > 0 ? (
           <div className="space-y-4">
-            <div className={`flex items-center justify-between mb-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
-              <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-2' : 'space-x-2'}`}>
-                <Smartphone className="w-5 h-5 text-green-600" />
-                <h4 className={`font-semibold text-gray-900 text-lg ${isRTL ? 'text-right' : 'text-left'}`}>
-                  {t('planSelection.availablePlans', 'Available Plans ({{count}})', { count: availablePlans.length })}
-                </h4>
+            <div className="relative">
+              <div className="absolute inset-px rounded-xl border-2 border-gray-200/50 shadow-sm bg-gray-50"></div>
+              <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
+                <div className="px-4 py-3 md:px-6 md:py-4">
+                  <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                      <Smartphone className="w-5 h-5 text-tufts-blue" />
+                      <h4 className={`font-semibold text-eerie-black text-base ${isRTL ? 'text-right' : 'text-left'}`}>
+                        {t('planSelection.availablePlans', 'Available Plans ({{count}})', { count: availablePlans.length })}
+                      </h4>
+                    </div>
+                    <div className={`flex items-center text-sm text-cool-black gap-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                      <SortAsc className="w-4 h-4 text-tufts-blue" />
+                      <span className="text-xs">{t('planSelection.sortedByCheapest', 'Sorted by cheapest')}</span>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className={`flex items-center text-sm text-gray-500 ${isRTL ? 'space-x-reverse space-x-1' : 'space-x-1'}`}>
-                <SortAsc className="w-4 h-4" />
-                <span>{t('planSelection.sortedByCheapest', 'Sorted by cheapest first')}</span>
-              </div>
+              <div className="pointer-events-none absolute inset-px rounded-xl shadow-sm ring-1 ring-black/5"></div>
             </div>
             
-            {sortPlansByPrice(availablePlans).map((plan, index) => (
-              <PlanCard
-                key={plan.id}
-                plan={plan}
-                index={index}
-                hasReferralDiscount={userProfile?.referralCodeUsed}
-                referralSettings={referralSettings}
-                regularSettings={regularSettings}
-                onClick={() => handlePlanSelect(plan)}
-              />
-            ))}
+            <div className="space-y-4 mt-4">
+              {sortPlansByPrice(availablePlans).map((plan, index) => (
+                <PlanCard
+                  key={plan.id}
+                  plan={plan}
+                  index={index}
+                  hasReferralDiscount={userProfile?.referralCodeUsed}
+                  referralSettings={referralSettings}
+                  regularSettings={regularSettings}
+                  onClick={() => handlePlanSelect(plan)}
+                />
+              ))}
+            </div>
           </div>
         ) : filteredCountries && filteredCountries.length > 0 ? (
           <div className="space-y-6">
             <div className={`flex items-center justify-between mb-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
               <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-2' : 'space-x-2'}`}>
-                <Smartphone className="w-5 h-5 text-green-600" />
-                <h4 className={`font-semibold text-gray-900 text-lg ${isRTL ? 'text-right' : 'text-left'}`}>
+                <Smartphone className="w-5 h-5 text-tufts-blue" />
+                <h4 className={`font-semibold text-gray-900 text-base ${isRTL ? 'text-right' : 'text-left'}`}>
                   {t('planSelection.availablePlans', 'Available Plans')}
                 </h4>
               </div>
               <div className={`flex items-center text-sm text-gray-500 ${isRTL ? 'space-x-reverse space-x-1' : 'space-x-1'}`}>
-                <SortAsc className="w-4 h-4" />
+                <SortAsc className="w-4 h-4 text-tufts-blue" />
                 <span>{t('planSelection.sortedByCheapest', 'Sorted by cheapest first')}</span>
               </div>
             </div>
@@ -404,7 +386,7 @@ const PlanSelectionBottomSheet = ({
                     )}
                     
                     <div className="text-center">
-                      <h5 className="text-xl font-bold text-gray-900">
+                      <h5 className="text-base font-bold text-gray-900">
                         {t('planSelection.dayPlans', '{{days}} Day{{plural}} Plans', { days, plural: days !== 1 ? 's' : '' })}
                       </h5>
                       <p className="text-sm text-gray-600 mt-1">
@@ -434,14 +416,14 @@ const PlanSelectionBottomSheet = ({
                                   </span>
                                 ) : (
                                   <div className="country-code-avatar w-10 h-10 bg-tufts-blue rounded-full flex items-center justify-center">
-                                    <span className="text-white font-bold text-sm">
+                                    <span className="text-white font-bold text-xs">
                                       {country.code || '??'}
                                     </span>
                                   </div>
                                 )}
                               </div>
                               <div className="flex-1 text-left">
-                                <h6 className="font-semibold text-gray-900 text-sm mb-1">
+                                <h6 className="font-semibold text-gray-900 text-xs mb-1">
                                   {country.name}
                                 </h6>
                                 <div className="flex items-center justify-between">
@@ -464,15 +446,15 @@ const PlanSelectionBottomSheet = ({
             })()}
           </div>
         ) : (
-          <div className="text-center py-12">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="text-center py-6">
+            <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Globe size={24} className="text-gray-400" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('planSelection.noPlansAvailable', 'No Plans Available')}</h3>
-            <p className="text-gray-600 mb-4">
+            <h3 className="text-base font-semibold text-gray-900 mb-2">{t('planSelection.noPlansAvailable', 'No Plans Available')}</h3>
+            <p className="text-xs text-gray-600 mb-4">
               {t('planSelection.couldNotFind', 'We couldn\'t find any plans for your current selection')}
             </p>
-            <p className="text-sm text-gray-500">
+            <p className="text-xs text-gray-500 mb-4">
               {t('planSelection.tryAdjusting', 'Try adjusting your filters or selecting a different country')}
             </p>
           </div>
