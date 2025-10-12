@@ -8,7 +8,16 @@ export default function EsimPlansPage() {
   return (
     <>
       <div className="min-h-screen " dir="rtl">
-        <div className="container mx-auto">
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-bold text-gray-900 mb-4 text-center">
+              اختر خطة eSIM الخاصة بك
+            </h1>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto text-center">
+              تصفح مجموعتنا الكاملة من خطط بيانات eSIM لأكثر من 200 دولة. 
+              تسعير فوري مع تفعيل فوري.
+            </p>
+          </div>
           
           <Suspense fallback={
             <div className="flex justify-center items-center min-h-64">

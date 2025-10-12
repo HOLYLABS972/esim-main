@@ -15,27 +15,16 @@
     "announcement": "Now available in 200+ countries worldwide.",
     "countriesAvailable": "Now available in 200+ countries",
     "stayConnected": "Stay connected",
-    "noMatterWhere": " no matter where you ",
-    "with": "are with",
-    "description": "Global eSIM for travelers, digital nomads, and backpackers. No roaming fees, no physical SIM cards needed.",
+    "noMatterWhere": "no matter where you are",
+    "with": "with",
+    "description": "RoamJet: Global eSIM for travelers, digital nomads, and backpackers. Buy instant international mobile data plans for 200+ countries. No roaming fees, no physical SIM cards needed.",
     "downloadApp": "Download App",
     "exploreTariffs": "Explore Tariffs",
-    "exploreBlog": "Explore Blog",
-    "popularCountries": {
-      "france": "🇫🇷 France",
-      "usa": "🇺🇸 USA",
-      "thailand": "🇹🇭 Thailand",
-      "japan": "🇯🇵 Japan",
-      "spain": "🇪🇸 Spain",
-      "china": "🇨🇳 China",
-      "brazil": "🇧🇷 Brazil",
-      "india": "🇮🇳 India"
-    }
+    "exploreBlog": "Explore Blog"
   },
   "features": {
     "title": "Connect globally",
     "subtitle": "Perfect eSIM solution for backpackers, travelers, and digital nomads worldwide",
-    "get35Off": "Get 35% OFF",
     "globalCoverage": {
       "title": "Global Coverage",
       "description": "Stay connected in 200+ countries with our extensive eSIM network coverage worldwide. Perfect for backpackers exploring multiple destinations and digital nomads working remotely.",
@@ -59,15 +48,12 @@
     }
   },
   "plans": {
-    "title": "eSIM Plans",
-    "subtitle": "Choose your perfect eSIM plan",
-    "description": "Connect instantly with our global eSIM plans. No physical SIM card needed, just scan and go.",
-    "searchPlaceholder": "Search countries...",
-    "loadingPlans": "Loading countries...",
+    "title": "Portable Pricing System",
+    "subtitle": "Best eSIM Plans for Backpackers, Travelers & Digital Nomads",
+    "description": "Select from our wide range of data plans designed for every type of traveler. Perfect for backpackers exploring multiple countries, business travelers, and digital nomads working remotely. Compare our competitive rates with Airalo and eSIMo.",
+    "loadingPlans": "Loading plans...",
     "fromPrice": "From ${price}",
     "noPlansAvailable": "No plans available",
-    "noCountriesFound": "No countries found matching your search",
-    "noCountriesAvailable": "No countries available yet",
     "totalPlans": "Total Plans",
     "countries": "Countries",
     "startingFrom": "Starting From",
@@ -76,9 +62,7 @@
     "showLess": "Show Less"
   },
   "discount": {
-    "get35Off": "Get 35% OFF",
-    "copied": "Discount code OCTOBER35 copied! 35% off your purchase!",
-    "copyFailed": "Failed to copy code. Please try again."
+    "get35Off": "Get 35% OFF"
   },
   "activation": {
     "downloads": "Downloads",
@@ -181,7 +165,7 @@
     "addBankAccountDesc": "Add your bank account details to withdraw your earnings"
   },
   "blog": {
-    "title": "Blog",
+    "title": "eSIM Insights",
     "subtitle": "Stay updated with eSIM technology",
     "description": "Discover the latest trends, guides, and insights in eSIM technology and global connectivity solutions.",
     "searchPlaceholder": "Search blog posts...",
@@ -299,19 +283,7 @@
       "deleteEsimAnswer": "Go to your device's cellular settings, select the eSIM plan you want to remove, and choose 'Delete eSIM' or 'Remove Plan'. This will permanently delete the eSIM from your device."
     }
   },
-  "QRCodeModal": {
-    "esimQrCode": "eSIM QR Code",
-    "qrCodeImageFromAiralo": "QR Code Image from Airalo",
-    "realQrCodeFromAiralo": "Real QR Code from Airalo (Add Cellular Plan)",
-    "qrData": "QR Data: {{data}}...",
-    "directAppleInstallationLink": "Direct Apple Installation Link",
-    "appleEsimInstallation": "Apple eSIM Installation",
-    "qrCodeBeingGenerated": "QR code is being generated...",
-    "clickGenerateQrCodeToTryAgain": "Click \"Generate QR Code\" to try again",
-    "actions": "Actions"
-  },
   "dashboard": {
-    "title": "Dashboard",
     "loadingDashboard": "Loading dashboard...",
     "welcomeBack": "Welcome back, {{name}}!",
     "manageOrders": "Manage your eSIM orders and account settings",
@@ -359,28 +331,6 @@
     "resetPassword": "Reset Password",
     "passwordResetInfo": "We'll send a password reset link to your email address",
     "accountRole": "Account Role",
-    "phoneUpdatedSuccessfully": "Phone number updated successfully",
-    "failedToUpdatePhone": "Failed to update phone number",
-    "passwordResetEmailSent": "Password reset email sent! Check your inbox.",
-    "failedToSendPasswordReset": "Failed to send password reset email",
-    "esimQrCode": "eSIM QR Code",
-    "realQrCodeFromAiralo": "✅ Real QR Code from Airalo (Add Cellular Plan)",
-    "qrData": "QR Data: {{data}}...",
-    "qrCodeImageFromAiralo": "✅ QR Code Image from Airalo",
-    "appleEsimInstallation": "Apple eSIM Installation",
-    "directAppleInstallationLink": "✅ Direct Apple Installation Link",
-    "installEsim": "Install eSIM",
-    "qrCodeBeingGenerated": "QR code is being generated...",
-    "noQrCodeAvailable": "No QR code available",
-    "clickGenerateQrCodeToTryAgain": "Click \"Generate QR Code\" to try again",
-    "actions": "Actions",
-    "checkingEsimDetails": "Checking eSIM Details...",
-    "checkEsimDetailsInApi": "Check eSIM Details in API",
-    "checkingUsage": "Checking Usage...",
-    "checkUsageAndStatus": "Check Usage & Status",
-    "openInAppleEsim": "Open in Apple eSIM",
-    "downloadQrCode": "Download QR Code",
-    "uses": "Uses",
     "roles": {
       "customer": "Customer",
       "admin": "Admin",

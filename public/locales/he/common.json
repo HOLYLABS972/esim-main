@@ -14,27 +14,16 @@
   "hero": {
     "announcement": "כעת זמין ביותר מ-200 מדינות ברחבי העולם.",
     "countriesAvailable": "כעת זמין ביותר מ-200 מדינות",
-    "stayConnected": "תשארו מחוברים",
-    "noMatterWhere": "לא משנה איפה אתם",
+    "stayConnected": "הישאר מחובר",
+    "noMatterWhere": "לא משנה איפה אתה",
     "with": "עם",
-    "description": "eSIM גלובלי למטיילים, נומאדים דיגיטליים ותרמילאים. אין צורך בסים פיזיים. התקן את eSIM המטייל באינטרנט במשך מספר דקות, הפעל בחוץ בשניות.",
+    "description": "RoamJet: eSIM גלובלי למטיילים, נומאדים דיגיטליים ותרמילאים. קנה תוכניות נתונים ניידים בינלאומיות מיידיות ל-200+ מדינות. אין צורך בסים פיזיים. התקן את eSIM המטייל באינטרנט במשך מספר דקות, הפעל בחוץ בשניות.",
     "downloadApp": "הורד אפליקציה",
-    "exploreTariffs": "הצג תוכניות",
-    "popularCountries": {
-      "france": "🇫🇷 צרפת",
-      "usa": "🇺🇸 ארצות הברית",
-      "thailand": "🇹🇭 תאילנד",
-      "japan": "🇯🇵 יפן",
-      "spain": "🇪🇸 ספרד",
-      "china": "🇨🇳 סין",
-      "brazil": "🇧🇷 ברזיל",
-      "india": "🇮🇳 סין"
-    }
+    "exploreTariffs": "הצג תוכניות"
   },
   "features": {
     "title": "התחבר גלובלית",
     "subtitle": "כל מה שאתה צריך לחיבור גלובלי",
-    "get35Off": "קבל 35% הנחה",
     "globalCoverage": {
       "title": "כיסוי גלובלי",
       "description": "הישאר מחובר ביותר מ-200 מדינות עם כיסוי רשת ה-eSIM הנרחב שלנו ברחבי העולם.",
@@ -116,36 +105,20 @@
   },
   "plans": {
     "title": "תוכניות eSIM",
-    "subtitle": "בחר את תוכנית eSIM המושלמת שלך",
-    "description": "התחבר מיידית עם תוכניות eSIM הגלובליות שלנו. אין צורך בכרטיס SIM פיזי, פשוט סרוק ותתחיל.",
-    "searchPlaceholder": "חפש מדינות...",
-    "loadingPlans": "טוען מדינות...",
-    "fromPrice": "החל מ-${price}",
-    "noPlansAvailable": "אין תוכניות זמינות",
-    "noCountriesFound": "לא נמצאו מדינות התואמות לחיפוש שלך",
-    "noCountriesAvailable": "אין מדינות זמינות עדיין",
+    "subtitle": "בחר את תוכנית ה-eSIM המושלמת שלך",
+    "description": "עיין במבחר תוכניות ה-eSIM שלנו מכל רחבי העולם. הפעלה מיידית, כיסוי גלובלי ומחירים תחרותיים.",
+    "loadingPlans": "טוען תוכניות...",
     "totalPlans": "סה\"כ תוכניות",
     "countries": "מדינות",
     "startingFrom": "החל מ-",
     "averagePrice": "מחיר ממוצע",
+    "fromPrice": "החל מ-${price}",
+    "noPlansAvailable": "אין תוכניות זמינות",
     "showAll": "הצג הכל",
     "showLess": "הצג פחות"
   },
-  "QRCodeModal": {
-    "esimQrCode": "eSIM QR Code",
-    "qrCodeImageFromAiralo": "QR Code Image from Airalo",
-    "realQrCodeFromAiralo": "Real QR Code from Airalo (Add Cellular Plan)",
-    "qrData": "QR Data: {{data}}...",
-    "directAppleInstallationLink": "Direct Apple Installation Link",
-    "appleEsimInstallation": "Apple eSIM Installation",
-    "qrCodeBeingGenerated": "QR code is being generated...",
-    "clickGenerateQrCodeToTryAgain": "Click \"Generate QR Code\" to try again",
-    "actions": "Actions"
-  },
   "discount": {
-    "get35Off": "קבל 35% הנחה",
-    "copied": "קוד הנחה OCTOBER35 הועתק! 35% הנחה על הרכישה שלך!",
-    "copyFailed": "שגיאה בהעתקת הקוד. אנא נסה שוב."
+    "get35Off": "קבל 35% הנחה"
   },
   "language": {
     "select": "בחר שפה",
@@ -355,27 +328,6 @@
     "resetPassword": "איפוס סיסמה",
     "passwordResetInfo": "נשלח לך קישור לאיפוס סיסמה לכתובת האימייל שלך",
     "accountRole": "תפקיד בחשבון",
-    "phoneUpdatedSuccessfully": "מספר הטלפון עודכן בהצלחה",
-    "failedToUpdatePhone": "נכשל בעדכון מספר הטלפון",
-    "passwordResetEmailSent": "נשלח אימייל לאיפוס סיסמה! בדקו את תיבת הדואר שלכם.",
-    "failedToSendPasswordReset": "נכשל בשליחת אימייל לאיפוס סיסמה",
-    "esimQrCode": "קוד QR של eSIM",
-    "realQrCodeFromAiralo": "✅ קוד QR אמיתי מ-Airalo (הוסף תוכנית סלולרית)",
-    "qrData": "נתוני QR: {{data}}...",
-    "qrCodeImageFromAiralo": "✅ תמונת קוד QR מ-Airalo",
-    "appleEsimInstallation": "התקנת eSIM של Apple",
-    "directAppleInstallationLink": "✅ קישור התקנה ישיר של Apple",
-    "installEsim": "התקן eSIM",
-    "qrCodeBeingGenerated": "קוד QR נוצר...",
-    "noQrCodeAvailable": "אין קוד QR זמין",
-    "clickGenerateQrCodeToTryAgain": "לחצו על \"צור קוד QR\" כדי לנסות שוב",
-    "actions": "פעולות",
-    "checkingEsimDetails": "בודק פרטי eSIM...",
-    "checkEsimDetailsInApi": "בדוק פרטי eSIM ב-API",
-    "checkingUsage": "בודק שימוש...",
-    "checkUsageAndStatus": "בדוק שימוש וסטטוס",
-    "openInAppleEsim": "פתח ב-Apple eSIM",
-    "downloadQrCode": "הורד קוד QR",
     "roles": {
       "customer": "לקוח",
       "admin": "מנהל",
@@ -385,7 +337,6 @@
     "activeEsims": "eSIM פעילים",
     "yourPerformance": "הביצועים שלך",
     "totalEarnings": "סך הכנסות",
-    "uses": "שימושים",
     "tapToJoinAffiliate": "הקש כדי להצטרף לתוכנית השותפים"
   },
   "plansManagement": {

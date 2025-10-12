@@ -76,14 +76,12 @@ const Footer = () => {
   const quickLinks = [
     { name: getText('footer.home', 'Home'), path: '/' },
     { name: getText('footer.blog', 'Blog'), path: '/blog' },
-    { name: getText('footer.jobs', 'Jobs'), path: '/jobs' },
-    { name: getText('footer.contactUs', 'Contact Us'), path: '/contact' }
+    { name: getText('footer.contactUs', 'Contact Us'), path: 'https://www.theholylabs.com/', external: true }
   ];
 
   const usefulLinks = [
-    { name: getText('footer.privacyPolicy', 'Privacy Policy'), path: '/privacy-policy' },
-    { name: getText('footer.termsOfService', 'Terms of Service'), path: '/terms-of-service' },
-    { name: getText('footer.cookiePolicy', 'Cookie Policy'), path: '/cookie-policy' },
+    { name: getText('footer.privacyPolicy', 'Privacy Policy'), path: 'https://www.theholylabs.com/privacy', external: true },
+    { name: getText('footer.termsOfService', 'Terms of Service'), path: 'https://www.theholylabs.com/terms', external: true },
     { name: getText('footer.affiliateProgram', 'Affiliate Program'), path: '/affiliate' }
   ];
 
@@ -106,8 +104,8 @@ const Footer = () => {
       </div>
 
       {/* Footer Top */}
-      <div className="footer-area__footer-top relative py-6 px-6">
-        <div className="max-w-9xl mx-auto ">
+      <div className="footer-area__footer-top relative py-16">
+        <div className="max-w-9xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             
             {/* Company Info */}
@@ -123,11 +121,11 @@ const Footer = () => {
                   alt="RoamJet Logo" 
                   width={120}
                   height={40}
-                  className="h-8 w-auto"
+                  className="h-10 w-auto"
                 />
-                <span className="text-xl font-semibold text-eerie-black ml-2">{getText('footer.brandName', 'RoamJet')}</span>
+                <span className="text-2xl font-semibold text-eerie-black ml-2">{getText('footer.brandName', 'RoamJet')}</span>
               </Link>
-              <p className="footer-item__desc text-eerie-black text-xs mb-6 leading-relaxed">
+              <p className="footer-item__desc text-eerie-black text-sm mb-6 leading-relaxed">
                 {getText('footer.companyDescription', 'Your trusted partner for global eSIM connectivity. Stay connected worldwide with our reliable data plans.')}
               </p>
               {socialLinks.length > 0 && (
@@ -138,7 +136,7 @@ const Footer = () => {
                       <li key={index} className="social-list__item">
                         <a 
                           href={social.url} 
-                          className="social-list__link w-8 h-8 bg-cobalt-blue hover:bg-cobalt-blue-700 rounded-full flex items-center justify-center transition-colors duration-200"
+                          className="social-list__link w-10 h-10 bg-cobalt-blue hover:bg-cobalt-blue-700 rounded-full flex items-center justify-center transition-colors duration-200"
                           target="_blank"
                           rel="noopener noreferrer"
                           aria-label={social.name}
@@ -159,16 +157,27 @@ const Footer = () => {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="footer-item"
             >
-              <h5 className="footer-item__title text-base font-semibold mb-3">{getText('footer.quickLinks', 'Quick Links')}</h5>
-              <ul className="footer-menu space-y-2">
+              <h5 className="footer-item__title text-xl font-semibold mb-6">{getText('footer.quickLinks', 'Quick Links')}</h5>
+              <ul className="footer-menu space-y-3">
                 {quickLinks.map((link, index) => (
                   <li key={index} className="footer-menu__item">
-                    <Link 
-                      href={link.path} 
-                      className="footer-menu__link text-eerie-black hover:text-cobalt-blue transition-colors duration-200"
-                    >
-                      {link.name}
-                    </Link>
+                    {link.external ? (
+                      <a 
+                        href={link.path} 
+                        className="footer-menu__link text-eerie-black hover:text-cobalt-blue transition-colors duration-200"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {link.name}
+                      </a>
+                    ) : (
+                      <Link 
+                        href={link.path} 
+                        className="footer-menu__link text-eerie-black hover:text-cobalt-blue transition-colors duration-200"
+                      >
+                        {link.name}
+                      </Link>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -181,16 +190,27 @@ const Footer = () => {
               transition={{ duration: 0.6, delay: 0.3 }}
               className="footer-item"
             >
-              <h5 className="footer-item__title text-base font-semibold mb-3">{getText('footer.usefulLinks', 'Useful Links')}</h5>
-              <ul className="footer-menu space-y-2">
+              <h5 className="footer-item__title text-xl font-semibold mb-6">{getText('footer.usefulLinks', 'Useful Links')}</h5>
+              <ul className="footer-menu space-y-3">
                 {usefulLinks.map((link, index) => (
                   <li key={index} className="footer-menu__item">
-                    <Link 
-                      href={link.path} 
-                      className="footer-menu__link text-eerie-black hover:text-cobalt-blue transition-colors duration-200"
-                    >
-                      {link.name}
-                    </Link>
+                    {link.external ? (
+                      <a 
+                        href={link.path} 
+                        className="footer-menu__link text-eerie-black hover:text-cobalt-blue transition-colors duration-200"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {link.name}
+                      </a>
+                    ) : (
+                      <Link 
+                        href={link.path} 
+                        className="footer-menu__link text-eerie-black hover:text-cobalt-blue transition-colors duration-200"
+                      >
+                        {link.name}
+                      </Link>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -203,16 +223,16 @@ const Footer = () => {
               transition={{ duration: 0.6, delay: 0.4 }}
               className="footer-item"
             >
-              <h5 className="footer-item__title text-base font-semibold mb-3">{getText('footer.contactUs', 'Contact Us')}</h5>
+              <h5 className="footer-item__title text-xl font-semibold mb-6">{getText('footer.contactUs', 'Contact Us')}</h5>
               <ul className="footer-contact-menu space-y-4">
                 {/* Address - only show if address is provided */}
                 {contactInfo.address && contactInfo.address.trim() !== '' && (
                   <li className="footer-contact-menu__item flex items-center space-x-3">
-                    <div className="footer-contact-menu__item-icon w-8 h-8 bg-cobalt-blue rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                    <div className="footer-contact-menu__item-icon w-10 h-10 bg-cobalt-blue rounded-full flex items-center justify-center flex-shrink-0 mt-1">
                       <MapPin className="w-5 h-5" color="white" />
                     </div>
                     <div className="footer-contact-menu__item-content">
-                      <p className="footer-contact__desc text-eerie-black text-xs">
+                      <p className="footer-contact__desc text-eerie-black text-sm">
                         {contactInfo.address}
                       </p>
                     </div>
@@ -222,12 +242,12 @@ const Footer = () => {
                 {/* Email - only show if email is provided */}
                 {contactInfo.email && contactInfo.email.trim() !== '' && (
                   <li className="footer-contact-menu__item flex items-center space-x-3">
-                    <div className="footer-contact-menu__item-icon w-8 h-8 bg-cobalt-blue rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                    <div className="footer-contact-menu__item-icon w-10 h-10 bg-cobalt-blue rounded-full flex items-center justify-center flex-shrink-0 mt-1">
                       <Mail className="w-5 h-5" color="white" />
                     </div>
                     <div className="footer-contact-menu__item-content">
                       <a 
-                        className="footer-contact__desc text-eerie-black text-xs hover:text-cobalt-blue transition-colors duration-200" 
+                        className="footer-contact__desc text-eerie-black text-sm hover:text-cobalt-blue transition-colors duration-200" 
                         href={`mailto:${contactInfo.email}`}
                       >
                         {contactInfo.email}
@@ -239,12 +259,12 @@ const Footer = () => {
                 {/* Phone - only show if phone is provided */}
                 {contactInfo.phone && contactInfo.phone.trim() !== '' && (
                   <li className="footer-contact-menu__item flex items-center space-x-3">
-                    <div className="footer-contact-menu__item-icon w-8 h-8 bg-cobalt-blue rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                    <div className="footer-contact-menu__item-icon w-10 h-10 bg-cobalt-blue rounded-full flex items-center justify-center flex-shrink-0 mt-1">
                       <Phone className="w-5 h-5" color="white" />
                     </div>
                     <div className="footer-contact-menu__item-content">
                       <a 
-                        className="footer-contact__desc text-eerie-black text-xs hover:text-cobalt-blue transition-colors duration-200" 
+                        className="footer-contact__desc text-eerie-black text-sm hover:text-cobalt-blue transition-colors duration-200" 
                         href="https://t.me/theholylabs"
                       >
                         {contactInfo.phone}
@@ -256,7 +276,7 @@ const Footer = () => {
                 {/* Show message if no contact info is available */}
                 {!contactInfo.address && !contactInfo.email && !contactInfo.phone && !loading && (
                   <li className="footer-contact-menu__item">
-                    <p className="footer-contact__desc text-gray-500 italic text-xs">
+                    <p className="footer-contact__desc text-gray-500 italic">
                       {getText('footer.contactInfoNotAvailable', 'Contact information not available')}
                     </p>
                   </li>
@@ -268,12 +288,12 @@ const Footer = () => {
       </div>
 
       {/* Bottom Footer */}
-      <div className="bottom-footer py-3 border-t border-eerie-black">
-        <div className="max-w-7xl mx-auto px-4">
+      <div className="bottom-footer py-6 border-t border-eerie-black">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <div className="bottom-footer-text text-eerie-black">
               &copy; {currentYear} <Link href="/" className="text-cobalt-blue hover:text-cobalt-blue transition-colors duration-200">{getText('footer.brandName', 'RoamJet')}</Link>. 
-              {getText('footer.allRightsReserved', ' All rights reserved. ')}
+              {getText('footer.allRightsReserved', 'All rights reserved.')}
             </div>
           </div>
         </div>

@@ -9,7 +9,6 @@ import { useAuth } from '../contexts/AuthContext';
 import LanguageSelector from './LanguageSelector';
 import { detectLanguageFromPath, getLocalizedBlogListUrl } from '../utils/languageUtils';
 import { trackCustomFacebookEvent } from '../utils/facebookPixel';
-import { Download, MessageCircle, BookOpen, Package, LayoutDashboard, LogOut, LogIn } from 'lucide-react';
 
 const Navbar = ({ hideLanguageSelector = false }) => {
   const { t, locale } = useI18n();
@@ -113,17 +112,17 @@ const Navbar = ({ hideLanguageSelector = false }) => {
     <header className={`navbar-header fixed w-full top-0 transition-transform duration-300 ${
       isVisible ? 'translate-y-0' : '-translate-y-full'
     }`} style={{ zIndex: 9999 }}>
-      <div className="bg-white/80 shadow-sm shadow-white/30 backdrop-blur-xl w-full">
+      <div className="bg-white/80 shadow-sm shadow-white/30 backdrop-blur-sm w-full">
       <nav aria-label="Global" className="mx-auto flex max-w-7xl items-center justify-between p-2 lg:px-8">
         <div className="flex lg:flex-1">
-          <Link href={getLocalizedUrl("/")} className="-m-1.5 p-1.5 flex items-center ">
-            <span className="sr-only">RoamJet</span>
+          <Link href={getLocalizedUrl("/")} className="-m-1.5 p-1.5 flex items-center">
+            <span className="sr-only">RoamJet Plans</span>
             <img
               src="/images/logo_icon/logo.png"
-              alt="Roam Jet Logo"
-              className="h-6 w-auto hidden sm:block"
+              alt="Roam Jet Plans Logo"
+              className="h-8 w-auto"
             />
-            <span className="ml-1 text-lg sm:text-xl font-semibold text-gray-900">{t('navbar.logo', 'RoamJet')}</span>
+            <span className="ml-2 text-xl font-semibold text-gray-900">{t('navbar.logo', 'RoamJet')}</span>
           </Link>
         </div>
         
@@ -182,20 +181,20 @@ const Navbar = ({ hideLanguageSelector = false }) => {
       {isMenuOpen && mounted && createPortal(
         <div className="lg:hidden" style={{ zIndex: 99999, position: 'fixed', inset: 0 }}>
           <div 
-            className="fixed inset-0 w-full h-full overflow-y-auto bg-white/80 backdrop-blur-xl" 
+            className="fixed inset-0 w-full h-full overflow-y-auto bg-white/80 backdrop-blur-sm" 
             style={{ zIndex: 99999 }}
           >
             {/* Header with logo and close button */}
             <div className="flex items-center justify-between p-6">
               <Link href={getLocalizedUrl("/")} className="
                flex items-center" onClick={() => setIsMenuOpen(false)}>
-                <span className="sr-only">RoamJet</span>
+                <span className="sr-only">RoamJet Plans</span>
                 <img
                   src="/images/logo_icon/logo.png"
-                  alt="RoamJet Logo"
-                  className="h-6 w-auto"
+                  alt="RoamJet Plans Logo"
+                  className="h-8 w-auto"
                 />
-                <span className="mx-2 text-lg sm:text-xl font-bold text-gray-900 hidden sm:block">RoamJet</span>
+                <span className="ml-2 text-xl font-bold text-gray-900">RoamJet</span>
               </Link>
               <button
                 type="button"
@@ -210,53 +209,47 @@ const Navbar = ({ hideLanguageSelector = false }) => {
             </div>
             
             {/* Centered menu items */}
-            <div className="flex flex-col justify-center min-h-[60vh]">
-              <div className="">
+            <div className="flex flex-col items-center justify-center min-h-[calc(100vh-120px)] p-6">
+              <div className="space-y-8 text-center">
                 {/* Main Navigation Group */}
-                <div className=" w-full">
-                  
+                <div className="p-4 w-full max-w-xs">
                   <button
-                        onClick={() => {
-                          handleDownloadApp();
-                          setIsMenuOpen(false);
-                        }}
-                        className="flex items-center justify-center text-xl font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 mb-4 w-full bg-transparent border-none cursor-pointer"
-                      >
-                    {t('navbar.downloadApp', 'Download App')} 
+                    onClick={() => {
+                      handleDownloadApp();
+                      setIsMenuOpen(false);
+                    }}
+                    className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2 w-full bg-transparent border-none cursor-pointer"
+                  >
+                    {t('navbar.downloadApp', 'Download App')}
                   </button>
                   <Link
-                        href={getLocalizedUrl("/esim-plans")}
-                        className="flex items-center justify-center text-xl font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 mb-4"
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                     
-                        {t('navbar.plans', 'Plans')}
-                      </Link>
-                  <Link
                     href={getLocalizedUrl('/contact')}
-                    className="flex items-center justify-center text-xl font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 mb-4"
+                    className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2"
                     onClick={() => setIsMenuOpen(false)}
                   >
-          
                     {t('navbar.contactUs', 'Contact Us')}
                   </Link>
                   <Link
                     href={getLocalizedBlogListUrl(currentLanguage)}
-                    className="flex items-center justify-center text-xl font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 mb-4"
+                    className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     {t('navbar.blog', 'Blog')}
                   </Link>
-                  
                   {currentUser ? (
                     <>
-                     
                       <Link
-                        href={getLocalizedUrl("/dashboard")}
-                        className="flex items-center justify-center text-xl font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 mb-4"
+                        href={getLocalizedUrl("/esim-plans")}
+                        className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2"
                         onClick={() => setIsMenuOpen(false)}
                       >
-                      
+                        {t('navbar.plans', 'Plans')}
+                      </Link>
+                      <Link
+                        href={getLocalizedUrl("/dashboard")}
+                        className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
                         {t('navbar.dashboard', 'Dashboard')}
                       </Link>
                       <button
@@ -264,19 +257,17 @@ const Navbar = ({ hideLanguageSelector = false }) => {
                           handleLogout();
                           setIsMenuOpen(false);
                         }}
-                        className="flex items-center justify-center w-full text-xl font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 mb-4"
+                        className="block w-full text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2"
                       >
-                        
                         {t('navbar.logout', 'Logout')}
                       </button>
                     </>
                   ) : (
                     <Link
                       href={getLocalizedUrl('/login')}
-                      className="flex items-center justify-center text-xl font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 mb-4"
+                      className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2"
                       onClick={() => setIsMenuOpen(false)}
                     >
-                      
                       {t('navbar.login', 'Login')}
                     </Link>
                   )}

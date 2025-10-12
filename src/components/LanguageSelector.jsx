@@ -101,8 +101,7 @@ const LanguageSelector = () => {
     ];
     
     for (const prefix of languagePrefixes) {
-      // Make sure we match the exact language prefix followed by / or end of string
-      if (cleanPath === prefix || cleanPath.startsWith(prefix + '/')) {
+      if (cleanPath.startsWith(prefix)) {
         cleanPath = cleanPath.substring(prefix.length) || '/';
         break;
       }
@@ -144,25 +143,64 @@ const LanguageSelector = () => {
     console.log('LanguageSelector: Changing language to', language.code, 'from pathname', pathname);
     setIsOpen(false);
     
+    // Map languages to their domains
+    const languageToDomain = {
+      'en': 'esim.roamjet.net',
+      'ru': 'ru.roamjet.net',
+      'ar': 'ar.roamjet.net',
+      'he': 'he.roamjet.net',
+      'de': 'de.roamjet.net',
+      'fr': 'fr.roamjet.net',
+      'es': 'es.roamjet.net'
+    };
+    
     // Always save language preference to localStorage first
     if (typeof window !== 'undefined') {
       localStorage.setItem('roamjet-language', language.code);
       console.log('LanguageSelector: Saved language to localStorage:', language.code);
     }
     
-    // Change the language context if available
-    if (changeLanguage && typeof changeLanguage === 'function') {
-      console.log('LanguageSelector: Calling changeLanguage with', language.code);
-      await changeLanguage(language.code);
-      console.log('LanguageSelector: changeLanguage completed');
+    const targetDomain = languageToDomain[language.code];
+    const currentHostname = typeof window !== 'undefined' ? window.location.hostname : '';
+    const currentProtocol = typeof window !== 'undefined' ? window.location.protocol : 'https:';
+    
+    // Clean the current path - remove language prefixes
+    let cleanPath = pathname;
+    const languagePrefixes = ['/he', '/ar', '/ru', '/de', '/fr', '/es', '/hebrew', '/arabic', '/russian', '/german', '/french', '/spanish'];
+    
+    for (const prefix of languagePrefixes) {
+      if (cleanPath.startsWith(prefix)) {
+        cleanPath = cleanPath.substring(prefix.length) || '/';
+        break;
+      }
     }
     
-    // Get the localized path for the current page instead of always going to homepage
-    const localizedPath = getLocalizedPath(language.code, pathname);
-    console.log('LanguageSelector: Navigating to localized path:', localizedPath);
+    // Ensure cleanPath starts with /
+    if (!cleanPath.startsWith('/')) {
+      cleanPath = '/' + cleanPath;
+    }
     
-    // Navigate to the same page but in the new language
-    router.push(localizedPath);
+    // If we're already on the target domain, just update the context and stay
+    if (currentHostname === targetDomain) {
+      console.log('LanguageSelector: Already on target domain, staying put');
+      if (changeLanguage && typeof changeLanguage === 'function') {
+        await changeLanguage(language.code);
+      }
+      // Navigate to clean path on same domain
+      if (cleanPath !== pathname) {
+        router.push(cleanPath);
+      }
+      return;
+    }
+    
+    // Redirect to the target domain with the clean path
+    const targetUrl = `${currentProtocol}//${targetDomain}${cleanPath}`;
+    console.log('LanguageSelector: Redirecting to:', targetUrl);
+    
+    // Use window.location for cross-domain redirect
+    if (typeof window !== 'undefined') {
+      window.location.href = targetUrl;
+    }
   };
 
   return (

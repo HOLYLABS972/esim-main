@@ -15,7 +15,6 @@ import { doc, setDoc, getDoc, collection, query, where, getDocs, addDoc, serverT
 import { auth, db } from '../firebase/config';
 import { generateOTPWithTimestamp } from '../utils/otpUtils';
 import { sendVerificationEmail } from '../services/emailService';
-import { hasAdminAccess, hasSuperAdminAccess, hasAdminPermission } from '../services/adminService';
 import { processReferralUsage } from '../services/referralService';
 
 const AuthContext = createContext();
@@ -262,49 +261,12 @@ export function AuthProvider({ children }) {
         console.log('🔍 AuthContext: Loading user profile for:', currentUser.email);
         console.log('🆔 AuthContext: User UID:', currentUser.uid);
         
-        // First try to get by UID
         const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
-        console.log('📄 AuthContext: Document exists by UID:', userDoc.exists());
-        
-        let profileData = null;
+        console.log('📄 AuthContext: Document exists:', userDoc.exists());
         
         if (userDoc.exists()) {
-          profileData = userDoc.data();
-          console.log('📋 AuthContext: User profile loaded by UID:', profileData);
-          console.log('🔐 AuthContext: Role from profile:', profileData.role);
-        }
-        
-        // Always also check by email to find admin documents
-        console.log('🔍 AuthContext: Also checking by email for admin documents...');
-        const usersRef = collection(db, 'users');
-        const q = query(usersRef, where('email', '==', currentUser.email));
-        const querySnapshot = await getDocs(q);
-        
-        if (!querySnapshot.empty) {
-          // Look for admin role first
-          let adminDoc = null;
-          for (const doc of querySnapshot.docs) {
-            const data = doc.data();
-            if (data.role === 'admin' || data.role === 'super_admin') {
-              adminDoc = doc;
-              break;
-            }
-          }
-          
-          if (adminDoc) {
-            const adminProfileData = adminDoc.data();
-            console.log('👑 AuthContext: Found admin document by email:', adminProfileData);
-            console.log('🔐 AuthContext: Admin role from profile:', adminProfileData.role);
-            console.log('🆔 AuthContext: Admin Document ID:', adminDoc.id);
-            setUserProfile(adminProfileData);
-          } else if (profileData) {
-            console.log('👤 AuthContext: No admin found, using UID document');
-            setUserProfile(profileData);
-          } else {
-            console.log('❌ AuthContext: No documents found');
-          }
-        } else if (profileData) {
-          console.log('👤 AuthContext: No email matches, using UID document');
+          const profileData = userDoc.data();
+          console.log('📋 AuthContext: User profile loaded:', profileData);
           setUserProfile(profileData);
         } else {
           console.log('❌ AuthContext: No user profile found');
@@ -350,11 +312,7 @@ export function AuthProvider({ children }) {
     completeGoogleSignup,
     verifyEmailOTP,
     updateUserProfile,
-    loadUserProfile,
-    // Admin functions
-    hasAdminAccess: () => hasAdminAccess(userProfile),
-    hasSuperAdminAccess: () => hasSuperAdminAccess(userProfile),
-    hasAdminPermission: (permission) => hasAdminPermission(userProfile, permission)
+    loadUserProfile
   };
 
   // Helper function to add user to newsletter collection

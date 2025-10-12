@@ -324,7 +324,7 @@ const SharePackagePage = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-tufts-blue mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading package information...</p>
         </div>
       </div>
@@ -335,16 +335,16 @@ const SharePackagePage = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <Globe size={24} className="text-gray-400" />
           </div>
-          <h3 className="text-base font-semibold text-gray-900 mb-2">Package Not Found</h3>
-          <p className="text-xs text-gray-600 mb-4">
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Package Not Found</h3>
+          <p className="text-gray-600 mb-4">
             The package you&apos;re looking for doesn&apos;t exist or has been removed
           </p>
           <button
             onClick={() => router.push('/esim-plans')}
-            className="bg-tufts-blue hover:bg-tufts-blue text-white px-6 py-2 rounded-lg transition-colors"
+            className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition-colors"
           >
             Browse Available Packages
           </button>
@@ -364,10 +364,10 @@ const SharePackagePage = () => {
                 onClick={() => router.back()}
                 className="p-2 hover:bg-gray-100 rounded-full transition-colors"
               >
-                <ArrowLeft className="w-5 h-5 text-tufts-blue" />
+                <ArrowLeft className="w-5 h-5 text-gray-600" />
               </button>
               <div>
-                <h1 className="text-base font-bold text-gray-900">Package Details</h1>
+                <h1 className="text-xl font-bold text-gray-900">Package Details</h1>
               </div>
             </div>
           </div>
@@ -375,178 +375,144 @@ const SharePackagePage = () => {
       </div>
 
       {/* Content */}
-      <div className="w-full max-w-4xl mx-auto px-4 py-6">
+      <div className="w-full">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
+          className="bg-white shadow-lg overflow-hidden"
         >
-          {/* Package Header Card */}
-          <div className="relative mb-6">
-            <div className="absolute inset-px rounded-xl border-2 border-gray-200/50 shadow-xl shadow-gray-200/50 bg-white"></div>
-            <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
-              <div className="px-6 pt-6 pb-6 md:px-8 md:pt-8 md:pb-8">
-                <div className="text-center">
-                  <div className="flex items-center justify-center gap-3 mb-4">
-                    <span className="text-4xl">
-                      {urlCountryFlag || (packageData.country_code ? getCountryFlag(packageData.country_code) : '🌍')}
-                    </span>
-                    <h2 className="text-3xl font-semibold tracking-tight text-eerie-black">{packageData.name}</h2>
-                  </div>
-                  <p className="text-cool-black text-sm mt-2 max-w-2xl mx-auto">{packageData.description || 'Travel Package'}</p>
-                  {(urlCountryCode || packageData.country_code) && (
-                    <div className="flex items-center justify-center gap-2 mt-4">
-                      <Globe className="w-4 h-4 text-tufts-blue" />
-                      <span className="text-sm text-cool-black">
-                        {urlCountryCode || packageData.country_code}
-                      </span>
-                    </div>
-                  )}
-                </div>
+          {/* Package Title */}
+          <div className="bg-white p-4">
+            <div className="text-center">
+              <div className="flex items-center justify-center space-x-3 mb-4">
+                <span className="text-4xl">
+                  {urlCountryFlag || (packageData.country_code ? getCountryFlag(packageData.country_code) : '🌍')}
+                </span>
+                <h2 className="text-4xl font-bold text-black">{packageData.name}</h2>
               </div>
+              <p className="text-gray-600 text-lg mt-2">{packageData.description || 'Travel Package'}</p>
+              {(urlCountryCode || packageData.country_code) && (
+                <div className="flex items-center justify-center space-x-2 mt-3">
+                  <span className="text-sm text-gray-500">Country:</span>
+                  <span className="text-sm font-medium text-gray-700">
+                    {urlCountryCode || packageData.country_code}
+                  </span>
+                </div>
+              )}
             </div>
-            <div className="pointer-events-none absolute inset-px rounded-xl shadow-sm ring-1 ring-black/5"></div>
           </div>
           
           {/* Package Stats */}
-          <div className="relative mb-6">
-            <div className="absolute inset-px rounded-xl border-2 border-gray-200/50 shadow-xl shadow-gray-200/50 bg-white"></div>
-            <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
-              <div className="px-4 pt-4 pb-4 md:px-6 md:pt-6 md:pb-6">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <div className="flex items-start gap-3">
-                      <div className="flex-shrink-0 bg-tufts-blue/10 p-2 rounded-lg">
-                        <Wifi className="w-5 h-5 text-tufts-blue" />
-                      </div>
-                      <div>
-                        <div className="text-xs text-cool-black mb-1">Data</div>
-                        <div className="font-semibold text-eerie-black">{formatData(packageData.data, packageData.dataUnit)}</div>
-                      </div>
-                    </div>
+          <div className="bg-white px-4 pb-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-gray-50 rounded-lg p-3">
+                <div className="flex items-center space-x-2">
+                  <Wifi className="w-5 h-5 text-gray-600" />
+                  <div>
+                    <div className="text-sm text-gray-600">Data</div>
+                    <div className="font-semibold text-black">{formatData(packageData.data, packageData.dataUnit)}</div>
                   </div>
-                  
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <div className="flex items-start gap-3">
-                      <div className="flex-shrink-0 bg-tufts-blue/10 p-2 rounded-lg">
-                        <Clock className="w-5 h-5 text-tufts-blue" />
-                      </div>
-                      <div>
-                        <div className="text-xs text-cool-black mb-1">Validity</div>
-                        <div className="font-semibold text-eerie-black">{packageData.period || packageData.duration || 'N/A'} days</div>
-                      </div>
-                    </div>
+                </div>
+              </div>
+              
+              <div className="bg-gray-50 rounded-lg p-3">
+                <div className="flex items-center space-x-2">
+                  <Clock className="w-5 h-5 text-gray-600" />
+                  <div>
+                    <div className="text-sm text-gray-600">Validity</div>
+                    <div className="font-semibold text-black">{packageData.period || packageData.duration || 'N/A'} days</div>
                   </div>
-                  
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <div className="flex items-start gap-3">
-                      <div className="flex-shrink-0 bg-tufts-blue/10 p-2 rounded-lg">
-                        <DollarSign className="w-5 h-5 text-tufts-blue" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="text-xs text-cool-black mb-1">Price</div>
-                        {hasReferralDiscount ? (
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <span className="font-semibold text-green-600">
-                                ${Math.max(referralSettings.minimumPrice, parseFloat(packageData.price) * (100 - referralSettings.discountPercentage) / 100).toFixed(2)}
-                              </span>
-                              <div className="flex bg-cobalt-blue rounded-full px-2 py-0.5">
-                                <span className="text-xs text-white font-medium whitespace-nowrap">
-                                  -{referralSettings.discountPercentage}%
-                                </span>
-                              </div>
-                            </div>
-                            <div className="text-xs text-gray-500 line-through mt-1">${formatPrice(packageData.price)}</div>
-                          </div>
-                        ) : (
-                          <div className="font-semibold text-eerie-black">${formatPrice(packageData.price)}</div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <div className="flex items-start gap-3">
-                      <div className="flex-shrink-0 bg-tufts-blue/10 p-2 rounded-lg">
-                        <Shield className="w-5 h-5 text-tufts-blue" />
-                      </div>
+                </div>
+              </div>
+              
+              <div className="bg-gray-50 rounded-lg p-3">
+                <div className="flex items-center space-x-2">
+                  <DollarSign className="w-5 h-5 text-gray-600" />
+                  <div>
+                    <div className="text-sm text-gray-600">Price</div>
+                    {hasReferralDiscount ? (
                       <div>
-                        <div className="text-xs text-cool-black mb-1">Type</div>
-                        <div className="font-semibold text-eerie-black">eSIM</div>
+                        <div className="font-semibold text-red-600">
+                          ${Math.max(referralSettings.minimumPrice, parseFloat(packageData.price) * (100 - referralSettings.discountPercentage) / 100).toFixed(2)}
+                        </div>
+                        <div className="text-xs text-gray-500 line-through">${formatPrice(packageData.price)}</div>
+                        <div className="text-xs text-red-600 font-medium">
+                          Save ${(parseFloat(packageData.price) - Math.max(referralSettings.minimumPrice, parseFloat(packageData.price) * (100 - referralSettings.discountPercentage) / 100)).toFixed(2)}!
+                        </div>
                       </div>
-                    </div>
+                    ) : (
+                      <div className="font-semibold text-green-600">${formatPrice(packageData.price)}</div>
+                    )}
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-gray-50 rounded-lg p-3">
+                <div className="flex items-center space-x-2">
+                  <Shield className="w-5 h-5 text-gray-600" />
+                  <div>
+                    <div className="text-sm text-gray-600">Type</div>
+                    <div className="font-semibold text-black">eSIM</div>
                   </div>
                 </div>
               </div>
             </div>
-            <div className="pointer-events-none absolute inset-px rounded-xl shadow-sm ring-1 ring-black/5"></div>
           </div>
 
           {/* Package Actions */}
-          <div className="relative mb-6">
-            <div className="absolute inset-px rounded-xl border-2 border-gray-200/50 shadow-xl shadow-gray-200/50 bg-white"></div>
-            <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
-              <div className="px-6 pt-6 pb-6 md:px-8 md:pt-8 md:pb-8">
-                <div className="text-center">
-                  <h3 className="text-2xl font-semibold text-eerie-black mb-6 tracking-tight">Get This Package</h3>
-                  {hasReferralDiscount && (
-                    <div className="bg-green-50 border-2 border-green-200 rounded-xl p-4 mb-6 max-w-md mx-auto">
-                      <div className="flex items-center justify-center gap-2">
-                        <Gift className="w-5 h-5 text-green-600" />
-                        <span className="text-green-700 font-semibold">Referral Discount Applied!</span>
-                      </div>
-                      <p className="text-sm text-green-600 mt-2">
-                        You're saving ${(parseFloat(packageData.price) - Math.max(referralSettings.minimumPrice, parseFloat(packageData.price) * (100 - referralSettings.discountPercentage) / 100)).toFixed(2)} on this purchase ({referralSettings.discountPercentage}% off)
-                      </p>
+          <div className="p-6">
+            <div className="max-w-2xl mx-auto">
+              {/* Get Package Section */}
+              <div className="text-center mb-8">
+                <h3 className="text-2xl font-semibold text-gray-900 mb-4">Get This Package</h3>
+                {hasReferralDiscount && (
+                  <div className="bg-green-100 border border-green-300 rounded-lg p-3 mb-4 max-w-md mx-auto">
+                    <div className="flex items-center justify-center space-x-2">
+                      <Gift className="w-5 h-5 text-green-600" />
+                      <span className="text-green-800 font-medium">Referral Discount Applied!</span>
                     </div>
-                  )}
-                  <button
-                    onClick={handlePurchase}
-                    className="w-full max-w-md mx-auto flex items-center justify-center btn-primary "
-                  >
-                    <Smartphone className="w-6 h-6" />
-                    <span>Purchase Now</span>
-                  </button>
-                </div>
+                    <p className="text-sm text-green-700 mt-1">
+                      You're saving ${(parseFloat(packageData.price) - Math.max(referralSettings.minimumPrice, parseFloat(packageData.price) * (100 - referralSettings.discountPercentage) / 100)).toFixed(2)} on this purchase ({referralSettings.discountPercentage}% off)
+                    </p>
+                  </div>
+                )}
+                <button
+                  onClick={handlePurchase}
+                  className="w-full max-w-md mx-auto flex items-center justify-center space-x-3 bg-blue-600 hover:bg-blue-700 text-white py-4 px-6 rounded-xl transition-colors font-medium text-lg shadow-lg"
+                >
+                  <Smartphone className="w-6 h-6" />
+                  <span>Purchase Now</span>
+                </button>
               </div>
-            </div>
-            <div className="pointer-events-none absolute inset-px rounded-xl shadow-sm ring-1 ring-black/5"></div>
-          </div>
 
-          {/* How to Use Section */}
-          <div className="relative">
-            <div className="absolute inset-px rounded-xl border-2 border-gray-200/50 shadow-xl shadow-gray-200/50 bg-white"></div>
-            <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
-              <div className="px-6 pt-6 pb-6 md:px-8 md:pt-8 md:pb-8">
-                <div className="text-center">
-                  <h3 className="text-2xl font-semibold text-eerie-black mb-6 tracking-tight">How to Use</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="flex flex-col items-center text-center p-4">
-                      <div className="bg-tufts-blue/10 p-4 rounded-xl mb-4">
-                        <Zap className="w-8 h-8 text-tufts-blue" />
-                      </div>
-                      <h4 className="font-semibold text-eerie-black mb-2">Instant Activation</h4>
-                      <p className="text-sm text-cool-black">Get connected immediately after purchase</p>
+              {/* How to Use Section */}
+              <div className="text-center">
+                <h3 className="text-2xl font-semibold text-gray-900 mb-6">How to Use</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="flex flex-col items-center text-center p-4">
+                    <div className="bg-yellow-100 p-3 rounded-full mb-3">
+                      <Zap className="w-8 h-8 text-yellow-600" />
                     </div>
-                    <div className="flex flex-col items-center text-center p-4">
-                      <div className="bg-tufts-blue/10 p-4 rounded-xl mb-4">
-                        <Shield className="w-8 h-8 text-tufts-blue" />
-                      </div>
-                      <h4 className="font-semibold text-eerie-black mb-2">Secure & Reliable</h4>
-                      <p className="text-sm text-cool-black">Trusted by millions of travelers worldwide</p>
+                    <h4 className="font-semibold text-gray-900 mb-2">Instant Activation</h4>
+                    <p className="text-sm text-gray-600">Get connected immediately after purchase</p>
+                  </div>
+                  <div className="flex flex-col items-center text-center p-4">
+                    <div className="bg-green-100 p-3 rounded-full mb-3">
+                      <Shield className="w-8 h-8 text-green-600" />
                     </div>
-                    <div className="flex flex-col items-center text-center p-4">
-                      <div className="bg-tufts-blue/10 p-4 rounded-xl mb-4">
-                        <Globe className="w-8 h-8 text-tufts-blue" />
-                      </div>
-                      <h4 className="font-semibold text-eerie-black mb-2">Global Coverage</h4>
-                      <p className="text-sm text-cool-black">Stay connected wherever you go</p>
+                    <h4 className="font-semibold text-gray-900 mb-2">Secure & Reliable</h4>
+                    <p className="text-sm text-gray-600">Trusted by millions of travelers worldwide</p>
+                  </div>
+                  <div className="flex flex-col items-center text-center p-4">
+                    <div className="bg-blue-100 p-3 rounded-full mb-3">
+                      <Globe className="w-8 h-8 text-blue-600" />
                     </div>
+                    <h4 className="font-semibold text-gray-900 mb-2">Global Coverage</h4>
+                    <p className="text-sm text-gray-600">Stay connected wherever you go</p>
                   </div>
                 </div>
               </div>
             </div>
-            <div className="pointer-events-none absolute inset-px rounded-xl shadow-sm ring-1 ring-black/5"></div>
           </div>
         </motion.div>
       </div>

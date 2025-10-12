@@ -1,16 +1,18 @@
 'use client';
 
-import dynamic from 'next/dynamic';
+import { useEffect } from 'react';
 
-const TermsOfService = dynamic(() => import('../../src/components/TermsOfService'), {
-  ssr: false,
-  loading: () => (
-    <div className="flex justify-center items-center h-screen">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+export default function TermsOfServiceRedirect() {
+  useEffect(() => {
+    window.location.href = 'https://www.theholylabs.com/terms';
+  }, []);
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-white">
+      <div className="text-center">
+        <h1 className="text-2xl font-semibold text-gray-900 mb-4">Redirecting...</h1>
+        <p className="text-gray-600">You will be redirected to our terms of service.</p>
+      </div>
     </div>
-  )
-});
-
-export default function TermsOfServicePage() {
-  return <TermsOfService />;
+  );
 }

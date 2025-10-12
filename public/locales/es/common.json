@@ -15,42 +15,20 @@
     "announcement": "Ahora disponible en más de 200 países en todo el mundo.",
     "countriesAvailable": "Ahora disponible en más de 200 países",
     "stayConnected": "Mantente conectado",
-    "noMatterWhere": "sin importar dónde",
-    "with": "estés con",
-    "description": "eSIM global para viajeros, nómadas digitales y mochileros. Sin cargos de roaming, sin SIM física necesaria.",
+    "noMatterWhere": "sin importar dónde estés",
+    "with": "con",
+    "description": "RoamJet: eSIM global para viajeros, nómadas digitales y mochileros. Compra planes de datos móviles internacionales instantáneos para más de 200 países. Sin cargos de roaming, sin SIM física necesaria. Instala eSIM de viaje en línea en minutos, activa en el extranjero en segundos.",
     "downloadApp": "Descargar aplicación",
-    "exploreTariffs": "Explorar tarifas",
-    "popularCountries": {
-      "france": "🇫🇷 Francia",
-      "usa": "🇺🇸 Estados Unidos",
-      "thailand": "🇹🇭 Tailandia",
-      "japan": "🇯🇵 Japón",
-      "spain": "🇪🇸 España",
-      "china": "🇨🇳 China",
-        "brazil": "🇧🇷 Brasil",
-      "india": "🇮🇳 India"
-    }
+    "exploreTariffs": "Explorar tarifas"
   },
   "features": {
     "title": "Conéctate globalmente",
     "subtitle": "Todo lo que necesitas para la conectividad global",
-    "get35Off": "Obtén 35% DE DESCUENTO",
     "globalCoverage": {
       "title": "Cobertura global",
       "description": "Mantente conectado en más de 200 países con nuestra extensa cobertura de red eSIM en todo el mundo.",
       "countries": "200+ países",
       "worldwide": "Cobertura mundial"
-    },
-    "QRCodeModal": {
-      "esimQrCode": "eSIM QR Code",
-      "qrCodeImageFromAiralo": "QR Code Image from Airalo",
-      "realQrCodeFromAiralo": "Real QR Code from Airalo (Add Cellular Plan)",
-      "qrData": "QR Data: {{data}}...",
-      "directAppleInstallationLink": "Direct Apple Installation Link",
-      "appleEsimInstallation": "Apple eSIM Installation",
-      "qrCodeBeingGenerated": "QR code is being generated...",
-      "clickGenerateQrCodeToTryAgain": "Click \"Generate QR Code\" to try again",
-      "actions": "Actions"
     },
     "instantActivation": {
       "title": "Activación instantánea",
@@ -128,13 +106,8 @@
   "plans": {
     "title": "Planes eSIM",
     "subtitle": "Elige tu plan eSIM perfecto",
-    "description": "Conéctate al instante con nuestros planes eSIM globales. No necesitas tarjeta SIM física, solo escanea y listo.",
-    "searchPlaceholder": "Buscar países...",
-    "loadingPlans": "Cargando países...",
-    "fromPrice": "Desde ${price}",
-    "noPlansAvailable": "No hay planes disponibles",
-    "noCountriesFound": "No se encontraron países que coincidan con tu búsqueda",
-    "noCountriesAvailable": "No hay países disponibles aún",
+    "description": "Explora nuestra selección de planes eSIM de todo el mundo. Activación instantánea, cobertura global y precios competitivos.",
+    "loadingPlans": "Cargando planes...",
     "totalPlans": "Total de planes",
     "countries": "Países",
     "startingFrom": "Desde",
@@ -143,9 +116,7 @@
     "showLess": "Mostrar menos"
   },
   "discount": {
-    "get35Off": "Obtén 35% DE DESCUENTO",
-    "copied": "¡Código de descuento OCTOBER35 copiado! ¡35% de descuento en tu compra!",
-    "copyFailed": "Error al copiar el código. Por favor, inténtalo de nuevo."
+    "get35Off": "Obtén 35% DE DESCUENTO"
   },
   "language": {
     "select": "Seleccionar idioma",
@@ -254,20 +225,6 @@
     "welcomeMessage": "Bienvenido a RoamJet - Tu solución eSIM global",
     "trustedByThousands": "Confiado por miles de viajeros en todo el mundo"
   },
-  "accountSettings": {
-    "accountSettings": "Configuración de cuenta",
-    "email": "Dirección de correo electrónico",
-    "phone": "Número de teléfono",
-    "name": "Nombre",
-    "saveChanges": "Guardar cambios",
-    "cancel": "Cancelar",
-    "updateSuccess": "¡Cambios guardados exitosamente!",
-    "updateFailed": "Error al guardar los cambios",
-    "password": "Contraseña",
-    "passwordPlaceholder": "Ingresa tu contraseña",
-    "passwordConfirm": "Confirmar contraseña",
-    "passwordConfirmPlaceholder": "Ingresa tu contraseña nuevamente"
-  },
   "contact": {
     "title": "Ponte en contacto",
     "subtitle": "Estamos aquí para ayudarte con todas tus necesidades de eSIM",
@@ -369,28 +326,6 @@
     "resetPassword": "Restablecer contraseña",
     "passwordResetInfo": "Enviaremos un enlace para restablecer la contraseña a tu dirección de correo electrónico",
     "accountRole": "Rol de cuenta",
-    "phoneUpdatedSuccessfully": "Número de teléfono actualizado exitosamente",
-    "failedToUpdatePhone": "Error al actualizar el número de teléfono",
-    "passwordResetEmailSent": "¡Correo de restablecimiento de contraseña enviado! Revisa tu bandeja de entrada.",
-    "failedToSendPasswordReset": "Error al enviar el correo de restablecimiento de contraseña",
-    "esimQrCode": "Código QR eSIM",
-    "realQrCodeFromAiralo": "✅ Código QR Real de Airalo (Agregar Plan Celular)",
-    "qrData": "Datos QR: {{data}}...",
-    "qrCodeImageFromAiralo": "✅ Imagen de Código QR de Airalo",
-    "appleEsimInstallation": "Instalación eSIM de Apple",
-    "directAppleInstallationLink": "✅ Enlace de Instalación Directa de Apple",
-    "installEsim": "Instalar eSIM",
-    "qrCodeBeingGenerated": "El código QR se está generando...",
-    "noQrCodeAvailable": "No hay código QR disponible",
-    "clickGenerateQrCodeToTryAgain": "Haz clic en \"Generar Código QR\" para intentar de nuevo",
-    "actions": "Acciones",
-    "checkingEsimDetails": "Verificando Detalles eSIM...",
-    "checkEsimDetailsInApi": "Verificar Detalles eSIM en API",
-    "checkingUsage": "Verificando Uso...",
-    "checkUsageAndStatus": "Verificar Uso y Estado",
-    "openInAppleEsim": "Abrir en Apple eSIM",
-    "downloadQrCode": "Descargar Código QR",
-    "uses": "Usos",
     "roles": {
       "customer": "Cliente",
       "admin": "Administrador",

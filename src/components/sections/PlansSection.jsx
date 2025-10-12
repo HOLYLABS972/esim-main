@@ -1,30 +1,9 @@
 'use client';
 
-import { Suspense } from 'react';
-import dynamic from 'next/dynamic';
 import { useI18n } from '../../contexts/I18nContext';
 import { getLanguageDirection, detectLanguageFromPath } from '../../utils/languageUtils';
 import { usePathname } from 'next/navigation';
-import { Copy } from 'lucide-react';
-import toast from 'react-hot-toast';
-
-const EsimPlans = dynamic(() => import('../EsimPlans'), {
-  loading: () => <div className="animate-pulse">Loading plans...</div>,
-  ssr: false
-});
-
-export const handleCopyDiscountCode = async (t) => {
-  const discountCode = 'OCTOBER35';
-  try {
-    await navigator.clipboard.writeText(discountCode);
-    toast.success(t('discount.copied', 'Discount code OCTOBER35 copied! 35% off your purchase!'), {
-      duration: 4000,
-      icon: '🎉',
-    });
-  } catch (err) {
-    toast.error(t('discount.copyFailed', 'Failed to copy code. Please try again.'));
-  }
-};
+import { Globe } from 'lucide-react';
 
 export default function PlansSection() {
   const { t, locale, isLoading } = useI18n();
@@ -43,9 +22,58 @@ export default function PlansSection() {
   const currentLanguage = getCurrentLanguage();
   const isRTL = getLanguageDirection(currentLanguage) === 'rtl';
   
+  // Function to handle plan card click - redirect to app download
+  const handlePlanClick = () => {
+    // Use OneLink for smart routing to correct app store
+    if (typeof window !== 'undefined' && window.APPSFLYER_ONELINK_URL) {
+      console.log('📱 Opening AppsFlyer OneLink from plan card');
+      window.open(window.APPSFLYER_ONELINK_URL, '_blank');
+      return;
+    }
+    
+    // Fallback: scroll to download section if OneLink not ready
+    console.log('🖥️ OneLink not ready, scrolling to download section');
+    const downloadSection = document.getElementById('how-it-works');
+    if (downloadSection) {
+      downloadSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+  
+  // Hardcoded popular plans for landing page
+  const popularPlans = [
+    {
+      country: 'United States',
+      flag: '🇺🇸',
+      data: '1GB',
+      days: '7 Days',
+      price: '$4.00'
+    },
+    {
+      country: 'Europe',
+      flag: '🇪🇺',
+      data: '1GB',
+      days: '7 Days',
+      price: '$4.00'
+    },
+    {
+      country: 'Thailand',
+      flag: '🇹🇭',
+      data: '1GB',
+      days: '7 Days',
+      price: '$4.00'
+    },
+    {
+      country: 'Japan',
+      flag: '🇯🇵',
+      data: '1GB',
+      days: '7 Days',
+      price: '$4.00'
+    }
+  ];
+  
   if (isLoading) {
     return (
-      <section className="py-12 lg:py-16 bg-white relative overflow-hidden" dir={isRTL ? 'rtl' : 'ltr'}>
+      <section className="py-16 bg-white relative overflow-hidden" dir={isRTL ? 'rtl' : 'ltr'}>
         <div className="container mx-auto px-4 relative z-10">
           <div className="animate-pulse space-y-8">
             <div className="text-center">
@@ -60,29 +88,66 @@ export default function PlansSection() {
   }
   
   // Reduce top padding for Hebrew and Arabic since Features section is hidden
-  const topPadding = (locale === 'he' || locale === 'ar') ? 'pt-8' : 'py-12 lg:py-16';
+  const topPadding = (locale === 'he' || locale === 'ar') ? 'pt-8' : 'py-16';
   
   return (
-    <section id="esim-plans" className={`${topPadding} pb-12 lg:pb-16 scroll-mt-16 bg-white relative overflow-hidden`} dir={isRTL ? 'rtl' : 'ltr'}>                                                                                                          
-      <div className="container mx-auto relative z-10">
-       
+    <section id="esim-plans" className={`${topPadding} pb-16 scroll-mt-20 bg-white relative overflow-hidden`} dir={isRTL ? 'rtl' : 'ltr'}>                                                                                                          
+      <div className="container mx-auto px-4 relative z-10">
+        
+        {/* Section Header */}
+        <div className="text-center mb-16 max-w-4xl mx-auto">
+        <h2 className="text-center text-xl font-semibold text-tufts-blue"> <span>{'{ '}</span>
+          {t('plans.title')}
+          <span>{' }'}</span>
+         </h2>
+         <p className="mx-auto mt-12 max-w-4xl text-center text-4xl font-semibold tracking-tight text-eerie-black sm:text-5xl">                                                                                        
+            {t('plans.subtitle')}
+          </p>
+          <p className={`text-eerie-black max-w-3xl mx-auto mt-4 ${isRTL ? 'text-right' : 'text-left'}`}>
+            {t('plans.description')}
+          </p>
+        </div>
 
-        {/* Plans Component */}
-        <div>
-          <Suspense fallback={
-            <div className="text-center py-16">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-4 mx-auto" style={{ borderColor: '#9039FF' }}></div>                                                                                         
-              <p className={`mt-4 text-eerie-black ${isRTL ? 'text-right' : 'text-left'}`} style={{
-                fontSize: '16px',
-                fontWeight: '400',
-                lineHeight: '160%',
-                letterSpacing: '0px'
-              }}>{t('plans.loadingPlans')}</p>
+        {/* Hardcoded Popular Plans Preview */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto mb-12">
+          {popularPlans.map((plan, index) => (
+            <div 
+              key={index}
+              className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 hover:border-cobalt-blue cursor-pointer transform hover:scale-105"
+              onClick={handlePlanClick}
+            >
+              <div className="text-center">
+                <div className="text-5xl mb-3">{plan.flag}</div>
+                <h3 className="text-lg font-bold text-eerie-black mb-2">{plan.country}</h3>
+                <div className="flex items-center justify-center gap-2 mb-3">
+                  <Globe className="w-4 h-4 text-gray-500" />
+                  <span className="text-gray-600 text-sm">{plan.data}</span>
+                  <span className="text-gray-400">•</span>
+                  <span className="text-gray-600 text-sm">{plan.days}</span>
+                </div>
+                <div className="mt-4 mb-2">
+                  <span className="text-sm text-gray-500">From</span>
+                  <div className="text-2xl font-bold text-eerie-black mt-1">{plan.price}</div>
+                </div>
+              </div>
             </div>
-          }>
-            <EsimPlans />
-          </Suspense>
-          {/* Bottom Gradient Blob */}
+          ))}
+        </div>
+        
+        {/* Get 35% OFF Button */}
+        <div className="text-center mt-12">
+          <button
+            onClick={handlePlanClick}
+            className="btn-secondary inline-flex items-center gap-2"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+            <span>Get 35% OFF</span>
+          </button>
+        </div>
+        
+        {/* Bottom Gradient Blob */}
         <div aria-hidden="true" className="absolute inset-x-0 top-[calc(100%-13rem)] -z-10 transform-gpu overflow-hidden blur-3xl sm:top-[calc(100%-30rem)]">                                                           
           <div 
             style={{ 
@@ -91,7 +156,6 @@ export default function PlansSection() {
             }} 
             className="relative right-[calc(50%-36rem)] aspect-[1155/678] w-[12.125rem] translate-x-1/2 opacity-30 sm:right-[calc(50%+36rem)] sm:w-[72.1875rem]"                                                        
           ></div>
-        </div>
         </div>
       </div>
     </section>

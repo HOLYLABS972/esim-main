@@ -42,6 +42,47 @@ export const I18nProvider = ({ children }) => {
     const initializeLocale = async () => {
       console.log('I18nContext: Initializing locale...');
       
+      // Get domain-based language detection
+      const detectDomainLanguage = () => {
+        if (typeof window === 'undefined') return null;
+        const hostname = window.location.hostname;
+        
+        const domainLanguageMap = {
+          'ru.roamjet.net': 'ru',
+          'esim.roamjet.net': 'en',
+          'www.roamjet.net': 'en',
+          'roamjet.net': 'en',
+          'ar.roamjet.net': 'ar',
+          'he.roamjet.net': 'he',
+          'de.roamjet.net': 'de',
+          'fr.roamjet.net': 'fr',
+          'es.roamjet.net': 'es',
+        };
+        
+        // Check direct match
+        if (domainLanguageMap[hostname]) {
+          return domainLanguageMap[hostname];
+        }
+        
+        // Check without www.
+        const cleanHostname = hostname.replace(/^www\./, '');
+        if (domainLanguageMap[cleanHostname]) {
+          return domainLanguageMap[cleanHostname];
+        }
+        
+        // Extract subdomain
+        const subdomain = hostname.split('.')[0];
+        const supportedLanguageCodes = ['en', 'es', 'fr', 'de', 'ar', 'he', 'ru'];
+        if (supportedLanguageCodes.includes(subdomain)) {
+          return subdomain;
+        }
+        
+        return null;
+      };
+      
+      const domainLanguage = detectDomainLanguage();
+      console.log('I18nContext: Domain language detected:', domainLanguage);
+      
       // First, check for saved language in localStorage, then cookies
       let savedLanguage = localStorage.getItem('roamjet-language');
       
@@ -59,8 +100,12 @@ export const I18nProvider = ({ children }) => {
       if (savedLanguage) {
         console.log('I18nContext: Found saved language:', savedLanguage);
         initialLocale = savedLanguage;
+      } else if (domainLanguage) {
+        // Use domain language if no saved preference
+        console.log('I18nContext: Using domain language:', domainLanguage);
+        initialLocale = domainLanguage;
       } else {
-        // Fallback to pathname detection if no saved language
+        // Fallback to pathname detection if no saved language or domain language
         // Check for language prefix followed by / or end of string to avoid false matches
         if (pathname.startsWith('/he/') || pathname === '/he') initialLocale = 'he';
         else if (pathname.startsWith('/ar/') || pathname === '/ar') initialLocale = 'ar';
@@ -76,7 +121,7 @@ export const I18nProvider = ({ children }) => {
         else if (pathname.startsWith('/french/') || pathname === '/french') initialLocale = 'fr';
         else if (pathname.startsWith('/spanish/') || pathname === '/spanish') initialLocale = 'es';
         
-        console.log('I18nContext: No saved language, detected from pathname:', initialLocale);
+        console.log('I18nContext: No saved language or domain language, detected from pathname:', initialLocale);
       }
       
       // Set the locale

@@ -7,7 +7,6 @@ export default function robots() {
         userAgent: '*',
         allow: '/',
         disallow: [
-          '/admin',
           '/api/',
           '/_next/',
           '/static/',
@@ -17,7 +16,6 @@ export default function robots() {
         userAgent: 'Googlebot',
         allow: '/',
         disallow: [
-          '/admin',
           '/api/',
         ],
       },

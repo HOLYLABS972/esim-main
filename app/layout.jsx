@@ -1,7 +1,6 @@
 import Providers from '../src/components/Providers'
 import ConditionalNavbar from '../src/components/ConditionalNavbar'
 import ConditionalFooter from '../src/components/ConditionalFooter'
-import CookieConsent from '../src/components/CookieConsent'
 import FacebookPixel from '../src/components/FacebookPixel'
 import LanguageWrapper from '../src/components/LanguageWrapper'
 import './globals.css'
@@ -156,11 +155,10 @@ export default function RootLayout({ children }) {
           <LanguageWrapper>
             <div className="bg-white">
               <ConditionalNavbar />
-              <main className="pt-">
+              <main className="pt-16">
                 {children}
               </main>
               <ConditionalFooter />
-              <CookieConsent />
               <FacebookPixel />
             </div>
           </LanguageWrapper>

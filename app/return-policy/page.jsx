@@ -1,28 +1,18 @@
-import dynamic from 'next/dynamic';
+'use client';
 
-export const metadata = {
-  title: 'Return Policy - No Returns or Exchanges - eSIM Plans',
-  description: 'Our eSIM return policy: No returns or exchanges accepted. All purchases are final sale due to the digital nature of eSIM products.',
-  keywords: ['return policy', 'no returns', 'no exchanges', 'final sale', 'eSIM policy', 'digital goods'],
-  openGraph: {
-    title: 'Return Policy - No Returns or Exchanges - eSIM Plans',
-    description: 'Our eSIM return policy: No returns or exchanges accepted. All purchases are final sale.',
-    url: '/return-policy',
-  },
-  alternates: {
-    canonical: '/return-policy',
-  },
-};
+import { useEffect } from 'react';
 
-const ReturnPolicy = dynamic(() => import('../../src/components/ReturnPolicy'), {
-  ssr: false,
-  loading: () => (
-    <div className="flex justify-center items-center h-screen">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+export default function ReturnPolicyRedirect() {
+  useEffect(() => {
+    window.location.href = 'https://www.theholylabs.com/';
+  }, []);
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-white">
+      <div className="text-center">
+        <h1 className="text-2xl font-semibold text-gray-900 mb-4">Redirecting...</h1>
+        <p className="text-gray-600">You will be redirected to our main website.</p>
+      </div>
     </div>
-  )
-});
-
-export default function ReturnPolicyPage() {
-  return <ReturnPolicy />;
+  );
 }

@@ -3,11 +3,11 @@ import Dashboard from '../../../src/components/Dashboard'
 import Loading from '../../../src/components/Loading'
 
 export const metadata = {
-  title: 'Панель управления - тарифы eSIM',
+  title: 'Панель управления - планы eSIM',
   description: 'Управляйте своими планами eSIM, просматривайте использование и получайте доступ к настройкам аккаунта.',
   keywords: ['панель управления eSIM', 'управление аккаунтом', 'отслеживание использования'],
   openGraph: {
-    title: 'Панель управления - тарифы eSIM',
+    title: 'Панель управления - планы eSIM',
     description: 'Управляйте своими планами eSIM, просматривайте использование и получайте доступ к настройкам аккаунта.',
     url: '/ru/dashboard',
   },

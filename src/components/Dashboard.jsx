@@ -5,14 +5,13 @@ import { useAuth } from '../contexts/AuthContext';
 import { useI18n } from '../contexts/I18nContext';
 import { collection, query, getDocs, doc, setDoc, getDoc, deleteDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
-import { useRouter, useSearchParams, usePathname } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { esimService } from '../services/esimService';
 import { getReferralStats, createReferralCode } from '../services/referralService';
 import { getLanguageDirection, detectLanguageFromPath } from '../utils/languageUtils';
 import toast from 'react-hot-toast';
 
 // Dashboard Components
-import AccessDeniedAlert from './dashboard/AccessDeniedAlert';
 import DashboardHeader from './dashboard/DashboardHeader';
 import StatsCards from './dashboard/StatsCards';
 import RecentOrders from './dashboard/RecentOrders';
@@ -49,7 +48,6 @@ const Dashboard = () => {
   const [loadingReferralStats, setLoadingReferralStats] = useState(false);
   
   const router = useRouter();
-  const searchParams = useSearchParams();
 
   // Get current language for RTL detection
   const getCurrentLanguage = () => {
@@ -104,14 +102,6 @@ const Dashboard = () => {
     }
   };
 
-  // Check for access denied error
-  useEffect(() => {
-    const error = searchParams.get('error');
-    if (error === 'access_denied') {
-      // Show access denied message
-      console.log('Access denied: User tried to access admin panel without permission');
-    }
-  }, [searchParams]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -223,11 +213,9 @@ const Dashboard = () => {
   // Redirect to login if user is not authenticated
   useEffect(() => {
     if (!authLoading && !currentUser) {
-      // Get the appropriate login URL for the current language
-      const loginUrl = currentLanguage === 'en' ? '/login' : `/${currentLanguage}/login`;
-      router.push(loginUrl);
+      router.push('/login');
     }
-  }, [authLoading, currentUser, router, currentLanguage]);
+  }, [authLoading, currentUser, router]);
 
   // Show loading spinner while auth is loading
   if (authLoading) {
@@ -779,27 +767,12 @@ const Dashboard = () => {
 
 
   return (
-    <div className="min-h-screen bg-white py-4 mt-2" dir={isRTL ? 'rtl' : 'ltr'}>
-      {/* Access Denied Alert */}
-      <AccessDeniedAlert show={searchParams.get('error') === 'access_denied'} />
-      <section className="bg-white">
-        <div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8 mt-12">
-          <div className="text-center">
-            <h2 className="text-center text-lg lg:text-xl font-semibold text-tufts-blue">
-              <span>{'{ '}</span>
-              {t('dashboard.title', 'Dashboard')}
-              <span>{' }'}</span>
-            </h2>
-          </div>
-        </div>
-      </section>
-
+    <div className="min-h-screen bg-white py-8" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Header Section */}
       <DashboardHeader 
         currentUser={currentUser}
         userProfile={userProfile}
         onShowReferralSheet={() => setShowReferralSheet(true)}
-       
       />
 
       {/* Stats Cards */}
@@ -823,7 +796,8 @@ const Dashboard = () => {
         onLoadUserProfile={loadUserProfile}
       />
 
-   
+      {/* Spacing after dashboard */}
+      <div className="h-20"></div>
 
       {/* QR Code Modal */}
       <QRCodeModal 

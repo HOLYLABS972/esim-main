@@ -1,14 +1,12 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { useRouter, useSearchParams, usePathname } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '../contexts/AuthContext';
-import { useI18n } from '../contexts/I18nContext';
 import { motion } from 'framer-motion';
 import { Mail, ArrowLeft, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { validateOTPFormat } from '../utils/otpUtils';
-import { detectLanguageFromPath } from '../utils/languageUtils';
 
 const VerifyEmail = () => {
   const [otp, setOtp] = useState('');
@@ -18,10 +16,8 @@ const VerifyEmail = () => {
   const [loading, setLoading] = useState(false);
   const [verificationComplete, setVerificationComplete] = useState(false);
   const { verifyEmailOTP } = useAuth();
-  const { locale } = useI18n();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const pathname = usePathname();
 
   useEffect(() => {
     // Get email from URL params
@@ -79,11 +75,9 @@ const VerifyEmail = () => {
         localStorage.setItem('roamjet-language', 'en');
       }
       
-      // Redirect to dashboard in current language
+      // Redirect to English dashboard
       setTimeout(() => {
-        const currentLanguage = locale || detectLanguageFromPath(pathname) || 'en';
-        const dashboardUrl = currentLanguage === 'en' ? '/dashboard' : `/${currentLanguage}/dashboard`;
-        router.push(dashboardUrl);
+        router.push('/dashboard');
       }, 2000);
       
     } catch (error) {
@@ -96,9 +90,7 @@ const VerifyEmail = () => {
 
 
   const handleBackToRegister = () => {
-    const currentLanguage = locale || detectLanguageFromPath(pathname) || 'en';
-    const registerUrl = currentLanguage === 'en' ? '/register' : `/${currentLanguage}/register`;
-    router.push(registerUrl);
+    router.push('/register');
   };
 
   if (verificationComplete) {

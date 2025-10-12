@@ -47,7 +47,7 @@ const CountrySearchBar = ({ onSearch, showCountryCount = true }) => {
   };
 
   return (
-    <div className="w-full max-w-2xl mx-auto " dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="w-full max-w-3xl mx-auto px-4" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Search Bar */}
       <form onSubmit={handleSearch} className="relative">
         <div className="relative group">
@@ -56,55 +56,43 @@ const CountrySearchBar = ({ onSearch, showCountryCount = true }) => {
             value={searchValue}
             onChange={handleInputChange}
             onKeyPress={handleKeyPress}
-            placeholder={`${t('hero.countriesAvailable', 'Now available in 200+ countries')}`}
-            className={`w-full ${isRTL ? 'pl-12 sm:pl-16 pr-6' : 'pr-14 sm:pr-16 pl-6'} text-base sm:text-lg border-4 border-gray-200/40 rounded-full transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-blue-200/30 bg-white/70 focus:border-blue-200/20 backdrop-blur-md placeholder:text-gray-500 focus:ring-blue-200/20 placeholder:font-medium outline-none ${isRTL ? 'text-right' : 'text-left'}`}
+            placeholder={`🌍 ${t('hero.countriesAvailable', 'Now available in 200+ countries')}`}
+            className={`w-full px-6 py-4 sm:py-5 ${isRTL ? 'pl-14 sm:pl-16 pr-6' : 'pr-14 sm:pr-16 pl-6'} text-base sm:text-lg border-2 border-gray-200 rounded-full focus:outline-none focus:border-cobalt-blue focus:ring-2 focus:ring-cobalt-blue/20 transition-all duration-300 shadow-lg hover:shadow-xl bg-white/90 backdrop-blur-md placeholder:text-gray-500 placeholder:font-medium ${isRTL ? 'text-right' : 'text-left'}`}
           />
           <button
             type="submit"
-            className={`absolute ${isRTL ? 'left-2 sm:left-3' : 'right-2 sm:right-3'} top-1/2 transform -translate-y-1/2 bg-white/80 backdrop-blur-md p-1 rounded-full transition-all duration-300 hover:scale-105 outline-none focus:ring-2 focus:ring-blue-200/20 shadow-lg shadow-gray-200/50`}
+            className={`absolute ${isRTL ? 'left-2 sm:left-3' : 'right-2 sm:right-3'} top-1/2 transform -translate-y-1/2 bg-white/80 backdrop-blur-md hover:bg-white/95 border-2 border-cobalt-blue/30 hover:border-cobalt-blue p-3 sm:p-3.5 rounded-full transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-cobalt-blue/50 shadow-lg`}
             aria-label="Search"
           >
-            <Search className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+            <svg className="w-5 h-5 sm:w-6 sm:h-6 text-cobalt-blue" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+            </svg>
           </button>
         </div>
         
         {/* Search Suggestions */}
         <div className="mt-3 flex flex-wrap justify-center gap-2 px-2">
-          {['france', 'usa', 'thailand', 'japan', 'spain', 'china', 'brazil', 'india'].map((countryKey) => {
-            const displayName = t(`hero.popularCountries.${countryKey}`, countryKey);
-            // Extract English name for search (remove emoji and get the English equivalent)
-            const searchName = countryKey === 'france' ? 'France' :
-                              countryKey === 'usa' ? 'USA' :
-                              countryKey === 'thailand' ? 'Thailand' :
-                              countryKey === 'japan' ? 'Japan' :
-                              countryKey === 'spain' ? 'Spain' :
-                              countryKey === 'china' ? 'China' :
-                              countryKey === 'brazil' ? 'Brazil' :
-                              countryKey === 'india' ? 'India' :
-                              countryKey;
-            
-            return (
-              <button
-                key={countryKey}
-                type="button"
-                onClick={() => {
-                  setSearchValue(searchName);
-                  // Force English language
-                  if (typeof window !== 'undefined') {
-                    localStorage.setItem('roamjet-language', 'en');
-                  }
-                  setTimeout(() => {
-                    // Always use English URL
-                    const searchUrl = `/esim-plans?search=${encodeURIComponent(searchName)}`;
-                    router.push(searchUrl);
-                  }, 100);
-                }}
-                className="text-xs sm:text-sm px-3 py-1 rounded-full bg-white/60 hover:bg-cobalt-blue/10 border-2 border-blue-200/30 hover:border-blue-200/60 transition-all duration-200 text-gray-700 hover:text-cobalt-blue font-medium hover:shadow-lg hover:shadow-blue-200/60 hover:scale-103"
-              >
-                {displayName}
-              </button>
-            );
-          })}
+          {['France', 'USA', 'Thailand', 'Japan', 'Spain'].map((country) => (
+            <button
+              key={country}
+              type="button"
+              onClick={() => {
+                setSearchValue(country);
+                // Force English language
+                if (typeof window !== 'undefined') {
+                  localStorage.setItem('roamjet-language', 'en');
+                }
+                setTimeout(() => {
+                  // Always use English URL
+                  const searchUrl = `/esim-plans?search=${encodeURIComponent(country)}`;
+                  router.push(searchUrl);
+                }, 100);
+              }}
+              className="text-xs sm:text-sm px-3 py-1 rounded-full bg-white/80 hover:bg-cobalt-blue/10 border border-jordy-blue/30 hover:border-cobalt-blue transition-all duration-200 text-gray-700 hover:text-cobalt-blue font-medium"
+            >
+              {country}
+            </button>
+          ))}
         </div>
       </form>
     </div>

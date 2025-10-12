@@ -1,21 +1,18 @@
 'use client';
 
-import dynamic from 'next/dynamic';
-import RTLWrapper from '../../src/components/RTLWrapper';
+import { useEffect } from 'react';
 
-const PrivacyPolicy = dynamic(() => import('../../src/components/PrivacyPolicy'), {
-  ssr: false,
-  loading: () => (
-    <div className="flex justify-center items-center h-screen">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-    </div>
-  )
-});
+export default function PrivacyPolicyRedirect() {
+  useEffect(() => {
+    window.location.href = 'https://www.theholylabs.com/privacy';
+  }, []);
 
-export default function PrivacyPolicyPage() {
   return (
-    <RTLWrapper>
-      <PrivacyPolicy />
-    </RTLWrapper>
+    <div className="min-h-screen flex items-center justify-center bg-white">
+      <div className="text-center">
+        <h1 className="text-2xl font-semibold text-gray-900 mb-4">Redirecting...</h1>
+        <p className="text-gray-600">You will be redirected to our privacy policy.</p>
+      </div>
+    </div>
   );
 }

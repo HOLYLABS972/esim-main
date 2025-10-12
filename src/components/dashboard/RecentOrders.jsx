@@ -44,104 +44,76 @@ const RecentOrders = ({ orders, loading, onViewQRCode }) => {
   const isRTL = getLanguageDirection(currentLanguage) === 'rtl';
   return (
     <section className="bg-white recent-orders" dir={isRTL ? 'rtl' : 'ltr'}>
-      <div className="mx-auto max-w-2xl px-4 lg:max-w-7xl lg:px-8">
+      <div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8">
         <div className="relative">
-          <div className="absolute inset-px rounded-xl border-2 border-gray-200/50 shadow-xl shadow-gray-200/50 bg-white"></div>
+          <div className="absolute inset-px rounded-xl bg-white"></div>
           <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
-            <div className="px-4 pt-6 pb-6 md:px-8 md:pt-8 md:pb-8">
-              <div
-                className={
-                  `flex flex-col gap-4 ` +
-                  (isRTL ? 'flex-row-reverse' : '')
-                }
-              >
-                <div
-                  className={
-                    `flex justify-start md:gap-4 ` +
-                    (isRTL ? 'md:justify-end flex-row-reverse' : '')
-                  }
-                >
-                  <div>
-                    <h2 className={`text-base sm:text-lg font-medium tracking-tight text-eerie-black text-left mb-4 sm:mb-6`}>
-                      {t('dashboard.recentOrders', 'Recent Orders')}
-                    </h2>
-                  </div>
-                </div>
+            <div className="px-8 pt-8 pb-8">
+              <div className="mb-6">
+                <h2 className={`text-lg font-medium tracking-tight text-eerie-black ${isRTL ? 'text-right' : 'text-left'}`}>
+                  {t('dashboard.recentOrders', 'Recent Orders')}
+                </h2>
+              </div>
 
-                {loading ? (
-                  <div className="flex justify-center items-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-tufts-blue"></div>
-                  </div>
-                ) : orders.length === 0 ? (
-                  <div className="text-center py-8">
-                    <Globe className="w-12 h-12 text-cool-black/40 mx-auto mb-4" />
-                    <p className="text-cool-black">{t('dashboard.noOrders', 'No orders yet')}</p>
-                  </div>
-                ) : (
-                  <div className="space-y-3 sm:space-y-4">
+              {loading ? (
+                <div className="flex justify-center items-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-tufts-blue"></div>
+                </div>
+              ) : orders.length === 0 ? (
+                <div className="text-center py-8">
+                  <Globe className="w-12 h-12 text-cool-black/40 mx-auto mb-4" />
+                  <p className="text-cool-black">{t('dashboard.noOrders', 'No orders yet')}</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
                   {orders.slice(0, 5).map((order) => (
                     order && (
-                        <div
-                          key={order.id || order.orderId || Math.random()}
-                          className={`flex flex-col sm:flex-row justify-between p-3 sm:p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200 space-y-3 sm:space-y-0 ${isRTL ? 'sm:flex-row-reverse' : ''}`}
-                        >
-                          <div className={`flex flex-col justify-start ${isRTL ? 'items-end' : 'items-start'}`}>
-                            {/* Country Flag and Name */}
-                            <div className={`flex gap-2 items-center mb-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                              <div className={`text-xl sm:text-2xl ${isRTL ? 'hidden' : ''}`}>
-                                {getFlagEmoji(order.countryCode)}
-                              </div>
-                              <p className={`text-sm font-medium text-cool-black/60 text-left ${isRTL ? 'text-right' : ''}`}>
-                                {order.countryName || order.countryCode || t('dashboard.unknownCountry', 'Unknown Country')}
-                              </p>
-                            </div>
-                            
-                            {/* Plan Details */}
-                            <div className={`flex flex-col gap-1 ${isRTL ? 'items-end' : 'items-start'}`}>
-                              <p className={`font-medium text-eerie-black text-sm sm:text-base truncate text-left ${isRTL ? 'text-right' : ''}`}>
-                                {order.planName || t('dashboard.unknownPlan', 'Unknown Plan')}
-                              </p>
-                              <p className={`text-xs sm:text-sm text-gray-500 text-left ${isRTL ? 'text-right' : ''}`}>
-                                {t('dashboard.orderNumber', 'Order #{{number}}', { number: order.orderId || order.id || t('dashboard.unknown', 'Unknown') })}
+                      <div
+                        key={order.id || order.orderId || Math.random()}
+                        className={`flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200 ${isRTL ? 'flex-row-reverse' : ''}`}
+                      >
+                        <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-3' : 'space-x-3'}`}>
+                          <div className="text-2xl">
+                            {getFlagEmoji(order.countryCode)}
+                          </div>
+                          <div>
+                            <p className={`font-medium text-eerie-black ${isRTL ? 'text-right' : 'text-left'}`}>
+                              {order.planName || t('dashboard.unknownPlan', 'Unknown Plan')}
+                            </p>
+                            <p className={`text-sm text-cool-black ${isRTL ? 'text-right' : 'text-left'}`}>
+                              {t('dashboard.orderNumber', 'Order #{{number}}', { number: order.orderId || order.id || t('dashboard.unknown', 'Unknown') })}
+                            </p>
+                            <p className={`text-xs text-cool-black/60 ${isRTL ? 'text-right' : 'text-left'}`}>
+                              {order.countryName || order.countryCode || t('dashboard.unknownCountry', 'Unknown Country')}
+                            </p>
+                          </div>
+                        </div>
+                        <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-4' : 'space-x-4'}`}>
+                          <div className={isRTL ? 'text-left' : 'text-right'}>
+                            <p className="font-medium text-eerie-black">${Math.round(order.amount || 0)}</p>
+                            <div className={`flex items-center ${isRTL ? 'justify-start space-x-reverse space-x-2' : 'justify-end space-x-2'}`}>
+                              <div className={`w-2 h-2 rounded-full ${
+                                order.status === 'active' ? 'bg-green-500' :
+                                order.status === 'pending' ? 'bg-yellow-500' : 'bg-gray-500'
+                              }`}></div>
+                              <p className="text-sm text-cool-black capitalize">
+                                {t(`dashboard.status.${order.status}`, order.status || t('dashboard.unknown', 'unknown'))}
                               </p>
                             </div>
                           </div>
-                          {/* Price, Status, and Actions */}
-                          <div className={`flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 ${isRTL ? 'sm:flex-row-reverse items-start' : 'items-end'}`}>
-                            {/* Price and Status - Same Row */}
-                            <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                              {/* Price */}
-                              <p className={`font-medium text-eerie-black text-lg text-left ${isRTL ? 'text-right' : ''}`}>
-                                ${Math.round(order.amount || 0)}
-                              </p>
-                              
-                              {/* Status */}
-                              <div className={`flex gap-1 items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
-                                <div className={`w-2 h-2 rounded-full ${
-                                  order.status === 'active' ? 'bg-green-500' :
-                                  order.status === 'pending' ? 'bg-yellow-500' : 'bg-gray-500'
-                                }`}></div>
-                                <p className={`text-sm text-gray-500 capitalize text-left ${isRTL ? 'text-right' : ''}`}>
-                                  {t(`dashboard.status.${order.status}`, order.status || t('dashboard.unknown', 'unknown'))}
-                                </p>
-                              </div>
-                            </div>
-                            
-                            {/* QR Button */}
-                            <button
-                              onClick={() => onViewQRCode(order)}
-                              className={`flex gap-1 px-3 py-2 bg-tufts-blue/10 text-tufts-blue rounded-lg hover:bg-tufts-blue/20 transition-colors duration-200 w-full sm:w-auto ${isRTL ? 'flex-row-reverse' : ''}`}
-                            >
-                              <QrCode className={`w-4 h-4 sm:w-5 sm:h-5 ${isRTL ? '' : ''}`} />
-                              <span className="text-sm">{t('dashboard.viewQR', 'View QR')}</span>
-                            </button>
-                          </div>
+                          <button
+                            onClick={() => onViewQRCode(order)}
+                            className={`flex items-center px-3 py-2 bg-tufts-blue/10 text-tufts-blue rounded-lg hover:bg-tufts-blue/20 transition-colors duration-200 ${isRTL ? 'space-x-reverse space-x-2' : 'space-x-2'}`}
+                          >
+                            <QrCode className="w-4 h-4" />
+                            <span className="text-sm">{t('dashboard.viewQR', 'View QR')}</span>
+                          </button>
+                        </div>
                       </div>
                     )
                   ))}
-                  </div>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </div>
           <div className="pointer-events-none absolute inset-px rounded-xl shadow-sm ring-1 ring-black/5"></div>

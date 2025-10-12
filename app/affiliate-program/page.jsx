@@ -170,11 +170,11 @@ const AffiliateProgramPage = () => {
   return (
     <div className="min-h-screen bg-white ">
       {/* Header Section */}
-      <section className="bg-white py-8 mt-10">
+      <section className="bg-white py-8">
         <div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8">
           <div className="relative">
             <div className="absolute inset-px rounded-xl bg-white"></div>
-            <div className="relative flex h-full flex-col overflow-hidden rounded-xl border-2 border-gray-200/50 shadow-xl shadow-gray-200/50">
+            <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
               <div className="px-8 pt-6 pb-6">
                 <AffiliateHeader onBack={() => router.back()} />
               </div>

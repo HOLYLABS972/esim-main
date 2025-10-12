@@ -2,17 +2,7 @@
 
 import { useI18n } from '../../contexts/I18nContext';
 import Image from 'next/image';
-import { Copy } from 'lucide-react';
-import toast from 'react-hot-toast';
 
-export const handleCopyDiscountCode = async () => {
-  const discountCode = 'OCTOBER35';
-  await navigator.clipboard.writeText(discountCode);
-  toast.success('Discount code OCTOBER35 copied! 35% off your purchase!', {
-    duration: 4000,
-    icon: '🎉',
-  });
-};
 export default function FeaturesSection() {
   const { t, locale, isLoading } = useI18n();
   
@@ -46,7 +36,7 @@ export default function FeaturesSection() {
   }
   
   return (
-    <div className="features-section hidden md:block bg-white py-8 sm:py-16 lg:py-24">
+    <div className="features-section hidden md:block bg-white py-16 sm:py-24 lg:py-32">
       <div className="mx-auto max-w-2xl px-4 sm:px-6 lg:max-w-7xl lg:px-8">
         <h2 className="text-center text-lg sm:text-xl font-semibold text-tufts-blue"> <span>{'{ '}</span>
           {t('features.title')}
