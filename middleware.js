@@ -2,16 +2,16 @@ import { NextResponse } from 'next/server';
 
 // Domain to language mapping
 const domainLanguageMap = {
-  'ru.roamjet.net': 'ru',
-  'esim.roamjet.net': 'en',
-  'www.roamjet.net': 'en',
-  'roamjet.net': 'en',
+  'ru.romajet.net': 'ru',
+  'esim.romajet.net': 'en',
+  'www.romajet.net': 'en',
+  'romajet.net': 'en',
   // Add more domains as needed
-  'ar.roamjet.net': 'ar',
-  'he.roamjet.net': 'he',
-  'de.roamjet.net': 'de',
-  'fr.roamjet.net': 'fr',
-  'es.roamjet.net': 'es',
+  'ar.romajet.net': 'ar',
+  'he.romajet.net': 'he',
+  'de.romajet.net': 'de',
+  'fr.romajet.net': 'fr',
+  'es.romajet.net': 'es',
 };
 
 const supportedLanguageCodes = ['en', 'es', 'fr', 'de', 'ar', 'he', 'ru'];
@@ -46,10 +46,6 @@ export function middleware(request) {
   const { pathname } = request.nextUrl;
   const hostname = request.headers.get('host') || '';
   
-  // Add pathname to headers for language detection in server components
-  const response = NextResponse.next();
-  response.headers.set('x-pathname', pathname);
-  
   // Detect language from domain first
   const domainLanguage = detectLanguageFromDomain(hostname);
   
@@ -60,6 +56,17 @@ export function middleware(request) {
                       pathname.startsWith('/de') ? 'de' :
                       pathname.startsWith('/fr') ? 'fr' :
                       pathname.startsWith('/es') ? 'es' : null;
+  
+  // If domain has a language and we're on the root path, redirect to language-specific path
+  if (domainLanguage && domainLanguage !== 'en' && !pathLanguage) {
+    const url = request.nextUrl.clone();
+    url.pathname = `/${domainLanguage}${pathname}`;
+    return NextResponse.redirect(url);
+  }
+  
+  // Add pathname to headers for language detection in server components
+  const response = NextResponse.next();
+  response.headers.set('x-pathname', pathname);
   
   // Priority: path language > domain language > default 'en'
   const language = pathLanguage || domainLanguage || 'en';
