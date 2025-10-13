@@ -538,56 +538,56 @@ const EsimPlans = () => {
                     </div>
                   )}
                   
-                  {/* Mobile List Layout */}
-                  <div className={`sm:hidden space-y-3 ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+                  {/* Mobile Grid Layout - Same as Desktop but 2 columns */}
+                  <div className={`sm:hidden grid grid-cols-2 gap-4 ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
                     {(isPlansPage || searchTerm ? filteredCountries : filteredCountries.slice(0, 8)).map((country, index) => (
-                      <button
+                      <div
                         key={country.id}
-                        className={`esim-plan-card w-full bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 p-4 border border-gray-100 hover:border-blue-200 flex items-center ${isRTL ? 'space-x-reverse space-x-4' : 'space-x-4'}`}
-                        onClick={() => handleCountrySelect(country)}
-                        dir={isRTL ? 'rtl' : 'ltr'}
+                        className="col-span-1"
                       >
-                        <div className="country-flag-display flex-shrink-0">
-                          {country.flagEmoji ? (
-                            <span className="country-flag-emoji text-3xl">
-                              {country.flagEmoji}
-                            </span>
-                          ) : (
-                            <div className="country-code-avatar w-10 h-10 bg-tufts-blue rounded-full flex items-center justify-center">
-                              <span className="text-white font-bold text-sm">
-                                {country.code || '??'}
+                        <div className="relative">
+                          <button
+                            className="esim-plan-card w-full bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 p-4 text-center border border-gray-100 hover:border-blue-200"
+                            onClick={() => handleCountrySelect(country)}
+                            dir={isRTL ? 'rtl' : 'ltr'}
+                          >
+                            <div className="country-flag-display text-center mb-3">
+                              {country.flagEmoji ? (
+                                <span className="country-flag-emoji text-4xl">
+                                  {country.flagEmoji}
+                                </span>
+                              ) : (
+                                <div className="country-code-avatar w-12 h-12 mx-auto bg-tufts-blue rounded-full flex items-center justify-center">
+                                  <span className="text-blue-600 font-bold text-sm">
+                                    {country.code || '??'}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="esim-plan-card__content text-center" dir={isRTL ? 'rtl' : 'ltr'}>
+                              <h5 className="esim-plan-card__title text-sm font-semibold text-gray-900 mb-2 text-center">
+                                {country.name}
+                              </h5>
+                              <span className="esim-plan-card__price text-tufts-blue font-medium text-xs block text-center">
+                                {country.minPrice ? (() => {
+                                  const discountedPrice = calculateDiscountedPrice(country.minPrice);
+                                  const originalPrice = country.originalPrice || country.minPrice;
+                                  const hasDiscount = discountedPrice < originalPrice;
+                                  return hasDiscount ? (
+                                    <div className="text-center w-full">
+                                      <span className="text-sm font-semibold text-green-600">${discountedPrice.toFixed(2)}</span>
+                                      <span className={`text-xs text-gray-500 line-through ${isRTL ? 'mr-1' : 'ml-1'}`}>${originalPrice.toFixed(2)}</span>
+                                    </div>
+                                  ) : (
+                                    t('plans.fromPrice', `From $${country.minPrice.toFixed(2)}`).replace('${price}', `$${country.minPrice.toFixed(2)}`)
+                                  );
+                                })() : t('plans.noPlansAvailable', 'No plans available')}
                               </span>
                             </div>
-                          )}
+                          </button>
                         </div>
-
-                        <div className="esim-plan-card__content flex-1 text-center" dir={isRTL ? 'rtl' : 'ltr'}>
-                          <h5 className="esim-plan-card__title text-base font-semibold text-gray-900 mb-1 text-center">
-                            {country.name}
-                          </h5>
-                          <span className="esim-plan-card__price text-tufts-blue font-medium text-sm block text-center">
-                            {country.minPrice ? (() => {
-                              const discountedPrice = calculateDiscountedPrice(country.minPrice);
-                              const originalPrice = country.originalPrice || country.minPrice;
-                              const hasDiscount = discountedPrice < originalPrice;
-                              return hasDiscount ? (
-                                <div>
-                                  <span className="text-sm font-semibold text-green-600">${discountedPrice.toFixed(2)}</span>
-                                  <span className={`text-xs text-gray-500 line-through ${isRTL ? 'mr-2' : 'ml-2'}`}>${originalPrice.toFixed(2)}</span>
-                                </div>
-                              ) : (
-                                t('plans.fromPrice', `From $${country.minPrice.toFixed(2)}`).replace('${price}', `$${country.minPrice.toFixed(2)}`)
-                              );
-                            })() : t('plans.noPlansAvailable', 'No plans available')}
-                          </span>
-                        </div>
-                        
-                        <div className="flex-shrink-0">
-                          <svg className={`w-5 h-5 text-gray-400 ${isRTL ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                          </svg>
-                        </div>
-                      </button>
+                      </div>
                     ))}
                   </div>
                   
