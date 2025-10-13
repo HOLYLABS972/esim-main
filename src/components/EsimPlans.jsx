@@ -92,6 +92,10 @@ const EsimPlans = () => {
   const currentLanguage = getCurrentLanguage();
   const isRTL = getLanguageDirection(currentLanguage) === 'rtl';
   
+  // Check if parent already has RTL direction set
+  const parentHasRTL = typeof document !== 'undefined' && 
+    document.querySelector('[dir="rtl"]') !== null;
+  
   // Get search term from URL params
   const urlSearchTerm = searchParams.get('search') || '';
   const [searchTerm, setSearchTerm] = useState(urlSearchTerm);
@@ -440,8 +444,8 @@ const EsimPlans = () => {
 
   return (
     <>
-      <section className={`destination py-0 ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
-        <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+      <section className="destination py-0">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           
           {/* Active Search Badge */}
           {searchTerm && (
@@ -473,7 +477,7 @@ const EsimPlans = () => {
               ) : (
                 <>
                   {/* Desktop Grid Layout */}
-                  <div className={`hidden sm:grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-center ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+                  <div className="hidden sm:grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-center items-center">
                     {(isPlansPage || searchTerm ? filteredCountries : filteredCountries.slice(0, 8)).map((country, index) => (
                       <div
                         key={country.id}
@@ -483,7 +487,6 @@ const EsimPlans = () => {
                           <button
                             className="esim-plan-card w-full bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 text-center border border-gray-100 hover:border-blue-200"
                             onClick={() => handleCountrySelect(country)}
-                            dir={isRTL ? 'rtl' : 'ltr'}
                           >
                             <div className="country-flag-display text-center mb-4">
                               {country.flagEmoji ? (
@@ -499,7 +502,7 @@ const EsimPlans = () => {
                               )}
                             </div>
 
-                            <div className="esim-plan-card__content text-center" dir={isRTL ? 'rtl' : 'ltr'}>
+                            <div className="esim-plan-card__content text-center">
                               <h5 className="esim-plan-card__title text-lg font-semibold text-gray-900 mb-2 text-center">
                                 {country.name}
                               </h5>
@@ -539,7 +542,7 @@ const EsimPlans = () => {
                   )}
                   
                   {/* Mobile Grid Layout - Same as Desktop but 2 columns */}
-                  <div className={`sm:hidden grid grid-cols-2 gap-4 ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+                  <div className="sm:hidden grid grid-cols-2 gap-4 justify-center items-center">
                     {(isPlansPage || searchTerm ? filteredCountries : filteredCountries.slice(0, 8)).map((country, index) => (
                       <div
                         key={country.id}
@@ -549,7 +552,6 @@ const EsimPlans = () => {
                           <button
                             className="esim-plan-card w-full bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 p-4 text-center border border-gray-100 hover:border-blue-200"
                             onClick={() => handleCountrySelect(country)}
-                            dir={isRTL ? 'rtl' : 'ltr'}
                           >
                             <div className="country-flag-display text-center mb-3">
                               {country.flagEmoji ? (
@@ -565,7 +567,7 @@ const EsimPlans = () => {
                               )}
                             </div>
 
-                            <div className="esim-plan-card__content text-center" dir={isRTL ? 'rtl' : 'ltr'}>
+                            <div className="esim-plan-card__content text-center">
                               <h5 className="esim-plan-card__title text-sm font-semibold text-gray-900 mb-2 text-center">
                                 {country.name}
                               </h5>

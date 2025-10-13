@@ -1778,6 +1778,101 @@
 [dir="rtl"] .grid.lg\\:grid-cols-3,
 [dir="rtl"] .grid.xl\\:grid-cols-4 {
   direction: rtl !important;
+  justify-content: center !important;
+  align-items: center !important;
+}
+
+/* Ensure grid items are properly centered in RTL */
+[dir="rtl"] .grid.justify-center {
+  justify-content: center !important;
+}
+
+[dir="rtl"] .grid.items-center {
+  align-items: center !important;
+}
+
+/* Fix grid container centering */
+[dir="rtl"] .max-w-7xl.mx-auto {
+  text-align: center !important;
+}
+
+[dir="rtl"] .max-w-7xl.mx-auto .grid {
+  justify-content: center !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+/* Specific fix for eSIM plans grid centering */
+[dir="rtl"] .destination .max-w-7xl.mx-auto {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+}
+
+[dir="rtl"] .destination .grid {
+  width: 100% !important;
+  display: grid !important;
+  justify-content: center !important;
+  justify-items: center !important;
+}
+
+/* Force proper centering for eSIM plans in RTL */
+[dir="rtl"] .min-h-screen .container {
+  text-align: center !important;
+}
+
+[dir="rtl"] .min-h-screen .grid {
+  justify-content: center !important;
+  justify-items: center !important;
+  margin: 0 auto !important;
+}
+
+/* Override any conflicting grid properties in RTL */
+[dir="rtl"] .grid.grid-cols-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  justify-content: center !important;
+  justify-items: center !important;
+  margin: 0 auto !important;
+}
+
+[dir="rtl"] .grid.lg\\:grid-cols-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  justify-content: center !important;
+  justify-items: center !important;
+  margin: 0 auto !important;
+}
+
+[dir="rtl"] .grid.xl\\:grid-cols-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  justify-content: center !important;
+  justify-items: center !important;
+  margin: 0 auto !important;
+}
+
+/* Additional fix for container centering in Hebrew/Arabic pages */
+[dir="rtl"] .min-h-screen .container.mx-auto {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  text-align: center !important;
+}
+
+[dir="rtl"] .min-h-screen .container.mx-auto > * {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Ensure grid items are centered within their containers */
+[dir="rtl"] .grid > .col-span-1 {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+}
+
+[dir="rtl"] .esim-plan-card {
+  margin: 0 auto !important;
+  display: block !important;
+  text-align: center !important;
 }
 
 /* Ensure proper spacing in mobile layout */
