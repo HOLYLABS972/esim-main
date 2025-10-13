@@ -117,7 +117,7 @@ export default function RootLayout({ children }) {
           }}
         />
         <link rel="manifest" href="/manifest.json" />
-        <link rel="icon" href="/app/favicon.ico" sizes="any" />
+        <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="icon" href="/images/logo_icon/favicon.png" type="image/png" />
         <link rel="apple-touch-icon" href="/images/logo_icon/ioslogo.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />

@@ -48,8 +48,18 @@ const FacebookPixel = () => {
       try {
         const cookieConsent = localStorage.getItem('cookieConsent');
         if (cookieConsent) {
-          const consent = JSON.parse(cookieConsent);
-          return consent.marketing === true;
+          // Handle both plain string and JSON formats
+          if (cookieConsent === 'accepted' || cookieConsent === 'true') {
+            return true; // Old format: plain string
+          }
+          try {
+            const consent = JSON.parse(cookieConsent);
+            return consent.marketing === true; // New format: JSON object
+          } catch (parseError) {
+            // If it's not valid JSON and not a recognized string, return false
+            console.warn('Invalid cookieConsent format:', cookieConsent);
+            return false;
+          }
         }
         return false;
       } catch (error) {
