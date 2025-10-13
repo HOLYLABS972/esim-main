@@ -103,35 +103,37 @@ export default function PlansSection() {
          <p className="mx-auto mt-12 max-w-4xl text-center text-4xl font-semibold tracking-tight text-eerie-black sm:text-5xl">                                                                                        
             {t('plans.subtitle')}
           </p>
-          <p className={`text-eerie-black max-w-3xl mx-auto mt-4 ${isRTL ? 'text-right' : 'text-left'}`}>
-            {t('plans.description')}
-          </p>
+          <div className={`text-eerie-black max-w-3xl mx-auto mt-4 ${isRTL ? 'text-right' : 'text-left'}`}>
+            {t('plans.description').split('\n').map((line, index) => (
+              <p key={index} className={index > 0 ? 'mt-2' : ''}>{line}</p>
+            ))}
+          </div>
         </div>
 
         {/* Hardcoded Popular Plans Preview */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto mb-12">
-          {popularPlans.map((plan, index) => (
-            <div 
-              key={index}
-              className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 hover:border-cobalt-blue cursor-pointer transform hover:scale-105"
-              onClick={handlePlanClick}
-            >
-              <div className="text-center">
-                <div className="text-5xl mb-3">{plan.flag}</div>
-                <h3 className="text-lg font-bold text-eerie-black mb-2">{plan.country}</h3>
-                <div className="flex items-center justify-center gap-2 mb-3">
-                  <Globe className="w-4 h-4 text-gray-500" />
-                  <span className="text-gray-600 text-sm">{plan.data}</span>
-                  <span className="text-gray-400">•</span>
-                  <span className="text-gray-600 text-sm">{plan.days}</span>
+        <div className="max-w-4xl mx-auto mb-12">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            {popularPlans.map((plan, index) => (
+              <button
+                key={index}
+                className="w-full px-4 py-2 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-colors duration-200 flex items-center justify-between"
+                onClick={handlePlanClick}
+              >
+                <div className="flex items-center space-x-4">
+                  <div className="flex-shrink-0">
+                    <span className="text-2xl">{plan.flag}</span>
+                  </div>
+                  <div className="text-left">
+                    <h3 className="text-lg font-semibold text-gray-900">{plan.country}</h3>
+                    <p className="text-sm text-gray-500">1GB • 7 Days</p>
+                  </div>
                 </div>
-                <div className="mt-4 mb-2">
-                  <span className="text-sm text-gray-500">From</span>
-                  <div className="text-2xl font-bold text-eerie-black mt-1">{plan.price}</div>
+                <div className="text-right">
+                  <div className="text-lg font-semibold text-gray-900">{plan.price}</div>
                 </div>
-              </div>
-            </div>
-          ))}
+              </button>
+            ))}
+          </div>
         </div>
         
         {/* Get 35% OFF Button */}

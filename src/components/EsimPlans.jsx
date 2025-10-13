@@ -77,7 +77,10 @@ const EsimPlans = () => {
   const searchParams = useSearchParams();
   
   // Determine if this is the dedicated plans page or landing page
-  const isPlansPage = pathname === '/esim-plans' || pathname.includes('/esim-plans');
+  const isPlansPage = pathname === '/esim-plans' || pathname.includes('/esim-plans') || 
+                      pathname.includes('/ar/esim-plans') || pathname.includes('/he/esim-plans') ||
+                      pathname.includes('/ru/esim-plans') || pathname.includes('/de/esim-plans') ||
+                      pathname.includes('/fr/esim-plans') || pathname.includes('/es/esim-plans');
   
   // Detect RTL language
   const getCurrentLanguage = () => {
@@ -167,7 +170,7 @@ const EsimPlans = () => {
       
       // Plans page: Always use Firebase data
       try {
-        console.log('📊 Plans page - Fetching real Firebase data...');
+        console.log('📊 Plans page - Fetching real Firebase data (limited to 8)...');
         const countriesWithPricing = await getCountriesWithPricing();
         
         // Filter to show only countries with plans (minPrice < 999 indicates real data)
@@ -175,18 +178,23 @@ const EsimPlans = () => {
           country.minPrice < 999 && country.plansCount > 0
         );
         
-        // Sort by minimum price (cheapest first)
+        // Sort by minimum price (cheapest first) and limit to 8
         countriesWithRealPricing.sort((a, b) => a.minPrice - b.minPrice);
+        const limitedCountries = countriesWithRealPricing.slice(0, 8);
         
-        console.log('✅ USING REAL FIREBASE DATA FOR PLANS PAGE');
-        console.log('Real data sample prices:', countriesWithRealPricing.slice(0, 5).map(c => ({ 
+        console.log('✅ USING REAL FIREBASE DATA FOR PLANS PAGE (limited to 8)');
+        console.log('Real data sample prices:', limitedCountries.map(c => ({ 
           name: c.name, 
           minPrice: c.minPrice 
         })));
-        return countriesWithRealPricing;
+        return limitedCountries;
       } catch (error) {
         console.error('❌ FIREBASE ERROR:', error);
-        return []; // Return empty array when Firebase fails
+        // Fallback to hardcoded countries if Firebase fails
+        console.log('🔄 Falling back to hardcoded countries');
+        const mobileCountries = getMobileCountries();
+        mobileCountries.sort((a, b) => a.minPrice - b.minPrice);
+        return mobileCountries.slice(0, 8); // Also limit fallback to 8
       }
     },
     retry: 1,
@@ -476,57 +484,52 @@ const EsimPlans = () => {
                 </div>
               ) : (
                 <>
-                  {/* Desktop Grid Layout */}
-                  <div className="hidden sm:grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-center items-center">
-                    {(isPlansPage || searchTerm ? filteredCountries : filteredCountries.slice(0, 8)).map((country, index) => (
-                      <div
-                        key={country.id}
-                        className="col-span-1"
-                      >
-                        <div className="relative">
-                          <button
-                            className="esim-plan-card w-full bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 text-center border border-gray-100 hover:border-blue-200"
-                            onClick={() => handleCountrySelect(country)}
-                          >
-                            <div className="country-flag-display text-center mb-4">
+                  {/* Desktop Records Layout */}
+                  <div className="hidden sm:block max-w-4xl mx-auto">
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                      {(isPlansPage || searchTerm ? filteredCountries : filteredCountries.slice(0, 8)).map((country, index) => (
+                        <button
+                          key={country.id}
+                          className="w-full px-6 py-4 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-colors duration-200 flex items-center justify-between"
+                          onClick={() => handleCountrySelect(country)}
+                        >
+                          <div className="flex items-center space-x-4">
+                            <div className="flex-shrink-0">
                               {country.flagEmoji ? (
-                                <span className="country-flag-emoji text-5xl">
-                                  {country.flagEmoji}
-                                </span>
+                                <span className="text-2xl">{country.flagEmoji}</span>
                               ) : (
-                                <div className="country-code-avatar w-16 h-16 mx-auto bg-tufts-blue rounded-full flex items-center justify-center">
-                                  <span className="text-blue-600 font-bold text-lg">
+                                <div className="w-8 h-8 bg-tufts-blue rounded-full flex items-center justify-center">
+                                  <span className="text-white font-bold text-sm">
                                     {country.code || '??'}
                                   </span>
                                 </div>
                               )}
                             </div>
-
-                            <div className="esim-plan-card__content text-center">
-                              <h5 className="esim-plan-card__title text-lg font-semibold text-gray-900 mb-2 text-center">
-                                {country.name}
-                              </h5>
-                              <span className="esim-plan-card__price text-tufts-blue font-medium block text-center">
-                                {country.minPrice ? (() => {
-                                  const discountedPrice = calculateDiscountedPrice(country.minPrice);
-                                  const originalPrice = country.originalPrice || country.minPrice;
-                                  const hasDiscount = discountedPrice < originalPrice;
-                                  return hasDiscount ? (
-                                    <div className="text-center w-full">
-                                      <span className="text-lg font-semibold text-green-600">${discountedPrice.toFixed(2)}</span>
-                                      <span className={`text-sm text-gray-500 line-through ${isRTL ? 'mr-2' : 'ml-2'}`}>${originalPrice.toFixed(2)}</span>
-                                    </div>
-                                  ) : (
-                                    t('plans.fromPrice', `From $${country.minPrice.toFixed(2)}`).replace('${price}', `$${country.minPrice.toFixed(2)}`)
-                                  );
-                                })() : t('plans.noPlansAvailable', 'No plans available')}
-                              </span>
+                            <div className="text-left">
+                              <h3 className="text-lg font-semibold text-gray-900">{country.name}</h3>
+                              <p className="text-sm text-gray-500">1GB • 7 Days</p>
                             </div>
-                          </button>
-                        
-                        </div>
-                      </div>
-                    ))}
+                          </div>
+                          <div className="text-right">
+                            {country.minPrice ? (() => {
+                              const discountedPrice = calculateDiscountedPrice(country.minPrice);
+                              const originalPrice = country.originalPrice || country.minPrice;
+                              const hasDiscount = discountedPrice < originalPrice;
+                              return hasDiscount ? (
+                                <div>
+                                  <div className="text-lg font-semibold text-green-600">${discountedPrice.toFixed(2)}</div>
+                                  <div className="text-sm text-gray-500 line-through">${originalPrice.toFixed(2)}</div>
+                                </div>
+                              ) : (
+                                <div className="text-lg font-semibold text-gray-900">${country.minPrice.toFixed(2)}</div>
+                              );
+                            })() : (
+                              <div className="text-lg font-medium text-gray-500">No plans</div>
+                            )}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
                   </div>
                   
                   {/* Show All Button for Desktop - Only on Landing Page */}
@@ -541,56 +544,52 @@ const EsimPlans = () => {
                     </div>
                   )}
                   
-                  {/* Mobile Grid Layout - Same as Desktop but 2 columns */}
-                  <div className="sm:hidden grid grid-cols-2 gap-4 justify-center items-center">
-                    {(isPlansPage || searchTerm ? filteredCountries : filteredCountries.slice(0, 8)).map((country, index) => (
-                      <div
-                        key={country.id}
-                        className="col-span-1"
-                      >
-                        <div className="relative">
-                          <button
-                            className="esim-plan-card w-full bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 p-4 text-center border border-gray-100 hover:border-blue-200"
-                            onClick={() => handleCountrySelect(country)}
-                          >
-                            <div className="country-flag-display text-center mb-3">
+                  {/* Mobile Records Layout */}
+                  <div className="sm:hidden">
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                      {(isPlansPage || searchTerm ? filteredCountries : filteredCountries.slice(0, 8)).map((country, index) => (
+                        <button
+                          key={country.id}
+                          className="w-full px-3 py-2 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-colors duration-200 flex items-center justify-between"
+                          onClick={() => handleCountrySelect(country)}
+                        >
+                          <div className="flex items-center space-x-3">
+                            <div className="flex-shrink-0">
                               {country.flagEmoji ? (
-                                <span className="country-flag-emoji text-4xl">
-                                  {country.flagEmoji}
-                                </span>
+                                <span className="text-xl">{country.flagEmoji}</span>
                               ) : (
-                                <div className="country-code-avatar w-12 h-12 mx-auto bg-tufts-blue rounded-full flex items-center justify-center">
-                                  <span className="text-blue-600 font-bold text-sm">
+                                <div className="w-6 h-6 bg-tufts-blue rounded-full flex items-center justify-center">
+                                  <span className="text-white font-bold text-xs">
                                     {country.code || '??'}
                                   </span>
                                 </div>
                               )}
                             </div>
-
-                            <div className="esim-plan-card__content text-center">
-                              <h5 className="esim-plan-card__title text-sm font-semibold text-gray-900 mb-2 text-center">
-                                {country.name}
-                              </h5>
-                              <span className="esim-plan-card__price text-tufts-blue font-medium text-xs block text-center">
-                                {country.minPrice ? (() => {
-                                  const discountedPrice = calculateDiscountedPrice(country.minPrice);
-                                  const originalPrice = country.originalPrice || country.minPrice;
-                                  const hasDiscount = discountedPrice < originalPrice;
-                                  return hasDiscount ? (
-                                    <div className="text-center w-full">
-                                      <span className="text-sm font-semibold text-green-600">${discountedPrice.toFixed(2)}</span>
-                                      <span className={`text-xs text-gray-500 line-through ${isRTL ? 'mr-1' : 'ml-1'}`}>${originalPrice.toFixed(2)}</span>
-                                    </div>
-                                  ) : (
-                                    t('plans.fromPrice', `From $${country.minPrice.toFixed(2)}`).replace('${price}', `$${country.minPrice.toFixed(2)}`)
-                                  );
-                                })() : t('plans.noPlansAvailable', 'No plans available')}
-                              </span>
+                            <div className="text-left">
+                              <h3 className="text-sm font-semibold text-gray-900">{country.name}</h3>
+                              <p className="text-xs text-gray-500">1GB • 7 Days</p>
                             </div>
-                          </button>
-                        </div>
-                      </div>
-                    ))}
+                          </div>
+                          <div className="text-right">
+                            {country.minPrice ? (() => {
+                              const discountedPrice = calculateDiscountedPrice(country.minPrice);
+                              const originalPrice = country.originalPrice || country.minPrice;
+                              const hasDiscount = discountedPrice < originalPrice;
+                              return hasDiscount ? (
+                                <div>
+                                  <div className="text-sm font-semibold text-green-600">${discountedPrice.toFixed(2)}</div>
+                                  <div className="text-xs text-gray-500 line-through">${originalPrice.toFixed(2)}</div>
+                                </div>
+                              ) : (
+                                <div className="text-sm font-semibold text-gray-900">${country.minPrice.toFixed(2)}</div>
+                              );
+                            })() : (
+                              <div className="text-sm font-medium text-gray-500">No plans</div>
+                            )}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
                   </div>
                   
                   {/* Show All Button for Mobile - Only on Landing Page */}
