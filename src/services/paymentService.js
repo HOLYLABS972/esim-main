@@ -1,9 +1,18 @@
 import { loadStripe } from '@stripe/stripe-js';
 
 // Load Stripe (only if API key is provided)
-const stripePromise = process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY 
-  ? loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY)
+const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY 
+  ? loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
   : Promise.resolve(null);
+
+// Debug Stripe configuration
+if (process.env.NODE_ENV === 'development') {
+  console.log('🔧 Stripe Config Debug:', {
+    hasPublishableKey: !!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
+    publishableKeyPrefix: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ? 
+      process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY.substring(0, 15) + '...' : 'NOT SET'
+  });
+}
 
 // Server payments service URL
 const SERVER_PAYMENTS_URL = 'https://pay.theholylabs.com';
@@ -56,6 +65,7 @@ export const paymentService = {
   async createCheckoutSession(orderData) {
     try {
       console.log('🔍 Creating single order checkout via server:', orderData);
+      console.log('🌐 Payment server URL:', SERVER_PAYMENTS_URL);
       
       // Use your server's create-payment-order endpoint for single orders
       const response = await fetch(`${SERVER_PAYMENTS_URL}/create-payment-order`, {
