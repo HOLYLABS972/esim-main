@@ -15,7 +15,7 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 // Server payments service URL
-const SERVER_PAYMENTS_URL = 'https://pay.theholylabs.com';
+const SERVER_PAYMENTS_URL = 'https://pay.roamjet.net';
 
 export const paymentService = {
   // Create payment intent and redirect to external payment page
