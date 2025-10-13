@@ -52,7 +52,9 @@ const Blog = () => {
     try {
       setLoading(true);
       const result = await blogService.getPublishedPosts(20, null, detectedLanguage);
-      setBlogPosts(result.posts);
+      // Filter out fallback posts (posts not in the target language)
+      const postsInTargetLanguage = result.posts.filter(post => !post.isFallback);
+      setBlogPosts(postsInTargetLanguage);
     } catch (error) {
       console.error('Error loading blog posts:', error);
       // Fallback to empty array if there's an error

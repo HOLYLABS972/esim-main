@@ -126,6 +126,16 @@ export default function RootLayout({ children }) {
         <meta name="theme-color" content="#468BE6" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         
+        {/* hreflang tags for multilingual SEO */}
+        <link rel="alternate" href="https://esim.romajet.net" hrefLang="x-default" />
+        <link rel="alternate" href="https://esim.romajet.net" hrefLang="en" />
+        <link rel="alternate" href="https://es.romajet.net" hrefLang="es" />
+        <link rel="alternate" href="https://fr.romajet.net" hrefLang="fr" />
+        <link rel="alternate" href="https://de.romajet.net" hrefLang="de" />
+        <link rel="alternate" href="https://ar.romajet.net" hrefLang="ar" />
+        <link rel="alternate" href="https://ru.romajet.net" hrefLang="ru" />
+        <link rel="alternate" href="https://he.romajet.net" hrefLang="he" />
+        
         {/* Structured Data for SEO */}
         <script
           type="application/ld+json"
