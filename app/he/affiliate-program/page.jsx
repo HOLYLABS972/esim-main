@@ -166,6 +166,19 @@ const AffiliateProgramPage = () => {
     router.push('/transactions');
   };
 
+  const handleAddBankAccount = () => {
+    router.push('/add-bank-account');
+  };
+
+  const handleEditBankAccount = () => {
+    router.push('/add-bank-account');
+  };
+
+  const handleDeleteBankAccount = async () => {
+    // Implement delete bank account logic if needed
+    console.log('Delete bank account clicked');
+  };
+
 
   return (
     <div className="min-h-screen bg-white " dir="rtl">
@@ -197,6 +210,9 @@ const AffiliateProgramPage = () => {
         checkingBankAccount={checkingBankAccount}
         referralStats={referralStats}
         onWithdrawClick={handleWithdrawClick}
+        onAddBankAccount={handleAddBankAccount}
+        onEditBankAccount={handleEditBankAccount}
+        onDeleteBankAccount={handleDeleteBankAccount}
       />
 
       {/* How It Works */}
