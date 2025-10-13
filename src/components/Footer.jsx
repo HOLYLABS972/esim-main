@@ -79,10 +79,23 @@ const Footer = () => {
     { name: getText('footer.contactUs', 'Contact Us'), path: 'https://www.theholylabs.com/', external: true }
   ];
 
+  // Helper function to get language prefix from pathname
+  const getLanguagePrefix = () => {
+    const languageCodes = ['ar', 'he', 'ru', 'de', 'fr', 'es'];
+    for (const code of languageCodes) {
+      if (pathname.startsWith(`/${code}/`) || pathname === `/${code}`) {
+        return `/${code}`;
+      }
+    }
+    return '';
+  };
+
+  const langPrefix = getLanguagePrefix();
+
   const usefulLinks = [
     { name: getText('footer.privacyPolicy', 'Privacy Policy'), path: 'https://www.theholylabs.com/privacy', external: true },
     { name: getText('footer.termsOfService', 'Terms of Service'), path: 'https://www.theholylabs.com/terms', external: true },
-    { name: getText('footer.affiliateProgram', 'Affiliate Program'), path: '/affiliate' }
+    { name: getText('footer.affiliateProgram', 'Affiliate Program'), path: `${langPrefix}/affiliate-program` }
   ];
 
   // Create social links array with only non-empty URLs

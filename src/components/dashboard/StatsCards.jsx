@@ -22,6 +22,19 @@ const StatsCards = ({ orders, activeOrders, referralStats }) => {
   const currentLanguage = getCurrentLanguage();
   const isRTL = getLanguageDirection(currentLanguage) === 'rtl';
 
+  // Helper function to get language prefix from pathname
+  const getLanguagePrefix = () => {
+    const languageCodes = ['ar', 'he', 'ru', 'de', 'fr', 'es'];
+    for (const code of languageCodes) {
+      if (pathname.startsWith(`/${code}/`) || pathname === `/${code}`) {
+        return `/${code}`;
+      }
+    }
+    return '';
+  };
+
+  const langPrefix = getLanguagePrefix();
+
   return (
     <section className="bg-white py-8 stats-card" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8">
@@ -89,7 +102,7 @@ const StatsCards = ({ orders, activeOrders, referralStats }) => {
           {/* Performance Card */}
           <div 
             className="relative cursor-pointer group"
-            onClick={() => router.push('/affiliate-program')}
+            onClick={() => router.push(`${langPrefix}/affiliate-program`)}
           >
             <div className="absolute inset-px rounded-xl bg-white group-hover:bg-gray-50 transition-colors"></div>
             <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
