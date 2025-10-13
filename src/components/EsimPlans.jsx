@@ -440,8 +440,8 @@ const EsimPlans = () => {
 
   return (
     <>
-      <section className="destination py-0">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className={`destination py-0 ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+        <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
           
           {/* Active Search Badge */}
           {searchTerm && (
@@ -462,8 +462,8 @@ const EsimPlans = () => {
           )}
 
         {/* Local eSIMs Content */}
-        <div className="tab-content">
-          <div className="tab-pane fade show active">
+        <div className={`tab-content ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+          <div className={`tab-pane fade show active ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
               {/* Loading state for countries */}
               {countriesLoading && countries.length === 0 ? (
                 <div className="flex justify-center items-center min-h-64">
@@ -473,7 +473,7 @@ const EsimPlans = () => {
               ) : (
                 <>
                   {/* Desktop Grid Layout */}
-                  <div className="hidden sm:grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-center">
+                  <div className={`hidden sm:grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-center ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
                     {(isPlansPage || searchTerm ? filteredCountries : filteredCountries.slice(0, 8)).map((country, index) => (
                       <div
                         key={country.id}
@@ -481,8 +481,9 @@ const EsimPlans = () => {
                       >
                         <div className="relative">
                           <button
-                            className="esim-plan-card w-full bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 text-left border border-gray-100 hover:border-blue-200"
+                            className="esim-plan-card w-full bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 text-center border border-gray-100 hover:border-blue-200"
                             onClick={() => handleCountrySelect(country)}
+                            dir={isRTL ? 'rtl' : 'ltr'}
                           >
                             <div className="country-flag-display text-center mb-4">
                               {country.flagEmoji ? (
@@ -498,11 +499,11 @@ const EsimPlans = () => {
                               )}
                             </div>
 
-                            <div className={`esim-plan-card__content ${isRTL ? 'text-center' : 'text-center'}`}>
-                              <h5 className={`esim-plan-card__title text-lg font-semibold text-gray-900 mb-2 ${isRTL ? 'text-center' : 'text-center'}`}>
+                            <div className="esim-plan-card__content text-center" dir={isRTL ? 'rtl' : 'ltr'}>
+                              <h5 className="esim-plan-card__title text-lg font-semibold text-gray-900 mb-2 text-center">
                                 {country.name}
                               </h5>
-                              <span className={`esim-plan-card__price text-tufts-blue font-medium block ${isRTL ? 'text-center' : 'text-center'}`}>
+                              <span className="esim-plan-card__price text-tufts-blue font-medium block text-center">
                                 {country.minPrice ? (() => {
                                   const discountedPrice = calculateDiscountedPrice(country.minPrice);
                                   const originalPrice = country.originalPrice || country.minPrice;
@@ -538,7 +539,7 @@ const EsimPlans = () => {
                   )}
                   
                   {/* Mobile List Layout */}
-                  <div className="sm:hidden space-y-3">
+                  <div className={`sm:hidden space-y-3 ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
                     {(isPlansPage || searchTerm ? filteredCountries : filteredCountries.slice(0, 8)).map((country, index) => (
                       <button
                         key={country.id}
@@ -560,11 +561,11 @@ const EsimPlans = () => {
                           )}
                         </div>
 
-                        <div className={`esim-plan-card__content flex-1 ${isRTL ? 'text-right' : 'text-left'}`}>
-                          <h5 className="esim-plan-card__title text-base font-semibold text-gray-900 mb-1">
+                        <div className="esim-plan-card__content flex-1 text-center" dir={isRTL ? 'rtl' : 'ltr'}>
+                          <h5 className="esim-plan-card__title text-base font-semibold text-gray-900 mb-1 text-center">
                             {country.name}
                           </h5>
-                          <span className="esim-plan-card__price text-tufts-blue font-medium text-sm block">
+                          <span className="esim-plan-card__price text-tufts-blue font-medium text-sm block text-center">
                             {country.minPrice ? (() => {
                               const discountedPrice = calculateDiscountedPrice(country.minPrice);
                               const originalPrice = country.originalPrice || country.minPrice;
