@@ -214,7 +214,7 @@ const WithdrawalSection = ({
                     <CreditCard className="w-5 h-5" />
                     <span>
                       {referralStats.totalEarnings < 50 
-                        ? `Need $${(50 - referralStats.totalEarnings).toFixed(2)} more` 
+                        ? `Earn $${(50 - referralStats.totalEarnings).toFixed(2)} more to withdraw` 
                         : 'Withdraw Funds'
                       }
                     </span>
