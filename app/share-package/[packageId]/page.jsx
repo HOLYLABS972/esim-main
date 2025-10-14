@@ -15,6 +15,8 @@ import {
   Gift
 } from 'lucide-react';
 import { useAuth } from '../../../src/contexts/AuthContext';
+import { useI18n } from '../../../src/contexts/I18nContext';
+import { getLanguageDirection } from '../../../src/utils/languageUtils';
 import { hasUserUsedReferralCode } from '../../../src/services/referralService';
 import { getReferralSettings } from '../../../src/services/settingsService';
 import toast from 'react-hot-toast';
@@ -23,17 +25,29 @@ const SharePackagePage = () => {
   const params = useParams();
   const router = useRouter();
   const { currentUser } = useAuth();
+  const { t, locale } = useI18n();
   const packageId = params.packageId;
   
+  // RTL support
+  const isRTL = getLanguageDirection(locale) === 'rtl';
+  
   // Get country info from URL parameters
-  const searchParams = new URLSearchParams(window.location.search);
-  const urlCountryCode = searchParams.get('country');
-  const urlCountryFlag = searchParams.get('flag');
+  const [urlCountryCode, setUrlCountryCode] = useState(null);
+  const [urlCountryFlag, setUrlCountryFlag] = useState(null);
+  
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const searchParams = new URLSearchParams(window.location.search);
+      setUrlCountryCode(searchParams.get('country'));
+      setUrlCountryFlag(searchParams.get('flag'));
+    }
+  }, []);
   
   const [packageData, setPackageData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [hasReferralDiscount, setHasReferralDiscount] = useState(false);
-  const [referralSettings, setReferralSettings] = useState({ discountPercentage: 10, minimumPrice: 0.5 });
+  const [referralSettings, setReferralSettings] = useState({ discountPercentage: 7, minimumPrice: 0.5 });
+  const [regularSettings, setRegularSettings] = useState({ discountPercentage: 10, minimumPrice: 0.5 });
 
   const loadFromAiraloAPI = useCallback(async () => {
     try {
@@ -157,14 +171,19 @@ const SharePackagePage = () => {
     }
   }, [packageId, loadFromAiraloAPI]);
 
-  // Load referral settings
-  const loadReferralSettings = useCallback(async () => {
+  // Load discount settings
+  const loadDiscountSettings = useCallback(async () => {
     try {
-      const settings = await getReferralSettings();
-      setReferralSettings(settings);
-      console.log('⚙️ Loaded referral settings:', settings);
+      const { getRegularSettings } = await import('../../../src/services/settingsService');
+      const [regular, referral] = await Promise.all([
+        getRegularSettings(),
+        getReferralSettings()
+      ]);
+      setRegularSettings(regular);
+      setReferralSettings(referral);
+      console.log('⚙️ Loaded discount settings:', { regular, referral });
     } catch (error) {
-      console.error('Error loading referral settings:', error);
+      console.error('Error loading discount settings:', error);
     }
   }, []);
 
@@ -188,8 +207,8 @@ const SharePackagePage = () => {
   }, [packageId, loadPackageData]);
 
   useEffect(() => {
-    loadReferralSettings();
-  }, [loadReferralSettings]);
+    loadDiscountSettings();
+  }, [loadDiscountSettings]);
 
   useEffect(() => {
     checkReferralDiscount();
@@ -207,24 +226,36 @@ const SharePackagePage = () => {
       return;
     }
     
-    // Calculate discounted price if user has referral discount
+    // Calculate discounted price - apply BOTH basic + referral discounts
     const originalPrice = parseFloat(packageData.price);
-    const discountPercentage = referralSettings.discountPercentage || 10;
-    const minimumPrice = referralSettings.minimumPrice || 0.5;
     
-    // Calculate percentage-based discount
-    const discountedPrice = hasReferralDiscount 
-      ? Math.max(minimumPrice, originalPrice * (100 - discountPercentage) / 100)
-      : originalPrice;
-    const finalPrice = hasReferralDiscount ? discountedPrice : originalPrice;
+    // Step 1: Apply basic discount (10%)
+    const basicDiscountPercent = regularSettings.discountPercentage || 10;
+    const priceAfterBasicDiscount = originalPrice * (100 - basicDiscountPercent) / 100;
+    
+    // Step 2: Apply referral discount (7%) on top if user has referral
+    let finalPrice = priceAfterBasicDiscount;
+    let totalDiscountPercent = basicDiscountPercent;
+    
+    if (hasReferralDiscount) {
+      const referralDiscountPercent = referralSettings.discountPercentage || 7;
+      finalPrice = priceAfterBasicDiscount * (100 - referralDiscountPercent) / 100;
+      totalDiscountPercent = basicDiscountPercent + referralDiscountPercent;
+    }
+    
+    // Apply minimum price constraint
+    const minimumPrice = regularSettings.minimumPrice || 0.5;
+    finalPrice = Math.max(minimumPrice, finalPrice);
     
     console.log('💰 Pricing calculation:', {
       originalPrice,
+      basicDiscountPercent,
+      priceAfterBasicDiscount,
       hasReferralDiscount,
-      discountPercentage,
-      minimumPrice,
-      discountedPrice,
-      finalPrice
+      referralDiscountPercent: hasReferralDiscount ? referralSettings.discountPercentage : 0,
+      totalDiscountPercent,
+      finalPrice,
+      minimumPrice
     });
     
     // Store package data in localStorage for the checkout process
@@ -325,7 +356,7 @@ const SharePackagePage = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading package information...</p>
+          <p className="text-gray-600">{t('sharePackage.loadingPackageInfo', 'Loading package information...')}</p>
         </div>
       </div>
     );
@@ -338,9 +369,9 @@ const SharePackagePage = () => {
           <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <Globe size={24} className="text-gray-400" />
           </div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Package Not Found</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('sharePackage.packageNotFound', 'Package Not Found')}</h3>
           <p className="text-gray-600 mb-4">
-            The package you&apos;re looking for doesn&apos;t exist or has been removed
+            {t('sharePackage.packageNotFoundDesc', 'The package you\'re looking for doesn\'t exist or has been removed')}
           </p>
           <button
             onClick={() => router.push('/esim-plans')}
@@ -354,7 +385,7 @@ const SharePackagePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Header */}
       <div className="bg-white shadow-sm border-b sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 py-2">
@@ -367,7 +398,7 @@ const SharePackagePage = () => {
                 <ArrowLeft className="w-5 h-5 text-gray-600" />
               </button>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">Package Details</h1>
+                <h1 className="text-xl font-bold text-gray-900">{t('sharePackage.packageDetails', 'Package Details')}</h1>
               </div>
             </div>
           </div>
@@ -384,21 +415,8 @@ const SharePackagePage = () => {
           {/* Package Title */}
           <div className="bg-white p-4">
             <div className="text-center">
-              <div className="flex items-center justify-center space-x-3 mb-4">
-                <span className="text-4xl">
-                  {urlCountryFlag || (packageData.country_code ? getCountryFlag(packageData.country_code) : '🌍')}
-                </span>
-                <h2 className="text-4xl font-bold text-black">{packageData.name}</h2>
-              </div>
-              <p className="text-gray-600 text-lg mt-2">{packageData.description || 'Travel Package'}</p>
-              {(urlCountryCode || packageData.country_code) && (
-                <div className="flex items-center justify-center space-x-2 mt-3">
-                  <span className="text-sm text-gray-500">Country:</span>
-                  <span className="text-sm font-medium text-gray-700">
-                    {urlCountryCode || packageData.country_code}
-                  </span>
-                </div>
-              )}
+              <h2 className="text-4xl font-bold text-black">{packageData.name}</h2>
+              <p className="text-gray-600 text-lg mt-2">{t('sharePackage.noPhoneNumber', 'This eSIM doesn\'t come with a number')}</p>
             </div>
           </div>
           
@@ -406,53 +424,67 @@ const SharePackagePage = () => {
           <div className="bg-white px-4 pb-4">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="bg-gray-50 rounded-lg p-3">
-                <div className="flex items-center space-x-2">
+                <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-2' : 'space-x-2'}`}>
                   <Wifi className="w-5 h-5 text-gray-600" />
-                  <div>
-                    <div className="text-sm text-gray-600">Data</div>
+                  <div className={isRTL ? 'text-right' : 'text-left'}>
+                    <div className="text-sm text-gray-600">{t('sharePackage.data', 'Data')}</div>
                     <div className="font-semibold text-black">{formatData(packageData.data, packageData.dataUnit)}</div>
                   </div>
                 </div>
               </div>
               
               <div className="bg-gray-50 rounded-lg p-3">
-                <div className="flex items-center space-x-2">
+                <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-2' : 'space-x-2'}`}>
                   <Clock className="w-5 h-5 text-gray-600" />
-                  <div>
-                    <div className="text-sm text-gray-600">Validity</div>
+                  <div className={isRTL ? 'text-right' : 'text-left'}>
+                    <div className="text-sm text-gray-600">{t('sharePackage.validity', 'Validity')}</div>
                     <div className="font-semibold text-black">{packageData.period || packageData.duration || 'N/A'} days</div>
                   </div>
                 </div>
               </div>
               
               <div className="bg-gray-50 rounded-lg p-3">
-                <div className="flex items-center space-x-2">
+                <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-2' : 'space-x-2'}`}>
                   <DollarSign className="w-5 h-5 text-gray-600" />
-                  <div>
-                    <div className="text-sm text-gray-600">Price</div>
-                    {hasReferralDiscount ? (
-                      <div>
-                        <div className="font-semibold text-red-600">
-                          ${Math.max(referralSettings.minimumPrice, parseFloat(packageData.price) * (100 - referralSettings.discountPercentage) / 100).toFixed(2)}
+                  <div className={isRTL ? 'text-right' : 'text-left'}>
+                    <div className="text-sm text-gray-600">{t('sharePackage.price', 'Price')}</div>
+                    {(() => {
+                      const originalPrice = parseFloat(packageData.price);
+                      // Step 1: Apply basic discount (10%)
+                      const basicDiscountPercent = regularSettings.discountPercentage || 10;
+                      let finalPrice = originalPrice * (100 - basicDiscountPercent) / 100;
+                      
+                      // Step 2: Apply referral discount (7%) on top if user has referral
+                      if (hasReferralDiscount) {
+                        const referralDiscountPercent = referralSettings.discountPercentage || 7;
+                        finalPrice = finalPrice * (100 - referralDiscountPercent) / 100;
+                      }
+                      
+                      // Apply minimum price constraint
+                      const minimumPrice = regularSettings.minimumPrice || 0.5;
+                      finalPrice = Math.max(minimumPrice, finalPrice);
+                      
+                      return (
+                        <div>
+                          <div className="font-semibold text-red-600">
+                            ${finalPrice.toFixed(2)}
+                          </div>
+                          <div className="text-xs text-gray-500 line-through">${formatPrice(packageData.price)}</div>
                         </div>
-                        <div className="text-xs text-gray-500 line-through">${formatPrice(packageData.price)}</div>
-                        <div className="text-xs text-red-600 font-medium">
-                          Save ${(parseFloat(packageData.price) - Math.max(referralSettings.minimumPrice, parseFloat(packageData.price) * (100 - referralSettings.discountPercentage) / 100)).toFixed(2)}!
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="font-semibold text-green-600">${formatPrice(packageData.price)}</div>
-                    )}
+                      );
+                    })()}
                   </div>
                 </div>
               </div>
               
               <div className="bg-gray-50 rounded-lg p-3">
-                <div className="flex items-center space-x-2">
-                  <Shield className="w-5 h-5 text-gray-600" />
-                  <div>
-                    <div className="text-sm text-gray-600">Type</div>
-                    <div className="font-semibold text-black">eSIM</div>
+                <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-2' : 'space-x-2'}`}>
+                  <span className="text-2xl">
+                    {urlCountryFlag || (packageData.country_code ? getCountryFlag(packageData.country_code) : '🌍')}
+                  </span>
+                  <div className={isRTL ? 'text-right' : 'text-left'}>
+                    <div className="text-sm text-gray-600">{t('sharePackage.country', 'Country')}</div>
+                    <div className="font-semibold text-black">{urlCountryCode || packageData.country_code || 'DE'}</div>
                   </div>
                 </div>
               </div>
@@ -464,51 +496,64 @@ const SharePackagePage = () => {
             <div className="max-w-2xl mx-auto">
               {/* Get Package Section */}
               <div className="text-center mb-8">
-                <h3 className="text-2xl font-semibold text-gray-900 mb-4">Get This Package</h3>
-                {hasReferralDiscount && (
-                  <div className="bg-green-100 border border-green-300 rounded-lg p-3 mb-4 max-w-md mx-auto">
-                    <div className="flex items-center justify-center space-x-2">
-                      <Gift className="w-5 h-5 text-green-600" />
-                      <span className="text-green-800 font-medium">Referral Discount Applied!</span>
+                <h3 className={`text-2xl font-semibold text-gray-900 mb-4 ${isRTL ? 'text-right' : 'text-center'}`}>{t('sharePackage.getThisPackage', 'Get This Package')}</h3>
+                {hasReferralDiscount && (() => {
+                  const originalPrice = parseFloat(packageData.price);
+                  const basicDiscountPercent = regularSettings.discountPercentage || 10;
+                  const referralDiscountPercent = referralSettings.discountPercentage || 7;
+                  const totalDiscountPercent = basicDiscountPercent + referralDiscountPercent;
+                  
+                  let finalPrice = originalPrice * (100 - basicDiscountPercent) / 100;
+                  finalPrice = finalPrice * (100 - referralDiscountPercent) / 100;
+                  finalPrice = Math.max(regularSettings.minimumPrice || 0.5, finalPrice);
+                  
+                  const savings = originalPrice - finalPrice;
+                  
+                  return (
+                    <div className="bg-green-100 border border-green-300 rounded-lg p-3 mb-4 max-w-md mx-auto">
+                      <div className="flex items-center justify-center space-x-2">
+                        <Gift className="w-5 h-5 text-green-600" />
+                        <span className="text-green-800 font-medium">{t('sharePackage.referralDiscountApplied', 'Referral Discount Applied!')}</span>
+                      </div>
+                      <p className="text-sm text-green-700 mt-1">
+                        You're saving ${savings.toFixed(2)} on this purchase ({totalDiscountPercent}% total: {basicDiscountPercent}% basic + {referralDiscountPercent}% referral)
+                      </p>
                     </div>
-                    <p className="text-sm text-green-700 mt-1">
-                      You're saving ${(parseFloat(packageData.price) - Math.max(referralSettings.minimumPrice, parseFloat(packageData.price) * (100 - referralSettings.discountPercentage) / 100)).toFixed(2)} on this purchase ({referralSettings.discountPercentage}% off)
-                    </p>
-                  </div>
-                )}
+                  );
+                })()}
                 <button
                   onClick={handlePurchase}
                   className="w-full max-w-md mx-auto flex items-center justify-center space-x-3 bg-blue-600 hover:bg-blue-700 text-white py-4 px-6 rounded-xl transition-colors font-medium text-lg shadow-lg"
                 >
                   <Smartphone className="w-6 h-6" />
-                  <span>Purchase Now</span>
+                  <span>{t('sharePackage.purchaseNow', 'Purchase Now')}</span>
                 </button>
               </div>
 
               {/* How to Use Section */}
               <div className="text-center">
-                <h3 className="text-2xl font-semibold text-gray-900 mb-6">How to Use</h3>
+                <h3 className={`text-2xl font-semibold text-gray-900 mb-6 ${isRTL ? 'text-right' : 'text-center'}`}>{t('sharePackage.howToUse', 'How to Use')}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div className="flex flex-col items-center text-center p-4">
                     <div className="bg-yellow-100 p-3 rounded-full mb-3">
                       <Zap className="w-8 h-8 text-yellow-600" />
                     </div>
-                    <h4 className="font-semibold text-gray-900 mb-2">Instant Activation</h4>
-                    <p className="text-sm text-gray-600">Get connected immediately after purchase</p>
+                    <h4 className={`font-semibold text-gray-900 mb-2 ${isRTL ? 'text-right' : 'text-center'}`}>{t('sharePackage.instantActivation', 'Instant Activation')}</h4>
+                    <p className={`text-sm text-gray-600 ${isRTL ? 'text-right' : 'text-center'}`}>{t('sharePackage.instantActivationDesc', 'Get connected immediately after purchase')}</p>
                   </div>
                   <div className="flex flex-col items-center text-center p-4">
                     <div className="bg-green-100 p-3 rounded-full mb-3">
                       <Shield className="w-8 h-8 text-green-600" />
                     </div>
-                    <h4 className="font-semibold text-gray-900 mb-2">Secure & Reliable</h4>
-                    <p className="text-sm text-gray-600">Trusted by millions of travelers worldwide</p>
+                    <h4 className={`font-semibold text-gray-900 mb-2 ${isRTL ? 'text-right' : 'text-center'}`}>{t('sharePackage.secureReliable', 'Secure & Reliable')}</h4>
+                    <p className={`text-sm text-gray-600 ${isRTL ? 'text-right' : 'text-center'}`}>{t('sharePackage.secureReliableDesc', 'Trusted by millions of travelers worldwide')}</p>
                   </div>
                   <div className="flex flex-col items-center text-center p-4">
                     <div className="bg-blue-100 p-3 rounded-full mb-3">
                       <Globe className="w-8 h-8 text-blue-600" />
                     </div>
-                    <h4 className="font-semibold text-gray-900 mb-2">Global Coverage</h4>
-                    <p className="text-sm text-gray-600">Stay connected wherever you go</p>
+                    <h4 className={`font-semibold text-gray-900 mb-2 ${isRTL ? 'text-right' : 'text-center'}`}>{t('sharePackage.globalCoverage', 'Global Coverage')}</h4>
+                    <p className={`text-sm text-gray-600 ${isRTL ? 'text-right' : 'text-center'}`}>{t('sharePackage.globalCoverageDesc', 'Stay connected wherever you go')}</p>
                   </div>
                 </div>
               </div>

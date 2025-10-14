@@ -27,24 +27,14 @@ const PlanCard = ({ plan, isSelected, onClick, index, hasReferralDiscount, refer
   const currentLanguage = getCurrentLanguage();
   const isRTL = getLanguageDirection(currentLanguage) === 'rtl';
   
-  // Calculate discounted price based on user type
+  // Calculate discounted price - ALWAYS use regular discount only
   const originalPrice = parseFloat(plan.price);
   
-  let discountedPrice, hasDiscount, discountPercentage;
-  
-  if (hasReferralDiscount) {
-    // User has referral code - use ONLY referral discount
-    discountPercentage = referralSettings?.discountPercentage || 17;
-    const minimumPrice = referralSettings?.minimumPrice || 0.5;
-    discountedPrice = Math.max(minimumPrice, originalPrice * (100 - discountPercentage) / 100);
-    hasDiscount = discountedPrice < originalPrice;
-  } else {
-    // User has no referral code - use regular discount
-    discountPercentage = regularSettings?.discountPercentage || 10;
-    const minimumPrice = regularSettings?.minimumPrice || 0.5;
-    discountedPrice = Math.max(minimumPrice, originalPrice * (100 - discountPercentage) / 100);
-    hasDiscount = discountedPrice < originalPrice;
-  }
+  // Use regular discount only (not referral discount)
+  const discountPercentage = regularSettings?.discountPercentage || 10;
+  const minimumPrice = regularSettings?.minimumPrice || 0.5;
+  const discountedPrice = Math.max(minimumPrice, originalPrice * (100 - discountPercentage) / 100);
+  const hasDiscount = discountedPrice < originalPrice;
   
   console.log('💳 PlanCard calculation:', {
     planName: plan.name,
@@ -77,13 +67,6 @@ const PlanCard = ({ plan, isSelected, onClick, index, hasReferralDiscount, refer
         </div>
       )}
 
-      {/* Hot Deal Badge */}
-      {hasDiscount && (
-        <div className={`absolute -top-2 ${isRTL ? '-right-2' : '-left-2'} bg-gradient-to-r from-red-500 to-orange-500 text-white text-xs px-2 py-1 rounded-full font-medium`}>
-          <DollarSign size={12} className={`inline ${isRTL ? 'ml-1' : 'mr-1'}`} />
-          {t('planSelection.hotDeal', 'Hot Deal')}
-        </div>
-      )}
 
       {/* Plan Header */}
       <div className={`flex items-start justify-between mb-3 ${isRTL ? 'flex-row-reverse' : ''}`} dir={isRTL ? 'rtl' : 'ltr'}>
@@ -127,9 +110,6 @@ const PlanCard = ({ plan, isSelected, onClick, index, hasReferralDiscount, refer
             <div>
               <div className="text-2xl font-bold text-red-600">${discountedPrice.toFixed(2)}</div>
               <div className="text-sm text-gray-500 line-through">${originalPrice.toFixed(2)}</div>
-              <div className="text-xs text-red-600 font-medium">
-                {t('planSelection.save', 'Save ${{amount}}!', { amount: (originalPrice - discountedPrice).toFixed(2) })}
-              </div>
             </div>
           ) : (
             <div className="text-2xl font-bold text-green-600">${originalPrice.toFixed(2)}</div>
@@ -141,7 +121,14 @@ const PlanCard = ({ plan, isSelected, onClick, index, hasReferralDiscount, refer
       {/* Plan Features */}
       <div className="space-y-2 mb-4">
         <div className={`flex items-center text-sm text-gray-700 ${isRTL ? 'text-right' : 'text-left'}`}>
-          <span>{plan.data} {plan.dataUnit}</span>
+          {hasDiscount ? (
+            <div className="bg-gradient-to-r from-red-500 to-orange-500 text-white text-xs px-2 py-1 rounded-full font-medium inline-flex items-center">
+              <DollarSign size={12} className={`${isRTL ? 'ml-1' : 'mr-1'}`} />
+              {t('planSelection.hotDeal', 'Hot Deal')}
+            </div>
+          ) : (
+            <span>{plan.data} {plan.dataUnit}</span>
+          )}
         </div>
         {plan.speed && (
           <div className={`flex items-center text-sm text-gray-700 ${isRTL ? 'text-right' : 'text-left'}`}>

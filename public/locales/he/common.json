@@ -84,6 +84,7 @@
     "privacyPolicy": "מדיניות פרטיות",
     "termsOfService": "תנאי שירות",
     "cookiePolicy": "מדיניות עוגיות",
+    "affiliateProgram": "תוכנית שותפים",
     "contactInfoNotAvailable": "מידע יצירת קשר לא זמין",
     "allRightsReserved": "כל הזכויות שמורות"
   },
@@ -393,7 +394,33 @@
     "needHelp": "צריך עזרה?",
     "contactSupport": "צור קשר עם צוות התמיכה שלנו"
   },
+  "sharePackage": {
+    "packageDetails": "פרטי החבילה",
+    "country": "מדינה",
+    "data": "נתונים",
+    "validity": "תקופת תוקף",
+    "price": "מחיר",
+    "type": "סוג",
+    "getThisPackage": "קבל את החבילה הזו",
+    "purchaseNow": "קנה עכשיו",
+    "noPhoneNumber": "ה-eSIM הזה לא מגיע עם מספר טלפון",
+    "referralDiscountApplied": "הנחת הפניה הוחלה!",
+    "howToUse": "איך להשתמש",
+    "instantActivation": "הפעלה מיידית",
+    "instantActivationDesc": "התחבר מיד לאחר הרכישה",
+    "secureReliable": "בטוח ואמין",
+    "secureReliableDesc": "מהימן על ידי מיליוני מטיילים ברחבי העולם",
+    "globalCoverage": "כיסוי גלובלי",
+    "globalCoverageDesc": "הישאר מחובר בכל מקום שתלך",
+    "travelPackage": "חבילת נסיעות",
+    "loadingPackageInfo": "טוען מידע על החבילה...",
+    "packageNotFound": "חבילה לא נמצאה",
+    "packageNotFoundDesc": "החבילה שאתה מחפש לא קיימת או הוסרה",
+    "backToPlans": "חזור לתוכניות"
+  },
   "common": {
-    "close": "סגור"
+    "close": "סגור",
+    "loading": "טוען...",
+    "notFound": "לא נמצא"
   }
 }

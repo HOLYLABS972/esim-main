@@ -72,7 +72,7 @@ const matchesCountrySearch = (countryName, searchTerm) => {
 
 const EsimPlans = () => {
   const { t, locale } = useI18n();
-  const { currentUser } = useAuth();
+  const { currentUser, userProfile } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -322,7 +322,7 @@ const EsimPlans = () => {
     return () => clearTimeout(timeoutId);
   }, [searchTerm]);
 
-  // Helper function to calculate discounted price
+  // Helper function to calculate discounted price - ALWAYS use regular discount only
   const calculateDiscountedPrice = (originalPrice) => {
     if (!originalPrice || originalPrice <= 0) return originalPrice;
     
@@ -331,20 +331,9 @@ const EsimPlans = () => {
       return originalPrice; // Return the already discounted price
     }
     
-    // For plans page, apply discount based on user referral status
-    const hasReferralDiscount = userProfile?.referralCodeUsed;
-    
-    let discountPercentage, minimumPrice;
-    
-    if (hasReferralDiscount) {
-      // User has referral code - use referral discount
-      discountPercentage = referralSettings.discountPercentage || 17;
-      minimumPrice = referralSettings.minimumPrice || 0.5;
-    } else {
-      // User has no referral code - use regular discount
-      discountPercentage = regularSettings.discountPercentage || 10;
-      minimumPrice = regularSettings.minimumPrice || 0.5;
-    }
+    // For plans page, ALWAYS apply regular discount only (not referral discount)
+    const discountPercentage = regularSettings.discountPercentage || 10;
+    const minimumPrice = regularSettings.minimumPrice || 0.5;
     
     const discountedPrice = Math.max(minimumPrice, originalPrice * (100 - discountPercentage) / 100);
     return discountedPrice;
