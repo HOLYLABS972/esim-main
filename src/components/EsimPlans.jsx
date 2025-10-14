@@ -9,7 +9,7 @@ import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useAuth } from '../contexts/AuthContext';
 import PlanSelectionBottomSheet from './PlanSelectionBottomSheet';
 import { getCountriesWithPricing } from '../services/plansService';
-import { getRegularSettings } from '../services/settingsService';
+import { getRegularSettings, getReferralSettings } from '../services/settingsService';
 import { useI18n } from '../contexts/I18nContext';
 import { detectPlatform, shouldRedirectToDownload, isMobileDevice } from '../utils/platformDetection';
 import { getMobileCountries } from '../data/mobileCountries';
@@ -116,6 +116,7 @@ const EsimPlans = () => {
   
   // Discount settings state
   const [regularSettings, setRegularSettings] = useState({ discountPercentage: 10, minimumPrice: 0.5 });
+  const [referralSettings, setReferralSettings] = useState({ discountPercentage: 17, minimumPrice: 0.5 });
   
   // Simplified state - no sorting or grouping
   const [groupByDays, setGroupByDays] = useState(false); // Disable grouping by days
@@ -137,15 +138,20 @@ const EsimPlans = () => {
     // They will be prompted to download app when they tap on countries
   }, [currentUser, router]);
 
-  // Fetch regular discount settings
+  // Fetch discount settings
   useEffect(() => {
     const fetchDiscountSettings = async () => {
       try {
-        const settings = await getRegularSettings();
-        console.log('💰 Regular discount settings loaded:', settings);
-        setRegularSettings(settings);
+        const [regular, referral] = await Promise.all([
+          getRegularSettings(),
+          getReferralSettings()
+        ]);
+        console.log('💰 Regular discount settings loaded:', regular);
+        console.log('💰 Referral discount settings loaded:', referral);
+        setRegularSettings(regular);
+        setReferralSettings(referral);
       } catch (error) {
-        console.error('Error fetching regular discount settings:', error);
+        console.error('Error fetching discount settings:', error);
         // Keep default settings
       }
     };
@@ -325,9 +331,20 @@ const EsimPlans = () => {
       return originalPrice; // Return the already discounted price
     }
     
-    // For plans page, apply discount from settings
-    const discountPercentage = regularSettings.discountPercentage || 10;
-    const minimumPrice = regularSettings.minimumPrice || 0.5;
+    // For plans page, apply discount based on user referral status
+    const hasReferralDiscount = userProfile?.referralCodeUsed;
+    
+    let discountPercentage, minimumPrice;
+    
+    if (hasReferralDiscount) {
+      // User has referral code - use referral discount
+      discountPercentage = referralSettings.discountPercentage || 17;
+      minimumPrice = referralSettings.minimumPrice || 0.5;
+    } else {
+      // User has no referral code - use regular discount
+      discountPercentage = regularSettings.discountPercentage || 10;
+      minimumPrice = regularSettings.minimumPrice || 0.5;
+    }
     
     const discountedPrice = Math.max(minimumPrice, originalPrice * (100 - discountPercentage) / 100);
     return discountedPrice;

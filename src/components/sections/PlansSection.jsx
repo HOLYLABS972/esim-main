@@ -48,7 +48,8 @@ export default function PlansSection() {
       flag: '🇺🇸',
       data: '1GB',
       days: '7 Days',
-      price: '$4.00'
+      price: '$4.00',
+      hotDeal: true
     },
     {
       country: 'Poland',
@@ -56,7 +57,8 @@ export default function PlansSection() {
       flag: '🇵🇱',
       data: '1GB',
       days: '7 Days',
-      price: '$4.00'
+      price: '$4.00',
+      hotDeal: false
     },
     {
       country: 'Thailand',
@@ -64,7 +66,8 @@ export default function PlansSection() {
       flag: '🇹🇭',
       data: '1GB',
       days: '7 Days',
-      price: '$4.00'
+      price: '$4.00',
+      hotDeal: true
     },
     {
       country: 'Japan',
@@ -72,7 +75,8 @@ export default function PlansSection() {
       flag: '🇯🇵',
       data: '1GB',
       days: '7 Days',
-      price: '$4.00'
+      price: '$4.00',
+      hotDeal: false
     }
   ];
   
@@ -131,9 +135,16 @@ export default function PlansSection() {
                     </div>
                     <div className={`flex items-center space-x-4`}>
                       <div className="text-right">
-                        <h3 className="text-lg font-semibold text-gray-900">
-                          {translateCountryName(plan.countryCode, plan.country, locale)}
-                        </h3>
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="text-lg font-semibold text-gray-900">
+                            {translateCountryName(plan.countryCode, plan.country, locale)}
+                          </h3>
+                          {plan.hotDeal && (
+                            <span className="bg-gradient-to-r from-red-500 to-orange-500 text-white text-xs px-2 py-1 rounded-full font-medium">
+                              {t('planSelection.hotDeal', 'Hot Deal')}
+                            </span>
+                          )}
+                        </div>
                         <p className="text-sm text-gray-500">1GB • 7 Days</p>
                       </div>
                       <div className="flex-shrink-0" style={{ padding: '10px' }}>
@@ -148,9 +159,16 @@ export default function PlansSection() {
                         <span className="text-2xl">{plan.flag}</span>
                       </div>
                       <div className="text-left">
-                        <h3 className="text-lg font-semibold text-gray-900">
-                          {translateCountryName(plan.countryCode, plan.country, locale)}
-                        </h3>
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="text-lg font-semibold text-gray-900">
+                            {translateCountryName(plan.countryCode, plan.country, locale)}
+                          </h3>
+                          {plan.hotDeal && (
+                            <span className="bg-gradient-to-r from-red-500 to-orange-500 text-white text-xs px-2 py-1 rounded-full font-medium">
+                              {t('planSelection.hotDeal', 'Hot Deal')}
+                            </span>
+                          )}
+                        </div>
                         <p className="text-sm text-gray-500">1GB • 7 Days</p>
                       </div>
                     </div>

@@ -306,6 +306,9 @@ export const countryTranslations = {
     'LU': 'لوكسمبورغ',
     'NZ': 'نيوزيلندا',
     'PS': 'فلسطين',
+    'AL': 'ألبانيا',
+    'BA': 'البوسنة والهرسك',
+    'AD': 'أندورا',
   },
   
   // German translations
@@ -380,6 +383,9 @@ export const countryTranslations = {
     'IS': 'Island',
     'LU': 'Luxemburg',
     'NZ': 'Neuseeland',
+    'AL': 'Albanien',
+    'BA': 'Bosnien und Herzegowina',
+    'AD': 'Andorra',
   },
   
   // Spanish translations
@@ -454,6 +460,9 @@ export const countryTranslations = {
     'IS': 'Islandia',
     'LU': 'Luxemburgo',
     'NZ': 'Nueva Zelanda',
+    'AL': 'Albania',
+    'BA': 'Bosnia y Herzegovina',
+    'AD': 'Andorra',
   },
   
   // French translations
@@ -528,6 +537,9 @@ export const countryTranslations = {
     'IS': 'Islande',
     'LU': 'Luxembourg',
     'NZ': 'Nouvelle-Zélande',
+    'AL': 'Albanie',
+    'BA': 'Bosnie-Herzégovine',
+    'AD': 'Andorre',
   },
   
   // Hebrew translations
@@ -603,6 +615,9 @@ export const countryTranslations = {
     'LU': 'לוקסמבורג',
     'NZ': 'ניו זילנד',
     'PS': 'פלסטין',
+    'AL': 'אלבניה',
+    'BA': 'בוסניה והרצגובינה',
+    'AD': 'אנדורה',
   },
   
   // Russian translations
@@ -677,6 +692,9 @@ export const countryTranslations = {
     'IS': 'Исландия',
     'LU': 'Люксембург',
     'NZ': 'Новая Зеландия',
+    'AL': 'Албания',
+    'BA': 'Босния и Герцеговина',
+    'AD': 'Андорра',
   },
 };
 
