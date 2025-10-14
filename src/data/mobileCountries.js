@@ -1,3 +1,5 @@
+import { translateCountries } from '../utils/countryTranslations';
+
 // Hardcoded countries data for mobile users with consistent pricing
 // Base price: $4.5, Discounted price: $3.83 (15% discount)
 export const mobileCountries = [
@@ -194,6 +196,15 @@ export const isMobileIOS = () => {
 };
 
 // Helper function to get countries for mobile iOS users
-export const getMobileCountries = () => {
-  return mobileCountries.filter(country => country.status === 'active');
+// Now supports automatic translation based on locale
+export const getMobileCountries = (locale = 'en') => {
+  const activeCountries = mobileCountries.filter(country => country.status === 'active');
+  
+  // If locale is English or not provided, return as is
+  if (!locale || locale === 'en') {
+    return activeCountries;
+  }
+  
+  // Otherwise, translate country names based on locale
+  return translateCountries(activeCountries, locale);
 };

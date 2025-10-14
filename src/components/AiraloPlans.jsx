@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useI18n } from '../contexts/I18nContext';
 import { esimService } from '../services/esimService';
+import { translateCountries } from '../utils/countryTranslations';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Globe, 
@@ -21,7 +22,7 @@ import toast from 'react-hot-toast';
 
 const AiraloPlans = () => {
   const { currentUser } = useAuth();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [packages, setPackages] = useState([]);
   const [countries, setCountries] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -86,7 +87,9 @@ const AiraloPlans = () => {
       
       if (result.success) {
         setPackages(result.plans || []);
-        setCountries(result.countries || []);
+        // Translate countries based on current locale
+        const translatedCountries = translateCountries(result.countries || [], locale);
+        setCountries(translatedCountries);
         console.log('✅ Loaded packages and countries from Airalo API');
       } else {
         throw new Error(result.error || 'Failed to load data');

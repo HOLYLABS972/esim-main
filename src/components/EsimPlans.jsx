@@ -14,6 +14,7 @@ import { useI18n } from '../contexts/I18nContext';
 import { detectPlatform, shouldRedirectToDownload, isMobileDevice } from '../utils/platformDetection';
 import { getMobileCountries } from '../data/mobileCountries';
 import { getLanguageDirection, detectLanguageFromPath } from '../utils/languageUtils';
+import { translateCountries } from '../utils/countryTranslations';
 
 // Helper function to get flag emoji from country code
 const getFlagEmoji = (countryCode) => {
@@ -154,12 +155,12 @@ const EsimPlans = () => {
 
   // Fetch countries - use hardcoded for landing pages, Firebase for dedicated plans page
   const { data: countriesData, isLoading: countriesLoading, error: countriesError } = useQuery({
-    queryKey: ['countries-with-pricing', isPlansPage],
+    queryKey: ['countries-with-pricing', isPlansPage, locale],
     queryFn: async () => {
       // Landing pages: Always use hardcoded countries
       if (!isPlansPage) {
         console.log('🏠 Landing page - Using hardcoded countries');
-        const mobileCountries = getMobileCountries();
+        const mobileCountries = getMobileCountries(locale); // Pass locale for translation
         
         // Sort by minimum price (cheapest first)
         mobileCountries.sort((a, b) => a.minPrice - b.minPrice);
@@ -213,14 +214,16 @@ const EsimPlans = () => {
     
     if (countriesData) {
       console.log('Setting countries data:', countriesData);
-      setCountries(countriesData);
-      setFilteredCountries(countriesData);
+      // Translate countries based on current locale
+      const translatedCountries = translateCountries(countriesData, locale);
+      setCountries(translatedCountries);
+      setFilteredCountries(translatedCountries);
     } else if (countriesError) {
       console.log('Firebase error, no data available:', countriesError);
       setCountries([]);
       setFilteredCountries([]);
     }
-  }, [countriesData, countriesError, countriesLoading]);
+  }, [countriesData, countriesError, countriesLoading, locale]);
 
   // Search function - uses hardcoded countries for landing, Firebase for plans page
   const searchCountries = async (term) => {
@@ -235,11 +238,12 @@ const EsimPlans = () => {
       // Landing pages: Use hardcoded countries
       if (!isPlansPage) {
         console.log('🏠 Landing search - Using hardcoded countries:', term);
-        const mobileCountries = getMobileCountries();
+        const mobileCountries = getMobileCountries(locale); // Pass locale for translation
         const searchResults = mobileCountries.filter(country => 
           matchesCountrySearch(country.name, term) ||
           country.code.toLowerCase().includes(term.toLowerCase())
         );
+        // Countries are already translated by getMobileCountries
         setSearchResults(searchResults);
         setIsSearching(false);
         return;
@@ -287,7 +291,9 @@ const EsimPlans = () => {
       }
       
       console.log('Firebase search results:', firebaseResults.length);
-      setSearchResults(firebaseResults);
+      // Translate Firebase search results based on current locale
+      const translatedResults = translateCountries(firebaseResults, locale);
+      setSearchResults(translatedResults);
       
     } catch (error) {
       console.error('Search error:', error);

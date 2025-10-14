@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search } from 'lucide-react';
 import { useI18n } from '../contexts/I18nContext';
+import { translateCountryName } from '../utils/countryTranslations';
 
 const CountrySearchBar = ({ onSearch, showCountryCount = true }) => {
   const { t, locale } = useI18n();
@@ -12,6 +13,15 @@ const CountrySearchBar = ({ onSearch, showCountryCount = true }) => {
   
   // Check if current locale is RTL
   const isRTL = locale === 'ar' || locale === 'he';
+  
+  // Popular countries with their codes for translation
+  const popularCountries = [
+    { code: 'FR', name: 'France' },
+    { code: 'US', name: 'USA' },
+    { code: 'TH', name: 'Thailand' },
+    { code: 'JP', name: 'Japan' },
+    { code: 'ES', name: 'Spain' },
+  ];
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -72,27 +82,30 @@ const CountrySearchBar = ({ onSearch, showCountryCount = true }) => {
         
         {/* Search Suggestions */}
         <div className="mt-3 flex flex-wrap justify-center gap-2 px-2">
-          {['France', 'USA', 'Thailand', 'Japan', 'Spain'].map((country) => (
-            <button
-              key={country}
-              type="button"
-              onClick={() => {
-                setSearchValue(country);
-                // Force English language
-                if (typeof window !== 'undefined') {
-                  localStorage.setItem('roamjet-language', 'en');
-                }
-                setTimeout(() => {
-                  // Always use English URL
-                  const searchUrl = `/esim-plans?search=${encodeURIComponent(country)}`;
-                  router.push(searchUrl);
-                }, 100);
-              }}
-              className="text-xs sm:text-sm px-3 py-1 rounded-full bg-white/80 hover:bg-cobalt-blue/10 border border-jordy-blue/30 hover:border-cobalt-blue transition-all duration-200 text-gray-700 hover:text-cobalt-blue font-medium"
-            >
-              {country}
-            </button>
-          ))}
+          {popularCountries.map((country) => {
+            const translatedName = translateCountryName(country.code, country.name, locale);
+            return (
+              <button
+                key={country.code}
+                type="button"
+                onClick={() => {
+                  setSearchValue(country.name); // Use English name for search
+                  // Force English language
+                  if (typeof window !== 'undefined') {
+                    localStorage.setItem('roamjet-language', 'en');
+                  }
+                  setTimeout(() => {
+                    // Always use English URL
+                    const searchUrl = `/esim-plans?search=${encodeURIComponent(country.name)}`;
+                    router.push(searchUrl);
+                  }, 100);
+                }}
+                className="text-xs sm:text-sm px-3 py-1 rounded-full bg-white/80 hover:bg-cobalt-blue/10 border border-jordy-blue/30 hover:border-cobalt-blue transition-all duration-200 text-gray-700 hover:text-cobalt-blue font-medium"
+              >
+                {translatedName}
+              </button>
+            );
+          })}
         </div>
       </form>
     </div>

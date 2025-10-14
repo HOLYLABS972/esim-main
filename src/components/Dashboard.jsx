@@ -9,6 +9,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { esimService } from '../services/esimService';
 import { getReferralStats, createReferralCode } from '../services/referralService';
 import { getLanguageDirection, detectLanguageFromPath } from '../utils/languageUtils';
+import { translateCountryName } from '../utils/countryTranslations';
 import toast from 'react-hot-toast';
 
 // Dashboard Components
@@ -129,7 +130,10 @@ const Dashboard = () => {
         const ordersData = esimsSnapshot.docs.map(doc => {
           try {
             const data = doc.data();
-                          return {
+            const countryCode = data.countryCode || data.orderResult?.countryCode;
+            const countryName = data.countryName || data.orderResult?.countryName;
+            
+            return {
                 id: doc.id,
                 ...data,
                 // Map mobile app fields to web app expected fields
@@ -140,9 +144,9 @@ const Dashboard = () => {
                 customerEmail: data.customerEmail || currentUser.email,
                 createdAt: data.createdAt || data.created_at,
                 updatedAt: data.updatedAt || data.updated_at,
-                // Map country information
-                countryCode: data.countryCode || data.orderResult?.countryCode,
-                countryName: data.countryName || data.orderResult?.countryName,
+                // Map country information with translation
+                countryCode: countryCode,
+                countryName: translateCountryName(countryCode, countryName, locale),
                 // Map QR code data
                 qrCode: {
                   qrCode: data.qrCode || data.orderResult?.qrCode,
