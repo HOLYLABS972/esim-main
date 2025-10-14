@@ -2,16 +2,16 @@ import { NextResponse } from 'next/server';
 
 // Domain to language mapping
 const domainLanguageMap = {
-  'ru.romajet.net': 'ru',
-  'esim.romajet.net': 'en',
-  'www.romajet.net': 'en',
-  'romajet.net': 'en',
+  'ru.roamjet.net': 'ru',
+  'esim.roamjet.net': 'en',
+  'www.roamjet.net': 'en',
+  'roamjet.net': 'en',
   // Add more domains as needed
-  'ar.romajet.net': 'ar',
-  'he.romajet.net': 'he',
-  'de.romajet.net': 'de',
-  'fr.romajet.net': 'fr',
-  'es.romajet.net': 'es',
+  'ar.roamjet.net': 'ar',
+  'he.roamjet.net': 'he',
+  'de.roamjet.net': 'de',
+  'fr.roamjet.net': 'fr',
+  'es.roamjet.net': 'es',
 };
 
 const supportedLanguageCodes = ['en', 'es', 'fr', 'de', 'ar', 'he', 'ru'];
