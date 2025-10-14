@@ -26,14 +26,12 @@ const CountrySearchBar = ({ onSearch, showCountryCount = true }) => {
   const handleSearch = (e) => {
     e.preventDefault();
     
-    // Force English language for search
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('roamjet-language', 'en');
-    }
+    // Build URL with language prefix if not English
+    const languagePrefix = locale && locale !== 'en' ? `/${locale}` : '';
     
     if (searchValue.trim()) {
-      // Always use English URL for search
-      const searchUrl = `/esim-plans?search=${encodeURIComponent(searchValue.trim())}`;
+      // Navigate to plans page with search parameter, preserving language
+      const searchUrl = `${languagePrefix}/esim-plans?search=${encodeURIComponent(searchValue.trim())}`;
       router.push(searchUrl);
       
       // Also call onSearch callback if provided
@@ -41,8 +39,8 @@ const CountrySearchBar = ({ onSearch, showCountryCount = true }) => {
         onSearch(searchValue.trim());
       }
     } else {
-      // Always navigate to English plans page
-      router.push('/esim-plans');
+      // Navigate to plans page, preserving language
+      router.push(`${languagePrefix}/esim-plans`);
     }
   };
 
@@ -66,12 +64,12 @@ const CountrySearchBar = ({ onSearch, showCountryCount = true }) => {
             value={searchValue}
             onChange={handleInputChange}
             onKeyPress={handleKeyPress}
-            placeholder={`🌍 ${t('hero.countriesAvailable', 'Now available in 200+ countries')}`}
-            className={`w-full px-6 py-4 sm:py-5 ${isRTL ? 'pl-14 sm:pl-16 pr-6' : 'pr-14 sm:pr-16 pl-6'} text-base sm:text-lg border-2 border-gray-200 rounded-full focus:outline-none focus:border-cobalt-blue focus:ring-2 focus:ring-cobalt-blue/20 transition-all duration-300 shadow-lg hover:shadow-xl bg-white/90 backdrop-blur-md placeholder:text-gray-500 placeholder:font-medium ${isRTL ? 'text-right' : 'text-left'}`}
+            placeholder={isRTL ? `${t('hero.countriesAvailable', 'Now available in 200+ countries')} 🌍` : `🌍 ${t('hero.countriesAvailable', 'Now available in 200+ countries')}`}
+            className={`w-full px-6 py-4 sm:py-5 ${isRTL ? 'pr-14 sm:pr-16 pl-6' : 'pr-14 sm:pr-16 pl-6'} text-base sm:text-lg border-2 border-gray-200 rounded-full focus:outline-none focus:border-cobalt-blue focus:ring-2 focus:ring-cobalt-blue/20 transition-all duration-300 shadow-lg hover:shadow-xl bg-white/90 backdrop-blur-md placeholder:text-gray-500 placeholder:font-medium ${isRTL ? 'text-right' : 'text-left'}`}
           />
           <button
             type="submit"
-            className={`absolute ${isRTL ? 'left-2 sm:left-3' : 'right-2 sm:right-3'} top-1/2 transform -translate-y-1/2 bg-white/80 backdrop-blur-md hover:bg-white/95 border-2 border-cobalt-blue/30 hover:border-cobalt-blue p-3 sm:p-3.5 rounded-full transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-cobalt-blue/50 shadow-lg`}
+            className={`absolute ${isRTL ? 'right-2 sm:right-3' : 'right-2 sm:right-3'} top-1/2 transform -translate-y-1/2 bg-white/80 backdrop-blur-md hover:bg-white/95 border-2 border-cobalt-blue/30 hover:border-cobalt-blue p-3 sm:p-3.5 rounded-full transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-cobalt-blue/50 shadow-lg`}
             aria-label="Search"
           >
             <svg className="w-5 h-5 sm:w-6 sm:h-6 text-cobalt-blue" fill="currentColor" viewBox="0 0 20 20">
@@ -90,15 +88,11 @@ const CountrySearchBar = ({ onSearch, showCountryCount = true }) => {
                 type="button"
                 onClick={() => {
                   setSearchValue(country.name); // Use English name for search
-                  // Force English language
-                  if (typeof window !== 'undefined') {
-                    localStorage.setItem('roamjet-language', 'en');
-                  }
-                  setTimeout(() => {
-                    // Always use English URL
-                    const searchUrl = `/esim-plans?search=${encodeURIComponent(country.name)}`;
-                    router.push(searchUrl);
-                  }, 100);
+                  // Build URL with language prefix if not English
+                  const languagePrefix = locale && locale !== 'en' ? `/${locale}` : '';
+                  // Navigate to plans page with search, preserving language
+                  const searchUrl = `${languagePrefix}/esim-plans?search=${encodeURIComponent(country.name)}`;
+                  router.push(searchUrl);
                 }}
                 className="text-xs sm:text-sm px-3 py-1 rounded-full bg-white/80 hover:bg-cobalt-blue/10 border border-jordy-blue/30 hover:border-cobalt-blue transition-all duration-200 text-gray-700 hover:text-cobalt-blue font-medium"
               >
