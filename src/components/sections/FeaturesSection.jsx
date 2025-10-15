@@ -1,11 +1,26 @@
 'use client';
 
 import { useI18n } from '../../contexts/I18nContext';
+import { usePathname } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 
 export default function FeaturesSection() {
   const { t, locale, isLoading } = useI18n();
+  const pathname = usePathname();
+
+  // Get language prefix from pathname
+  const getLanguagePrefix = () => {
+    const languageCodes = ['ar', 'he', 'ru', 'de', 'fr', 'es'];
+    for (const code of languageCodes) {
+      if (pathname.startsWith(`/${code}/`) || pathname === `/${code}`) {
+        return `/${code}`;
+      }
+    }
+    return '';
+  };
+
+  const langPrefix = getLanguagePrefix();
   
   if (isLoading) {
     return (
@@ -92,7 +107,7 @@ export default function FeaturesSection() {
             </div>
             <div className="text-center pt-4 border-t border-gray-200">
               <Link 
-                href="/device-compatibility"
+                href={`${langPrefix}/device-compatibility`}
                 className="text-tufts-blue hover:text-cobalt-blue font-medium transition-colors inline-flex items-center"
               >
                 {t('features.deviceCompatibility.checkYourDevice')}
