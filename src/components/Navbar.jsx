@@ -142,9 +142,12 @@ const Navbar = ({ hideLanguageSelector = false }) => {
         
         <div className="hidden lg:flex lg:gap-x-12">
           
-          <Link href={getLocalizedUrl('/contact')} className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
-            {t('navbar.contactUs', 'Contact Us')}
-          </Link>
+          <button
+            onClick={handleDownloadApp}
+            className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors"
+          >
+            Download
+          </button>
           <Link href={getLocalizedBlogListUrl(currentLanguage)} className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
             {t('navbar.blog', 'Blog')}
           </Link>
@@ -220,15 +223,8 @@ const Navbar = ({ hideLanguageSelector = false }) => {
                     }}
                     className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2 w-full bg-transparent border-none cursor-pointer"
                   >
-                    {t('navbar.downloadApp', 'Download App')}
+                    Download
                   </button>
-                  <Link
-                    href={getLocalizedUrl('/contact')}
-                    className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    {t('navbar.contactUs', 'Contact Us')}
-                  </Link>
                   <Link
                     href={getLocalizedBlogListUrl(currentLanguage)}
                     className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2"

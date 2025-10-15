@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { MapPin, Mail, Phone, Facebook, Twitter, Instagram, Linkedin, Youtube } from 'lucide-react';
+import { Mail, Facebook, Twitter, Instagram, Youtube } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { useI18n } from '../contexts/I18nContext';
 
@@ -14,16 +14,14 @@ const Footer = () => {
   const currentYear = new Date().getFullYear();
   // Hardcoded contact information
   const contactInfo = {
-    email: 'support@roamjet.net',
-    phone: '+1 778 907 7638',
-    address: 'Holylabs Ltd, 275 New North Road Islington # 1432, London, N1 7AA, United Kingdom'
+    email: 'support@roamjet.net'
   };
   
   // Hardcoded social media links
   const socialMedia = {
     instagram: 'https://www.instagram.com/esim.roamjet',
     facebook: 'https://www.facebook.com/profile.php?id=61581184673040',
-    linkedin: 'https://www.linkedin.com/company/holylabs/'
+    tiktok: 'https://www.tiktok.com/@roamjet'
   };
   
   
@@ -73,12 +71,6 @@ const Footer = () => {
     return (isLanguagePage || isBlogPage || isLanguageSpecificPage) ? t(key, englishText) : englishText;
   };
 
-  const quickLinks = [
-    { name: getText('footer.home', 'Home'), path: '/' },
-    { name: getText('footer.blog', 'Blog'), path: '/blog' },
-    { name: getText('footer.contactUs', 'Contact Us'), path: 'https://www.theholylabs.com/', external: true }
-  ];
-
   // Helper function to get language prefix from pathname
   const getLanguagePrefix = () => {
     const languageCodes = ['ar', 'he', 'ru', 'de', 'fr', 'es'];
@@ -92,18 +84,31 @@ const Footer = () => {
 
   const langPrefix = getLanguagePrefix();
 
+  const quickLinks = [
+    { name: getText('footer.home', 'Home'), path: '/' },
+    { name: getText('footer.blog', 'Blog'), path: '/blog' },
+    { name: getText('navbar.login', 'Login'), path: `${langPrefix}/login` }
+  ];
+
   const usefulLinks = [
-    { name: getText('footer.privacyPolicy', 'Privacy Policy'), path: 'https://www.theholylabs.com/privacy', external: true },
-    { name: getText('footer.termsOfService', 'Terms of Service'), path: 'https://www.theholylabs.com/terms', external: true },
+    { name: getText('footer.privacyPolicy', 'Privacy Policy'), path: `${langPrefix}/privacy-policy` },
+    { name: getText('footer.termsOfService', 'Terms of Service'), path: `${langPrefix}/terms-of-service` },
     { name: getText('footer.affiliateProgram', 'Affiliate Program'), path: `${langPrefix}/affiliate-program` }
   ];
+
+  // Custom TikTok Icon Component
+  const TikTokIcon = ({ className }) => (
+    <svg viewBox="0 0 24 24" className={className} fill="currentColor">
+      <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
+    </svg>
+  );
 
   // Create social links array with only non-empty URLs
   const socialLinks = [
     { icon: Facebook, url: socialMedia.facebook, name: 'Facebook' },
     { icon: Twitter, url: socialMedia.twitter, name: 'Twitter' },
     { icon: Instagram, url: socialMedia.instagram, name: 'Instagram' },
-    { icon: Linkedin, url: socialMedia.linkedin, name: 'LinkedIn' },
+    { icon: TikTokIcon, url: socialMedia.tiktok, name: 'TikTok' },
     { icon: Youtube, url: socialMedia.youtube, name: 'YouTube' }
   ].filter(link => link.url && link.url.trim() !== '');
 
@@ -238,20 +243,6 @@ const Footer = () => {
             >
               <h5 className="footer-item__title text-xl font-semibold mb-6 text-gray-100">{getText('footer.contactUs', 'Contact Us')}</h5>
               <ul className="footer-contact-menu space-y-4">
-                {/* Address - only show if address is provided */}
-                {contactInfo.address && contactInfo.address.trim() !== '' && (
-                  <li className="footer-contact-menu__item flex items-center space-x-3">
-                    <div className="footer-contact-menu__item-icon w-10 h-10 bg-cobalt-blue rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                      <MapPin className="w-5 h-5" color="white" />
-                    </div>
-                    <div className="footer-contact-menu__item-content">
-                      <p className="footer-contact__desc text-gray-300 text-sm">
-                        {contactInfo.address}
-                      </p>
-                    </div>
-                  </li>
-                )}
-                
                 {/* Email - only show if email is provided */}
                 {contactInfo.email && contactInfo.email.trim() !== '' && (
                   <li className="footer-contact-menu__item flex items-center space-x-3">
@@ -265,29 +256,15 @@ const Footer = () => {
                       >
                         {contactInfo.email}
                       </a>
-                    </div>
-                  </li>
-                )}
-                
-                {/* Phone - only show if phone is provided */}
-                {contactInfo.phone && contactInfo.phone.trim() !== '' && (
-                  <li className="footer-contact-menu__item flex items-center space-x-3">
-                    <div className="footer-contact-menu__item-icon w-10 h-10 bg-cobalt-blue rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                      <Phone className="w-5 h-5" color="white" />
-                    </div>
-                    <div className="footer-contact-menu__item-content">
-                      <a 
-                        className="footer-contact__desc text-gray-300 text-sm hover:text-blue-400 transition-colors duration-200" 
-                        href="https://t.me/theholylabs"
-                      >
-                        {contactInfo.phone}
-                      </a>
+                      <p className="text-gray-400 text-xs mt-1">
+                        {getText('contact.emailDescription', 'Send us an email anytime for support and inquiries')}
+                      </p>
                     </div>
                   </li>
                 )}
                 
                 {/* Show message if no contact info is available */}
-                {!contactInfo.address && !contactInfo.email && !contactInfo.phone && !loading && (
+                {!contactInfo.email && !loading && (
                   <li className="footer-contact-menu__item">
                     <p className="footer-contact__desc text-gray-400 italic">
                       {getText('footer.contactInfoNotAvailable', 'Contact information not available')}
