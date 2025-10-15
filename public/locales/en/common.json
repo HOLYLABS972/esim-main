@@ -29,7 +29,9 @@
       "title": "Global Coverage",
       "description": "Stay connected in 200+ countries with our extensive eSIM network coverage worldwide. Perfect for backpackers exploring multiple destinations and digital nomads working remotely.",
       "countries": "200+ Countries",
-      "worldwide": "Worldwide Coverage"
+      "worldwide": "Worldwide Coverage",
+      "countriesCount": "200+",
+      "countriesLabel": "Countries"
     },
     "instantActivation": {
       "title": "Instant Activation",
@@ -42,9 +44,14 @@
     },
     "deviceCompatibility": {
       "title": "Device Compatibility",
-      "description": "Works with all modern smartphones and tablets that support eSIM technology. Compatible with devices used by backpackers and digital nomads globally.",
+      "description": "Check if your device supports eSIM technology",
       "esimCompatible": "eSIM Compatible",
-      "operatingSystem": "Android 12+, iOS 15+"
+      "operatingSystem": "Android 12+, iOS 15+",
+      "supportedBrands": "Supported Brands",
+      "supportedBrandsList": "iPhone, Samsung, Pixel +9 more",
+      "requirements": "Requirements",
+      "requirementsList": "iOS 12.1+ | Android 9.0+",
+      "checkYourDevice": "Check Your Device"
     }
   },
   "plans": {

@@ -28,7 +28,9 @@
       "title": "כיסוי גלובלי",
       "description": "הישאר מחובר ביותר מ-200 מדינות עם כיסוי רשת ה-eSIM הנרחב שלנו ברחבי העולם.",
       "countries": "200+ מדינות",
-      "worldwide": "כיסוי עולמי"
+      "worldwide": "כיסוי עולמי",
+      "countriesCount": "200+",
+      "countriesLabel": "מדינות"
     },
     "instantActivation": {
       "title": "הפעלה מיידית",
@@ -41,9 +43,14 @@
     },
     "deviceCompatibility": {
       "title": "תאימות מכשירים",
-      "description": "עובד עם כל הסמארטפונים והטאבלטים המודרניים התומכים בטכנולוגיית eSIM.",
+      "description": "בדוק אם המכשיר שלך תומך בטכנולוגיית eSIM",
       "esimCompatible": "תואם eSIM",
-      "operatingSystem": "Android 12+, iOS 15+"
+      "operatingSystem": "Android 12+, iOS 15+",
+      "supportedBrands": "מותגים נתמכים",
+      "supportedBrandsList": "iPhone, Samsung, Pixel +9 נוספים",
+      "requirements": "דרישות",
+      "requirementsList": "iOS 12.1+ | Android 9.0+",
+      "checkYourDevice": "בדוק את המכשיר שלך"
     }
   },
   "activation": {

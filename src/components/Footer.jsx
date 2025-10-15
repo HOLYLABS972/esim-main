@@ -85,7 +85,7 @@ const Footer = () => {
   const langPrefix = getLanguagePrefix();
 
   const quickLinks = [
-    { name: getText('footer.home', 'Home'), path: '/' },
+    { name: 'FAQ', path: '/faq' },
     { name: getText('footer.blog', 'Blog'), path: '/blog' },
     { name: getText('navbar.login', 'Login'), path: `${langPrefix}/login` }
   ];

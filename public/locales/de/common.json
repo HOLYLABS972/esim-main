@@ -28,7 +28,9 @@
       "title": "Globale Abdeckung",
       "description": "Bleiben Sie in über 200 Ländern mit unserer umfangreichen eSIM-Netzwerkabdeckung weltweit verbunden. Perfekt für Rucksacktouristen, die mehrere Ziele erkunden, und digitale Nomaden, die remote arbeiten.",
       "countries": "200+ Länder",
-      "worldwide": "Weltweite Abdeckung"
+      "worldwide": "Weltweite Abdeckung",
+      "countriesCount": "200+",
+      "countriesLabel": "Länder"
     },
     "instantActivation": {
       "title": "Sofortige Aktivierung",
@@ -41,9 +43,14 @@
     },
     "deviceCompatibility": {
       "title": "Gerätekompatibilität",
-      "description": "Funktioniert mit allen modernen Smartphones und Tablets, die eSIM-Technologie unterstützen. Kompatibel mit Geräten, die von Rucksacktouristen und digitalen Nomaden weltweit verwendet werden.",
+      "description": "Überprüfen Sie, ob Ihr Gerät eSIM-Technologie unterstützt",
       "esimCompatible": "eSIM-kompatibel",
-      "operatingSystem": "Android 12+, iOS 15+"
+      "operatingSystem": "Android 12+, iOS 15+",
+      "supportedBrands": "Unterstützte Marken",
+      "supportedBrandsList": "iPhone, Samsung, Pixel +9 weitere",
+      "requirements": "Anforderungen",
+      "requirementsList": "iOS 12.1+ | Android 9.0+",
+      "checkYourDevice": "Gerät überprüfen"
     }
   },
   "activation": {

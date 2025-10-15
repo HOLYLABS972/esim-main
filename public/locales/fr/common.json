@@ -28,7 +28,9 @@
       "title": "Couverture mondiale",
       "description": "Restez connecté dans plus de 200 pays avec notre vaste couverture réseau eSIM dans le monde entier. Parfait pour les randonneurs explorant plusieurs destinations et les nomades numériques travaillant à distance.",
       "countries": "200+ pays",
-      "worldwide": "Couverture mondiale"
+      "worldwide": "Couverture mondiale",
+      "countriesCount": "200+",
+      "countriesLabel": "Pays"
     },
     "instantActivation": {
       "title": "Activation instantanée",
@@ -41,9 +43,14 @@
     },
     "deviceCompatibility": {
       "title": "Compatibilité des appareils",
-      "description": "Fonctionne avec tous les smartphones et tablettes modernes qui prennent en charge la technologie eSIM. Compatible avec les appareils utilisés par les randonneurs et nomades numériques dans le monde entier.",
+      "description": "Vérifiez si votre appareil prend en charge la technologie eSIM",
       "esimCompatible": "Compatible eSIM",
-      "operatingSystem": "Android 12+, iOS 15+"
+      "operatingSystem": "Android 12+, iOS 15+",
+      "supportedBrands": "Marques prises en charge",
+      "supportedBrandsList": "iPhone, Samsung, Pixel +9 autres",
+      "requirements": "Exigences",
+      "requirementsList": "iOS 12.1+ | Android 9.0+",
+      "checkYourDevice": "Vérifier votre appareil"
     }
   },
   "activation": {

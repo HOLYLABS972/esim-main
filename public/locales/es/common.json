@@ -28,7 +28,9 @@
       "title": "Cobertura global",
       "description": "Mantente conectado en más de 200 países con nuestra extensa cobertura de red eSIM en todo el mundo.",
       "countries": "200+ países",
-      "worldwide": "Cobertura mundial"
+      "worldwide": "Cobertura mundial",
+      "countriesCount": "200+",
+      "countriesLabel": "Países"
     },
     "instantActivation": {
       "title": "Activación instantánea",
@@ -41,9 +43,14 @@
     },
     "deviceCompatibility": {
       "title": "Compatibilidad de dispositivos",
-      "description": "Funciona con todos los smartphones y tablets modernos que soportan tecnología eSIM.",
+      "description": "Verifica si tu dispositivo soporta tecnología eSIM",
       "esimCompatible": "Compatible con eSIM",
-      "operatingSystem": "Android 12+, iOS 15+"
+      "operatingSystem": "Android 12+, iOS 15+",
+      "supportedBrands": "Marcas compatibles",
+      "supportedBrandsList": "iPhone, Samsung, Pixel +9 más",
+      "requirements": "Requisitos",
+      "requirementsList": "iOS 12.1+ | Android 9.0+",
+      "checkYourDevice": "Verificar dispositivo"
     }
   },
   "activation": {

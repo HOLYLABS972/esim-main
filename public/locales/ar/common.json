@@ -28,7 +28,9 @@
       "title": "التغطية العالمية",
       "description": "ابق متصلاً في أكثر من 200 دولة مع تغطية شبكة eSIM الواسعة لدينا في جميع أنحاء العالم. مثالي للمسافرين الذين يستكشفون وجهات متعددة والمتنقلين الرقميين الذين يعملون عن بُعد.",
       "countries": "200+ دولة",
-      "worldwide": "التغطية العالمية"
+      "worldwide": "التغطية العالمية",
+      "countriesCount": "200+",
+      "countriesLabel": "دولة"
     },
     "instantActivation": {
       "title": "التفعيل الفوري",
@@ -41,9 +43,14 @@
     },
     "deviceCompatibility": {
       "title": "توافق الأجهزة",
-      "description": "يعمل مع جميع الهواتف الذكية والأجهزة اللوحية الحديثة التي تدعم تقنية eSIM. متوافق مع الأجهزة المستخدمة من قبل المسافرين والمتنقلين الرقميين عالمياً.",
+      "description": "تحقق من دعم جهازك لتقنية eSIM",
       "esimCompatible": "متوافق مع eSIM",
-      "operatingSystem": "Android 12+, iOS 15+"
+      "operatingSystem": "Android 12+, iOS 15+",
+      "supportedBrands": "العلامات التجارية المدعومة",
+      "supportedBrandsList": "iPhone, Samsung, Pixel +9 أخرى",
+      "requirements": "المتطلبات",
+      "requirementsList": "iOS 12.1+ | Android 9.0+",
+      "checkYourDevice": "تحقق من جهازك"
     }
   },
   "activation": {

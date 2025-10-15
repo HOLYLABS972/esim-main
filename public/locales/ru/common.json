@@ -28,7 +28,9 @@
       "title": "Глобальное покрытие",
       "description": "Оставайтесь на связи в более чем 200 странах с нашим обширным покрытием сети eSIM по всему миру.",
       "countries": "200+ стран",
-      "worldwide": "Покрытие по всему миру"
+      "worldwide": "Покрытие по всему миру",
+      "countriesCount": "200+",
+      "countriesLabel": "Стран"
     },
     "instantActivation": {
       "title": "Мгновенная активация",
@@ -41,9 +43,14 @@
     },
     "deviceCompatibility": {
       "title": "Совместимость устройств",
-      "description": "Работает со всеми современными смартфонами и планшетами, поддерживающими технологию eSIM.",
+      "description": "Проверьте, поддерживает ли ваше устройство технологию eSIM",
       "esimCompatible": "Совместим с eSIM",
-      "operatingSystem": "Android 12+, iOS 15+"
+      "operatingSystem": "Android 12+, iOS 15+",
+      "supportedBrands": "Поддерживаемые бренды",
+      "supportedBrandsList": "iPhone, Samsung, Pixel +9 других",
+      "requirements": "Требования",
+      "requirementsList": "iOS 12.1+ | Android 9.0+",
+      "checkYourDevice": "Проверить устройство"
     }
   },
   "activation": {

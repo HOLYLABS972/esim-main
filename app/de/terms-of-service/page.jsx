@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 
 export default function TermsOfServiceRedirect() {
-  useEffect () => {
+  useEffect(() => {
     window.location.href = '/terms-of-service';
   }, []);
 
