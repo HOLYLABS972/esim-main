@@ -1,11 +1,14 @@
 'use client';
 
 import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function PrivacyPolicyRedirect() {
+  const router = useRouter();
+  
   useEffect(() => {
-    window.location.href = '/privacy-policy';
-  }, []);
+    router.replace('/privacy-policy');
+  }, [router]);
 
   return null;
 }
