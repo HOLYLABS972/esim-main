@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 
 export default function ContactRedirect() {
   useEffect(() => {
-    window.location.href = 'https://www.theholylabs.com/';
+    window.location.href = '/contact';
   }, []);
 
   return (
