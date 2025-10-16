@@ -7,13 +7,6 @@ export default function PrivacyPolicyRedirect() {
     window.location.href = '/privacy-policy';
   }, []);
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-white">
-      <div className="text-center">
-        <h1 className="text-2xl font-semibold text-gray-900 mb-4">Redirecting...</h1>
-        <p className="text-gray-600">You will be redirected to our privacy policy.</p>
-      </div>
-    </div>
-  );
+  return null;
 }
 
