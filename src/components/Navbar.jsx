@@ -146,7 +146,7 @@ const Navbar = ({ hideLanguageSelector = false }) => {
             onClick={handleDownloadApp}
             className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors"
           >
-            Download
+            {t('navbar.downloadApp', 'Download App')}
           </button>
           <Link href={getLocalizedBlogListUrl(currentLanguage)} className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
             {t('navbar.blog', 'Blog')}
@@ -223,7 +223,7 @@ const Navbar = ({ hideLanguageSelector = false }) => {
                     }}
                     className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2 w-full bg-transparent border-none cursor-pointer"
                   >
-                    Download
+                    {t('navbar.downloadApp', 'Download App')}
                   </button>
                   <Link
                     href={getLocalizedBlogListUrl(currentLanguage)}
