@@ -329,7 +329,7 @@ const BlogPost = ({ slug }) => {
                       </div>
                       <div className="flex items-center space-x-2">
                         <Clock className="w-4 h-4" />
-                        <span>{post.readTime}</span>
+                        <span>{post.readTime || '5 min'}</span>
                       </div>
                     </div>
                     
