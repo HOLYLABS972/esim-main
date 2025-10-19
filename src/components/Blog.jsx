@@ -279,7 +279,7 @@ const Blog = () => {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-1 text-sm text-cool-black">
                         <Clock className="w-4 h-4" />
-                        <span>{post.readTime || '5 min'}</span>
+                        <span>{post.readTime || '5 min read'}</span>
                       </div>
                       
                       <div className="inline-flex items-center space-x-1 text-tufts-blue group-hover:text-cobalt-blue font-medium transition-colors duration-200">
