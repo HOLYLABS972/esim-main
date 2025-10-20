@@ -1,5 +1,5 @@
 // Configuration service to read admin settings
-import { doc, getDoc, addDoc, serverTimestamp, collection, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc, addDoc, serverTimestamp, collection, onSnapshot, getDocs } from 'firebase/firestore';
 import { db } from '../firebase/config';
 
 class ConfigService {
@@ -76,6 +76,17 @@ class ConfigService {
         }
       }
       
+      // Check API key mode from business dashboard
+      try {
+        const apiKeyMode = await this.getApiKeyMode();
+        if (apiKeyMode === 'sandbox') {
+          console.log('🔑 API key mode detected as sandbox');
+          return 'sandbox';
+        }
+      } catch (error) {
+        console.log('⚠️ Could not detect API key mode:', error);
+      }
+      
       // Default to production environment
       console.log('🚀 DEFAULT: Using PRODUCTION environment');
       return 'production';
@@ -88,20 +99,40 @@ class ConfigService {
   // Get Airalo API configuration
   async getAiraloConfig() {
     try {
-      // First try to get from Firestore
+      // First try to get from Firestore config/airalo
       const configRef = doc(db, 'config', 'airalo');
       const configDoc = await getDoc(configRef);
       
       if (configDoc.exists()) {
         const configData = configDoc.data();
         if (configData.api_key) {
-          console.log('✅ Airalo API key loaded from Firestore');
+          console.log('✅ Airalo API key loaded from Firestore config');
           return {
             apiKey: configData.api_key,
             environment: configData.environment || 'sandbox',
             baseUrl: 'https://partners-api.airalo.com/v2'
           };
         }
+      }
+      
+      // Try to get from business_users collection (business dashboard)
+      try {
+        const businessUsersRef = collection(db, 'business_users');
+        const businessUsersSnapshot = await getDocs(businessUsersRef);
+        
+        for (const userDoc of businessUsersSnapshot.docs) {
+          const userData = userDoc.data();
+          if (userData.apiCredentials?.apiKey) {
+            console.log('✅ Airalo API key loaded from business_users');
+            return {
+              apiKey: userData.apiCredentials.apiKey,
+              environment: userData.apiCredentials.mode || 'sandbox',
+              baseUrl: 'https://partners-api.airalo.com/v2'
+            };
+          }
+        }
+      } catch (error) {
+        console.log('⚠️ Could not read from business_users:', error);
       }
       
       // Fallback to localStorage
@@ -415,11 +446,18 @@ class ConfigService {
     return 'sandbox';
   }
 
-  // Get current API key mode
+  // Get current API key mode from business dashboard
   async getApiKeyMode() {
     try {
       const airaloConfig = await this.getAiraloConfig();
       if (airaloConfig.apiKey) {
+        // Check if the environment is explicitly set to sandbox
+        if (airaloConfig.environment === 'sandbox') {
+          console.log('🔍 API key mode detected as sandbox from config');
+          return 'sandbox';
+        }
+        
+        // Fallback to string detection
         const mode = this.detectApiKeyMode(airaloConfig.apiKey);
         console.log('🔍 API key mode detected:', mode);
         return mode;

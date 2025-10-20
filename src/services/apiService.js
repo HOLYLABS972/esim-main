@@ -37,10 +37,10 @@ const getApiKey = async () => {
     
     // Final fallback to hardcoded key
     console.log('⚠️ Using fallback API key');
-    return 'rjapi_jlhz2bt56hcgkkcm9qlicpvzm6rpwkk';
+    return 'rjapi_gu718wbhvo54u33hl42qbim3l9moapg9';
   } catch (error) {
     console.error('❌ Error getting API key:', error);
-    return 'rjapi_jlhz2bt56hcgkkcm9qlicpvzm6rpwkk';
+    return 'rjapi_gu718wbhvo54u33hl42qbim3l9moapg9';
   }
 };
 

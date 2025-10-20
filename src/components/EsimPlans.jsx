@@ -138,6 +138,7 @@ const EsimPlans = () => {
     // They will be prompted to download app when they tap on countries
   }, [currentUser, router]);
 
+
   // Fetch discount settings
   useEffect(() => {
     const fetchDiscountSettings = async () => {

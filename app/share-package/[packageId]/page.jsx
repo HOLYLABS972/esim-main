@@ -49,6 +49,8 @@ const SharePackagePage = () => {
   const [referralSettings, setReferralSettings] = useState({ discountPercentage: 7, minimumPrice: 0.5 });
   const [regularSettings, setRegularSettings] = useState({ discountPercentage: 10, minimumPrice: 0.5 });
   const [environmentMode, setEnvironmentMode] = useState(null);
+  const [apiKeyMode, setApiKeyMode] = useState(null);
+  const [balanceInfo, setBalanceInfo] = useState({ balance: 0, hasInsufficientFunds: false, minimumRequired: 4 });
 
   const loadFromAPI = useCallback(async () => {
     try {
@@ -138,30 +140,40 @@ const SharePackagePage = () => {
     checkReferralDiscount();
   }, [checkReferralDiscount]);
 
-  // Check environment mode and URL parameters
+  // Check environment mode, API key mode, and business balance
   useEffect(() => {
-    const checkEnvironment = async () => {
+    const checkEnvironmentAndBalance = async () => {
       try {
         const { configService } = await import('../../../src/services/configService');
+        const { getBusinessBalance } = await import('../../../src/services/balanceService');
+        
         const mode = await configService.getDataPlansEnvironment();
+        const apiMode = await configService.getApiKeyMode();
+        const balance = await getBusinessBalance();
         
         setEnvironmentMode(mode);
+        setApiKeyMode(apiMode);
+        setBalanceInfo(balance);
         
         console.log('🔍 Environment mode:', mode);
+        console.log('🔑 API key mode:', apiMode);
+        console.log('💰 Business balance:', balance);
         
         // Log URL parameters for debugging
         if (urlCountryCode || urlCountryFlag) {
           console.log('🌐 URL parameters detected:', {
             country: urlCountryCode,
             flag: urlCountryFlag,
-            environmentMode: mode
+            environmentMode: mode,
+            apiKeyMode: apiMode,
+            balance: balance
           });
         }
       } catch (error) {
-        console.error('Error checking environment mode:', error);
+        console.error('Error checking environment mode and balance:', error);
       }
     };
-    checkEnvironment();
+    checkEnvironmentAndBalance();
   }, [urlCountryCode, urlCountryFlag]);
 
   const handlePurchase = async () => {
@@ -349,17 +361,44 @@ const SharePackagePage = () => {
               </button>
               <div className="flex items-center gap-2">
                 <h1 className="text-xl font-bold text-gray-900">{t('sharePackage.packageDetails', 'Package Details')}</h1>
-                {/* Environment indicator - only show in test/sandbox mode */}
-                {environmentMode && environmentMode !== 'production' && environmentMode !== 'live' && (
-                  <span className="text-xs px-2 py-1 bg-yellow-500 text-white rounded-full font-semibold shadow-sm">
-                    {environmentMode.toUpperCase()}
-                  </span>
-                )}
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Technical Issues Banner - Show when balance is insufficient OR in sandbox/test mode */}
+      {(balanceInfo.hasInsufficientFunds || (environmentMode && (environmentMode === 'sandbox' || environmentMode === 'test'))) && (
+        <div className="bg-red-50 border-l-4 border-red-400 p-4 mx-4 mt-4 rounded-r-lg">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-red-800">
+                Technical Issues - Service Temporarily Unavailable
+              </h3>
+              <div className="mt-2 text-sm text-red-700">
+                <p>
+                  {balanceInfo.hasInsufficientFunds ? (
+                    <>
+                      Your business account balance is <strong>${balanceInfo.balance.toFixed(2)}</strong>. 
+                      A minimum balance of <strong>${balanceInfo.minimumRequired.toFixed(2)}</strong> is required to process transactions. 
+                      Please top up your account to continue.
+                    </>
+                  ) : (
+                    <>
+                      Our service is currently experiencing technical difficulties. Please check back later or contact support for assistance.
+                    </>
+                  )}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Content */}
       <div className="w-full">
@@ -479,10 +518,19 @@ const SharePackagePage = () => {
                 })()}
                 <button
                   onClick={handlePurchase}
-                  className="w-full max-w-md mx-auto flex items-center justify-center space-x-3 bg-blue-600 hover:bg-blue-700 text-white py-4 px-6 rounded-xl transition-colors font-medium text-lg shadow-lg"
+                  disabled={balanceInfo.hasInsufficientFunds || (environmentMode && (environmentMode === 'sandbox' || environmentMode === 'test'))}
+                  className={`w-full max-w-md mx-auto flex items-center justify-center space-x-3 py-4 px-6 rounded-xl transition-colors font-medium text-lg shadow-lg ${
+                    (balanceInfo.hasInsufficientFunds || (environmentMode && (environmentMode === 'sandbox' || environmentMode === 'test')))
+                      ? 'bg-gray-400 cursor-not-allowed text-white'
+                      : 'bg-blue-600 hover:bg-blue-700 text-white'
+                  }`}
                 >
                   <Smartphone className="w-6 h-6" />
-                  <span>{t('sharePackage.purchaseNow', 'Purchase Now')}</span>
+                  <span>
+                    {(balanceInfo.hasInsufficientFunds || (environmentMode && (environmentMode === 'sandbox' || environmentMode === 'test')))
+                      ? t('sharePackage.serviceUnavailable', 'Service Unavailable') 
+                      : t('sharePackage.purchaseNow', 'Purchase Now')}
+                  </span>
                 </button>
               </div>
 
