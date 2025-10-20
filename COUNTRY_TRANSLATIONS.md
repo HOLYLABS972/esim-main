@@ -32,7 +32,7 @@ When a user visits your site on a specific domain (e.g., `ru.romajet.net`, `ar.r
 1. **`src/utils/countryTranslations.js`** - Core translation utility with all translations
 2. **`src/components/EsimPlans.jsx`** - Landing and plans page country display
 3. **`src/components/Dashboard.jsx`** - Order country names in dashboard
-4. **`src/components/AiraloPlans.jsx`** - Country dropdown filter
+4. **`src/components/EsimPlans.jsx`** - Country dropdown filter
 5. **`src/components/CountrySearchBar.jsx`** - Popular country suggestions
 6. **`src/data/mobileCountries.js`** - Hardcoded mobile countries
 

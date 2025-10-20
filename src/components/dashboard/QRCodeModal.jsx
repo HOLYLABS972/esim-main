@@ -50,7 +50,7 @@ const QRCodeModal = ({
                     <div className="w-64 h-64 mx-auto bg-white p-4 rounded-lg border-2 border-green-300 shadow-sm">
                       <LPAQRCodeDisplay lpaData={selectedOrder.qrCode.qrCode} />
                     </div>
-                    <p className="text-xs text-gray-500 mt-2">✅ Real QR Code from Airalo (Add Cellular Plan)</p>
+                    <p className="text-xs text-gray-500 mt-2">✅ Real QR Code (Add Cellular Plan)</p>
                     <p className="text-xs text-gray-400 mt-1 break-all">QR Data: {selectedOrder.qrCode.qrCode?.substring(0, 50)}...</p>
                   </div>
                 ) : selectedOrder.qrCode && selectedOrder.qrCode.qrCodeUrl ? (
@@ -63,7 +63,7 @@ const QRCodeModal = ({
                         className="w-full h-full object-contain"
                       />
                     </div>
-                    <p className="text-xs text-gray-500 mt-2">✅ QR Code Image from Airalo</p>
+                    <p className="text-xs text-gray-500 mt-2">✅ QR Code Image</p>
                   </div>
                 ) : selectedOrder.qrCode && selectedOrder.qrCode.directAppleInstallationUrl ? (
                   // Show Apple installation link

@@ -49,50 +49,14 @@ const SharePackagePage = () => {
   const [referralSettings, setReferralSettings] = useState({ discountPercentage: 7, minimumPrice: 0.5 });
   const [regularSettings, setRegularSettings] = useState({ discountPercentage: 10, minimumPrice: 0.5 });
 
-  const loadFromAiraloAPI = useCallback(async () => {
+  const loadFromAPI = useCallback(async () => {
     try {
-      console.log('🔍 Searching for package in Airalo API:', packageId);
-      const response = await fetch(`/api/airalo/plans`);
-      const data = await response.json();
-      
-      if (data.success && data.plans) {
-        console.log(`📋 Found ${data.plans.length} plans in API response`);
-        const packageData = data.plans.find(pkg => 
-          pkg.slug === packageId || 
-          pkg.id === packageId ||
-          pkg.name?.toLowerCase().includes(packageId.toLowerCase())
-        );
-        
-        if (packageData) {
-          console.log('📦 Airalo package data found:', packageData);
-          const transformedData = {
-            id: packageData.slug || packageData.id,
-            name: packageData.name,
-            description: packageData.description,
-            price: packageData.price,
-            currency: packageData.currency || 'USD',
-            data: packageData.capacity || packageData.data,
-            dataUnit: packageData.data_unit || 'GB',
-            period: packageData.period || packageData.validity,
-            duration: packageData.period || packageData.validity,
-            country_code: packageData.country_codes?.[0] || packageData.country_code,
-            benefits: packageData.features || [],
-            speed: packageData.speed,
-            region_slug: packageData.region_slug
-          };
-          console.log('🔄 Transformed package data:', transformedData);
-          setPackageData(transformedData);
-          return true; // Package found
-        } else {
-          console.log('❌ Package not found in Airalo API response');
-          console.log('Available package IDs:', data.plans.map(p => p.slug || p.id).slice(0, 10));
-        }
-      } else {
-        console.error('❌ Airalo API response failed:', data);
-      }
-      return false; // Package not found
+      console.log('🔍 Searching for package:', packageId);
+      // Packages are now loaded from Firestore dataplans collection
+      // This function is kept for backwards compatibility
+      return false;
     } catch (error) {
-      console.error('❌ Error loading from Airalo API:', error);
+      console.error('❌ Error loading package:', error);
       return false;
     }
   }, [packageId]);
@@ -118,50 +82,9 @@ const SharePackagePage = () => {
         });
         return; // Package found, exit early
       } else {
-        console.log('❌ Package not found in Firebase dataplans, trying Airalo API...');
-      }
-      
-      // If not found in Firebase, try to load from Airalo API
-      const foundInAPI = await loadFromAiraloAPI();
-      
-      if (!foundInAPI && urlCountryCode) {
-        console.log('🔍 Package not found by ID, trying to find by country code:', urlCountryCode);
-        // Try to find a package for the country from the URL
-        try {
-          const response = await fetch(`/api/airalo/plans?country=${urlCountryCode}`);
-          const data = await response.json();
-          
-          if (data.success && data.plans && data.plans.length > 0) {
-            // Use the first available plan for this country
-            const fallbackPackage = data.plans[0];
-            console.log('✅ Using fallback package for country:', fallbackPackage);
-            setPackageData({
-              id: fallbackPackage.slug || fallbackPackage.id,
-              name: fallbackPackage.name,
-              description: fallbackPackage.description,
-              price: fallbackPackage.price,
-              currency: fallbackPackage.currency || 'USD',
-              data: fallbackPackage.capacity || fallbackPackage.data,
-              dataUnit: fallbackPackage.data_unit || 'GB',
-              period: fallbackPackage.period || fallbackPackage.validity,
-              duration: fallbackPackage.period || fallbackPackage.validity,
-              country_code: fallbackPackage.country_codes?.[0] || fallbackPackage.country_code,
-              benefits: fallbackPackage.features || [],
-              speed: fallbackPackage.speed,
-              region_slug: fallbackPackage.region_slug
-            });
-            return;
-          }
-        } catch (fallbackError) {
-          console.error('❌ Error with fallback country search:', fallbackError);
-        }
-      }
-      
-      if (!foundInAPI) {
-        console.log('❌ Package not found in either Firebase or Airalo API');
+        console.log('❌ Package not found in Firebase dataplans');
         console.log('Package ID:', packageId);
         console.log('URL Country Code:', urlCountryCode);
-        // Don't set packageData to null here, let the component handle the "not found" state
       }
     } catch (error) {
       console.error('❌ Error loading package data:', error);
@@ -169,7 +92,7 @@ const SharePackagePage = () => {
     } finally {
       setLoading(false);
     }
-  }, [packageId, loadFromAiraloAPI]);
+  }, [packageId, loadFromAPI]);
 
   // Load discount settings
   const loadDiscountSettings = useCallback(async () => {

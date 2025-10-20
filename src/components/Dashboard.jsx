@@ -287,7 +287,7 @@ const Dashboard = () => {
 
   const generateQRCode = async (orderId, planName, retryCount = 0) => {
     try {
-      // Try to get real QR code from Airalo API
+      // Try to get real QR code from RoamJet API
       console.log(`📱 Attempting to get real QR code for order: ${orderId} (attempt ${retryCount + 1})`);
       
       const qrCodeResult = await esimService.getEsimQrCode(orderId);

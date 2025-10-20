@@ -10,7 +10,7 @@ const EsimDetailsModal = ({ esimDetails, onClose }) => {
         <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
           <div className="px-8 pt-8 pb-8">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-medium text-eerie-black">eSIM Details from Airalo API</h3>
+              <h3 className="text-xl font-medium text-eerie-black">eSIM Details</h3>
               <button
                 onClick={onClose}
                 className="text-cool-black hover:text-eerie-black transition-colors"

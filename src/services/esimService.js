@@ -1,240 +1,53 @@
-// API routes for eSIM operations (replacing Cloud Functions)
-import { db } from '../firebase/config';
-import { doc, getDoc } from 'firebase/firestore';
-
-// Helper function to get Airalo credentials from Firestore
-const getAiraloCredentials = async () => {
-  try {
-    const configRef = doc(db, 'config', 'airalo');
-    const configDoc = await getDoc(configRef);
-    
-    if (!configDoc.exists()) {
-      throw new Error('Airalo configuration not found');
-    }
-    
-    const configData = configDoc.data();
-    const clientId = configData.api_key;
-    
-    if (!clientId) {
-      throw new Error('Airalo API key not found');
-    }
-    
-    return {
-      client_id: clientId,
-      client_secret: configData.client_secret || configData.api_secret
-    };
-  } catch (error) {
-    console.error('Error getting Airalo credentials:', error);
-    throw error;
-  }
-};
+// eSIM service - now uses Python API for all eSIM operations
+// All methods are handled through apiService.js which calls the Python backend
+import { apiService } from './apiService';
 
 export const esimService = {
-  // Create Airalo eSIM order
+  // Create eSIM order (delegates to Python API)
   async createAiraloOrder(orderData) {
-    try {
-      const response = await fetch('/api/airalo/order', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(orderData)
-      });
-
-      const result = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to create order');
-      }
-
-      return result;
-    } catch (error) {
-      console.error('Error creating Airalo eSIM order:', error);
-      throw error;
-    }
+    console.warn('esimService.createAiraloOrder is deprecated. Use apiService.createOrder instead.');
+    return apiService.createOrder({
+      package_id: orderData.package_id,
+      quantity: orderData.quantity || "1",
+      to_email: orderData.to_email,
+      description: orderData.description
+    });
   },
 
-  // Create Airalo eSIM order with full API support
+  // Create eSIM order V2 (delegates to Python API)
   async createAiraloOrderV2({
     package_id,
     quantity = "1",
-    type = "sim",
-    description,
-    brand_settings_name,
     to_email,
-    sharing_option = ["link"],
-    copy_address
+    description
   }) {
-    try {
-      // Get Airalo credentials from Firestore
-      const credentials = await getAiraloCredentials();
-      
-      const response = await fetch('/api/airalo/order', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          package_id,
-          quantity,
-          type,
-          description,
-          brand_settings_name,
-          to_email,
-          sharing_option,
-          copy_address,
-          client_id: credentials.client_id,
-          client_secret: credentials.client_secret
-        })
-      });
-
-      const result = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to create order');
-      }
-
-      return result;
-    } catch (error) {
-      console.error('Error creating Airalo eSIM order:', error);
-      throw error;
-    }
+    console.warn('esimService.createAiraloOrderV2 is deprecated. Use apiService.createOrder instead.');
+    return apiService.createOrder({
+      package_id,
+      quantity,
+      to_email,
+      description
+    });
   },
 
-  // Get eSIM QR code
+  // Get eSIM QR code (delegates to Python API)
   async getEsimQrCode(orderId) {
-    try {
-      const response = await fetch('/api/airalo/qr-code', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ orderId })
-      });
-
-      const result = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to get QR code');
-      }
-
-      return result;
-    } catch (error) {
-      console.error('Error getting eSIM QR code:', error);
-      throw error;
-    }
+    console.warn('esimService.getEsimQrCode is deprecated. Use apiService.getQrCode instead.');
+    return apiService.getQrCode(orderId);
   },
 
-  // Fetch plans from Firestore
-  async fetchPlans(countryCode = null, limit = 50) {
-    try {
-      const params = new URLSearchParams();
-      if (countryCode) params.append('country', countryCode);
-      params.append('limit', limit.toString());
-
-      const response = await fetch(`/api/airalo/plans?${params}`);
-      const result = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to fetch plans');
-      }
-
-      return result;
-    } catch (error) {
-      console.error('Error fetching plans:', error);
-      throw error;
-    }
-  },
-
-  // Fetch countries from Firestore
-  async fetchCountries(limit = 100) {
-    try {
-      const params = new URLSearchParams();
-      params.append('limit', limit.toString());
-
-      const response = await fetch(`/api/airalo/countries?${params}`);
-      const result = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to fetch countries');
-      }
-
-      return result;
-    } catch (error) {
-      console.error('Error fetching countries:', error);
-      throw error;
-    }
-  },
-
-  // Sync all data from Airalo API (admin function)
-  async syncAllDataFromApi() {
-    try {
-      const response = await fetch('/api/sync-airalo', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      });
-
-      const result = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to sync data');
-      }
-
-      return result;
-    } catch (error) {
-      console.error('Error syncing all data:', error);
-      throw error;
-    }
-  },
-
-
-  // Get eSIM usage data by ICCID
+  // Get eSIM usage data by ICCID (delegates to Python API)
   async getEsimUsageByIccid(iccid) {
-    try {
-      const response = await fetch('/api/airalo/sim-usage', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ iccid })
-      });
-
-      const result = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to get usage data');
-      }
-
-      return result;
-    } catch (error) {
-      console.error('Error getting usage data:', error);
-      throw error;
-    }
+    console.warn('esimService.getEsimUsageByIccid is deprecated. Use apiService.getSimUsage instead.');
+    return apiService.getSimUsage(iccid);
   },
 
-  // Get eSIM details by ICCID (including QR code data)
+  // Get eSIM details by ICCID (delegates to Python API)
   async getEsimDetailsByIccid(iccid) {
-    try {
-      const response = await fetch('/api/airalo/sim-details', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ iccid })
-      });
+    console.warn('esimService.getEsimDetailsByIccid is deprecated. Use apiService.getSimDetails instead.');
+    return apiService.getSimDetails(iccid);
+  },
 
-      const result = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to get eSIM details');
-      }
-
-      return result;
-    } catch (error) {
-      console.error('Error getting eSIM details:', error);
-      throw error;
-    }
-  }
+  // Note: Firestore-based methods for plans and countries are no longer needed
+  // as data should be synced to Firestore separately and accessed directly
 };

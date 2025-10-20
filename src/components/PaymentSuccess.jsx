@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { processTransactionCommission } from '../services/referralService';
+import { apiService } from '../services/apiService';
 import toast from 'react-hot-toast';
 
 const PaymentSuccess = () => {
@@ -51,10 +52,10 @@ const PaymentSuccess = () => {
     }
   };
 
-  // Create order record in Firebase and process with Airalo API
+  // Create order record in Firebase and process with RoamJet API
   const createOrderRecord = async (orderData) => {
     try {
-      console.log('🛒 Creating order record and processing with Airalo API...');
+      console.log('🛒 Creating RoamJet order...');
       
       // Extract country info from plan name (e.g., "kargi-mobile-7days-1gb" -> "kargi")
       const getCountryFromPlan = (planId) => {
@@ -284,30 +285,16 @@ const PaymentSuccess = () => {
       const countryInfo = getCountryFromPlan(orderData.planId);
       const orderRef = doc(db, 'users', currentUser.uid, 'esims', orderData.orderId);
       
-      // Step 1: Create Airalo order
-      console.log('📞 Creating Airalo order with package ID:', orderData.planId);
-      const airaloOrderResponse = await fetch('/api/airalo/order', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          package_id: orderData.planId,
-          quantity: "1",
-          type: "sim",
-          description: `eSIM order for ${orderData.customerEmail}`,
-          to_email: orderData.customerEmail,
-          sharing_option: ["link"]
-        })
+      // Step 1: Create order via Python API
+      console.log('📞 Creating eSIM order with package ID:', orderData.planId);
+      const airaloOrderResult = await apiService.createOrder({
+        package_id: orderData.planId,
+        quantity: "1",
+        to_email: orderData.customerEmail,
+        description: `eSIM order for ${orderData.customerEmail}`
       });
-
-      if (!airaloOrderResponse.ok) {
-        const errorData = await airaloOrderResponse.json();
-        throw new Error(`Airalo order creation failed: ${errorData.error}`);
-      }
-
-      const airaloOrderResult = await airaloOrderResponse.json();
-      console.log('✅ Airalo order created:', airaloOrderResult);
+      
+      console.log('✅ Order created:', airaloOrderResult);
 
       // Step 2: Save order to Firebase with both order ID reference
       await setDoc(doc(db, 'orders', orderData.orderId), {
@@ -376,44 +363,36 @@ const PaymentSuccess = () => {
       
       await setDoc(orderRef, esimData, { merge: true });
 
-      // Step 4: Try to get QR code immediately (might not be ready yet)
+      // Step 4: Try to get QR code immediately via RoamJet API (might not be ready yet)
       try {
         console.log('🔄 Attempting to retrieve QR code for order:', orderData.orderId);
-        const qrResponse = await fetch('/api/airalo/qr-code', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ orderId: orderData.orderId })
-        });
-
-        if (qrResponse.ok) {
-          const qrResult = await qrResponse.json();
-          if (qrResult.success && qrResult.qrCode) {
-            console.log('✅ QR code retrieved immediately:', qrResult);
-            
-            // Update the eSIM record with QR code data
-            await setDoc(orderRef, {
-              status: 'active',
+        const qrResult = await apiService.getQrCode(orderData.orderId);
+        
+        if (qrResult.success && qrResult.qrCode) {
+          console.log('✅ QR code retrieved immediately:', qrResult);
+          
+          // Update the eSIM record with QR code data
+          await setDoc(orderRef, {
+            status: 'active',
+            qrCode: qrResult.qrCode,
+            activationCode: qrResult.activationCode,
+            iccid: qrResult.iccid,
+            directAppleInstallationUrl: qrResult.directAppleInstallationUrl,
+            qrCodeUrl: qrResult.qrCodeUrl,
+            lpa: qrResult.lpa,
+            smdpAddress: qrResult.smdpAddress,
+            orderResult: {
+              ...esimData.orderResult,
               qrCode: qrResult.qrCode,
               activationCode: qrResult.activationCode,
               iccid: qrResult.iccid,
-              directAppleInstallationUrl: qrResult.directAppleInstallationUrl,
-              airaloOrderDetails: qrResult.orderDetails,
-              airaloSimDetails: qrResult.simDetails,
-              orderResult: {
-                ...esimData.orderResult,
-                qrCode: qrResult.qrCode,
-                activationCode: qrResult.activationCode,
-                iccid: qrResult.iccid,
-                status: 'active',
-                updatedAt: new Date().toISOString()
-              },
-              processingStatus: 'completed',
-              completedAt: serverTimestamp(),
-              updatedAt: serverTimestamp()
-            }, { merge: true });
-          }
+              status: 'active',
+              updatedAt: new Date().toISOString()
+            },
+            processingStatus: 'completed',
+            completedAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+          }, { merge: true });
         } else {
           console.log('⏳ QR code not ready yet, will be available later');
         }
@@ -422,7 +401,7 @@ const PaymentSuccess = () => {
         // This is expected - QR code might not be ready immediately
       }
 
-      return { success: true, orderId: orderData.orderId, airaloOrderId: airaloOrderResult.airaloOrderId };
+      return { success: true, orderId: orderData.orderId, remoteOrderId: airaloOrderResult.airaloOrderId };
       
     } catch (error) {
       console.error('❌ Order creation failed:', error);
