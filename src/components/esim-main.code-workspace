@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "../.."
+		},
+		{
+			"path": "../../../admin-app"
+		},
+		{
+			"path": "../../../esim-business"
+		}
+	],
+	"settings": {}
+}

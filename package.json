@@ -1,30 +1,23 @@
 {
   "name": "next-esim-app",
   "version": "1.0.0",
-  "description": "A modern Next.js application for eSIM management with Firebase backend, featuring real-time data synchronization, Stripe payments, and QR code generation.",
+  "description": "A modern Next.js application for eSIM information and QR code generation.",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "export": "next export",
-    "firebase:deploy": "firebase deploy",
-    "firebase:functions:deploy": "firebase deploy --only functions",
-    "firebase:hosting:deploy": "firebase deploy --only hosting"
+    "export": "next export"
   },
   "keywords": [
     "esim",
     "nextjs",
-    "firebase",
-    "stripe",
     "react"
   ],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@stripe/react-stripe-js": "^3.9.2",
-    "@stripe/stripe-js": "^7.9.0",
     "@tailwindcss/typography": "^0.5.19",
     "@tanstack/react-query": "^5.85.6",
     "@types/node": "^24.3.0",
@@ -32,8 +25,6 @@
     "@types/react-dom": "^18.3.1",
     "axios": "^1.11.0",
     "date-fns": "^4.1.0",
-    "firebase": "^12.2.1",
-    "firebase-admin": "^13.5.0",
     "framer-motion": "^11.18.2",
     "i18next": "^25.5.2",
     "lucide-react": "^0.542.0",
@@ -43,7 +34,6 @@
     "qrcode.react": "^4.2.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-dropzone": "^14.3.8",
     "react-hook-form": "^7.62.0",
     "react-hot-toast": "^2.6.0",
     "react-i18next": "^15.7.3",

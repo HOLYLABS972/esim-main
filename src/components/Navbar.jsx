@@ -5,29 +5,18 @@ import Link from 'next/link';
 import { createPortal } from 'react-dom';
 import { useRouter, usePathname } from 'next/navigation';
 import { useI18n } from '../contexts/I18nContext';
-import { useAuth } from '../contexts/AuthContext';
 import LanguageSelector from './LanguageSelector';
 import { detectLanguageFromPath, getLocalizedBlogListUrl } from '../utils/languageUtils';
 import { trackCustomFacebookEvent } from '../utils/facebookPixel';
 
 const Navbar = ({ hideLanguageSelector = false }) => {
   const { t, locale } = useI18n();
-  const { currentUser, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   // Detect current language from multiple sources
   const getCurrentLanguage = () => {
-    // For logged-in users, always use English
-    if (currentUser) {
-      // Ensure localStorage is set to English for authenticated users
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('roamjet-language', 'en');
-      }
-      return 'en';
-    }
-    
     // First try I18n context
     if (locale) return locale;
     
@@ -99,15 +88,6 @@ const Navbar = ({ hideLanguageSelector = false }) => {
     setMounted(true);
   }, []);
 
-  const handleLogout = async () => {
-    try {
-      await logout();
-      setIsMenuOpen(false);
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
-  };
-
   return (
     <header className={`navbar-header fixed w-full top-0 transition-transform duration-300 ${
       isVisible ? 'translate-y-0' : '-translate-y-full'
@@ -146,31 +126,27 @@ const Navbar = ({ hideLanguageSelector = false }) => {
             onClick={handleDownloadApp}
             className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors"
           >
-            {t('navbar.downloadApp', 'Download App')}
+            {t('navbar.download', 'Download')}
           </button>
+          <a 
+            href="https://store.roamjet.net" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors"
+          >
+            {t('navbar.store', 'Store')}
+          </a>
+          <a 
+            href="https://business.roamjet.net" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors"
+          >
+            {t('navbar.partnership', 'Partnership')}
+          </a>
           <Link href={getLocalizedBlogListUrl(currentLanguage)} className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
             {t('navbar.blog', 'Blog')}
           </Link>
-          {currentUser ? (
-            <>
-              <Link href={getLocalizedUrl("/esim-plans")} className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
-                {t('navbar.plans', 'Plans')}
-              </Link>
-              <Link href={getLocalizedUrl("/dashboard")} className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
-                {t('navbar.dashboard', 'Dashboard')}
-              </Link>
-              <button
-                onClick={handleLogout}
-                className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors"
-              >
-                {t('navbar.logout', 'Logout')}
-              </button>
-            </>
-          ) : (
-            <Link href={getLocalizedUrl('/login')} className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
-              {t('navbar.login', 'Login')}
-            </Link>
-          )}
         </div>
         
         {/* Right side with language selector */}
@@ -223,8 +199,26 @@ const Navbar = ({ hideLanguageSelector = false }) => {
                     }}
                     className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2 w-full bg-transparent border-none cursor-pointer"
                   >
-                    {t('navbar.downloadApp', 'Download App')}
+                    {t('navbar.download', 'Download')}
                   </button>
+                  <a
+                    href="https://store.roamjet.net"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    {t('navbar.store', 'Store')}
+                  </a>
+                  <a
+                    href="https://business.roamjet.net"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    {t('navbar.partnership', 'Partnership')}
+                  </a>
                   <Link
                     href={getLocalizedBlogListUrl(currentLanguage)}
                     className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2"
@@ -232,41 +226,6 @@ const Navbar = ({ hideLanguageSelector = false }) => {
                   >
                     {t('navbar.blog', 'Blog')}
                   </Link>
-                  {currentUser ? (
-                    <>
-                      <Link
-                        href={getLocalizedUrl("/esim-plans")}
-                        className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2"
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        {t('navbar.plans', 'Plans')}
-                      </Link>
-                      <Link
-                        href={getLocalizedUrl("/dashboard")}
-                        className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2"
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        {t('navbar.dashboard', 'Dashboard')}
-                      </Link>
-                      <button
-                        onClick={() => {
-                          handleLogout();
-                          setIsMenuOpen(false);
-                        }}
-                        className="block w-full text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2"
-                      >
-                        {t('navbar.logout', 'Logout')}
-                      </button>
-                    </>
-                  ) : (
-                    <Link
-                      href={getLocalizedUrl('/login')}
-                      className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      {t('navbar.login', 'Login')}
-                    </Link>
-                  )}
                 </div>
               </div>
             </div>

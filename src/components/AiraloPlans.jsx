@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext';
 import { useI18n } from '../contexts/I18nContext';
 import { esimService } from '../services/esimService';
 import { translateCountries } from '../utils/countryTranslations';
@@ -21,7 +20,6 @@ import {
 import toast from 'react-hot-toast';
 
 const AiraloPlans = () => {
-  const { currentUser } = useAuth();
   const { t, locale } = useI18n();
   const [packages, setPackages] = useState([]);
   const [countries, setCountries] = useState([]);
