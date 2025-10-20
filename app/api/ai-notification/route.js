@@ -6,26 +6,24 @@ import { db } from '../../../src/firebase/config';
 // Initialize Firebase Admin SDK
 if (!admin.apps.length) {
   try {
-    let credential;
-    
-    if (process.env.FIREBASE_PRIVATE_KEY && process.env.FIREBASE_CLIENT_EMAIL) {
-      credential = admin.credential.cert({
-        projectId: 'esim-f0e3e',
-        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-        privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
-      });
-      console.log('✅ Firebase Admin SDK initialized');
-    } else {
-      credential = admin.credential.cert('./esim-service.json');
-      console.log('✅ Firebase Admin SDK initialized (dev mode)');
+    if (!process.env.FIREBASE_PRIVATE_KEY || !process.env.FIREBASE_CLIENT_EMAIL) {
+      throw new Error('Firebase Admin credentials not configured. Please set FIREBASE_PRIVATE_KEY and FIREBASE_CLIENT_EMAIL environment variables.');
     }
+
+    const credential = admin.credential.cert({
+      projectId: 'esim-f0e3e',
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+    });
 
     admin.initializeApp({
       credential,
       projectId: 'esim-f0e3e',
     });
+    
+    console.log('✅ Firebase Admin SDK initialized');
   } catch (error) {
-    console.error('❌ Firebase Admin initialization error:', error);
+    console.error('❌ Firebase Admin initialization error:', error.message);
   }
 }
 
