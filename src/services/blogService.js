@@ -1,20 +1,19 @@
-// Firebase imports
 import { 
-  db,
-  collection,
-  query,
-  where,
-  orderBy,
+  collection, 
+  doc, 
+  getDocs, 
+  getDoc, 
+  addDoc, 
+  updateDoc, 
+  deleteDoc, 
+  query, 
+  where, 
+  orderBy, 
   limit,
   startAfter,
-  getDocs,
-  getDoc,
-  doc,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  serverTimestamp
-} from '../firebase/config';
+  serverTimestamp 
+} from 'firebase/firestore';
+import { db } from '../firebase/config';
 import { enhancePostWithAutoSEO } from '../utils/autoSEOGenerator';
 
 // Blog post data structure
@@ -36,8 +35,8 @@ export const createBlogPost = (postData) => {
     seoTitle: postData.seoTitle || postData.title || '',
     seoDescription: postData.seoDescription || postData.excerpt || '',
     seoKeywords: postData.seoKeywords || [],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
     views: 0,
     likes: 0,
     comments: 0
