@@ -1,4 +1,20 @@
-// Static site - no Firebase
+// Firebase imports
+import { 
+  db,
+  collection,
+  query,
+  where,
+  orderBy,
+  limit,
+  startAfter,
+  getDocs,
+  getDoc,
+  doc,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  serverTimestamp
+} from '../firebase/config';
 import { enhancePostWithAutoSEO } from '../utils/autoSEOGenerator';
 
 // Blog post data structure
