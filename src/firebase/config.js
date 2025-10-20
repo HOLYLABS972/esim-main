@@ -22,3 +22,30 @@ export const db = getFirestore(app);
 // Initialize Storage
 export const storage = getStorage(app);
 
+// Re-export all Firestore functions that services need
+export {
+  collection,
+  doc,
+  getDocs,
+  getDoc,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+  orderBy,
+  limit,
+  startAfter,
+  serverTimestamp,
+  setDoc,
+  Timestamp
+} from 'firebase/firestore';
+
+// Re-export Storage functions
+export {
+  ref,
+  uploadBytes,
+  getDownloadURL,
+  deleteObject
+} from 'firebase/storage';
+
