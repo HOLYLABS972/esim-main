@@ -6,6 +6,14 @@ import LanguageWrapper from '../src/components/LanguageWrapper'
 import './globals.css'
 import './rtl.css'
 
+// Initialize config service listeners for real-time API key updates
+if (typeof window !== 'undefined') {
+  import('../src/services/configService').then(({ configService }) => {
+    configService.listenToConfigChanges();
+    console.log('🔄 Config service listeners initialized for real-time updates');
+  });
+}
+
 export const metadata = {
   title: {
     default: 'Best eSIM Plans for Backpackers, Travelers & Digital Nomads | RoamJet',

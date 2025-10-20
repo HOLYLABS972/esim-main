@@ -1,8 +1,9 @@
 // Service to call the Python API server for eSIM operations
 import { auth } from '../firebase/config';
+import { configService } from './configService';
 
-// Get API URL from environment or default to localhost
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+// Get API URL from environment
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.roamjet.net';
 
 /**
  * Get Firebase ID token for authentication
@@ -16,16 +17,46 @@ const getIdToken = async () => {
 };
 
 /**
- * Make authenticated request to Python API
+ * Get API key from config service (supports real-time updates)
+ */
+const getApiKey = async () => {
+  try {
+    // Try to get from config service first (supports real-time updates)
+    const airaloConfig = await configService.getAiraloConfig();
+    if (airaloConfig.apiKey) {
+      console.log('🔑 Using API key from config service:', airaloConfig.apiKey.substring(0, 10) + '...');
+      return airaloConfig.apiKey;
+    }
+    
+    // Fallback to environment variable
+    const envKey = process.env.NEXT_PUBLIC_API_KEY;
+    if (envKey) {
+      console.log('🔑 Using API key from environment variable');
+      return envKey;
+    }
+    
+    // Final fallback to hardcoded key
+    console.log('⚠️ Using fallback API key');
+    return 'rjapi_jlhz2bt56hcgkkcm9qlicpvzm6rpwkk';
+  } catch (error) {
+    console.error('❌ Error getting API key:', error);
+    return 'rjapi_jlhz2bt56hcgkkcm9qlicpvzm6rpwkk';
+  }
+};
+
+/**
+ * Make authenticated request to API
  */
 const makeAuthenticatedRequest = async (endpoint, options = {}) => {
   try {
     const idToken = await getIdToken();
+    const apiKey = await getApiKey();
     
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       ...options,
       headers: {
         'Authorization': `Bearer ${idToken}`,
+        'X-API-Key': apiKey,
         'Content-Type': 'application/json',
         ...options.headers,
       },
@@ -52,10 +83,11 @@ export const apiService = {
    * @param {string} orderData.quantity - Number of eSIMs (default: "1")
    * @param {string} orderData.to_email - Customer email
    * @param {string} orderData.description - Order description
+   * @param {string} orderData.mode - Mode (test/live) - tells backend whether to use mock or real data
    * @returns {Promise<Object>} Order result with orderId and airaloOrderId
    */
-  async createOrder({ package_id, quantity = "1", to_email, description }) {
-    console.log('📦 Creating order via Python API:', { package_id, quantity, to_email });
+  async createOrder({ package_id, quantity = "1", to_email, description, mode }) {
+    console.log('📦 Creating order via Python API:', { package_id, quantity, to_email, mode });
     
     const result = await makeAuthenticatedRequest('/api/user/order', {
       method: 'POST',
@@ -64,6 +96,7 @@ export const apiService = {
         quantity,
         to_email,
         description,
+        mode, // Pass mode to backend
       }),
     });
 

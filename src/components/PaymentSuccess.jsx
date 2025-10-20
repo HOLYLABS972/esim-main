@@ -7,7 +7,7 @@ import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { processTransactionCommission } from '../services/referralService';
 import { apiService } from '../services/apiService';
-import toast from 'react-hot-toast';
+import { configService } from '../services/configService';
 
 const PaymentSuccess = () => {
   const router = useRouter();
@@ -55,7 +55,12 @@ const PaymentSuccess = () => {
   // Create order record in Firebase and process with RoamJet API
   const createOrderRecord = async (orderData) => {
     try {
+      // Check if we're in test mode
+      const stripeMode = await configService.getStripeMode();
+      const isTestMode = stripeMode === 'test' || stripeMode === 'sandbox';
+      
       console.log('🛒 Creating RoamJet order...');
+      console.log('🔍 Stripe Mode:', stripeMode, '| Test Mode:', isTestMode);
       
       // Extract country info from plan name (e.g., "kargi-mobile-7days-1gb" -> "kargi")
       const getCountryFromPlan = (planId) => {
@@ -285,16 +290,19 @@ const PaymentSuccess = () => {
       const countryInfo = getCountryFromPlan(orderData.planId);
       const orderRef = doc(db, 'users', currentUser.uid, 'esims', orderData.orderId);
       
-      // Step 1: Create order via Python API
-      console.log('📞 Creating eSIM order with package ID:', orderData.planId);
+      // Step 1: Create order via Python API (backend will decide mock vs real based on mode)
+      console.log(`📞 Creating order via API (${isTestMode ? 'TEST' : 'LIVE'} mode)`);
+      console.log('🎯 Backend will handle:', isTestMode ? 'MOCK data' : 'REAL Airalo purchase');
+      
       const airaloOrderResult = await apiService.createOrder({
         package_id: orderData.planId,
         quantity: "1",
         to_email: orderData.customerEmail,
-        description: `eSIM order for ${orderData.customerEmail}`
+        description: `eSIM order for ${orderData.customerEmail}`,
+        mode: stripeMode // Pass mode to backend so it knows whether to mock or create real order
       });
       
-      console.log('✅ Order created:', airaloOrderResult);
+      console.log('✅ Order created by backend:', airaloOrderResult);
 
       // Step 2: Save order to Firebase with both order ID reference
       await setDoc(doc(db, 'orders', orderData.orderId), {
@@ -308,7 +316,9 @@ const PaymentSuccess = () => {
         customerEmail: orderData.customerEmail,
         status: 'active',
         createdAt: serverTimestamp(),
-        airaloOrderData: airaloOrderResult.orderData
+        airaloOrderData: airaloOrderResult.orderData,
+        isTestMode: isTestMode, // Flag to indicate test order
+        stripeMode: stripeMode
       });
 
       // Step 3: Create initial eSIM record in user's collection
@@ -363,13 +373,13 @@ const PaymentSuccess = () => {
       
       await setDoc(orderRef, esimData, { merge: true });
 
-      // Step 4: Try to get QR code immediately via RoamJet API (might not be ready yet)
+      // Step 4: Try to get QR code immediately via RoamJet API (backend handles mock vs real)
       try {
         console.log('🔄 Attempting to retrieve QR code for order:', orderData.orderId);
         const qrResult = await apiService.getQrCode(orderData.orderId);
         
         if (qrResult.success && qrResult.qrCode) {
-          console.log('✅ QR code retrieved immediately:', qrResult);
+          console.log('✅ QR code retrieved:', qrResult);
           
           // Update the eSIM record with QR code data
           await setDoc(orderRef, {
@@ -381,6 +391,8 @@ const PaymentSuccess = () => {
             qrCodeUrl: qrResult.qrCodeUrl,
             lpa: qrResult.lpa,
             smdpAddress: qrResult.smdpAddress,
+            isTestMode: isTestMode,
+            testModeNotice: isTestMode ? '🧪 This is a TEST order' : null,
             orderResult: {
               ...esimData.orderResult,
               qrCode: qrResult.qrCode,
@@ -512,51 +524,18 @@ const PaymentSuccess = () => {
               console.log('Could not fetch referrer email, using UID');
             }
             
-            // Display detailed commission information in snack notification
-            toast.success(
-              `💰 Commission: ${commissionPercentage}% ($${commissionResult.commission.toFixed(2)}) credited to ${referrerDisplay} via code ${commissionResult.referralCode || 'unknown'}`,
-              {
-                duration: 6000,
-                style: {
-                  background: '#10B981',
-                  color: '#fff',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  maxWidth: '450px',
-                },
-              }
-            );
+            // Commission processed successfully (no notification)
+            console.log(`✅ Commission: ${commissionPercentage}% ($${commissionResult.commission.toFixed(2)}) credited to ${referrerDisplay} via code ${commissionResult.referralCode || 'unknown'}`);
           } else if (commissionResult.success) {
             console.log('ℹ️ No referral commission (user did not use referral code)');
-            toast.info('ℹ️ No referral code used - no commission earned', {
-              duration: 3000,
-              style: {
-                background: '#3B82F6',
-                color: '#fff',
-              },
-            });
           } else {
             console.error('❌ Referral commission processing failed:', commissionResult.error);
-            toast.error(`❌ Commission processing failed: ${commissionResult.error}`, {
-              duration: 4000,
-              style: {
-                background: '#EF4444',
-                color: '#fff',
-              },
-            });
           }
         } catch (commissionError) {
           console.error('❌ Commission processing failed:', commissionError);
-          toast.error(`⚠️ Commission processing failed: ${commissionError.message}`, {
-            duration: 4000,
-            style: {
-              background: '#EF4444',
-              color: '#fff',
-            },
-          });
         }
 
-        toast.success('Payment successful! Redirecting to dashboard...');
+        console.log('✅ Payment successful! Redirecting to dashboard...');
         
         // Redirect to dashboard after 2 seconds
         setTimeout(() => {

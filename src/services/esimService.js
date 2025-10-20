@@ -1,8 +1,44 @@
 // eSIM service - now uses Python API for all eSIM operations
 // All methods are handled through apiService.js which calls the Python backend
 import { apiService } from './apiService';
+import { getAllPlans, getCountriesWithPricing } from './plansService';
 
 export const esimService = {
+  // Fetch plans and countries from Firestore
+  async fetchPlans() {
+    try {
+      console.log('📦 Fetching plans and countries from Firestore...');
+      
+      // Fetch plans and countries in parallel
+      const [plans, countriesWithPricing] = await Promise.all([
+        getAllPlans(),
+        getCountriesWithPricing()
+      ]);
+      
+      // Extract just the country data (without pricing details for the list)
+      const countries = countriesWithPricing.map(country => ({
+        code: country.code,
+        name: country.name,
+        flagEmoji: country.flagEmoji
+      }));
+      
+      console.log('✅ Loaded plans:', plans.length, 'countries:', countries.length);
+      
+      return {
+        success: true,
+        plans: plans,
+        countries: countries
+      };
+    } catch (error) {
+      console.error('❌ Error fetching plans:', error);
+      return {
+        success: false,
+        error: error.message,
+        plans: [],
+        countries: []
+      };
+    }
+  },
   // Create eSIM order (delegates to Python API)
   async createAiraloOrder(orderData) {
     console.warn('esimService.createAiraloOrder is deprecated. Use apiService.createOrder instead.');
@@ -46,8 +82,5 @@ export const esimService = {
   async getEsimDetailsByIccid(iccid) {
     console.warn('esimService.getEsimDetailsByIccid is deprecated. Use apiService.getSimDetails instead.');
     return apiService.getSimDetails(iccid);
-  },
-
-  // Note: Firestore-based methods for plans and countries are no longer needed
-  // as data should be synced to Firestore separately and accessed directly
+  }
 };

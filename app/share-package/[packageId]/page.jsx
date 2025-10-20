@@ -48,6 +48,7 @@ const SharePackagePage = () => {
   const [hasReferralDiscount, setHasReferralDiscount] = useState(false);
   const [referralSettings, setReferralSettings] = useState({ discountPercentage: 7, minimumPrice: 0.5 });
   const [regularSettings, setRegularSettings] = useState({ discountPercentage: 10, minimumPrice: 0.5 });
+  const [environmentMode, setEnvironmentMode] = useState(null);
 
   const loadFromAPI = useCallback(async () => {
     try {
@@ -136,6 +137,32 @@ const SharePackagePage = () => {
   useEffect(() => {
     checkReferralDiscount();
   }, [checkReferralDiscount]);
+
+  // Check environment mode and URL parameters
+  useEffect(() => {
+    const checkEnvironment = async () => {
+      try {
+        const { configService } = await import('../../../src/services/configService');
+        const mode = await configService.getDataPlansEnvironment();
+        
+        setEnvironmentMode(mode);
+        
+        console.log('🔍 Environment mode:', mode);
+        
+        // Log URL parameters for debugging
+        if (urlCountryCode || urlCountryFlag) {
+          console.log('🌐 URL parameters detected:', {
+            country: urlCountryCode,
+            flag: urlCountryFlag,
+            environmentMode: mode
+          });
+        }
+      } catch (error) {
+        console.error('Error checking environment mode:', error);
+      }
+    };
+    checkEnvironment();
+  }, [urlCountryCode, urlCountryFlag]);
 
   const handlePurchase = async () => {
     if (!currentUser) {
@@ -320,8 +347,14 @@ const SharePackagePage = () => {
               >
                 <ArrowLeft className="w-5 h-5 text-gray-600" />
               </button>
-              <div>
+              <div className="flex items-center gap-2">
                 <h1 className="text-xl font-bold text-gray-900">{t('sharePackage.packageDetails', 'Package Details')}</h1>
+                {/* Environment indicator - only show in test/sandbox mode */}
+                {environmentMode && environmentMode !== 'production' && environmentMode !== 'live' && (
+                  <span className="text-xs px-2 py-1 bg-yellow-500 text-white rounded-full font-semibold shadow-sm">
+                    {environmentMode.toUpperCase()}
+                  </span>
+                )}
               </div>
             </div>
           </div>

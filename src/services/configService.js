@@ -1,15 +1,31 @@
 // Configuration service to read admin settings
-import { doc, getDoc, addDoc, serverTimestamp, collection } from 'firebase/firestore';
+import { doc, getDoc, addDoc, serverTimestamp, collection, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase/config';
 
 class ConfigService {
   constructor() {
     this.cache = new Map();
     this.cacheTimeout = 5 * 60 * 1000; // 5 minutes
+    this.listeners = new Map(); // Track active listeners
   }
 
   // Get Stripe mode (test/live) from admin configuration
   async getStripeMode() {
+    // Check URL parameters first for mode override
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlMode = urlParams.get('mode');
+      if (urlMode && ['test', 'sandbox', 'live', 'production'].includes(urlMode)) {
+        console.log('🌐 URL mode override detected:', urlMode);
+        return urlMode;
+      }
+    }
+    
+    // Default to production mode (can be overridden by URL params)
+    console.log('🚀 DEFAULT: Using PRODUCTION mode');
+    return 'production';
+    
+    /* Uncomment below to enable dynamic mode switching
     try {
       // First try to get from Firestore (admin panel)
       const configRef = doc(db, 'config', 'stripe');
@@ -44,38 +60,28 @@ class ConfigService {
       console.log('⚠️ No Stripe mode found in fallback, defaulting to test');
       return 'test';
     }
+    */
   }
 
   // Get DataPlans environment (test/production)
   async getDataPlansEnvironment() {
     try {
-      // First try to get from Firestore (admin panel)
-      const configRef = doc(db, 'config', 'environment');
-      const configDoc = await getDoc(configRef);
-      
-      if (configDoc.exists()) {
-        const configData = configDoc.data();
-        if (configData.mode) {
-          console.log('✅ DataPlans environment loaded from Firestore:', configData.mode);
-          return configData.mode;
+      // Check URL parameters first for mode override
+      if (typeof window !== 'undefined') {
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlMode = urlParams.get('mode');
+        if (urlMode && ['test', 'sandbox', 'live', 'production'].includes(urlMode)) {
+          console.log('🌐 URL environment override detected:', urlMode);
+          return urlMode;
         }
       }
       
-      // Fallback to localStorage (admin panel fallback)
-      const savedEnv = localStorage.getItem('esim_environment');
-      if (savedEnv) {
-        console.log('✅ DataPlans environment loaded from localStorage:', savedEnv);
-        return savedEnv;
-      }
-      
-      // Default to test environment
-      console.log('⚠️ No DataPlans environment found, defaulting to test');
-      return 'test';
+      // Default to production environment
+      console.log('🚀 DEFAULT: Using PRODUCTION environment');
+      return 'production';
     } catch (error) {
       console.error('❌ Error loading DataPlans environment:', error);
-      // Fallback to localStorage
-      const savedEnv = localStorage.getItem('esim_environment');
-      return savedEnv || 'test';
+      return 'production';
     }
   }
 
@@ -130,10 +136,17 @@ class ConfigService {
 
   // Get Stripe publishable key based on mode
   async getStripePublishableKey(mode = 'test') {
-    console.log('🔍 Getting Stripe key for mode:', mode);
+    console.log('🔍 Getting Stripe publishable key for mode:', mode);
+    
+    // Hardcoded test key for test/sandbox mode
+    if (mode === 'test' || mode === 'sandbox') {
+      const testKey = 'pk_test_51QgvHMDAQpPJFhcuO3sh2pE1JSysFYHgJo781w5lzeDX6Qh9P026LaxpeilCyXx73TwCLHcF5O0VQU45jPZhLBK800G6bH5LdA';
+      console.log('🔑 Using hardcoded TEST publishable key');
+      return testKey;
+    }
     
     try {
-      // Try to get keys from Firestore first
+      // For live/production mode, get from Firestore
       const configRef = doc(db, 'config', 'stripe');
       const configDoc = await getDoc(configRef);
       
@@ -141,20 +154,25 @@ class ConfigService {
         const configData = configDoc.data();
         console.log('🔍 Stripe config from Firestore:', configData);
         
-        // Always use live key (only one key supported now)
         const liveKey = configData.livePublishableKey || configData.live_publishable_key;
-        console.log('🔍 Live key from DB:', liveKey ? 'Yes' : 'No');
         if (liveKey) {
-          console.log('🔑 Using live key from Firebase');
+          console.log('🔑 Using LIVE publishable key from Firebase');
           return liveKey;
         }
       }
       
-      // No fallback - show error if keys not found
-      console.error('❌ No Stripe keys found in Firebase');
+      // Fallback to environment variables for live mode
+      const envKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY_LIVE || process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+      if (envKey) {
+        console.log('🔑 Using LIVE publishable key from environment');
+        return envKey;
+      }
+      
+      // No live keys found
+      console.error('❌ No Stripe LIVE publishable keys found in Firebase or environment');
       throw new Error('Stripe keys not configured. Please contact administrator.');
     } catch (error) {
-      console.error('❌ Error loading Stripe keys from Firestore:', error);
+      console.error('❌ Error loading Stripe publishable key:', error);
       
       // Log the error if it's related to expired keys
       if (error.message && error.message.includes('expired')) {
@@ -331,6 +349,88 @@ class ConfigService {
   clearCache() {
     this.cache.clear();
   }
+
+  // Listen to Firestore config changes and clear cache when updated
+  listenToConfigChanges() {
+    if (typeof window === 'undefined') return; // Skip on server-side
+
+    // Listen to Stripe config changes
+    const stripeConfigRef = doc(db, 'config', 'stripe');
+    const stripeUnsubscribe = onSnapshot(stripeConfigRef, (doc) => {
+      if (doc.exists()) {
+        console.log('🔄 Stripe config updated in Firestore, clearing cache');
+        this.cache.delete('stripe');
+        this.cache.delete('stripeMode');
+        this.cache.delete('stripePublishableKey');
+      }
+    });
+    this.listeners.set('stripe', stripeUnsubscribe);
+
+    // Listen to environment config changes
+    const envConfigRef = doc(db, 'config', 'environment');
+    const envUnsubscribe = onSnapshot(envConfigRef, (doc) => {
+      if (doc.exists()) {
+        console.log('🔄 Environment config updated in Firestore, clearing cache');
+        this.cache.delete('environment');
+        this.cache.delete('dataPlansEnvironment');
+      }
+    });
+    this.listeners.set('environment', envUnsubscribe);
+
+    // Listen to Airalo config changes
+    const airaloConfigRef = doc(db, 'config', 'airalo');
+    const airaloUnsubscribe = onSnapshot(airaloConfigRef, (doc) => {
+      if (doc.exists()) {
+        console.log('🔄 Airalo config updated in Firestore, clearing cache');
+        this.cache.delete('airalo');
+        this.cache.delete('airaloConfig');
+      }
+    });
+    this.listeners.set('airalo', airaloUnsubscribe);
+  }
+
+  // Stop listening to config changes
+  stopListening() {
+    this.listeners.forEach((unsubscribe) => {
+      unsubscribe();
+    });
+    this.listeners.clear();
+  }
+
+  // Detect if API key is in sandbox mode based on key prefix
+  detectApiKeyMode(apiKey) {
+    if (!apiKey) return 'unknown';
+    
+    // Check for sandbox/test key patterns
+    if (apiKey.includes('test') || apiKey.includes('sandbox') || apiKey.includes('dev')) {
+      return 'sandbox';
+    }
+    
+    // Check for production key patterns
+    if (apiKey.includes('live') || apiKey.includes('prod') || apiKey.includes('production')) {
+      return 'production';
+    }
+    
+    // Default to sandbox for safety
+    return 'sandbox';
+  }
+
+  // Get current API key mode
+  async getApiKeyMode() {
+    try {
+      const airaloConfig = await this.getAiraloConfig();
+      if (airaloConfig.apiKey) {
+        const mode = this.detectApiKeyMode(airaloConfig.apiKey);
+        console.log('🔍 API key mode detected:', mode);
+        return mode;
+      }
+      return 'sandbox'; // Default to sandbox
+    } catch (error) {
+      console.error('❌ Error detecting API key mode:', error);
+      return 'sandbox';
+    }
+  }
 }
 
 export const configService = new ConfigService();
+
