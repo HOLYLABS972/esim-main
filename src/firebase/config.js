@@ -1,56 +1,24 @@
-// Stub Firebase config for static site build
-// This allows the code to compile without actual Firebase connection
+// Firebase configuration
+import { initializeApp } from 'firebase/app';
+import { getFirestore } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 
-// Mock Firestore functions
-const mockCollection = () => ({});
-const mockDoc = () => ({});
-const mockGetDocs = async () => ({ docs: [], empty: true });
-const mockGetDoc = async () => ({ exists: () => false, data: () => ({}) });
-const mockAddDoc = async () => ({ id: 'mock-id' });
-const mockUpdateDoc = async () => ({});
-const mockDeleteDoc = async () => ({});
-const mockQuery = (...args) => ({});
-const mockWhere = () => ({});
-const mockOrderBy = () => ({});
-const mockLimit = () => ({});
-const mockStartAfter = () => ({});
-const mockServerTimestamp = () => new Date().toISOString();
-
-// Mock Storage functions
-const mockRef = () => ({});
-const mockUploadBytes = async () => ({ ref: {} });
-const mockGetDownloadURL = async () => '';
-const mockDeleteObject = async () => ({});
-
-// Export mock db object
-export const db = {
-  collection: mockCollection,
-  doc: mockDoc
+const firebaseConfig = {
+  apiKey: "AIzaSyAl456JTQntXJItbXSv8hx1oQ9KW4BGci4",
+  authDomain: "esim-f0e3e.firebaseapp.com",
+  projectId: "esim-f0e3e",
+  storageBucket: "esim-f0e3e.firebasestorage.app",
+  messagingSenderId: "482450515497",
+  appId: "1:482450515497:web:5f15bfaf97b55221a39e38",
+  measurementId: "G-SZDJF30GC8"
 };
 
-// Export mock storage object
-export const storage = {
-  ref: mockRef
-};
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
 
-// Re-export all Firestore functions as mocks for imports
-export {
-  mockCollection as collection,
-  mockDoc as doc,
-  mockGetDocs as getDocs,
-  mockGetDoc as getDoc,
-  mockAddDoc as addDoc,
-  mockUpdateDoc as updateDoc,
-  mockDeleteDoc as deleteDoc,
-  mockQuery as query,
-  mockWhere as where,
-  mockOrderBy as orderBy,
-  mockLimit as limit,
-  mockStartAfter as startAfter,
-  mockServerTimestamp as serverTimestamp,
-  mockRef as ref,
-  mockUploadBytes as uploadBytes,
-  mockGetDownloadURL as getDownloadURL,
-  mockDeleteObject as deleteObject
-};
+// Initialize Firestore
+export const db = getFirestore(app);
+
+// Initialize Storage
+export const storage = getStorage(app);
 
