@@ -2,11 +2,11 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { useI18n } from '../../src/contexts/I18nContext';
+import { useI18n } from '@/src/contexts/I18nContext';
 
 // Affiliate Components
-import AffiliateHeader from '../../src/components/affiliate/AffiliateHeader';
-import HowItWorks from '../../src/components/affiliate/HowItWorks';
+import AffiliateHeader from '@/src/components/affiliate/AffiliateHeader';
+import HowItWorks from '@/src/components/affiliate/HowItWorks';
 
 const AffiliateProgramPage = () => {
   const router = useRouter();
