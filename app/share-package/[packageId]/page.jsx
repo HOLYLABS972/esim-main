@@ -188,21 +188,20 @@ const SharePackagePage = () => {
       return;
     }
     
-    // Calculate discounted price - apply BOTH basic + referral discounts
+    // Calculate discounted price - use EITHER basic OR referral discount (not both)
     const originalPrice = parseFloat(packageData.price);
     
-    // Step 1: Apply basic discount (10%)
-    const basicDiscountPercent = regularSettings.discountPercentage || 10;
-    const priceAfterBasicDiscount = originalPrice * (100 - basicDiscountPercent) / 100;
-    
-    // Step 2: Apply referral discount (7%) on top if user has referral
-    let finalPrice = priceAfterBasicDiscount;
-    let totalDiscountPercent = basicDiscountPercent;
+    let finalPrice;
+    let appliedDiscountPercent;
     
     if (hasReferralDiscount) {
-      const referralDiscountPercent = referralSettings.discountPercentage || 7;
-      finalPrice = priceAfterBasicDiscount * (100 - referralDiscountPercent) / 100;
-      totalDiscountPercent = basicDiscountPercent + referralDiscountPercent;
+      // User has referral - apply ONLY referral discount
+      appliedDiscountPercent = referralSettings.discountPercentage || 7;
+      finalPrice = originalPrice * (100 - appliedDiscountPercent) / 100;
+    } else {
+      // No referral - apply basic discount
+      appliedDiscountPercent = regularSettings.discountPercentage || 10;
+      finalPrice = originalPrice * (100 - appliedDiscountPercent) / 100;
     }
     
     // Apply minimum price constraint
@@ -211,11 +210,8 @@ const SharePackagePage = () => {
     
     console.log('💰 Pricing calculation:', {
       originalPrice,
-      basicDiscountPercent,
-      priceAfterBasicDiscount,
       hasReferralDiscount,
-      referralDiscountPercent: hasReferralDiscount ? referralSettings.discountPercentage : 0,
-      totalDiscountPercent,
+      appliedDiscountPercent,
       finalPrice,
       minimumPrice
     });
@@ -445,14 +441,16 @@ const SharePackagePage = () => {
                     <div className="text-sm text-gray-600">{t('sharePackage.price', 'Price')}</div>
                     {(() => {
                       const originalPrice = parseFloat(packageData.price);
-                      // Step 1: Apply basic discount (10%)
-                      const basicDiscountPercent = regularSettings.discountPercentage || 10;
-                      let finalPrice = originalPrice * (100 - basicDiscountPercent) / 100;
+                      let finalPrice;
                       
-                      // Step 2: Apply referral discount (7%) on top if user has referral
                       if (hasReferralDiscount) {
+                        // Apply ONLY referral discount
                         const referralDiscountPercent = referralSettings.discountPercentage || 7;
-                        finalPrice = finalPrice * (100 - referralDiscountPercent) / 100;
+                        finalPrice = originalPrice * (100 - referralDiscountPercent) / 100;
+                      } else {
+                        // Apply basic discount
+                        const basicDiscountPercent = regularSettings.discountPercentage || 10;
+                        finalPrice = originalPrice * (100 - basicDiscountPercent) / 100;
                       }
                       
                       // Apply minimum price constraint
@@ -494,12 +492,9 @@ const SharePackagePage = () => {
                 <h3 className={`text-2xl font-semibold text-gray-900 mb-4 ${isRTL ? 'text-right' : 'text-center'}`}>{t('sharePackage.getThisPackage', 'Get This Package')}</h3>
                 {hasReferralDiscount && (() => {
                   const originalPrice = parseFloat(packageData.price);
-                  const basicDiscountPercent = regularSettings.discountPercentage || 10;
                   const referralDiscountPercent = referralSettings.discountPercentage || 7;
-                  const totalDiscountPercent = basicDiscountPercent + referralDiscountPercent;
                   
-                  let finalPrice = originalPrice * (100 - basicDiscountPercent) / 100;
-                  finalPrice = finalPrice * (100 - referralDiscountPercent) / 100;
+                  let finalPrice = originalPrice * (100 - referralDiscountPercent) / 100;
                   finalPrice = Math.max(regularSettings.minimumPrice || 0.5, finalPrice);
                   
                   const savings = originalPrice - finalPrice;
@@ -511,7 +506,7 @@ const SharePackagePage = () => {
                         <span className="text-green-800 font-medium">{t('sharePackage.referralDiscountApplied', 'Referral Discount Applied!')}</span>
                       </div>
                       <p className="text-sm text-green-700 mt-1">
-                        You're saving ${savings.toFixed(2)} on this purchase ({totalDiscountPercent}% total: {basicDiscountPercent}% basic + {referralDiscountPercent}% referral)
+                        You're saving ${savings.toFixed(2)} with {referralDiscountPercent}% referral discount
                       </p>
                     </div>
                   );
