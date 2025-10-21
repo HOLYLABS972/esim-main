@@ -101,11 +101,7 @@ export default function PlansSection() {
         
         {/* Section Header */}
         <div className="text-center mb-16 max-w-4xl mx-auto">
-        <h2 className="text-center text-xl font-semibold text-tufts-blue"> <span>{'{ '}</span>
-          {t('plans.title')}
-          <span>{' }'}</span>
-         </h2>
-         <p className="mx-auto mt-12 max-w-4xl text-center text-4xl font-semibold tracking-tight text-eerie-black sm:text-5xl">                                                                                        
+         <p className="mx-auto max-w-4xl text-center text-4xl font-semibold tracking-tight text-eerie-black sm:text-5xl">                                                                                        
             {t('plans.subtitle')}
           </p>
           <div className={`text-eerie-black max-w-3xl mx-auto mt-4 ${isRTL ? 'text-right' : 'text-left'}`}>

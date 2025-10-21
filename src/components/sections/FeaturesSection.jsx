@@ -49,12 +49,7 @@ export default function FeaturesSection() {
   return (
     <div className="features-section bg-white py-16 sm:py-24 lg:py-32">
       <div className="mx-auto max-w-2xl px-4 sm:px-6 lg:max-w-7xl lg:px-8">
-        <h2 className="text-center text-lg sm:text-xl font-semibold text-tufts-blue">
-          <span>{'{ '}</span>
-          {t('features.title')}
-          <span>{' }'}</span>
-        </h2>
-        <p className="mx-auto mt-6 sm:mt-12 max-w-4xl text-center text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-semibold tracking-tight text-eerie-black">
+        <p className="mx-auto max-w-4xl text-center text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-semibold tracking-tight text-eerie-black">
           {t('features.subtitle')}
         </p>
         

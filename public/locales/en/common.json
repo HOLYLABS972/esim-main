@@ -56,7 +56,6 @@
     }
   },
   "plans": {
-    "title": "Portable Pricing System",
     "subtitle": "Best eSIM Plans for Backpackers, Travelers & Digital Nomads",
     "description": "Choose from our global eSIM plans with instant activation.\nCompetitive rates compared to Airalo and eSIMo.",
     "loadingPlans": "Loading plans...",
@@ -73,7 +72,6 @@
     "get35Off": "Get 35% OFF"
   },
   "activation": {
-    "downloads": "Downloads",
     "appAvailable": "Our App Available for both iOS and Android devices.",
     "downloadOurApp": "Download Our App",
     "appDescription": "Get the most out of your eSIM with our mobile app. Manage your plans, track usage, and get instant support.",
