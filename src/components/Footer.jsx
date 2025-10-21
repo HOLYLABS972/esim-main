@@ -87,13 +87,13 @@ const Footer = () => {
   const quickLinks = [
     { name: 'FAQ', path: `${langPrefix}/faq` },
     { name: getText('footer.blog', 'Blog'), path: '/blog' },
-    { name: getText('navbar.login', 'Login'), path: `${langPrefix}/login` }
+    { name: 'Store', path: `https://store.roamjet.net/${currentLanguage}`, external: true }
   ];
 
   const usefulLinks = [
+    { name: 'Device Compatibility', path: `${langPrefix}/device-compatibility` },
     { name: getText('footer.privacyPolicy', 'Privacy Policy'), path: `${langPrefix}/privacy-policy` },
-    { name: getText('footer.termsOfService', 'Terms of Service'), path: `${langPrefix}/terms-of-service` },
-    { name: getText('footer.affiliateProgram', 'Affiliate Program'), path: `${langPrefix}/affiliate-program` }
+    { name: getText('footer.termsOfService', 'Terms of Service'), path: `${langPrefix}/terms-of-service` }
   ];
 
   // Custom TikTok Icon Component
@@ -281,10 +281,7 @@ const Footer = () => {
       <div className="bottom-footer py-6 border-t border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <div className="bottom-footer-text text-gray-300">
-              &copy; {currentYear} <Link href="/" className="text-cobalt-blue hover:text-cobalt-blue transition-colors duration-200">{getText('footer.brandName', 'RoamJet')}</Link>. 
-              {getText('footer.allRightsReserved', 'All rights reserved.')}
-            </div>
+            <div className="bottom-footer-text text-gray-300">&copy; {currentYear} <Link href="/" className="text-cobalt-blue hover:text-cobalt-blue transition-colors duration-200">RoamJet</Link>{'. All rights reserved.'}</div>
           </div>
         </div>
       </div>

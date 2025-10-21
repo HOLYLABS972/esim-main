@@ -78,11 +78,6 @@ const defaultSettings = {
   },
   
   // Discount Settings
-  referral: {
-    discountPercentage: 17,
-    minimumPrice: 0.5
-  },
-  
   regular: {
     discountPercentage: 10,
     minimumPrice: 0.5
@@ -112,7 +107,6 @@ export const getSettings = async () => {
         seo: { ...defaultSettings.seo, ...data.seo },
         app: { ...defaultSettings.app, ...data.app },
         appStore: { ...defaultSettings.appStore, ...data.appStore },
-        referral: { ...defaultSettings.referral, ...data.referral },
         regular: { ...defaultSettings.regular, ...data.regular }
       };
     } else {
@@ -207,23 +201,6 @@ export const getCompanyInfo = async () => {
   } catch (error) {
     console.error('Error getting company info:', error);
     return defaultSettings.company;
-  }
-};
-
-// Get referral settings only
-export const getReferralSettings = async () => {
-  try {
-    const settings = await getSettings();
-    console.log('🔍 All settings:', settings);
-    console.log('🔍 Referral settings from DB:', settings.referral);
-    console.log('🔍 Default referral settings:', defaultSettings.referral);
-    
-    const referralSettings = settings.referral || defaultSettings.referral;
-    console.log('🔍 Final referral settings:', referralSettings);
-    return referralSettings;
-  } catch (error) {
-    console.error('Error getting referral settings:', error);
-    return defaultSettings.referral;
   }
 };
 

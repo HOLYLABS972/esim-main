@@ -140,7 +140,7 @@ export const paymentService = {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          order: orderData.planId,
+          order: orderData.orderId, // Use unique order ID instead of plan ID
           email: orderData.customerEmail,
           name: orderData.planName,
           total: orderData.amount,

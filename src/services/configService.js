@@ -21,9 +21,9 @@ class ConfigService {
       }
     }
     
-    // Default to production mode (can be overridden by URL params)
-    console.log('🚀 DEFAULT: Using PRODUCTION mode');
-    return 'production';
+    // Default to test mode (can be overridden by URL params)
+    console.log('🧪 DEFAULT: Using TEST mode');
+    return 'test';
     
     /* Uncomment below to enable dynamic mode switching
     try {
@@ -446,23 +446,77 @@ class ConfigService {
     return 'sandbox';
   }
 
-  // Get current API key mode from business dashboard
+  // Get current API key mode from business_users collection (RoamJet API key)
   async getApiKeyMode() {
     try {
-      const airaloConfig = await this.getAiraloConfig();
-      if (airaloConfig.apiKey) {
-        // Check if the environment is explicitly set to sandbox
-        if (airaloConfig.environment === 'sandbox') {
-          console.log('🔍 API key mode detected as sandbox from config');
-          return 'sandbox';
-        }
+      console.log('🔍 getApiKeyMode called');
+      
+      // Check if we have a RoamJet API key from environment
+      const roamjetApiKey = process.env.NEXT_PUBLIC_ROAMJET_API_KEY;
+      console.log('🔑 RoamJet API Key from env:', roamjetApiKey ? `${roamjetApiKey.substring(0, 15)}...` : 'Not set');
+      
+      // If we have an API key, try to find the user by API key directly
+      if (roamjetApiKey) {
+        console.log('🔍 Searching for user by API key...');
         
-        // Fallback to string detection
-        const mode = this.detectApiKeyMode(airaloConfig.apiKey);
-        console.log('🔍 API key mode detected:', mode);
-        return mode;
+        // Search for user by API key in business_users collection
+        const { collection, query, where, limit, getDocs } = await import('firebase/firestore');
+        const { db } = await import('../firebase/config');
+        
+        const usersRef = collection(db, 'business_users');
+        const q = query(usersRef, where('apiCredentials.apiKey', '==', roamjetApiKey), limit(1));
+        const querySnapshot = await getDocs(q);
+        
+        if (!querySnapshot.empty) {
+          const userDoc = querySnapshot.docs[0];
+          const userData = userDoc.data();
+          console.log('👤 Found user by API key:', {
+            uid: userDoc.id,
+            companyName: userData.companyName,
+            email: userData.email,
+            apiCredentials: userData.apiCredentials
+          });
+          
+          const apiMode = userData.apiCredentials?.mode || 'sandbox';
+          console.log('🔍 RoamJet API key mode detected:', apiMode);
+          return apiMode;
+        } else {
+          console.log('❌ No user found with this API key');
+        }
       }
-      return 'sandbox'; // Default to sandbox
+      
+      // Fallback: Get current user's business profile
+      const { auth } = await import('../firebase/config');
+      const currentUser = auth.currentUser;
+      
+      console.log('👤 Current user:', currentUser ? currentUser.uid : 'null');
+      
+      if (!currentUser) {
+        console.log('🔍 No authenticated user, defaulting to sandbox');
+        return 'sandbox';
+      }
+      
+      // Get user's business profile
+      const userRef = doc(db, 'business_users', currentUser.uid);
+      const userDoc = await getDoc(userRef);
+      
+      console.log('👤 User UID:', currentUser.uid);
+      console.log('📄 Document exists:', userDoc.exists());
+      
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        console.log('📊 User data:', {
+          companyName: userData.companyName,
+          email: userData.email,
+          apiCredentials: userData.apiCredentials
+        });
+        const apiMode = userData.apiCredentials?.mode || 'sandbox';
+        console.log('🔍 RoamJet API key mode detected:', apiMode);
+        return apiMode;
+      }
+      
+      console.log('🔍 No business profile found, defaulting to sandbox');
+      return 'sandbox';
     } catch (error) {
       console.error('❌ Error detecting API key mode:', error);
       return 'sandbox';

@@ -2,8 +2,30 @@
 import { auth } from '../firebase/config';
 import { configService } from './configService';
 
-// Get API URL from environment
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.roamjet.net';
+// API URLs
+const API_PRODUCTION_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.roamjet.net';
+const API_SANDBOX_URL = process.env.NEXT_PUBLIC_API_SANDBOX_URL || 'https://sandbox.roamjet.net';
+
+/**
+ * Get the correct API base URL based on mode
+ * @returns {Promise<string>} API base URL
+ */
+const getApiBaseUrl = async () => {
+  try {
+    // Check if user is in sandbox/test mode
+    const stripeMode = await configService.getStripeMode();
+    const isTestMode = stripeMode === 'test' || stripeMode === 'sandbox';
+    
+    const apiUrl = isTestMode ? API_SANDBOX_URL : API_PRODUCTION_URL;
+    
+    console.log(`🌐 Using ${isTestMode ? 'SANDBOX' : 'PRODUCTION'} API:`, apiUrl);
+    
+    return apiUrl;
+  } catch (error) {
+    console.warn('⚠️ Could not determine mode, defaulting to production API');
+    return API_PRODUCTION_URL;
+  }
+};
 
 /**
  * Get Firebase ID token for authentication
@@ -17,30 +39,42 @@ const getIdToken = async () => {
 };
 
 /**
- * Get API key from config service (supports real-time updates)
+ * Get RoamJet API key (for authenticating with RoamJet API server)
+ * This is DIFFERENT from the Airalo API key
  */
 const getApiKey = async () => {
   try {
-    // Try to get from config service first (supports real-time updates)
-    const airaloConfig = await configService.getAiraloConfig();
-    if (airaloConfig.apiKey) {
-      console.log('🔑 Using API key from config service:', airaloConfig.apiKey.substring(0, 10) + '...');
-      return airaloConfig.apiKey;
+    // First try to get RoamJet API key from environment variable
+    const roamjetApiKey = process.env.NEXT_PUBLIC_ROAMJET_API_KEY;
+    if (roamjetApiKey) {
+      console.log('🔑 Using RoamJet API key from environment:', roamjetApiKey.substring(0, 15) + '...');
+      return roamjetApiKey;
     }
     
-    // Fallback to environment variable
-    const envKey = process.env.NEXT_PUBLIC_API_KEY;
-    if (envKey) {
-      console.log('🔑 Using API key from environment variable');
-      return envKey;
+    // Try to get from business_users collection (for current user)
+    const user = auth.currentUser;
+    if (user) {
+      const { doc, getDoc } = await import('firebase/firestore');
+      const { db } = await import('../firebase/config');
+      
+      const userRef = doc(db, 'business_users', user.uid);
+      const userDoc = await getDoc(userRef);
+      
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        if (userData.apiCredentials?.apiKey) {
+          console.log('🔑 Using RoamJet API key from business_users collection');
+          return userData.apiCredentials.apiKey;
+        }
+      }
     }
     
     // No API key found - throw error
-    console.error('❌ No API key configured! Please set up API key in Firebase or environment variables.');
-    throw new Error('API key not configured');
+    console.error('❌ No RoamJet API key configured! Please set NEXT_PUBLIC_ROAMJET_API_KEY in environment variables.');
+    throw new Error('RoamJet API key not configured');
   } catch (error) {
-    console.error('❌ Error getting API key:', error);
-    throw new Error('API key not configured');
+    console.error('❌ Error getting RoamJet API key:', error);
+    throw new Error('RoamJet API key not configured');
   }
 };
 
@@ -51,8 +85,9 @@ const makeAuthenticatedRequest = async (endpoint, options = {}) => {
   try {
     const idToken = await getIdToken();
     const apiKey = await getApiKey();
+    const apiBaseUrl = await getApiBaseUrl(); // Get dynamic URL based on mode
     
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    const response = await fetch(`${apiBaseUrl}${endpoint}`, {
       ...options,
       headers: {
         'Authorization': `Bearer ${idToken}`,
@@ -65,6 +100,13 @@ const makeAuthenticatedRequest = async (endpoint, options = {}) => {
     const data = await response.json();
 
     if (!response.ok) {
+      // Handle rate limiting (429 status)
+      if (response.status === 429 && data.rateLimitExceeded) {
+        const errorMsg = data.error || `Rate limit exceeded. Please wait ${data.secondsRemaining || 60} seconds before trying again.`;
+        console.warn('⏱️ Rate limit exceeded:', errorMsg);
+        throw new Error(errorMsg);
+      }
+      
       throw new Error(data.error || `Request failed with status ${response.status}`);
     }
 
@@ -161,7 +203,8 @@ export const apiService = {
    */
   async healthCheck() {
     try {
-      const response = await fetch(`${API_BASE_URL}/health`);
+      const apiBaseUrl = await getApiBaseUrl();
+      const response = await fetch(`${apiBaseUrl}/health`);
       return await response.json();
     } catch (error) {
       console.error('API health check failed:', error);
