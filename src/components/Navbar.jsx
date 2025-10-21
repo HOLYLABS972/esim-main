@@ -25,8 +25,8 @@ const Navbar = ({ hideLanguageSelector = false }) => {
       if (savedLanguage) return savedLanguage;
     }
     
-    // Fallback to URL detection
-    return detectLanguageFromPath(pathname);
+    // Fallback to URL detection, with default to 'en'
+    return detectLanguageFromPath(pathname) || 'en';
   };
 
   const currentLanguage = getCurrentLanguage();

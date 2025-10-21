@@ -53,10 +53,11 @@ const LanguageSelector = () => {
     if (pathname.startsWith('/german')) return languages.find(lang => lang.code === 'de');
     if (pathname.startsWith('/french')) return languages.find(lang => lang.code === 'fr');
     if (pathname.startsWith('/spanish')) return languages.find(lang => lang.code === 'es');
-    return languages.find(lang => lang.code === 'en'); // default to English
+    // Ensure we always return a valid language object
+    return languages.find(lang => lang.code === 'en') || languages[0]; // default to English or first language
   };
 
-  const currentLanguage = getCurrentLanguage();
+  const currentLanguage = getCurrentLanguage() || languages[0];
 
   const getLocalizedPath = (languageCode, currentPath) => {
     console.log('LanguageSelector: getLocalizedPath called with', languageCode, currentPath);

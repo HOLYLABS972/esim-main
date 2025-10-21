@@ -17,7 +17,7 @@ export default function PlansSection() {
       const savedLanguage = localStorage.getItem('roamjet-language');
       if (savedLanguage) return savedLanguage;
     }
-    return detectLanguageFromPath(pathname);
+    return detectLanguageFromPath(pathname) || 'en';
   };
 
   const currentLanguage = getCurrentLanguage();

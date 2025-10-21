@@ -82,7 +82,19 @@ const Footer = () => {
     return '';
   };
 
+  // Get current language code from pathname
+  const getCurrentLanguage = () => {
+    const languageCodes = ['ar', 'he', 'ru', 'de', 'fr', 'es'];
+    for (const code of languageCodes) {
+      if (pathname.startsWith(`/${code}/`) || pathname === `/${code}`) {
+        return code;
+      }
+    }
+    return 'en';
+  };
+
   const langPrefix = getLanguagePrefix();
+  const currentLanguage = getCurrentLanguage();
 
   const quickLinks = [
     { name: 'FAQ', path: `${langPrefix}/faq` },
