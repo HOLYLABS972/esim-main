@@ -26,21 +26,22 @@ const CountrySearchBar = ({ onSearch, showCountryCount = true }) => {
   const handleSearch = (e) => {
     e.preventDefault();
     
-    // Build URL with language prefix if not English
-    const languagePrefix = locale && locale !== 'en' ? `/${locale}` : '';
+    // Get the current language, default to 'en' if not set
+    const currentLanguage = locale || 'en';
     
     if (searchValue.trim()) {
-      // Navigate to plans page with search parameter, preserving language
-      const searchUrl = `${languagePrefix}/esim-plans?search=${encodeURIComponent(searchValue.trim())}`;
-      router.push(searchUrl);
+      // Redirect to store subdomain with search parameter
+      const storeUrl = `https://store.roamjet.net/${currentLanguage}?search=${encodeURIComponent(searchValue.trim())}`;
+      window.location.href = storeUrl;
       
       // Also call onSearch callback if provided
       if (onSearch) {
         onSearch(searchValue.trim());
       }
     } else {
-      // Navigate to plans page, preserving language
-      router.push(`${languagePrefix}/esim-plans`);
+      // Redirect to store subdomain without search
+      const storeUrl = `https://store.roamjet.net/${currentLanguage}`;
+      window.location.href = storeUrl;
     }
   };
 
@@ -88,11 +89,11 @@ const CountrySearchBar = ({ onSearch, showCountryCount = true }) => {
                 type="button"
                 onClick={() => {
                   setSearchValue(country.name); // Use English name for search
-                  // Build URL with language prefix if not English
-                  const languagePrefix = locale && locale !== 'en' ? `/${locale}` : '';
-                  // Navigate to plans page with search, preserving language
-                  const searchUrl = `${languagePrefix}/esim-plans?search=${encodeURIComponent(country.name)}`;
-                  router.push(searchUrl);
+                  // Get the current language, default to 'en' if not set
+                  const currentLanguage = locale || 'en';
+                  // Redirect to store subdomain with search
+                  const storeUrl = `https://store.roamjet.net/${currentLanguage}?search=${encodeURIComponent(country.name)}`;
+                  window.location.href = storeUrl;
                 }}
                 className="text-xs sm:text-sm px-3 py-1 rounded-full bg-white/80 hover:bg-cobalt-blue/10 border border-jordy-blue/30 hover:border-cobalt-blue transition-all duration-200 text-gray-700 hover:text-cobalt-blue font-medium"
               >
