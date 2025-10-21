@@ -35,12 +35,12 @@ const getApiKey = async () => {
       return envKey;
     }
     
-    // Final fallback to hardcoded key
-    console.log('⚠️ Using fallback API key');
-    return 'rjapi_gu718wbhvo54u33hl42qbim3l9moapg9';
+    // No API key found - throw error
+    console.error('❌ No API key configured! Please set up API key in Firebase or environment variables.');
+    throw new Error('API key not configured');
   } catch (error) {
     console.error('❌ Error getting API key:', error);
-    return 'rjapi_gu718wbhvo54u33hl42qbim3l9moapg9';
+    throw new Error('API key not configured');
   }
 };
 
