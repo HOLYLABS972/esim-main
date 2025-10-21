@@ -145,12 +145,7 @@ const Blog = () => {
       <section className="bg-white">
         <div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8">
           <div className="text-center">
-            <h2 className="text-center text-xl font-semibold text-tufts-blue">
-              <span>{'{ '}</span>
-              {t('blog.title', 'eSIM Insights')}
-              <span>{' }'}</span>
-            </h2>
-            <p className="mx-auto mt-12 max-w-4xl text-center text-4xl font-semibold tracking-tight text-eerie-black sm:text-5xl">
+            <p className="mx-auto max-w-4xl text-center text-4xl font-semibold tracking-tight text-eerie-black sm:text-5xl">
               {t('blog.subtitle', 'Stay updated with eSIM technology')}
             </p>
             <p className="mx-auto mt-6 max-w-2xl text-center text-lg text-cool-black">
