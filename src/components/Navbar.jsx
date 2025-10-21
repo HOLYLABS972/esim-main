@@ -7,7 +7,6 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useI18n } from '../contexts/I18nContext';
 import LanguageSelector from './LanguageSelector';
 import { detectLanguageFromPath, getLocalizedBlogListUrl } from '../utils/languageUtils';
-import { trackCustomFacebookEvent } from '../utils/facebookPixel';
 
 const Navbar = ({ hideLanguageSelector = false }) => {
   const { t, locale } = useI18n();
@@ -41,12 +40,6 @@ const Navbar = ({ hideLanguageSelector = false }) => {
   };
 
   const handleDownloadApp = () => {
-    // Track with Facebook Pixel
-    trackCustomFacebookEvent('DownloadAppClick', {
-      source: 'mobile_menu',
-      content_type: 'download_button'
-    });
-    
     // OneLink handles platform detection automatically
     if (typeof window !== 'undefined' && window.APPSFLYER_ONELINK_URL) {
       console.log('Opening AppsFlyer OneLink from mobile menu');

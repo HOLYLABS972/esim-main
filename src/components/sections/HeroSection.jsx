@@ -4,7 +4,6 @@ import { useI18n } from '../../contexts/I18nContext';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { trackCustomFacebookEvent } from '../../utils/facebookPixel';
 import CountrySearchBar from '../CountrySearchBar';
 import toast from 'react-hot-toast';
 
@@ -24,12 +23,6 @@ export default function HeroSection() {
   };
 
   const handleDownloadApp = () => {
-    // Track with Facebook Pixel
-    trackCustomFacebookEvent('DownloadAppClick', {
-      source: 'hero_section',
-      content_type: 'download_button'
-    });
-    
     // OneLink handles platform detection automatically
     if (typeof window !== 'undefined' && window.APPSFLYER_ONELINK_URL) {
       console.log('Opening AppsFlyer OneLink - smart routing to correct store');

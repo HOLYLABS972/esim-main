@@ -1,7 +1,6 @@
 import Providers from '../src/components/Providers'
 import ConditionalNavbar from '../src/components/ConditionalNavbar'
 import ConditionalFooter from '../src/components/ConditionalFooter'
-import FacebookPixel from '../src/components/FacebookPixel'
 import LanguageWrapper from '../src/components/LanguageWrapper'
 import './globals.css'
 import './rtl.css'
@@ -177,7 +176,6 @@ export default function RootLayout({ children }) {
                 {children}
               </main>
               <ConditionalFooter />
-              <FacebookPixel />
             </div>
           </LanguageWrapper>
         </Providers>

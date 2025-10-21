@@ -1,7 +1,7 @@
 'use client';
 
-import SharePackagePage from '../../../share-package/[packageId]/page';
-
-// Arabic version - uses the same component as English
-export default SharePackagePage;
+export default function SharePackagePage({ params }) {
+  // Arabic version - placeholder for share package functionality
+  return null;
+}
 
