@@ -168,5 +168,20 @@ export const apiService = {
       return { status: 'error', error: error.message };
     }
   },
+
+  /**
+   * Get current user balance
+   * @returns {Promise<Object>} Balance information
+   */
+  async getBalance() {
+    console.log('💰 Fetching user balance from backend');
+    
+    const result = await makeAuthenticatedRequest('/api/user/balance', {
+      method: 'GET',
+    });
+
+    console.log('✅ Balance fetched:', result);
+    return result;
+  },
 };
 

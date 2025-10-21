@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '../contexts/AuthContext';
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp, addDoc, collection } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { processTransactionCommission } from '../services/referralService';
 import { apiService } from '../services/apiService';
@@ -320,6 +320,42 @@ const PaymentSuccess = () => {
         isTestMode: isTestMode, // Flag to indicate test order
         stripeMode: stripeMode
       });
+
+      // Step 2.5: ALSO save to api_usage collection for admin dashboard tracking
+      const apiUsageData = {
+        userId: currentUser.uid,
+        userEmail: currentUser.email,
+        endpoint: '/api/user/order',
+        method: 'POST',
+        mode: isTestMode ? 'sandbox' : 'production',
+        packageId: orderData.planId,
+        packageName: orderData.planName,
+        orderId: orderData.orderId,
+        airaloOrderId: airaloOrderResult.airaloOrderId,
+        amount: isTestMode ? 0 : orderData.amount, // $0 for test orders
+        status: 'completed',
+        isTestOrder: isTestMode,
+        testModeLabel: isTestMode ? '🧪 TEST ORDER' : null,
+        createdAt: serverTimestamp(),
+        metadata: {
+          quantity: 1,
+          iccid: airaloOrderResult.orderData?.sims?.[0]?.iccid || null,
+          source: 'frontend_payment_success'
+        }
+      };
+
+      // Save to global api_usage collection
+      await addDoc(collection(db, 'api_usage'), apiUsageData);
+      console.log('✅ Logged to global api_usage collection from frontend');
+
+      // ALSO save to user subcollection for admin dashboard
+      try {
+        await addDoc(collection(db, 'business_users', currentUser.uid, 'api_usage'), apiUsageData);
+        console.log('✅ Logged to user subcollection from frontend');
+      } catch (subcollectionError) {
+        console.warn('⚠️ Could not save to user subcollection:', subcollectionError);
+        // Continue anyway - global collection is sufficient
+      }
 
       // Step 3: Create initial eSIM record in user's collection
       const esimData = {
