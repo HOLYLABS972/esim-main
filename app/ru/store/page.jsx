@@ -26,17 +26,6 @@ export default function StorePage() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Page Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-8">
-        <div className="container mx-auto px-4">
-          <h1 className="text-3xl md:text-4xl font-bold text-center">
-            Магазин RoamJet
-          </h1>
-          <p className="text-center mt-2 text-blue-100">
-            Откройте для себя наш полный ассортимент туристических продуктов и услуг
-          </p>
-        </div>
-      </div>
 
       {/* Loading Indicator */}
       {isLoading && (
@@ -66,12 +55,12 @@ export default function StorePage() {
       )}
 
       {/* Store Iframe */}
-      <div className="relative w-full" style={{ minHeight: 'calc(100vh - 200px)' }}>
+      <div className="relative w-full" style={{ minHeight: '100vh' }}>
         <iframe
           src="https://store.roamjet.net/ru"
           className={`w-full border-0 ${isLoading ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
           style={{ 
-            height: 'calc(100vh - 200px)',
+            height: '100vh',
             minHeight: '600px'
           }}
           title="Магазин RoamJet"
@@ -82,33 +71,6 @@ export default function StorePage() {
         />
       </div>
 
-      {/* Fallback Link */}
-      <div className="bg-gray-50 py-8 text-center">
-        <p className="text-gray-600 mb-4">
-          Проблемы с просмотром магазина?
-        </p>
-        <a
-          href="https://store.roamjet.net/ru"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          <span>Открыть магазин в новой вкладке</span>
-          <svg 
-            className="ml-2 w-4 h-4" 
-            fill="none" 
-            stroke="currentColor" 
-            viewBox="0 0 24 24"
-          >
-            <path 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              strokeWidth={2} 
-              d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" 
-            />
-          </svg>
-        </a>
-      </div>
     </div>
   );
 }
