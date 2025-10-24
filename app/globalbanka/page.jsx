@@ -5,30 +5,25 @@ import { useState, useEffect } from 'react';
 export default function GlobalBankaPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(false);
-  const [debugInfo, setDebugInfo] = useState('');
 
   const handleIframeLoad = () => {
     console.log('✅ GlobalBanka iframe loaded successfully');
     setIsLoading(false);
-    setDebugInfo('Iframe loaded successfully');
   };
 
   const handleIframeError = () => {
     console.error('❌ GlobalBanka iframe failed to load');
     setIsLoading(false);
     setError(true);
-    setDebugInfo('Iframe failed to load');
   };
 
   useEffect(() => {
     console.log('🔍 GlobalBanka page mounted, attempting to load iframe...');
-    setDebugInfo('Page mounted, loading iframe...');
     
     // Set a timeout to handle cases where the iframe doesn't trigger load event
     const timeout = setTimeout(() => {
       console.log('⏰ Iframe load timeout reached');
       setIsLoading(false);
-      setDebugInfo('Iframe load timeout - may still be loading');
     }, 10000); // 10 seconds timeout
 
     return () => clearTimeout(timeout);
@@ -36,13 +31,6 @@ export default function GlobalBankaPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Debug Info */}
-      {debugInfo && (
-        <div className="bg-blue-50 border border-blue-200 p-2 text-sm text-blue-800">
-          Debug: {debugInfo}
-        </div>
-      )}
-
       {/* Loading Indicator */}
       {isLoading && (
         <div className="flex items-center justify-center py-20">
