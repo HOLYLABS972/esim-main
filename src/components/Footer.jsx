@@ -99,7 +99,7 @@ const Footer = () => {
   const quickLinks = [
     { name: 'FAQ', path: `${langPrefix}/faq` },
     { name: getText('footer.blog', 'Blog'), path: '/blog' },
-    { name: 'Store', path: `https://store.roamjet.net/${currentLanguage}`, external: true }
+    { name: getText('navbar.store', 'Store'), path: `https://store.roamjet.net/${currentLanguage}`, external: true }
   ];
 
   const usefulLinks = [

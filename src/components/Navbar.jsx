@@ -125,7 +125,7 @@ const Navbar = ({ hideLanguageSelector = false }) => {
             {t('navbar.blog', 'Blog')}
           </Link>
           <Link href={getLocalizedUrl("/store")} className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
-            Store
+            {t('navbar.store', 'Store')}
           </Link>
           <a href="https://biz.roamjet.net" target="_blank" rel="noopener noreferrer" className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
             {t('navbar.partnership', 'Partnership')}
@@ -196,7 +196,7 @@ const Navbar = ({ hideLanguageSelector = false }) => {
                     className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    Store
+                    {t('navbar.store', 'Store')}
                   </Link>
                   <a
                     href="https://biz.roamjet.net"
