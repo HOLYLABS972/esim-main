@@ -23,3 +23,5 @@ export default function CodeCanyonLayout({ children }) {
     </html>
   )
 }
+
+
