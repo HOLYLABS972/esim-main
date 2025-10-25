@@ -85,7 +85,7 @@ const Navbar = ({ hideLanguageSelector = false }) => {
     <header className={`navbar-header fixed w-full top-0 transition-transform duration-300 ${
       isVisible ? 'translate-y-0' : '-translate-y-full'
     }`} style={{ zIndex: 9999 }}>
-      <div className="bg-white/80 shadow-sm shadow-white/30 backdrop-blur-sm w-full">
+      <div className="bg-white shadow-sm shadow-white/30 w-full">
       <nav aria-label="Global" className="mx-auto flex max-w-7xl items-center justify-between p-2 lg:px-8">
         <div className="flex lg:flex-1">
           <Link href={getLocalizedUrl("/")} className="-m-1.5 p-1.5 flex items-center">
@@ -143,7 +143,7 @@ const Navbar = ({ hideLanguageSelector = false }) => {
       {isMenuOpen && mounted && createPortal(
         <div className="lg:hidden" style={{ zIndex: 99999, position: 'fixed', inset: 0 }}>
           <div 
-            className="fixed inset-0 w-full h-full overflow-y-auto bg-white/80 backdrop-blur-sm" 
+            className="fixed inset-0 w-full h-full overflow-y-auto bg-white" 
             style={{ zIndex: 99999 }}
           >
             {/* Header with logo and close button */}
