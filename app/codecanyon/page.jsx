@@ -74,6 +74,7 @@ export default function CodeCanyonPage() {
           allow="payment; geolocation; microphone; camera; autoplay; clipboard-write"
           sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation allow-downloads"
           loading="eager"
+          referrerPolicy="no-referrer-when-downgrade"
         />
       </div>
     </div>
