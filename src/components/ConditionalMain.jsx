@@ -8,8 +8,7 @@ const ConditionalMain = ({ children }) => {
   // Remove padding on iframe pages
   const iframePages = [
     '/codecanyon',
-    '/store', 
-    '/globalbanka'
+    '/store'
   ];
   
   // Check if current path is an iframe page or starts with language prefix + iframe page
