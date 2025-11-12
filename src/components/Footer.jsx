@@ -105,6 +105,7 @@ const Footer = () => {
   const usefulLinks = [
     { name: 'Device Compatibility', path: `${langPrefix}/device-compatibility` },
     { name: getText('footer.privacyPolicy', 'Privacy Policy'), path: `${langPrefix}/privacy-policy` },
+    { name: getText('footer.refundPolicy', 'Refund Policy'), path: `${langPrefix}/refund-policy` },
     { name: getText('footer.termsOfService', 'Terms of Service'), path: `${langPrefix}/terms-of-service` }
   ];
 
