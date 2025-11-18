@@ -199,16 +199,18 @@ export const I18nProvider = ({ children }) => {
   const t = (key, fallback = '', variables = {}) => {
     const keys = key.split('.');
     let value = translations;
+    let found = true;
 
     for (const k of keys) {
       if (value && typeof value === 'object' && k in value) {
         value = value[k];
       } else {
-        return fallback || key;
+        found = false;
+        break;
       }
     }
     
-    let result = typeof value === 'string' ? value : fallback || key;
+    let result = found && typeof value === 'string' ? value : (fallback || key);
     
     // Handle interpolation with variables like {{name}}, {{number}}, etc.
     if (typeof result === 'string' && variables && typeof variables === 'object') {

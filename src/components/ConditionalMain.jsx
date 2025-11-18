@@ -5,22 +5,16 @@ import { usePathname } from 'next/navigation';
 const ConditionalMain = ({ children }) => {
   const pathname = usePathname();
   
-  // Remove padding on iframe pages
-  const iframePages = [
-    '/codecanyon',
-    '/store'
-  ];
-  
-  // Check if current path is an iframe page or starts with language prefix + iframe page
-  const isIframePage = iframePages.some(page => 
+  // Store pages and auth pages don't need top padding (they have their own layout)
+  const storePages = ['/store', '/dashboard', '/checkout', '/cart', '/login', '/register', '/payment-success', '/forgot-password', '/verify-email', '/esim-plans', '/share-package'];
+  const isStorePage = storePages.some(page => 
     pathname === page || 
     pathname.startsWith(page + '/') ||
-    // Check for language-specific iframe pages (e.g., /fr/store, /de/store, etc.)
-    iframePages.some(iframePage => pathname.includes(iframePage))
+    pathname.match(/^\/[a-z]{2}\/(store|dashboard|checkout|cart|login|register|esim-plans|share-package)/)
   );
   
-  if (isIframePage) {
-    return <main>{children}</main>;
+  if (isStorePage) {
+    return <main className="pt-[50px]">{children}</main>;
   }
   
   return <main className="pt-16">{children}</main>;

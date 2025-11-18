@@ -1,76 +1,37 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { Suspense } from 'react';
+import EsimPlans from '../../../src/components/EsimPlans';
+import CountrySearchBar from '../../../src/components/CountrySearchBar';
+import { useI18n } from '../../../src/contexts/I18nContext';
 
 export default function StorePage() {
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(false);
-
-  const handleIframeLoad = () => {
-    setIsLoading(false);
-  };
-
-  const handleIframeError = () => {
-    setIsLoading(false);
-    setError(true);
-  };
-
-  useEffect(() => {
-    // Set a timeout to handle cases where the iframe doesn't trigger load event
-    const timeout = setTimeout(() => {
-      setIsLoading(false);
-    }, 10000); // 10 seconds timeout
-
-    return () => clearTimeout(timeout);
-  }, []);
-
+  const { t } = useI18n();
+  
   return (
-    <div className="min-h-screen bg-white" dir="rtl">
-
-      {/* Loading Indicator */}
-      {isLoading && (
-        <div className="flex items-center justify-center py-20">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <span className="ml-3 text-gray-600">جاري تحميل المتجر...</span>
-        </div>
-      )}
-
-      {/* Error State */}
-      {error && (
-        <div className="flex flex-col items-center justify-center py-20">
-          <div className="text-red-500 text-6xl mb-4">⚠️</div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">
-            تعذر تحميل المتجر
-          </h2>
-          <p className="text-gray-600 mb-4">
-            يرجى التحقق من اتصالك بالإنترنت والمحاولة مرة أخرى.
+    <div className="min-h-screen">
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            {t('plans.title', 'Choose Your eSIM Plan')}
+          </h1>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-8">
+            {t('plans.description', 'Browse our complete selection of eSIM data plans for 200+ countries. Real-time pricing with instant activation.')}
           </p>
-          <button
-            onClick={() => window.location.reload()}
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            إعادة المحاولة
-          </button>
+          
+          {/* Search Bar */}
+          <CountrySearchBar showCountryCount={true} />
         </div>
-      )}
-
-      {/* Store Iframe */}
-      <div className="relative w-full pt-16" style={{ minHeight: '100vh' }}>
-        <iframe
-          src="https://store.roamjet.net/ar"
-          className={`w-full border-0 ${isLoading ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
-          style={{ 
-            height: 'calc(100vh - 4rem)',
-            minHeight: '600px'
-          }}
-          title="متجر RoamJet"
-          onLoad={handleIframeLoad}
-          onError={handleIframeError}
-          allow="payment; geolocation; microphone; camera"
-          sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation"
-        />
+        
+        <Suspense fallback={
+          <div className="flex justify-center items-center min-h-64">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-tufts-blue"></div>
+            <p className="ml-4 text-gray-600">{t('plans.loading', 'Loading plans...')}</p>
+          </div>
+        }>
+          <EsimPlans />
+        </Suspense>
       </div>
-
     </div>
   );
 }

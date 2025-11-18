@@ -1,7 +1,7 @@
 'use client';
 
-export default function SharePackagePage({ params }) {
-  // Spanish version - placeholder for share package functionality
-  return null;
-}
+import SharePackagePage from '../../../share-package/[packageId]/page';
+
+// Spanish version - uses the same component as English
+export default SharePackagePage;
 
