@@ -573,9 +573,9 @@ const SharePackagePage = () => {
                       return (
                         <div>
                           <div className="font-semibold text-red-600">
-                            ${finalPrice.toFixed(2)}
+                            {finalPrice.toFixed(2)}
                           </div>
-                          <div className="text-xs text-gray-500 line-through">${formatPrice(packageData.price)}</div>
+                          <div className="text-xs text-gray-500 line-through">{formatPrice(packageData.price)}</div>
                         </div>
                       );
                     })()}

@@ -21,11 +21,6 @@ class ConfigService {
       }
     }
     
-    // Default to test mode (can be overridden by URL params)
-    console.log('🧪 DEFAULT: Using TEST mode');
-    return 'test';
-    
-    /* Uncomment below to enable dynamic mode switching
     try {
       // First try to get from Firestore (admin panel)
       const configRef = doc(db, 'config', 'stripe');
@@ -46,9 +41,9 @@ class ConfigService {
         return savedMode;
       }
       
-      // Default to test mode
-      console.log('⚠️ No Stripe mode found, defaulting to test');
-      return 'test';
+      // Default to production mode
+      console.log('⚠️ No Stripe mode found, defaulting to production');
+      return 'production';
     } catch (error) {
       console.error('❌ Error loading Stripe mode:', error);
       // Fallback to localStorage
@@ -57,10 +52,9 @@ class ConfigService {
         console.log('✅ Stripe mode loaded from localStorage fallback:', savedMode);
         return savedMode;
       }
-      console.log('⚠️ No Stripe mode found in fallback, defaulting to test');
-      return 'test';
+      console.log('⚠️ No Stripe mode found in fallback, defaulting to production');
+      return 'production';
     }
-    */
   }
 
   // Get DataPlans environment (test/production)
@@ -166,7 +160,7 @@ class ConfigService {
   }
 
   // Get Stripe publishable key based on mode
-  async getStripePublishableKey(mode = 'test') {
+  async getStripePublishableKey(mode = 'production') {
     console.log('🔍 Getting Stripe publishable key for mode:', mode);
     
     // Hardcoded test key for test/sandbox mode
@@ -215,7 +209,7 @@ class ConfigService {
   }
 
   // Get Stripe secret key based on mode (for server-side)
-  async getStripeSecretKey(mode = 'test') {
+  async getStripeSecretKey(mode = 'production') {
     try {
       // Try to get keys from Firestore first
       const configRef = doc(db, 'config', 'stripe');
