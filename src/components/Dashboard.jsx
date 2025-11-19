@@ -39,6 +39,29 @@ const Dashboard = () => {
   
   const router = useRouter();
 
+  // Helper function to get country from operator slug
+  const getCountryFromOperator = (operatorSlug) => {
+    if (!operatorSlug) return null;
+    
+    // Common operator to country mappings (most common ones)
+    const operatorCountryMap = {
+      // Egypt
+      'giza-mobile': { code: 'EG', name: 'Egypt' },
+      'nile-mobile': { code: 'EG', name: 'Egypt' },
+      // UAE
+      'roamify': { code: 'AE', name: 'United Arab Emirates' },
+      // Turkey  
+      'turk-telecom': { code: 'TR', name: 'Turkey' },
+      // USA
+      'change': { code: 'US', name: 'United States' },
+      // Georgia
+      'kargi': { code: 'GE', name: 'Georgia' },
+      // Add more as needed...
+    };
+    
+    return operatorCountryMap[operatorSlug] || null;
+  };
+
   // Get current language for RTL detection
   const getCurrentLanguage = () => {
     if (locale) return locale;
@@ -91,8 +114,30 @@ const Dashboard = () => {
         const ordersData = esimsSnapshot.docs.map(doc => {
           try {
             const data = doc.data();
-            const countryCode = data.countryCode || data.orderResult?.countryCode;
-            const countryName = data.countryName || data.orderResult?.countryName;
+            
+            // Extract country code from multiple sources
+            let countryCode = data.countryCode || data.orderResult?.countryCode;
+            let countryName = data.countryName || data.orderResult?.countryName;
+            
+            // If no country code, try to extract from package_id or airaloOrderData
+            if (!countryCode || countryCode === 'US') {
+              const packageId = data.planId || data.package_id || data.airaloOrderData?.package_id;
+              const packageName = data.airaloOrderData?.package || data.planName;
+              
+              // Extract operator slug from package_id (e.g., "giza-mobile-15days-2gb" -> "giza-mobile")
+              if (packageId) {
+                const operatorSlug = packageId.split('-').slice(0, 2).join('-'); // Get first two parts
+                console.log(`📦 Extracting country from package_id: ${packageId} -> operator: ${operatorSlug}`);
+                
+                // Try to match against operator (giza-mobile, nile-mobile, etc.)
+                const countryInfo = getCountryFromOperator(operatorSlug);
+                if (countryInfo) {
+                  countryCode = countryInfo.code;
+                  countryName = countryInfo.name;
+                  console.log(`✅ Found country from operator: ${countryName} (${countryCode})`);
+                }
+              }
+            }
             
             return {
                 id: doc.id,
@@ -714,8 +759,18 @@ const Dashboard = () => {
       return;
     }
     
-    // Navigate to topup page
-    router.push(`/topup/${iccid}`);
+    // Get country code from the order
+    const countryCode = selectedOrder.countryCode || 
+                        selectedOrder.airaloOrderData?.country_code ||
+                        selectedOrder.orderResult?.country_code ||
+                        selectedOrder.country_code;
+    
+    // Navigate to topup page with country code if available
+    const topupUrl = countryCode 
+      ? `/topup/${iccid}?country=${encodeURIComponent(countryCode)}`
+      : `/topup/${iccid}`;
+    
+    router.push(topupUrl);
   };
 
   const handleDeleteOrder = async () => {

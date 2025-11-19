@@ -253,10 +253,18 @@ const QRCodePage = ({ orderId, iccid }) => {
     if (qrCodeData && (qrCodeData.qrCode || qrCodeData.lpa)) {
       console.log('✅ QR code/LPA found in order data');
       setQrData(qrCodeData);
+      
+      // Extract country code from order data
+      const countryCode = orderData.countryCode || 
+                         orderData.airaloOrderData?.country_code || 
+                         orderData.orderResult?.country_code || 
+                         orderData.country_code;
+      
       setOrderInfo({
         orderId: foundOrderId,
         planName: orderData.package_id || orderData.packageId || orderData.packageName || orderData.airaloOrderData?.package || 'eSIM Plan',
-        amount: orderData.price || orderData.amount || orderData.airaloOrderData?.price || 0
+        amount: orderData.price || orderData.amount || orderData.airaloOrderData?.price || 0,
+        countryCode: countryCode
       });
       setLoading(false);
     } else {
@@ -411,29 +419,10 @@ const QRCodePage = ({ orderId, iccid }) => {
       return;
     }
 
-    try {
-      setLoadingMobileData(true);
-      const result = await apiService.getMobileData({ 
-        iccid: qrData?.iccid, 
-        orderId: orderId 
-      });
-
-      if (result.success) {
-        setMobileData(result.data);
-        toast.success('Mobile data retrieved successfully');
-        // Show mobile data in an alert or modal
-        const dataInfo = result.data || {};
-        const message = `Data Usage: ${dataInfo.used || 'N/A'} / ${dataInfo.total || 'N/A'}\nStatus: ${dataInfo.status || 'N/A'}`;
-        alert(message);
-      } else {
-        toast.error(result.error || 'Failed to get mobile data');
-      }
-    } catch (error) {
-      console.error('❌ Error checking mobile data:', error);
-      toast.error('Error checking mobile data: ' + error.message);
-    } finally {
-      setLoadingMobileData(false);
-    }
+    // Navigate to the dedicated data usage page
+    const iccid = qrData?.iccid;
+    const queryParams = orderId ? `?orderId=${orderId}` : '';
+    router.push(`/data-usage/${iccid}${queryParams}`);
   };
 
   const handleOpenTopup = () => {
@@ -441,8 +430,19 @@ const QRCodePage = ({ orderId, iccid }) => {
       toast.error('No ICCID found. Cannot create topup.');
       return;
     }
-    // Navigate to topup page
-    router.push(`/topup/${qrData.iccid}`);
+    
+    // Get country code from orderInfo if available
+    const countryCode = orderInfo?.countryCode || 
+                        orderInfo?.airaloOrderData?.country_code ||
+                        orderInfo?.orderResult?.country_code ||
+                        orderInfo?.country_code;
+    
+    // Navigate to topup page with country code if available
+    const topupUrl = countryCode 
+      ? `/topup/${qrData.iccid}?country=${encodeURIComponent(countryCode)}`
+      : `/topup/${qrData.iccid}`;
+    
+    router.push(topupUrl);
   };
 
   const shareLink = async () => {
@@ -549,31 +549,21 @@ const QRCodePage = ({ orderId, iccid }) => {
                   {qrData?.iccid && (
                     <p className="text-xs sm:text-sm text-gray-500 break-all px-2">ICCID: {qrData.iccid}</p>
                   )}
-                  {orderInfo.orderId && (
-                    <p className="text-xs sm:text-sm text-gray-500">Order #{orderInfo.orderId}</p>
-                  )}
-                  {orderInfo.amount > 0 && (
-                    <p className="text-xs sm:text-sm text-gray-500">${Math.round(orderInfo.amount)}</p>
-                  )}
                 </div>
               )}
             </div>
 
             {/* QR Code Display */}
-            <div className="bg-gray-50 p-4 sm:p-6 md:p-8 rounded-lg sm:rounded-xl mb-4 sm:mb-6 md:mb-8">
+            <div className="p-4 sm:p-6 md:p-8 mb-4 sm:mb-6 md:mb-8">
               {qrData?.qrCode ? (
                 <div className="text-center">
-                  <div className="w-full max-w-[280px] sm:max-w-[320px] md:w-80 md:h-80 mx-auto aspect-square bg-white p-3 sm:p-4 md:p-6 rounded-lg border-2 border-green-300 shadow-lg">
+                  <div className="w-full max-w-[280px] sm:max-w-[320px] md:w-80 md:h-80 mx-auto aspect-square p-3 sm:p-4 md:p-6">
                     <LPAQRCodeDisplay lpaData={qrData.qrCode} />
                   </div>
-                  <p className="text-xs sm:text-sm text-gray-600 mt-3 sm:mt-4">✅ Real QR Code (Add Cellular Plan)</p>
-                  {qrData.iccid && (
-                    <p className="text-xs text-gray-500 mt-2 break-all px-2">ICCID: {qrData.iccid}</p>
-                  )}
                 </div>
               ) : qrData?.qrCodeUrl ? (
                 <div className="text-center">
-                  <div className="w-full max-w-[280px] sm:max-w-[320px] md:w-80 md:h-80 mx-auto aspect-square bg-white p-3 sm:p-4 md:p-6 rounded-lg border-2 border-blue-300 shadow-lg">
+                  <div className="w-full max-w-[280px] sm:max-w-[320px] md:w-80 md:h-80 mx-auto aspect-square p-3 sm:p-4 md:p-6">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img 
                       src={qrData.qrCodeUrl} 
@@ -581,11 +571,10 @@ const QRCodePage = ({ orderId, iccid }) => {
                       className="w-full h-full object-contain"
                     />
                   </div>
-                  <p className="text-xs sm:text-sm text-gray-600 mt-3 sm:mt-4">✅ QR Code Image</p>
                 </div>
               ) : qrData?.directAppleInstallationUrl ? (
                 <div className="text-center">
-                  <div className="w-full max-w-[280px] sm:max-w-[320px] md:w-80 md:h-80 mx-auto aspect-square bg-white p-4 sm:p-6 rounded-lg border-2 border-purple-300 shadow-lg flex items-center justify-center">
+                  <div className="w-full max-w-[280px] sm:max-w-[320px] md:w-80 md:h-80 mx-auto aspect-square p-4 sm:p-6 flex items-center justify-center">
                     <div className="text-center">
                       <div className="w-16 h-16 sm:w-20 sm:h-20 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
                         <span className="text-3xl sm:text-4xl">📱</span>
@@ -601,11 +590,10 @@ const QRCodePage = ({ orderId, iccid }) => {
                       </a>
                     </div>
                   </div>
-                  <p className="text-xs sm:text-sm text-gray-600 mt-3 sm:mt-4">✅ Direct Apple Installation Link</p>
                 </div>
               ) : (
                 <div className="text-center">
-                  <div className="w-full max-w-[280px] sm:max-w-[320px] md:w-80 md:h-80 mx-auto aspect-square bg-white p-4 sm:p-6 rounded-lg border-2 border-gray-300 shadow-lg flex items-center justify-center">
+                  <div className="w-full max-w-[280px] sm:max-w-[320px] md:w-80 md:h-80 mx-auto aspect-square p-4 sm:p-6 flex items-center justify-center">
                     <QrCode className="w-24 h-24 sm:w-32 sm:h-32 text-gray-400" />
                   </div>
                   <p className="text-xs sm:text-sm text-gray-500 mt-3 sm:mt-4">No QR code available</p>
@@ -657,34 +645,6 @@ const QRCodePage = ({ orderId, iccid }) => {
                     <Share2 className="w-5 h-5 sm:w-4 sm:h-4 mr-3 text-blue-600 flex-shrink-0" />
                     <span className="text-gray-700 text-sm sm:text-base">Share Link</span>
                   </button>
-
-                  {/* Download QR Code */}
-                  {(qrData?.qrCodeUrl || qrData?.qrCode) && (
-                    <button
-                      onClick={() => {
-                        setShowDropdown(false);
-                        downloadQR();
-                      }}
-                      className="w-full px-4 py-3.5 sm:py-3 text-left active:bg-gray-100 hover:bg-gray-50 transition-colors flex items-center border-t border-gray-200 touch-manipulation min-h-[44px]"
-                    >
-                      <Download className="w-5 h-5 sm:w-4 sm:h-4 mr-3 text-green-600 flex-shrink-0" />
-                      <span className="text-gray-700 text-sm sm:text-base">Download QR Code</span>
-                    </button>
-                  )}
-
-                  {/* Open in Apple eSIM */}
-                  {qrData?.directAppleInstallationUrl && (
-                    <a
-                      href={qrData.directAppleInstallationUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={() => setShowDropdown(false)}
-                      className="w-full px-4 py-3.5 sm:py-3 text-left active:bg-gray-100 hover:bg-gray-50 transition-colors flex items-center border-t border-gray-200 touch-manipulation min-h-[44px]"
-                    >
-                      <Smartphone className="w-5 h-5 sm:w-4 sm:h-4 mr-3 text-purple-600 flex-shrink-0" />
-                      <span className="text-gray-700 text-sm sm:text-base">Open in Apple eSIM</span>
-                    </a>
-                  )}
 
                   {/* View Mobile Data */}
                   {qrData?.iccid && (

@@ -164,6 +164,51 @@ const makePublicRequest = async (endpoint, options = {}) => {
   }
 };
 
+/**
+ * Make request with optional authentication (supports both authenticated and guest users)
+ */
+const makeOptionalAuthRequest = async (endpoint, options = {}) => {
+  try {
+    const apiBaseUrl = await getApiBaseUrl();
+    const user = auth.currentUser;
+    
+    const headers = {
+      'Content-Type': 'application/json',
+      ...(options.headers || {}),
+    };
+    
+    // Add authentication headers if user is logged in
+    if (user) {
+      try {
+        const idToken = await user.getIdToken();
+        headers['Authorization'] = `Bearer ${idToken}`;
+        console.log('🔐 Making authenticated request');
+      } catch (authError) {
+        console.warn('⚠️ Could not get auth token, making guest request:', authError);
+      }
+    } else {
+      console.log('👤 Making guest request (no authentication)');
+    }
+    
+    const response = await fetch(`${apiBaseUrl}${endpoint}`, {
+      ...options,
+      headers,
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      const errorMessage = data.error || `Request failed with status ${response.status}`;
+      throw new Error(errorMessage);
+    }
+
+    return data;
+  } catch (error) {
+    console.error(`API request to ${endpoint} failed:`, error);
+    throw error;
+  }
+};
+
 export const apiService = {
   /**
    * Create an eSIM order through the Python API
@@ -175,8 +220,8 @@ export const apiService = {
    * @param {string} orderData.mode - Mode (test/live) - tells backend whether to use mock or real data
    * @returns {Promise<Object>} Order result with orderId and airaloOrderId
    */
-  async createOrder({ package_id, quantity = "1", to_email, description, mode }) {
-    console.log('📦 Creating order via Python API:', { package_id, quantity, to_email, mode });
+  async createOrder({ package_id, quantity = "1", to_email, description, mode, isGuest = false }) {
+    console.log('📦 Creating order via Python API:', { package_id, quantity, to_email, mode, isGuest });
     
     if (!package_id) {
       throw new Error('package_id is required');
@@ -188,7 +233,16 @@ export const apiService = {
     }
     
     try {
-      const result = await makeAuthenticatedRequest('/api/user/order', {
+      // Check if user is authenticated
+      const user = auth.currentUser;
+      const isAuthenticated = !!user && !isGuest;
+      
+      console.log(`📦 Order request: ${isAuthenticated ? 'Authenticated' : 'Public'}`);
+      
+      // Use authenticated request if user is logged in, otherwise use public request
+      const requestFn = isAuthenticated ? makeAuthenticatedRequest : makePublicRequest;
+      
+      const result = await requestFn('/api/user/order', {
         method: 'POST',
         body: JSON.stringify({
           package_id: package_id.trim(),
@@ -334,7 +388,7 @@ export const apiService = {
   async getMobileData({ iccid, orderId }) {
     console.log('📊 Getting mobile data status via SDK API:', { iccid, orderId });
     
-    const result = await makeAuthenticatedRequest('/api/user/mobile-data', {
+    const result = await makeOptionalAuthRequest('/api/user/mobile-data', {
       method: 'POST',
       body: JSON.stringify({
         iccid,
@@ -375,6 +429,32 @@ export const apiService = {
       return data;
     } catch (error) {
       console.error(`❌ Failed to fetch packages:`, error);
+      throw error;
+    }
+  },
+
+  /**
+   * Get topup-compatible packages for an existing eSIM by ICCID
+   * @param {string} iccid - SIM ICCID
+   * @returns {Promise<Object>} Topup-compatible packages
+   */
+  async getTopupPackages(iccid) {
+    console.log('📦 Fetching topup-compatible packages for ICCID:', iccid);
+    
+    if (!iccid) {
+      throw new Error('ICCID is required to fetch topup packages');
+    }
+
+    try {
+      const result = await makeOptionalAuthRequest('/api/user/topup-packages', {
+        method: 'POST',
+        body: JSON.stringify({ iccid }),
+      });
+
+      console.log('✅ Topup packages fetched successfully');
+      return result;
+    } catch (error) {
+      console.error(`❌ Failed to fetch topup packages:`, error);
       throw error;
     }
   },

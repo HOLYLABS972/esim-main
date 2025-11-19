@@ -1,11 +1,13 @@
 import React from 'react';
-import { User } from 'lucide-react';
+import { User, LogOut } from 'lucide-react';
 import { useI18n } from '../../contexts/I18nContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { getLanguageDirection, detectLanguageFromPath } from '../../utils/languageUtils';
 import { usePathname } from 'next/navigation';
 
 const DashboardHeader = ({ currentUser }) => {
   const { t, locale } = useI18n();
+  const { logout } = useAuth();
   const pathname = usePathname();
   
   // Get current language for RTL detection
@@ -20,6 +22,15 @@ const DashboardHeader = ({ currentUser }) => {
 
   const currentLanguage = getCurrentLanguage();
   const isRTL = getLanguageDirection(currentLanguage) === 'rtl';
+  
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
+  };
+  
   return (
     <section className="bg-white" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8">
@@ -41,6 +52,15 @@ const DashboardHeader = ({ currentUser }) => {
                     </p>
                   </div>
                 </div>
+                
+                {/* Logout Button */}
+                <button
+                  onClick={handleLogout}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 rounded-lg transition-colors duration-200 font-medium"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span>{t('dashboard.logout', 'Logout')}</span>
+                </button>
               </div>
             </div>
           </div>

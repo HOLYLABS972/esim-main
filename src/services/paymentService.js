@@ -133,20 +133,33 @@ export const paymentService = {
       console.log('🌐 Payment server URL:', SERVER_PAYMENTS_URL);
       console.log('🎯 Using endpoint:', endpoint);
       
+      // Prepare the payload to send to payment server
+      const paymentPayload = {
+        order: orderData.orderId, // Use unique order ID instead of plan ID
+        email: orderData.customerEmail,
+        name: orderData.planName,
+        total: orderData.amount,
+        currency: orderData.currency || 'usd',
+        domain: window.location.origin,
+        plan: orderData.planId // Include the real package slug for topups
+      };
+      
+      console.log('📤 SENDING TO PAYMENT SERVER pay.roamjet.net:');
+      console.log('🔗 Full URL:', `${SERVER_PAYMENTS_URL}${endpoint}`);
+      console.log('📦 Payload being sent:', JSON.stringify(paymentPayload, null, 2));
+      console.log('🎯 Order ID:', paymentPayload.order);
+      console.log('📧 Email:', paymentPayload.email);
+      console.log('💰 Amount:', paymentPayload.total);
+      console.log('📱 Plan ID:', paymentPayload.plan);
+      console.log('🌍 Domain:', paymentPayload.domain);
+      
       // Use your server's create-payment-order endpoint for single orders
       const response = await fetch(`${SERVER_PAYMENTS_URL}${endpoint}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          order: orderData.orderId, // Use unique order ID instead of plan ID
-          email: orderData.customerEmail,
-          name: orderData.planName,
-          total: orderData.amount,
-          currency: orderData.currency || 'usd',
-          domain: window.location.origin
-        })
+        body: JSON.stringify(paymentPayload)
       });
 
       if (!response.ok) {
@@ -156,18 +169,15 @@ export const paymentService = {
       }
 
       const result = await response.json();
-      console.log('✅ Single order checkout created via server:', result);
       
-      // Redirect to Stripe checkout
+      // Redirect immediately to Stripe checkout - no delays
       if (result.sessionUrl) {
-        console.log('🔄 Redirecting to Stripe checkout for single order:', result.sessionUrl);
         window.location.href = result.sessionUrl;
+        return result;
       } else {
         console.error('❌ Server response missing sessionUrl:', result);
         throw new Error('No session URL received from server');
       }
-      
-      return result;
     } catch (error) {
       console.error('❌ Error creating single order checkout:', error);
       throw error;

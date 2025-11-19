@@ -41,21 +41,53 @@ const PaymentSuccess = () => {
   const createTopupRecord = async (topupData) => {
     try {
       console.log('📦 Creating topup after payment...');
+      console.log('📦 Topup data:', topupData);
+      console.log('📦 Package ID being sent:', topupData.packageId);
+      console.log('📦 ICCID being sent:', topupData.iccid);
       
+      // Validate package ID before sending
+      if (!topupData.packageId || topupData.packageId === 'topup' || topupData.packageId.startsWith('topup-')) {
+        const errorMsg = `Invalid package ID: ${topupData.packageId}. Expected a real Airalo package slug.`;
+        console.error('❌', errorMsg);
+        throw new Error(errorMsg);
+      }
+      
+      // Validate that package ID looks like a valid Airalo slug (should contain hyphens, not spaces)
+      if (!topupData.packageId.includes('-') || topupData.packageId.includes(' ')) {
+        console.warn('⚠️ Package ID format looks suspicious:', topupData.packageId);
+      }
+      
+      // Use the dedicated topup API endpoint
       const result = await apiService.createTopup({
         iccid: topupData.iccid,
-        package_id: topupData.packageId
+        package_id: topupData.packageId.trim() // Ensure no whitespace
       });
 
       if (result.success) {
         console.log('✅ Topup created successfully:', result);
-        toast.success('Topup added successfully!');
+        toast.success('Topup created successfully! Your data has been added to your eSIM.');
         return { success: true, topupId: result.topupId };
       } else {
-        throw new Error(result.error || 'Failed to create topup');
+        const errorMsg = result.error || 'Failed to create topup';
+        console.error('❌ Topup API returned error:', errorMsg);
+        console.error('❌ Package ID that failed:', topupData.packageId);
+        
+        // Provide more helpful error message
+        if (errorMsg.includes('Package not found') || errorMsg.includes('422')) {
+          throw new Error(`Topup package "${topupData.packageId}" is not compatible with your eSIM. Please select a different topup package that matches your eSIM's carrier.`);
+        }
+        
+        throw new Error(errorMsg);
       }
     } catch (error) {
       console.error('❌ Error creating topup:', error);
+      console.error('❌ Topup data that caused error:', topupData);
+      
+      // Enhance error message for better user experience
+      if (error.message && error.message.includes('422')) {
+        error.message = `The selected topup package is not compatible with your eSIM. Please try selecting a different topup package.`;
+      }
+      
       throw error;
     }
   };
@@ -69,20 +101,6 @@ const PaymentSuccess = () => {
       
       console.log('🛒 Creating RoamJet order...');
       console.log('🔍 Stripe Mode:', stripeMode, '| Test Mode:', isTestMode);
-      
-      // Extract country info from plan name
-      const getCountryFromPlan = (planId) => {
-        if (!planId) return { code: "US", name: "United States" };
-        // Basic country mapping - you can expand this
-        const countryMap = {
-          'change': { code: "US", name: "United States" },
-          'kargi': { code: "GE", name: "Georgia" },
-        };
-        const countryKey = Object.keys(countryMap).find(key => planId.includes(key));
-        return countryMap[countryKey] || { code: "US", name: "United States" };
-      };
-      
-      const countryInfo = getCountryFromPlan(orderData.planId);
       
       // For guest users, store in global orders collection
       const isGuest = !orderData.userId || orderData.isGuest;
@@ -106,6 +124,33 @@ const PaymentSuccess = () => {
       });
       
       console.log('✅ Order created by backend:', airaloOrderResult);
+
+      // Extract country info from Airalo response or fallback to plan-based lookup
+      let countryInfo = { code: "US", name: "United States" }; // Default
+      
+      if (airaloOrderResult.orderData?.country_code) {
+        // Use country data from Airalo API response
+        countryInfo = {
+          code: airaloOrderResult.orderData.country_code,
+          name: airaloOrderResult.orderData.country_name || airaloOrderResult.orderData.country_code
+        };
+        console.log('🌍 Using country from Airalo API:', countryInfo);
+      } else {
+        // Fallback: Extract from plan ID
+        const getCountryFromPlan = (planId) => {
+          if (!planId) return { code: "US", name: "United States" };
+          const countryMap = {
+            'change': { code: "US", name: "United States" },
+            'kargi': { code: "GE", name: "Georgia" },
+            'giza-mobile': { code: "EG", name: "Egypt" },
+            'nile-mobile': { code: "EG", name: "Egypt" },
+          };
+          const countryKey = Object.keys(countryMap).find(key => planId.includes(key));
+          return countryMap[countryKey] || { code: "US", name: "United States" };
+        };
+        countryInfo = getCountryFromPlan(orderData.planId);
+        console.log('🌍 Using country from plan ID fallback:', countryInfo);
+      }
 
       // Step 2: Save order to Firebase global orders collection
       await setDoc(globalOrderRef, {
@@ -208,22 +253,32 @@ const PaymentSuccess = () => {
         try {
           const topupData = JSON.parse(pendingTopupOrder);
           console.log('📦 Processing topup order:', topupData);
+          console.log('📦 Topup packageId:', topupData.packageId);
+          console.log('📦 Topup ICCID:', topupData.iccid);
           
           if (topupData.type === 'topup' && topupData.iccid && topupData.packageId) {
-            // Create topup after payment
-            const topupResult = await createTopupRecord(topupData);
-            
-            if (topupResult.success) {
-              // Clear pending topup order
+            // Validate package ID is not "topup"
+            if (topupData.packageId === 'topup' || topupData.packageId.startsWith('topup-')) {
+              console.error('❌ Invalid package ID in localStorage:', topupData.packageId);
+              console.log('💡 This is likely old cached data. Clearing and continuing with regular order flow...');
               localStorage.removeItem('pendingTopupOrder');
+              // Don't return, fall through to regular order handling
+            } else {
+              // Valid topup package ID, create topup order
+              const topupResult = await createTopupRecord(topupData);
               
-              // Redirect to QR code page or dashboard
-              if (topupData.iccid) {
-                router.push(`/qr/${topupData.iccid}`);
-              } else {
-                router.push('/dashboard');
+              if (topupResult.success) {
+                // Clear pending topup order
+                localStorage.removeItem('pendingTopupOrder');
+                
+                // Redirect to QR code page or dashboard
+                if (topupData.iccid) {
+                  router.push(`/qr/${topupData.iccid}`);
+                } else {
+                  router.push('/dashboard');
+                }
+                return;
               }
-              return;
             }
           }
         } catch (topupError) {
@@ -272,6 +327,66 @@ const PaymentSuccess = () => {
         // Extract plan ID from order ID (format: planId-timestamp-random)
         const extractPlanId = (orderId) => {
           if (!orderId) return null;
+          
+          // For topup orders, the format is: topup-{iccid}-{timestamp}-{random}
+          // We need to get the real package ID from other sources
+          if (orderId.startsWith('topup-')) {
+            console.log('📦 Detected topup order, extracting package ID from other sources');
+            
+              // First try localStorage (should have the real package slug)
+              const pendingTopup = localStorage.getItem('pendingTopupOrder');
+              if (pendingTopup) {
+                try {
+                  const topupData = JSON.parse(pendingTopup);
+                if (topupData.packageId && topupData.packageId !== 'topup' && !topupData.packageId.startsWith('topup-')) {
+                    console.log('📦 Using package ID from localStorage:', topupData.packageId);
+                    return topupData.packageId;
+                  }
+                } catch (e) {
+                  console.error('Error parsing pendingTopupOrder:', e);
+                }
+              }
+              
+              // Fallback 1: Try to extract from the name parameter (format: "Name [slug]")
+              if (name) {
+                const slugMatch = name.match(/\[([^\]]+)\]$/);
+              if (slugMatch && slugMatch[1] && slugMatch[1] !== 'topup' && !slugMatch[1].startsWith('topup-')) {
+                  console.log('📦 Extracted package slug from name parameter:', slugMatch[1]);
+                  return slugMatch[1];
+                }
+              }
+              
+              // Fallback 2: URL parameter
+              const planFromUrl = planId;
+            if (planFromUrl && planFromUrl !== 'topup' && !planFromUrl.startsWith('topup-')) {
+                console.log('📦 Using plan from URL instead of "topup":', planFromUrl);
+                return planFromUrl;
+              }
+              
+            // Fallback 3: Try to map common topup names to package IDs
+            if (name) {
+              const nameToPackageMap = {
+                '1GB Topup': '17miles-7days-1gb',
+                '3GB Topup': '17miles-30days-3gb', 
+                '5GB Topup': '17miles-30days-5gb',
+                '10GB Topup': '17miles-30days-10gb',
+                '20GB Topup': '17miles-30days-20gb'
+              };
+              
+              const decodedName = decodeURIComponent(name);
+              if (nameToPackageMap[decodedName]) {
+                console.log('📦 Mapped topup name to package ID:', { name: decodedName, packageId: nameToPackageMap[decodedName] });
+                return nameToPackageMap[decodedName];
+              }
+            }
+            
+            // If still no valid package ID found, return null to trigger error
+            console.error('❌ Cannot find valid package ID for topup order. Need real Airalo slug.');
+            console.log('💡 Tried: localStorage, name parameter, URL parameter, name mapping - all failed');
+              return null;
+            }
+            
+          // For regular orders, extract from order ID
           const parts = orderId.split('-');
           const timestampIndex = parts.findIndex(part => /^\d{10,}$/.test(part)); // Look for timestamp (10+ digits)
           if (timestampIndex > 0) {
@@ -279,12 +394,13 @@ const PaymentSuccess = () => {
             console.log('📦 Extracted plan ID from order ID:', { orderId, extracted });
             return extracted;
           }
+          
           // If no timestamp found, return the original orderId
           console.log('⚠️ No timestamp found in order ID, using as-is:', orderId);
           return orderId;
         };
 
-        const actualPlanId = planId || extractPlanId(orderParam);
+        const actualPlanId = extractPlanId(orderParam);
         console.log('📦 Final plan ID to use:', { 
           orderParam, 
           planIdFromUrl: planId, 
@@ -317,6 +433,102 @@ const PaymentSuccess = () => {
         
         console.log('🎯 Order data prepared:', orderData);
 
+        // Check if this is a topup order
+        if (orderParam.startsWith('topup-')) {
+          console.log('📦 Processing as topup order');
+          
+          // Extract ICCID from topup order ID (format: topup-{iccid}-{timestamp}-{random})
+          const orderParts = orderParam.split('-');
+          let iccid = null;
+          
+          // Find the ICCID (should be the second part after 'topup')
+          if (orderParts.length >= 2) {
+            iccid = orderParts[1];
+            console.log('📦 Extracted ICCID from order ID:', iccid);
+          }
+          
+          if (!iccid) {
+            console.error('❌ No ICCID found in topup order ID:', orderParam);
+            setError('Invalid topup order: No ICCID found');
+            setProcessing(false);
+            return;
+          }
+          
+          // Try to get package ID from multiple sources
+          let packageIdForTopup = actualPlanId;
+          
+          // Priority 1: Check localStorage for pending topup order
+          const pendingTopup = localStorage.getItem('pendingTopupOrder');
+          if (pendingTopup) {
+            try {
+              const topupDataFromStorage = JSON.parse(pendingTopup);
+              if (topupDataFromStorage.packageId && 
+                  topupDataFromStorage.packageId !== 'topup' && 
+                  !topupDataFromStorage.packageId.startsWith('topup-')) {
+                packageIdForTopup = topupDataFromStorage.packageId;
+                console.log('✅ Using package ID from localStorage:', packageIdForTopup);
+              }
+            } catch (e) {
+              console.error('Error parsing pendingTopupOrder:', e);
+            }
+          }
+          
+          // Priority 2: Use plan parameter from URL if available
+          if (!packageIdForTopup && planId && planId !== 'topup' && !planId.startsWith('topup-')) {
+            packageIdForTopup = planId;
+            console.log('✅ Using package ID from URL plan parameter:', packageIdForTopup);
+          }
+          
+          // Priority 3: Use actualPlanId from extractPlanId
+          if (!packageIdForTopup) {
+            packageIdForTopup = actualPlanId;
+            console.log('⚠️ Using package ID from extractPlanId:', packageIdForTopup);
+          }
+          
+          if (!packageIdForTopup) {
+            console.error('❌ No valid package ID found for topup order');
+            console.log('💡 Checked: localStorage, URL plan parameter, extractPlanId - all failed');
+            setError('Invalid topup order: Package ID not found. Please contact support.');
+            setProcessing(false);
+            return;
+          }
+          
+          // Create topup data
+          const topupData = {
+            orderId: orderParam,
+            iccid: iccid,
+            packageId: packageIdForTopup, // Use the package ID we found
+            packageName: decodeURIComponent(name || 'Topup Package'),
+            amount: Math.round(parseFloat(total || 0)),
+            customerEmail: email,
+            type: 'topup'
+          };
+          
+          console.log('📦 Topup data prepared:', topupData);
+          console.log('📦 Package ID being used:', packageIdForTopup);
+          
+          // Create topup record
+          const topupResult = await createTopupRecord(topupData);
+          
+          if (topupResult.success) {
+            console.log('✅ Topup created successfully');
+            toast.success('Topup completed successfully!');
+            
+            // Clear localStorage after successful topup
+            localStorage.removeItem('pendingTopupOrder');
+            
+            // Redirect to QR code page or dashboard
+            if (iccid) {
+              router.push(`/qr/${iccid}`);
+            } else {
+              router.push('/dashboard');
+            }
+            return;
+          }
+        } else {
+          // Regular order flow
+          console.log('📦 Processing as regular order');
+
         // Create order record
         const orderResult = await createOrderRecord(orderData);
         
@@ -327,6 +539,7 @@ const PaymentSuccess = () => {
             setQrCodeData(orderResult.qrCodeData);
           }
           setOrderComplete(true);
+          }
         }
       } 
       // Handle Stripe payment (has session_id, plan)

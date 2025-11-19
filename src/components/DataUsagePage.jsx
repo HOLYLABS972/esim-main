@@ -1,0 +1,272 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { ArrowLeft, Signal, Calendar, Database, Activity, AlertCircle } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { apiService } from '../services/apiService';
+import toast from 'react-hot-toast';
+
+const DataUsagePage = ({ iccid, orderId }) => {
+  const router = useRouter();
+  const { currentUser } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [dataInfo, setDataInfo] = useState(null);
+
+  const fetchDataUsage = async () => {
+    try {
+      setLoading(true);
+      
+      const result = await apiService.getMobileData({ 
+        iccid: iccid, 
+        orderId: orderId 
+      });
+
+      if (result.success) {
+        setDataInfo(result.data);
+      } else {
+        setError(result.error || 'Failed to fetch data usage');
+      }
+    } catch (err) {
+      console.error('❌ Error fetching data usage:', err);
+      setError(err.message || 'Failed to fetch data usage');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDataUsage();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [iccid, orderId]);
+
+  const getUsagePercentage = () => {
+    if (dataInfo?.usagePercentage) return dataInfo.usagePercentage;
+    
+    // If dataUsed is N/A or 0, return 0
+    const used = dataInfo?.dataUsed || '0MB';
+    if (used === 'N/A' || used === '0 MB' || used === '0MB') return 0;
+    
+    // Try to calculate from dataUsed and dataTotal
+    const total = dataInfo?.dataTotal || '0MB';
+    
+    // Extract numbers from strings like "1 GB", "500 MB", etc.
+    const usedMatch = used.match(/(\d+\.?\d*)\s*(GB|MB|TB)/i);
+    const totalMatch = total.match(/(\d+\.?\d*)\s*(GB|MB|TB)/i);
+    
+    if (!usedMatch || !totalMatch) return 0;
+    
+    // Convert to MB for calculation
+    const convertToMB = (value, unit) => {
+      const num = parseFloat(value);
+      const unitUpper = unit.toUpperCase();
+      if (unitUpper === 'GB') return num * 1024;
+      if (unitUpper === 'TB') return num * 1024 * 1024;
+      return num; // MB
+    };
+    
+    const usedMB = convertToMB(usedMatch[1], usedMatch[2]);
+    const totalMB = convertToMB(totalMatch[1], totalMatch[2]);
+    
+    if (totalMB > 0) {
+      return Math.round((usedMB / totalMB) * 100);
+    }
+    
+    return 0;
+  };
+
+  const getStatusColor = (status) => {
+    const statusLower = (status || '').toLowerCase();
+    if (statusLower === 'active') return 'bg-green-100 text-green-800 border-green-300';
+    if (statusLower === 'expired') return 'bg-red-100 text-red-800 border-red-300';
+    if (statusLower === 'inactive') return 'bg-gray-100 text-gray-800 border-gray-300';
+    return 'bg-blue-100 text-blue-800 border-blue-300';
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center p-4">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading data usage...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 p-4">
+        <div className="max-w-2xl mx-auto pt-8">
+          <button
+            onClick={() => router.back()}
+            className="flex items-center text-gray-600 hover:text-gray-900 mb-6 transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5 mr-2" />
+            Back
+          </button>
+          
+          <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
+            <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Error Loading Data</h2>
+            <p className="text-gray-600 mb-6">{error}</p>
+            <button
+              onClick={() => fetchDataUsage()}
+              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const usagePercentage = getUsagePercentage();
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 p-4">
+      <div className="max-w-2xl mx-auto pt-8 pb-12">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <button
+            onClick={() => router.back()}
+            className="flex items-center text-gray-600 hover:text-gray-900 transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5 mr-2" />
+            Back
+          </button>
+        </div>
+
+        {/* Main Card */}
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+          {/* Status Banner */}
+          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 text-white">
+            <h1 className="text-2xl font-bold mb-2">Data Usage</h1>
+            <p className="text-blue-100 text-sm break-all">ICCID: {iccid}</p>
+          </div>
+
+          {/* Content */}
+          <div className="p-6 space-y-6">
+            {/* Package Name */}
+            {dataInfo?.packageName && (
+              <div className="text-center pb-4 border-b">
+                <h2 className="text-xl font-bold text-gray-900">{dataInfo.packageName}</h2>
+                {dataInfo?.operator && dataInfo.operator !== 'N/A' && (
+                  <p className="text-sm text-gray-600 mt-1">Operator: {dataInfo.operator}</p>
+                )}
+              </div>
+            )}
+
+            {/* Status */}
+            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div className="flex items-center">
+                <Signal className="w-5 h-5 text-gray-600 mr-3" />
+                <span className="text-gray-700 font-medium">Status</span>
+              </div>
+              <span className={`px-4 py-1 rounded-full text-sm font-medium border ${getStatusColor(dataInfo?.status)}`}>
+                {dataInfo?.status || 'Unknown'}
+              </span>
+            </div>
+
+            {/* Data Usage Progress */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <Database className="w-5 h-5 text-gray-600 mr-2" />
+                  <span className="text-gray-700 font-medium">Data Usage</span>
+                </div>
+                <span className="text-2xl font-bold text-gray-900">
+                  {usagePercentage}%
+                </span>
+              </div>
+              
+              {/* Progress Bar */}
+              <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 transition-all duration-500 rounded-full"
+                  style={{ width: `${Math.min(usagePercentage, 100)}%` }}
+                ></div>
+              </div>
+              
+              <div className="flex justify-between text-sm text-gray-600">
+                <span>Used: {dataInfo?.dataUsed || 'N/A'}</span>
+                <span>Total: {dataInfo?.dataTotal || 'N/A'}</span>
+              </div>
+            </div>
+
+            {/* Remaining Data */}
+            {dataInfo?.dataRemaining && dataInfo?.dataRemaining !== 'N/A' && (
+              <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200">
+                <div className="flex items-center">
+                  <Activity className="w-5 h-5 text-green-600 mr-3" />
+                  <span className="text-gray-700 font-medium">
+                    {dataInfo?.isUnlimited ? 'Unlimited Data' : 'Data Available'}
+                  </span>
+                </div>
+                <span className="text-xl font-bold text-green-700">
+                  {dataInfo.isUnlimited ? '∞' : dataInfo.dataRemaining}
+                </span>
+              </div>
+            )}
+
+            {/* Days Information */}
+            {(dataInfo?.daysUsed > 0 || dataInfo?.daysRemaining > 0) && (
+              <div className="grid grid-cols-2 gap-4">
+                {dataInfo.daysUsed > 0 && (
+                  <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <div className="flex items-center mb-2">
+                      <Calendar className="w-4 h-4 text-blue-600 mr-2" />
+                      <span className="text-sm text-gray-600">Days Used</span>
+                    </div>
+                    <p className="text-2xl font-bold text-blue-700">{dataInfo.daysUsed}</p>
+                  </div>
+                )}
+                
+                {dataInfo.daysRemaining > 0 && (
+                  <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
+                    <div className="flex items-center mb-2">
+                      <Calendar className="w-4 h-4 text-purple-600 mr-2" />
+                      <span className="text-sm text-gray-600">{dataInfo.daysUsed > 0 ? 'Days Remaining' : 'Validity (Days)'}</span>
+                    </div>
+                    <p className="text-2xl font-bold text-purple-700">{dataInfo.daysRemaining}</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Expiry Date */}
+            {dataInfo?.expiresAt && (
+              <div className="p-4 bg-orange-50 rounded-lg border border-orange-200">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <Calendar className="w-5 h-5 text-orange-600 mr-3" />
+                    <span className="text-gray-700 font-medium">Expires On</span>
+                  </div>
+                  <span className="text-gray-900 font-semibold">
+                    {new Date(dataInfo.expiresAt).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric'
+                    })}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Last Updated */}
+            {dataInfo?.lastUpdated && (
+              <p className="text-xs text-gray-500 text-center">
+                Last updated: {new Date(dataInfo.lastUpdated).toLocaleString()}
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default DataUsagePage;
+
