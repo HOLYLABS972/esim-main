@@ -12,14 +12,16 @@ const CountrySearchBar = ({ onSearch, showCountryCount = true }) => {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [searchValue, setSearchValue] = useState('');
+  const [initialLoad, setInitialLoad] = useState(true);
   
-  // Sync search value with URL params
+  // Sync search value with URL params only on initial load
   useEffect(() => {
-    const urlSearchTerm = searchParams.get('search') || '';
-    if (urlSearchTerm !== searchValue) {
+    if (initialLoad) {
+      const urlSearchTerm = searchParams.get('search') || '';
       setSearchValue(urlSearchTerm);
+      setInitialLoad(false);
     }
-  }, [searchParams, searchValue]);
+  }, [searchParams, initialLoad]);
   
   // Check if current locale is RTL
   const isRTL = locale === 'ar' || locale === 'he';
