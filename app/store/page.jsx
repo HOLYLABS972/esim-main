@@ -20,7 +20,14 @@ export default function StorePage() {
         </div>
         
         {/* Airalo Packages Section with Tabs (Global, Regional, Countries) */}
-        <AiraloPackagesSection />
+        <Suspense fallback={
+          <div className="text-center py-16">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <p className="mt-4 text-gray-600">Loading packages...</p>
+          </div>
+        }>
+          <AiraloPackagesSection />
+        </Suspense>
       </div>
     </div>
   );
