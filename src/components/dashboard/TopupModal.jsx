@@ -46,21 +46,60 @@ const TopupModal = ({
   const fetchTopupPackages = async () => {
     try {
       setLoadingPackages(true);
-      // Fetch packages - you can filter for topup packages or use all packages
-      // For now, we'll fetch all packages and let user select
-      const result = await apiService.healthCheck(); // Placeholder
       
-      // In a real implementation, you'd fetch topup-specific packages
-      // For now, we'll show some example packages
-      setAvailablePackages([
-        { id: 'topup-1gb', name: '1GB Topup', data: '1GB', price: 4.50, validity: '7 days' },
-        { id: 'topup-3gb', name: '3GB Topup', data: '3GB', price: 12.00, validity: '30 days' },
-        { id: 'topup-5gb', name: '5GB Topup', data: '5GB', price: 18.00, validity: '30 days' },
-        { id: 'topup-10gb', name: '10GB Topup', data: '10GB', price: 32.00, validity: '30 days' },
-      ]);
+      // Fetch real topup packages from Firebase
+      const { collection, getDocs, query, where } = await import('firebase/firestore');
+      const { db } = await import('../../firebase/config');
+      
+      const topupQuery = query(
+        collection(db, 'dataplans'),
+        where('status', '==', 'active'),
+        where('is_topup', '==', true)
+      );
+      
+      const snapshot = await getDocs(topupQuery);
+      const packages = [];
+      
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        if (data.enabled !== false) {
+          packages.push({
+            id: data.slug || doc.id, // Use slug as the package ID for Airalo API
+            name: data.name || data.title,
+            data: data.data || data.data_amount || 'N/A',
+            price: data.price || 0,
+            validity: data.validity || data.days || 'N/A'
+          });
+        }
+      });
+      
+      // Sort by price
+      packages.sort((a, b) => a.price - b.price);
+      
+      console.log('📦 Loaded topup packages:', packages);
+      
+      if (packages.length === 0) {
+        console.warn('⚠️ No topup packages found. Using fallback packages.');
+        // Fallback to example packages if none found
+        setAvailablePackages([
+          { id: 'global-1gb-7days', name: '1GB Topup', data: '1GB', price: 4.50, validity: '7 days' },
+          { id: 'global-3gb-30days', name: '3GB Topup', data: '3GB', price: 12.00, validity: '30 days' },
+          { id: 'global-5gb-30days', name: '5GB Topup', data: '5GB', price: 18.00, validity: '30 days' },
+          { id: 'global-10gb-30days', name: '10GB Topup', data: '10GB', price: 32.00, validity: '30 days' },
+        ]);
+      } else {
+        setAvailablePackages(packages);
+      }
     } catch (error) {
       console.error('❌ Error fetching topup packages:', error);
       toast.error('Failed to load topup packages');
+      // Set fallback packages on error
+      setAvailablePackages([
+        { id: 'global-1gb-7days', name: '1GB Topup', data: '1GB', price: 4.50, validity: '7 days' },
+        { id: 'global-3gb-30days', name: '3GB Topup', data: '3GB', price: 12.00, validity: '30 days' },
+        { id: 'global-5gb-30days', name: '5GB Topup', data: '5GB', price: 18.00, validity: '30 days' },
+        { id: 'global-10gb-30days', name: '10GB Topup', data: '10GB', price: 32.00, validity: '30 days' },
+      ]);
     } finally {
       setLoadingPackages(false);
     }
