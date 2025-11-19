@@ -586,11 +586,125 @@ const SharePackagePage = () => {
               <div className="bg-gray-50 rounded-lg p-3">
                 <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-2' : 'space-x-2'}`}>
                   <span className="text-2xl">
-                    {urlCountryFlag || (packageData.country_code ? getCountryFlag(packageData.country_code) : '🌍')}
+                    {(() => {
+                      // Get plan data for detection
+                      const planType = (packageData.type || '').toLowerCase();
+                      const planRegion = (packageData.region || packageData.region_slug || '').toLowerCase();
+                      const planName = (packageData.name || packageData.title || '').toLowerCase();
+                      const planSlug = (packageData.slug || '').toLowerCase();
+                      
+                      // Check if it's a global package (same logic as organizePackages)
+                      const isGlobal = 
+                        packageData.is_global === true ||
+                        planType === 'global' ||
+                        planRegion === 'global' ||
+                        planSlug === 'global' ||
+                        planName === 'global' ||
+                        planSlug.startsWith('discover') ||
+                        planName.startsWith('discover') ||
+                        planName.includes('worldwide') ||
+                        planName.includes('world');
+                      
+                      // Regional identifiers
+                      const regionalIdentifiers = [
+                        'asia', 'europe', 'africa', 'americas', 'middle-east', 'middle east',
+                        'oceania', 'caribbean', 'latin-america', 'latin america',
+                        'north-america', 'south-america', 'central-america',
+                        'eastern-europe', 'western-europe', 'scandinavia',
+                        'asean', 'gcc', 'european-union', 'eu', 'mena',
+                        'middle-east-and-north-africa', 'middle-east-north-africa'
+                      ];
+                      
+                      const isRegional = 
+                        packageData.is_regional === true ||
+                        planType === 'regional' ||
+                        regionalIdentifiers.includes(planSlug) ||
+                        regionalIdentifiers.includes(planName) ||
+                        (planRegion && planRegion !== '' && planRegion !== 'global' && regionalIdentifiers.includes(planRegion));
+                      
+                      // Return appropriate emoji
+                      if (isGlobal) {
+                        return '🌍';
+                      }
+                      if (isRegional) {
+                        return '🗺️';
+                      }
+                      // For country-specific plans
+                      if (urlCountryFlag) {
+                        return urlCountryFlag;
+                      }
+                      if (packageData.country_code) {
+                        return getCountryFlag(packageData.country_code);
+                      }
+                      if (packageData.country_codes && packageData.country_codes.length > 0) {
+                        return getCountryFlag(packageData.country_codes[0]);
+                      }
+                      return '🌍';
+                    })()}
                   </span>
                   <div className={isRTL ? 'text-right' : 'text-left'}>
-                    <div className="text-sm text-gray-600">{t('sharePackage.country', 'Country')}</div>
-                    <div className="font-semibold text-black">{urlCountryCode || packageData.country_code || 'DE'}</div>
+                    <div className="text-sm text-gray-600">{t('sharePackage.coverage', 'Coverage')}</div>
+                    <div className="font-semibold text-black">
+                      {(() => {
+                        // Get plan data for detection
+                        const planType = (packageData.type || '').toLowerCase();
+                        const planRegion = (packageData.region || packageData.region_slug || '').toLowerCase();
+                        const planName = (packageData.name || packageData.title || '').toLowerCase();
+                        const planSlug = (packageData.slug || '').toLowerCase();
+                        
+                        // Check if it's a global package (same logic as organizePackages)
+                        const isGlobal = 
+                          packageData.is_global === true ||
+                          planType === 'global' ||
+                          planRegion === 'global' ||
+                          planSlug === 'global' ||
+                          planName === 'global' ||
+                          planSlug.startsWith('discover') ||
+                          planName.startsWith('discover') ||
+                          planName.includes('worldwide') ||
+                          planName.includes('world');
+                        
+                        // Regional identifiers
+                        const regionalIdentifiers = [
+                          'asia', 'europe', 'africa', 'americas', 'middle-east', 'middle east',
+                          'oceania', 'caribbean', 'latin-america', 'latin america',
+                          'north-america', 'south-america', 'central-america',
+                          'eastern-europe', 'western-europe', 'scandinavia',
+                          'asean', 'gcc', 'european-union', 'eu', 'mena',
+                          'middle-east-and-north-africa', 'middle-east-north-africa'
+                        ];
+                        
+                        const isRegional = 
+                          packageData.is_regional === true ||
+                          planType === 'regional' ||
+                          regionalIdentifiers.includes(planSlug) ||
+                          regionalIdentifiers.includes(planName) ||
+                          (planRegion && planRegion !== '' && planRegion !== 'global' && regionalIdentifiers.includes(planRegion));
+                        
+                        // Return appropriate text
+                        if (isGlobal) {
+                          return t('sharePackage.global', 'Global');
+                        }
+                        if (isRegional) {
+                          const regionName = packageData.region || packageData.region_slug || 'Regional';
+                          return regionName.charAt(0).toUpperCase() + regionName.slice(1);
+                        }
+                        // For country-specific plans
+                        if (urlCountryCode) {
+                          return urlCountryCode;
+                        }
+                        if (packageData.country_code) {
+                          return packageData.country_code;
+                        }
+                        if (packageData.country_codes && packageData.country_codes.length > 0) {
+                          return packageData.country_codes[0];
+                        }
+                        if (packageData.country_name) {
+                          return packageData.country_name;
+                        }
+                        return 'N/A';
+                      })()}
+                    </div>
                   </div>
                 </div>
               </div>

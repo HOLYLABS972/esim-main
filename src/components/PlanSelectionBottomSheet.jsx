@@ -289,6 +289,7 @@ const PlanSelectionBottomSheet = ({
     console.log('🔍 DEBUG: handlePlanSelect called');
     console.log('🔍 DEBUG: currentUser:', currentUser);
     console.log('🔍 DEBUG: plan:', plan.name);
+    console.log('🌐 DEBUG: locale:', locale);
     
     // Check if user is logged in
     if (!currentUser) {
@@ -301,11 +302,22 @@ const PlanSelectionBottomSheet = ({
         return String.fromCodePoint(...codePoints);
       })() : '🌍';
       
-      const returnUrl = `/share-package/${plan.id}?country=${countryCode || ''}&flag=${countryFlag}`;
+      // Build return URL with language prefix
+      let returnUrl = `/share-package/${plan.id}?country=${countryCode || ''}&flag=${countryFlag}`;
       
-      // Get language prefix from pathname
-      const langMatch = pathname.match(/^\/(ar|de|es|fr|he|ru)\//);
-      const langPrefix = langMatch ? `/${langMatch[1]}` : '';
+      // Get language prefix - use locale from context first, then pathname
+      let langPrefix = '';
+      if (locale && locale !== 'en') {
+        langPrefix = `/${locale}`;
+        returnUrl = `${langPrefix}${returnUrl}`;
+      } else {
+        // Fallback to pathname detection
+        const langMatch = pathname.match(/^\/(ar|de|es|fr|he|ru)\//);
+        langPrefix = langMatch ? `/${langMatch[1]}` : '';
+        if (langPrefix) {
+          returnUrl = `${langPrefix}${returnUrl}`;
+        }
+      }
       
       console.log('🔍 DEBUG: Redirecting to:', `${langPrefix}/login?returnUrl=${encodeURIComponent(returnUrl)}`);
       // Redirect to login with return URL
@@ -321,13 +333,20 @@ const PlanSelectionBottomSheet = ({
       return String.fromCodePoint(...codePoints);
     })() : '🌍';
     
-    // Navigate to the share package page with country info
+    // Navigate to the share package page with country info and language prefix
     const params = new URLSearchParams({
       country: countryCode || '',
       flag: countryFlag
     });
     
-    router.push(`/share-package/${plan.id}?${params.toString()}`);
+    // Build URL with language prefix if needed
+    let targetUrl = `/share-package/${plan.id}?${params.toString()}`;
+    if (locale && locale !== 'en') {
+      targetUrl = `/${locale}${targetUrl}`;
+    }
+    
+    console.log('📦 Navigating to:', targetUrl);
+    router.push(targetUrl);
   };
 
 

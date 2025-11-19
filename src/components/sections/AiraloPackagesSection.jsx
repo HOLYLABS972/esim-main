@@ -30,7 +30,7 @@ export default function AiraloPackagesSection() {
   useEffect(() => {
     fetchPackages();
     fetchCountries(); // Fetch countries on component load
-  }, []);
+  }, [locale]); // Re-fetch when locale changes
 
   // Fetch countries when Countries tab is active (fallback if not loaded yet)
   useEffect(() => {
@@ -45,6 +45,7 @@ export default function AiraloPackagesSection() {
       setError(null);
       
       console.log('📦 Fetching global and regional packages from Firestore dataplans collection...');
+      console.log('🌐 Current locale:', locale);
       
       // Query all active plans from dataplans collection
       const plansQuery = query(
@@ -64,13 +65,50 @@ export default function AiraloPackagesSection() {
           return;
         }
         
-        allPlans.push({
-          id: doc.id,
-          ...planData
-        });
+        // Filter by locale/language if not English (default)
+        // Language-specific pages should only show relevant global/regional packages
+        if (locale && locale !== 'en') {
+          const supportedLanguages = planData.supported_languages || [];
+          const isGlobalPlan = planData.is_global === true || 
+                              planData.type === 'global' || 
+                              planData.region === 'global';
+          const isRegionalPlan = planData.is_regional === true || 
+                                planData.type === 'regional';
+          
+          // For language-specific pages, only include:
+          // 1. Global plans (available everywhere)
+          // 2. Regional plans that support the current language
+          // 3. Skip country-specific plans (they're handled separately in Countries tab)
+          if (isGlobalPlan) {
+            // Global plans are available for all languages
+            allPlans.push({
+              id: doc.id,
+              ...planData
+            });
+          } else if (isRegionalPlan && supportedLanguages.length > 0 && supportedLanguages.includes(locale)) {
+            // Regional plans must explicitly support the language
+            allPlans.push({
+              id: doc.id,
+              ...planData
+            });
+          } else if (isRegionalPlan && supportedLanguages.length === 0) {
+            // If no supported_languages specified, show for all locales (backward compatibility)
+            allPlans.push({
+              id: doc.id,
+              ...planData
+            });
+          }
+          // Country-specific plans are filtered out for language pages
+        } else {
+          // English or default - show all plans
+          allPlans.push({
+            id: doc.id,
+            ...planData
+          });
+        }
       });
       
-      console.log(`✅ Found ${allPlans.length} active plans from dataplans collection`);
+      console.log(`✅ Found ${allPlans.length} active plans from dataplans collection (filtered by locale: ${locale})`);
       
       // Organize packages by type (global vs regional vs countries)
       const organized = organizePackages(allPlans);
@@ -325,8 +363,18 @@ export default function AiraloPackagesSection() {
       console.error('No package ID provided');
       return;
     }
-    // Navigate to share package page or store
-    router.push(`/share-package/${packageId}`);
+    
+    // Build the correct URL with language prefix if needed
+    let targetUrl = '/share-package/' + packageId;
+    
+    // Add language prefix if not English
+    if (locale && locale !== 'en') {
+      targetUrl = `/${locale}${targetUrl}`;
+    }
+    
+    console.log('📦 Navigating to package:', targetUrl);
+    // Navigate to share package page with proper language prefix
+    router.push(targetUrl);
   };
 
   const formatPrice = (price) => {
