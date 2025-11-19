@@ -1,14 +1,10 @@
 'use client';
 
 import React, { Suspense } from 'react';
-import Image from 'next/image';
 import AiraloPackagesSection from '../../src/components/sections/AiraloPackagesSection';
 import CountrySearchBar from '../../src/components/CountrySearchBar';
-import { useI18n } from '../../src/contexts/I18nContext';
 
 export default function StorePage() {
-  const { t, locale } = useI18n();
-  
   return (
     <div className="min-h-screen">
       <div className="container mx-auto px-4 py-8">
