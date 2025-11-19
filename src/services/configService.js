@@ -307,6 +307,56 @@ class ConfigService {
     }
   }
 
+  // Get Coinbase Commerce API configuration
+  async getCoinbaseConfig() {
+    try {
+      // First try to get from Firestore config/coinbase
+      const configRef = doc(db, 'config', 'coinbase');
+      const configDoc = await getDoc(configRef);
+      
+      if (configDoc.exists()) {
+        const configData = configDoc.data();
+        if (configData.api_key || configData.apiKey) {
+          console.log('✅ Coinbase API key loaded from Firestore');
+          return {
+            apiKey: configData.api_key || configData.apiKey,
+            secret: configData.secret || configData.shared_secret || configData.webhookSecret,
+            webhookSecret: configData.webhook_secret || configData.webhookSecret || configData.secret
+          };
+        }
+      }
+      
+      // Fallback to environment variables
+      const envApiKey = process.env.NEXT_PUBLIC_COINBASE_API_KEY;
+      const envSecret = process.env.COINBASE_SECRET;
+      const envWebhookSecret = process.env.COINBASE_WEBHOOK_SECRET;
+      
+      if (envApiKey) {
+        console.log('✅ Coinbase API key loaded from environment variable');
+        return {
+          apiKey: envApiKey,
+          secret: envSecret,
+          webhookSecret: envWebhookSecret
+        };
+      }
+      
+      // No API key found
+      console.log('⚠️ No Coinbase API key found');
+      return {
+        apiKey: null,
+        secret: null,
+        webhookSecret: null
+      };
+    } catch (error) {
+      console.error('❌ Error loading Coinbase configuration:', error);
+      return {
+        apiKey: null,
+        secret: null,
+        webhookSecret: null
+      };
+    }
+  }
+
   // Get OpenRouter API configuration (for AI-generated content)
   async getOpenRouterConfig() {
     try {

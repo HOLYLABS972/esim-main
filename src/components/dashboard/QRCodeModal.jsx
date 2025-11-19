@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { QrCode, MoreVertical, Smartphone, Download, Trash2 } from 'lucide-react';
+import { QrCode, MoreVertical, Smartphone, Download, Trash2, Battery, Activity, Share2, Check } from 'lucide-react';
 import LPAQRCodeDisplay from './LPAQRCodeDisplay';
 
 const QRCodeModal = ({ 
@@ -7,8 +7,12 @@ const QRCodeModal = ({
   selectedOrder, 
   onClose, 
   onDelete,
+  onCheckMobileData,
+  onOpenTopup,
+  loadingMobileData,
 }) => {
   const [showDropdown, setShowDropdown] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
 
   if (!show || !selectedOrder) return null;
 
@@ -105,6 +109,44 @@ const QRCodeModal = ({
               </div>
 
               <div className="space-y-3">
+                {/* Share QR Code Link Button */}
+                {(() => {
+                  // Get ICCID (preferred) or fallback to orderId
+                  const iccid = selectedOrder.iccid || 
+                                selectedOrder.qrCode?.iccid || 
+                                selectedOrder.orderResult?.iccid ||
+                                selectedOrder.esimData?.iccid;
+                  const orderId = selectedOrder.orderId || selectedOrder.id;
+                  
+                  if (iccid || orderId) {
+                    return (
+                      <button
+                        onClick={() => {
+                          const qrUrl = `${window.location.origin}/qr/${iccid || orderId}`;
+                          navigator.clipboard.writeText(qrUrl).then(() => {
+                            setLinkCopied(true);
+                            setTimeout(() => setLinkCopied(false), 2000);
+                          });
+                        }}
+                        className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
+                      >
+                        {linkCopied ? (
+                          <>
+                            <Check className="w-4 h-4 mr-2" />
+                            <span>Link Copied!</span>
+                          </>
+                        ) : (
+                          <>
+                            <Share2 className="w-4 h-4 mr-2" />
+                            <span>Share QR Code Link</span>
+                          </>
+                        )}
+                      </button>
+                    );
+                  }
+                  return null;
+                })()}
+
                 {/* Actions Dropdown Menu */}
                 <div className="relative dropdown-container">
                   <button
@@ -117,6 +159,37 @@ const QRCodeModal = ({
                   
                   {showDropdown && (
                     <div className="absolute bottom-full left-0 right-0 mb-2 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
+                      {/* Check Mobile Data */}
+                      {onCheckMobileData && (
+                        <button
+                          onClick={() => {
+                            setShowDropdown(false);
+                            onCheckMobileData();
+                          }}
+                          disabled={loadingMobileData}
+                          className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center disabled:opacity-50"
+                        >
+                          <Activity className="w-4 h-4 mr-3 text-blue-600" />
+                          <span className="text-gray-700">
+                            {loadingMobileData ? 'Checking...' : 'Check Mobile Data'}
+                          </span>
+                        </button>
+                      )}
+
+                      {/* Topup eSIM */}
+                      {onOpenTopup && (
+                        <button
+                          onClick={() => {
+                            setShowDropdown(false);
+                            onOpenTopup();
+                          }}
+                          className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center border-t border-gray-200"
+                        >
+                          <Battery className="w-4 h-4 mr-3 text-green-600" />
+                          <span className="text-gray-700">Add Data (Topup)</span>
+                        </button>
+                      )}
+
                       {/* Open in Apple eSIM */}
                       {selectedOrder.qrCode && selectedOrder.qrCode.directAppleInstallationUrl && (
                         <button
@@ -124,12 +197,37 @@ const QRCodeModal = ({
                             setShowDropdown(false);
                             window.open(selectedOrder.qrCode.directAppleInstallationUrl, '_blank', 'noopener,noreferrer');
                           }}
-                          className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center"
+                          className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center border-t border-gray-200"
                         >
                           <Smartphone className="w-4 h-4 mr-3 text-orange-600" />
                           <span className="text-gray-700">Open in Apple eSIM</span>
                         </button>
                       )}
+
+                      {/* View QR Code Page */}
+                      {(() => {
+                        const iccid = selectedOrder.iccid || 
+                                      selectedOrder.qrCode?.iccid || 
+                                      selectedOrder.orderResult?.iccid ||
+                                      selectedOrder.esimData?.iccid;
+                        const orderId = selectedOrder.orderId || selectedOrder.id;
+                        
+                        if (iccid || orderId) {
+                          return (
+                            <a
+                              href={`/qr/${iccid || orderId}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={() => setShowDropdown(false)}
+                              className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center border-t border-gray-200"
+                            >
+                              <Share2 className="w-4 h-4 mr-3 text-green-600" />
+                              <span className="text-gray-700">Open QR Code Page</span>
+                            </a>
+                          );
+                        }
+                        return null;
+                      })()}
 
                       {/* Download QR Code */}
                       {selectedOrder.qrCode && selectedOrder.qrCode.qrCodeUrl && (
@@ -141,7 +239,7 @@ const QRCodeModal = ({
                             link.download = `esim-qr-${selectedOrder.orderId || selectedOrder.id}.png`;
                             link.click();
                           }}
-                          className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center"
+                          className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center border-t border-gray-200"
                         >
                           <Download className="w-4 h-4 mr-3 text-blue-600" />
                           <span className="text-gray-700">Download QR Code</span>

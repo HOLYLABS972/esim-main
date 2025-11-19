@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect } from 'react';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { Search } from 'lucide-react';
 import { useI18n } from '../contexts/I18nContext';
 import { translateCountryName } from '../utils/countryTranslations';
@@ -9,7 +9,17 @@ import { translateCountryName } from '../utils/countryTranslations';
 const CountrySearchBar = ({ onSearch, showCountryCount = true }) => {
   const { t, locale } = useI18n();
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [searchValue, setSearchValue] = useState('');
+  
+  // Sync search value with URL params
+  useEffect(() => {
+    const urlSearchTerm = searchParams.get('search') || '';
+    if (urlSearchTerm !== searchValue) {
+      setSearchValue(urlSearchTerm);
+    }
+  }, [searchParams, searchValue]);
   
   // Check if current locale is RTL
   const isRTL = locale === 'ar' || locale === 'he';
@@ -23,25 +33,54 @@ const CountrySearchBar = ({ onSearch, showCountryCount = true }) => {
     { code: 'ES', name: 'Spain' },
   ];
 
+  // Helper function to get language prefix from pathname
+  const getLanguagePrefix = () => {
+    const languageCodes = ['ar', 'he', 'ru', 'de', 'fr', 'es'];
+    for (const code of languageCodes) {
+      if (pathname.startsWith(`/${code}/`) || pathname === `/${code}`) {
+        return `/${code}`;
+      }
+    }
+    return '';
+  };
+
+  // Check if we're on a store or esim-plans page
+  const isOnStorePage = pathname.includes('/store') || pathname.includes('/esim-plans');
+
   const handleSearch = (e) => {
     e.preventDefault();
     
-    // Get the current language, default to 'en' if not set
-    const currentLanguage = locale || 'en';
+    const searchTerm = searchValue.trim();
+    const langPrefix = getLanguagePrefix();
     
-    if (searchValue.trim()) {
-      // Redirect to store subdomain with search parameter
-      const storeUrl = `https://store.roamjet.net/${currentLanguage}?search=${encodeURIComponent(searchValue.trim())}`;
-      window.location.href = storeUrl;
+    if (searchTerm) {
+      // If on store/esim-plans page, update URL query parameter
+      if (isOnStorePage) {
+        const params = new URLSearchParams(searchParams);
+        params.set('search', searchTerm);
+        router.push(`${pathname}?${params.toString()}`, { scroll: false });
+      } else {
+        // If on landing page, navigate to store page with search
+        const storePath = `${langPrefix}/store?search=${encodeURIComponent(searchTerm)}`;
+        router.push(storePath);
+      }
       
       // Also call onSearch callback if provided
       if (onSearch) {
-        onSearch(searchValue.trim());
+        onSearch(searchTerm);
       }
     } else {
-      // Redirect to store subdomain without search
-      const storeUrl = `https://store.roamjet.net/${currentLanguage}`;
-      window.location.href = storeUrl;
+      // If no search term and on store page, just clear the search param
+      if (isOnStorePage) {
+        const params = new URLSearchParams(searchParams);
+        params.delete('search');
+        const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
+        router.push(newUrl, { scroll: false });
+      } else {
+        // Navigate to store page without search
+        const storePath = `${langPrefix}/store`;
+        router.push(storePath);
+      }
     }
   };
 
@@ -89,11 +128,23 @@ const CountrySearchBar = ({ onSearch, showCountryCount = true }) => {
                 type="button"
                 onClick={() => {
                   setSearchValue(country.name); // Use English name for search
-                  // Get the current language, default to 'en' if not set
-                  const currentLanguage = locale || 'en';
-                  // Redirect to store subdomain with search
-                  const storeUrl = `https://store.roamjet.net/${currentLanguage}?search=${encodeURIComponent(country.name)}`;
-                  window.location.href = storeUrl;
+                  const langPrefix = getLanguagePrefix();
+                  
+                  // If on store/esim-plans page, update URL query parameter
+                  if (isOnStorePage) {
+                    const params = new URLSearchParams(searchParams);
+                    params.set('search', country.name);
+                    router.push(`${pathname}?${params.toString()}`, { scroll: false });
+                  } else {
+                    // If on landing page, navigate to store page with search
+                    const storePath = `${langPrefix}/store?search=${encodeURIComponent(country.name)}`;
+                    router.push(storePath);
+                  }
+                  
+                  // Also call onSearch callback if provided
+                  if (onSearch) {
+                    onSearch(country.name);
+                  }
                 }}
                 className="text-xs sm:text-sm px-3 py-1 rounded-full bg-white/80 hover:bg-cobalt-blue/10 border border-jordy-blue/30 hover:border-cobalt-blue transition-all duration-200 text-gray-700 hover:text-cobalt-blue font-medium"
               >

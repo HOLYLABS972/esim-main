@@ -7,6 +7,7 @@ import { collection, query, getDocs, doc, setDoc, getDoc, deleteDoc, serverTimes
 import { db } from '../firebase/config';
 import { useRouter, usePathname } from 'next/navigation';
 import { esimService } from '../services/esimService';
+import { apiService } from '../services/apiService';
 import { getLanguageDirection, detectLanguageFromPath } from '../utils/languageUtils';
 import { translateCountryName } from '../utils/countryTranslations';
 import toast from 'react-hot-toast';
@@ -19,6 +20,7 @@ import AccountSettings from './dashboard/AccountSettings';
 import QRCodeModal from './dashboard/QRCodeModal';
 import EsimDetailsModal from './dashboard/EsimDetailsModal';
 import EsimUsageModal from './dashboard/EsimUsageModal';
+import TopupModal from './dashboard/TopupModal';
 
 const Dashboard = () => {
   const { currentUser, userProfile, loadUserProfile, loading: authLoading } = useAuth();
@@ -35,6 +37,9 @@ const Dashboard = () => {
   const [esimUsage, setEsimUsage] = useState(null);
   const [loadingEsimUsage, setLoadingEsimUsage] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [showTopupModal, setShowTopupModal] = useState(false);
+  const [loadingTopup, setLoadingTopup] = useState(false);
+  const [availableTopupPackages, setAvailableTopupPackages] = useState([]);
   
   const router = useRouter();
 
@@ -112,12 +117,27 @@ const Dashboard = () => {
                   qrCode: data.qrCode || data.orderResult?.qrCode,
                   qrCodeUrl: data.qrCodeUrl || data.orderResult?.qrCodeUrl,
                   directAppleInstallationUrl: data.directAppleInstallationUrl || data.orderResult?.directAppleInstallationUrl,
-                  iccid: data.iccid || data.orderResult?.iccid,
+                  iccid: data.iccid || 
+                         data.orderResult?.iccid ||
+                         data.esimData?.iccid ||
+                         data.airaloOrderData?.sims?.[0]?.iccid ||
+                         data.orderData?.sims?.[0]?.iccid ||
+                         data.sims?.[0]?.iccid,
                   lpa: data.lpa || data.orderResult?.lpa,
                   matchingId: data.matchingId || data.orderResult?.matchingId,
                   activationCode: data.activationCode || data.orderResult?.activationCode,
                   smdpAddress: data.smdpAddress || data.orderResult?.smdpAddress
-                }
+                },
+                // Also add ICCID at top level for easy access
+                iccid: data.iccid || 
+                       data.orderResult?.iccid ||
+                       data.esimData?.iccid ||
+                       data.airaloOrderData?.sims?.[0]?.iccid ||
+                       data.orderData?.sims?.[0]?.iccid ||
+                       data.sims?.[0]?.iccid,
+                // Keep esimData and airaloOrderData for reference
+                esimData: data.esimData,
+                airaloOrderData: data.airaloOrderData
               };
           } catch (docError) {
             console.error('❌ Error processing document:', doc.id, docError);
@@ -212,45 +232,58 @@ const Dashboard = () => {
 
   const handleViewQRCode = async (order) => {
     try {
-      setSelectedOrder(order);
-      setShowQRModal(true);
-      
-      // Check if we already have QR code data in the order (multiple formats for compatibility)
-      const hasQrCode = order.qrCode && (
-        (typeof order.qrCode === 'string' && order.qrCode.length > 0) ||
-        (typeof order.qrCode === 'object' && (order.qrCode.qrCode || order.qrCode.qrCodeUrl || order.qrCode.directAppleInstallationUrl))
-      );
-      
-      const hasOtherQrData = order.directAppleInstallationUrl || order.qrCodeUrl || order.iccid;
-      
-      if (hasQrCode || hasOtherQrData) {
-        console.log('✅ Using existing QR code data from order');
-        let qrCodeData;
+      // Helper function to extract ICCID from nested structures
+      const extractIccid = (orderData) => {
+        // Check all possible locations for ICCID
+        const checks = [
+          orderData?.iccid,
+          orderData?.qrCode?.iccid,
+          orderData?.orderResult?.iccid,
+          orderData?.esimData?.iccid,
+          orderData?.airaloOrderData?.sims?.[0]?.iccid,
+          orderData?.orderData?.sims?.[0]?.iccid,
+          orderData?.sims?.[0]?.iccid,
+          // Also check if airaloOrderData or esimData exist but are nested differently
+          orderData?.airaloOrderData?.iccid,
+          orderData?.orderResult?.sims?.[0]?.iccid,
+        ];
         
-        if (typeof order.qrCode === 'object') {
-          qrCodeData = order.qrCode;
-        } else {
-          qrCodeData = {
-            qrCode: order.qrCode || order.directAppleInstallationUrl,
-            qrCodeUrl: order.qrCodeUrl,
-            directAppleInstallationUrl: order.directAppleInstallationUrl,
-            iccid: order.iccid,
-            lpa: order.lpa,
-            matchingId: order.matchingId,
-            activationCode: order.activationCode,
-            isReal: true
-          };
-        }
-        
-        setSelectedOrder(prev => ({ ...prev, qrCode: qrCodeData }));
+        // Return first non-null/undefined value
+        return checks.find(val => val && val !== null && val !== undefined);
+      };
+      
+      const iccid = extractIccid(order);
+      
+      console.log('🔍 Looking for ICCID in order:', {
+        hasIccid: !!iccid,
+        iccid: iccid,
+        orderId: order.orderId || order.id,
+        orderKeys: Object.keys(order),
+        hasQrCode: !!order.qrCode,
+        qrCodeIccid: order.qrCode?.iccid,
+        hasEsimData: !!order.esimData,
+        esimDataIccid: order.esimData?.iccid,
+        hasAiraloOrderData: !!order.airaloOrderData,
+        airaloSimsIccid: order.airaloOrderData?.sims?.[0]?.iccid,
+        topLevelIccid: order.iccid
+      });
+      
+      if (iccid) {
+        // Navigate to QR code page using ICCID
+        console.log('✅ Using ICCID for QR code URL:', iccid);
+        router.push(`/qr/${iccid}`);
       } else {
-        console.log('⚠️ No existing QR code data, retrieving from API...');
-        // Retrieve QR code from API (this will now allow multiple retrievals)
-        const qrResult = await generateQRCode(order.orderId || order.id, order.planName);
-        setSelectedOrder(prev => ({ ...prev, qrCode: qrResult }));
+        // Fallback to orderId if ICCID not available
+        const orderId = order.orderId || order.id;
+        console.log('⚠️ ICCID not found, using orderId:', orderId);
+        if (!orderId) {
+          console.error('❌ No ICCID or order ID found in order:', order);
+          return;
+        }
+        router.push(`/qr/${orderId}`);
       }
     } catch (error) {
-      console.error('Error opening QR modal:', error);
+      console.error('❌ Error navigating to QR code page:', error);
     }
   };
 
@@ -637,32 +670,92 @@ const Dashboard = () => {
     
     try {
       setLoadingEsimUsage(true);
-      console.log('📊 Checking eSIM usage for order:', selectedOrder);
+      console.log('📊 Checking mobile data for order:', selectedOrder);
+      
+      // Get ICCID or orderId from the order
+      const iccid = selectedOrder.qrCode?.iccid || selectedOrder.iccid;
+      const orderId = selectedOrder.orderId || selectedOrder.id;
+      
+      if (!iccid && !orderId) {
+        console.log('❌ No ICCID or orderId found in order');
+        toast.error(t('dashboard.noIccidFoundUsage', 'No ICCID or order ID found in this order. Cannot check mobile data.'));
+        return;
+      }
+      
+      console.log('📊 Checking mobile data via SDK API:', { iccid, orderId });
+      const result = await apiService.getMobileData({ iccid, orderId });
+      
+      if (result.success) {
+        setEsimUsage(result.data);
+        console.log('✅ Mobile data retrieved:', result.data);
+        toast.success(t('dashboard.mobileDataRetrieved', 'Mobile data status retrieved successfully'));
+      } else {
+        console.log('❌ Failed to get mobile data:', result.error);
+        toast.error(t('dashboard.failedToGetMobileData', 'Failed to get mobile data: {{error}}', { error: result.error }));
+      }
+    } catch (error) {
+      console.error('❌ Error checking mobile data:', error);
+      toast.error(t('dashboard.errorCheckingMobileData', 'Error checking mobile data: {{error}}', { error: error.message }));
+    } finally {
+      setLoadingEsimUsage(false);
+    }
+  };
+
+  const handleTopup = async (packageId) => {
+    if (!selectedOrder || loadingTopup) return;
+    
+    try {
+      setLoadingTopup(true);
+      console.log('📦 Creating topup for order:', selectedOrder);
       
       // Get ICCID from the order
       const iccid = selectedOrder.qrCode?.iccid || selectedOrder.iccid;
       
       if (!iccid) {
         console.log('❌ No ICCID found in order');
-        alert(t('dashboard.noIccidFoundUsage', 'No ICCID found in this order. Cannot check eSIM usage.'));
+        toast.error(t('dashboard.noIccidFoundTopup', 'No ICCID found in this order. Cannot create topup.'));
         return;
       }
       
-      console.log('📊 Checking eSIM usage for ICCID:', iccid);
-      const result = await esimService.getEsimUsageByIccid(iccid);
+      if (!packageId) {
+        toast.error(t('dashboard.packageRequired', 'Please select a topup package'));
+        return;
+      }
+      
+      console.log('📦 Creating topup via SDK API:', { iccid, packageId });
+      const result = await apiService.createTopup({ iccid, package_id: packageId });
       
       if (result.success) {
-        setEsimUsage(result.data);
-        console.log('✅ eSIM usage retrieved:', result.data);
+        console.log('✅ Topup created:', result);
+        toast.success(t('dashboard.topupCreated', 'Topup created successfully!'));
+        setShowTopupModal(false);
+        
+        // Refresh mobile data to show updated status
+        await handleCheckEsimUsage();
       } else {
-        console.log('❌ Failed to get eSIM usage:', result.error);
-        alert(t('dashboard.failedToGetEsimUsage', 'Failed to get eSIM usage: {{error}}', { error: result.error }));
+        console.log('❌ Failed to create topup:', result.error);
+        toast.error(t('dashboard.failedToCreateTopup', 'Failed to create topup: {{error}}', { error: result.error }));
       }
     } catch (error) {
-      console.error('❌ Error checking eSIM usage:', error);
-      alert(t('dashboard.errorCheckingEsimUsage', 'Error checking eSIM usage: {{error}}', { error: error.message }));
+      console.error('❌ Error creating topup:', error);
+      toast.error(t('dashboard.errorCreatingTopup', 'Error creating topup: {{error}}', { error: error.message }));
     } finally {
-      setLoadingEsimUsage(false);
+      setLoadingTopup(false);
+    }
+  };
+
+  const handleOpenTopupModal = async () => {
+    if (!selectedOrder) return;
+    
+    try {
+      // Fetch available topup packages (you can customize this based on your needs)
+      // For now, we'll use the same packages endpoint or a dedicated topup packages endpoint
+      const packagesResult = await apiService.healthCheck(); // Placeholder - replace with actual topup packages endpoint
+      
+      setShowTopupModal(true);
+    } catch (error) {
+      console.error('❌ Error opening topup modal:', error);
+      toast.error(t('dashboard.errorOpeningTopup', 'Error opening topup options'));
     }
   };
 
@@ -776,10 +869,11 @@ const Dashboard = () => {
         selectedOrder={selectedOrder}
         onClose={() => setShowQRModal(false)}
         onCheckEsimDetails={handleCheckEsimDetails}
-        onCheckEsimUsage={handleCheckEsimUsage}
+        onCheckMobileData={handleCheckEsimUsage}
+        onOpenTopup={handleOpenTopupModal}
         onDelete={handleDeleteOrder}
         loadingEsimDetails={loadingEsimDetails}
-        loadingEsimUsage={loadingEsimUsage}
+        loadingMobileData={loadingEsimUsage}
       />
 
       {/* eSIM Details Modal */}
@@ -792,6 +886,15 @@ const Dashboard = () => {
       <EsimUsageModal 
         esimUsage={esimUsage}
         onClose={() => setEsimUsage(null)}
+      />
+
+      {/* Topup Modal */}
+      <TopupModal 
+        show={showTopupModal}
+        selectedOrder={selectedOrder}
+        onClose={() => setShowTopupModal(false)}
+        onTopup={handleTopup}
+        loadingTopup={loadingTopup}
       />
     </div>
   );

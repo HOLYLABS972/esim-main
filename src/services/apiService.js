@@ -3,7 +3,7 @@ import { auth } from '../firebase/config';
 import { configService } from './configService';
 
 // API URLs
-const API_PRODUCTION_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.roamjet.net';
+const API_PRODUCTION_URL = process.env.NEXT_PUBLIC_API_URL || 'https://sdk.roamjet.net';
 const API_SANDBOX_URL = process.env.NEXT_PUBLIC_API_SANDBOX_URL || 'https://sandbox.roamjet.net';
 
 /**
@@ -92,6 +92,41 @@ const makeAuthenticatedRequest = async (endpoint, options = {}) => {
       headers: {
         'Authorization': `Bearer ${idToken}`,
         'X-API-Key': apiKey,
+        'Content-Type': 'application/json',
+        ...options.headers,
+      },
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      // Handle rate limiting (429 status)
+      if (response.status === 429 && data.rateLimitExceeded) {
+        const errorMsg = data.error || `Rate limit exceeded. Please wait ${data.secondsRemaining || 60} seconds before trying again.`;
+        console.warn('⏱️ Rate limit exceeded:', errorMsg);
+        throw new Error(errorMsg);
+      }
+      
+      throw new Error(data.error || `Request failed with status ${response.status}`);
+    }
+
+    return data;
+  } catch (error) {
+    console.error(`API request to ${endpoint} failed:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Make public request to API (no authentication required)
+ */
+const makePublicRequest = async (endpoint, options = {}) => {
+  try {
+    const apiBaseUrl = await getApiBaseUrl(); // Get dynamic URL based on mode
+    
+    const response = await fetch(`${apiBaseUrl}${endpoint}`, {
+      ...options,
+      headers: {
         'Content-Type': 'application/json',
         ...options.headers,
       },
@@ -224,6 +259,59 @@ export const apiService = {
     });
 
     console.log('✅ Balance fetched:', result);
+    return result;
+  },
+
+  /**
+   * Create topup for existing eSIM (supports both authenticated and public access)
+   * @param {Object} topupData - Topup details
+   * @param {string} topupData.iccid - SIM ICCID
+   * @param {string} topupData.package_id - Topup package ID
+   * @returns {Promise<Object>} Topup result
+   */
+  async createTopup({ iccid, package_id }) {
+    console.log('📦 Creating topup via SDK API:', { iccid, package_id });
+    
+    // Check if user is authenticated
+    const user = auth.currentUser;
+    const isAuthenticated = !!user;
+    
+    console.log(`📦 Topup request: ${isAuthenticated ? 'Authenticated' : 'Public'}`);
+    
+    // Use authenticated request if user is logged in, otherwise use public request
+    const requestFn = isAuthenticated ? makeAuthenticatedRequest : makePublicRequest;
+    
+    const result = await requestFn('/api/user/topup', {
+      method: 'POST',
+      body: JSON.stringify({
+        iccid,
+        package_id,
+      }),
+    });
+
+    console.log('✅ Topup created:', result);
+    return result;
+  },
+
+  /**
+   * Get mobile data usage/status for eSIM
+   * @param {Object} params - Parameters
+   * @param {string} params.iccid - SIM ICCID (optional if orderId provided)
+   * @param {string} params.orderId - Order ID (optional if iccid provided)
+   * @returns {Promise<Object>} Mobile data status
+   */
+  async getMobileData({ iccid, orderId }) {
+    console.log('📊 Getting mobile data status via SDK API:', { iccid, orderId });
+    
+    const result = await makeAuthenticatedRequest('/api/user/mobile-data', {
+      method: 'POST',
+      body: JSON.stringify({
+        iccid,
+        orderId,
+      }),
+    });
+
+    console.log('✅ Mobile data status retrieved:', result);
     return result;
   },
 };

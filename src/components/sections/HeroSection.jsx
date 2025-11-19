@@ -1,5 +1,6 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useI18n } from '../../contexts/I18nContext';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -81,7 +82,9 @@ export default function HeroSection() {
         <div className="mx-auto max-w-5xl py-6 sm:py-12 lg:py-24  justify-center">
           {/* Country Search Bar */}
           <div className="mb-8 sm:mb-12">
-            <CountrySearchBar showCountryCount={true} />
+            <Suspense fallback={<div className="h-16" />}>
+              <CountrySearchBar showCountryCount={true} />
+            </Suspense>
           </div>
 
           {/* Main Content */}  

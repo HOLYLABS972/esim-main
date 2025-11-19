@@ -29,22 +29,30 @@ const EsimUsageModal = ({ esimUsage, onClose }) => {
                   <div>
                     <span className="font-medium text-gray-600">Status:</span>
                     <p className={`text-gray-900 font-semibold ${
-                      esimUsage.status === 'ACTIVE' ? 'text-green-600' :
-                      esimUsage.status === 'EXPIRED' ? 'text-red-600' :
-                      esimUsage.status === 'FINISHED' ? 'text-orange-600' :
+                      esimUsage.status === 'active' || esimUsage.status === 'ACTIVE' ? 'text-green-600' :
+                      esimUsage.status === 'expired' || esimUsage.status === 'EXPIRED' ? 'text-red-600' :
+                      esimUsage.status === 'finished' || esimUsage.status === 'FINISHED' ? 'text-orange-600' :
                       'text-gray-600'
                     }`}>
-                      {esimUsage.status}
+                      {esimUsage.status?.toUpperCase() || 'UNKNOWN'}
                     </p>
                   </div>
                   <div>
-                    <span className="font-medium text-gray-600">Unlimited:</span>
-                    <p className="text-gray-900">{esimUsage.is_unlimited ? 'Yes' : 'No'}</p>
+                    <span className="font-medium text-gray-600">ICCID:</span>
+                    <p className="text-gray-900 font-mono text-xs">{esimUsage.iccid || 'N/A'}</p>
                   </div>
-                  <div>
-                    <span className="font-medium text-gray-600">Expires At:</span>
-                    <p className="text-gray-900">{esimUsage.expired_at}</p>
-                  </div>
+                  {esimUsage.expiresAt && (
+                    <div>
+                      <span className="font-medium text-gray-600">Expires At:</span>
+                      <p className="text-gray-900">{new Date(esimUsage.expiresAt).toLocaleString()}</p>
+                    </div>
+                  )}
+                  {esimUsage.lastUpdated && (
+                    <div>
+                      <span className="font-medium text-gray-600">Last Updated:</span>
+                      <p className="text-gray-900">{new Date(esimUsage.lastUpdated).toLocaleString()}</p>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -55,32 +63,65 @@ const EsimUsageModal = ({ esimUsage, onClose }) => {
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium text-gray-600">Total Data:</span>
                     <span className="text-sm font-semibold text-gray-900">
-                      {esimUsage.is_unlimited ? 'Unlimited' : `${esimUsage.total} MB`}
+                      {esimUsage.dataTotal || esimUsage.total || 'N/A'}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-gray-600">Remaining Data:</span>
+                    <span className="text-sm font-medium text-gray-600">Used:</span>
                     <span className="text-sm font-semibold text-gray-900">
-                      {esimUsage.is_unlimited ? 'Unlimited' : `${esimUsage.remaining} MB`}
+                      {esimUsage.dataUsed || esimUsage.used || '0MB'}
                     </span>
                   </div>
-                  {!esimUsage.is_unlimited && (
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div 
-                        className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                        style={{ 
-                          width: `${((esimUsage.total - esimUsage.remaining) / esimUsage.total) * 100}%` 
-                        }}
-                      ></div>
-                    </div>
-                  )}
-                  {!esimUsage.is_unlimited && (
-                    <div className="text-xs text-gray-500 text-center">
-                      {Math.round(((esimUsage.total - esimUsage.remaining) / esimUsage.total) * 100)}% used
-                    </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium text-gray-600">Remaining:</span>
+                    <span className="text-sm font-semibold text-gray-900">
+                      {esimUsage.dataRemaining || esimUsage.remaining || '0MB'}
+                    </span>
+                  </div>
+                  {esimUsage.usagePercentage !== undefined && (
+                    <>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div 
+                          className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                          style={{ 
+                            width: `${Math.min(esimUsage.usagePercentage || 0, 100)}%` 
+                          }}
+                        ></div>
+                      </div>
+                      <div className="text-xs text-gray-500 text-center">
+                        {esimUsage.usagePercentage || 0}% used
+                      </div>
+                    </>
                   )}
                 </div>
               </div>
+
+              {/* Validity Period */}
+              {(esimUsage.daysUsed !== undefined || esimUsage.daysRemaining !== undefined) && (
+                <div className="bg-green-50 p-4 rounded-lg">
+                  <h4 className="font-semibold text-gray-900 mb-3">Validity Period</h4>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    {esimUsage.daysUsed !== undefined && (
+                      <div>
+                        <span className="font-medium text-gray-600">Days Used:</span>
+                        <p className="text-gray-900 font-semibold">{esimUsage.daysUsed} days</p>
+                      </div>
+                    )}
+                    {esimUsage.daysRemaining !== undefined && (
+                      <div>
+                        <span className="font-medium text-gray-600">Days Remaining:</span>
+                        <p className={`font-semibold ${
+                          esimUsage.daysRemaining < 3 ? 'text-red-600' : 
+                          esimUsage.daysRemaining < 7 ? 'text-orange-600' : 
+                          'text-green-600'
+                        }`}>
+                          {esimUsage.daysRemaining} days
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Voice Usage */}
               {esimUsage.total_voice > 0 && (

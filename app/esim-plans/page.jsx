@@ -20,7 +20,9 @@ export default function EsimPlansPage() {
           </p>
           
           {/* Search Bar */}
-          <CountrySearchBar showCountryCount={true} />
+          <Suspense fallback={<div className="h-16" />}>
+            <CountrySearchBar showCountryCount={true} />
+          </Suspense>
         </div>
         
         <Suspense fallback={
