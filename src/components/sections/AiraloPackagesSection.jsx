@@ -561,15 +561,15 @@ export default function AiraloPackagesSection() {
             }}
             className={`inline-flex items-center px-3 py-1.5 rounded-full font-medium text-xs transition-all duration-200 ${
               activeTab === 'countries'
-                ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30'
-                : 'bg-white text-gray-700 hover:bg-purple-50 hover:text-purple-600 border border-gray-200 hover:border-purple-200'
+                ? 'bg-yellow-500 text-white shadow-md shadow-yellow-500/30'
+                : 'bg-white text-gray-700 hover:bg-yellow-50 hover:text-yellow-600 border border-gray-200 hover:border-yellow-200'
             }`}
           >
             <Flag className="w-3.5 h-3.5 mr-1" />
             <span>Countries</span>
             <span className={`ml-1 px-1.5 py-0.5 rounded-full text-xs font-semibold ${
               activeTab === 'countries'
-                ? 'bg-purple-500 text-white'
+                ? 'bg-yellow-400 text-white'
                 : 'bg-gray-100 text-gray-600'
             }`}>
               {countries.length || 0}
