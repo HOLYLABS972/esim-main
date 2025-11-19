@@ -31,22 +31,29 @@ export default function AiraloPackagesSection() {
   
   // Search state
   const [searchTerm, setSearchTerm] = useState('');
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     fetchPackages();
     fetchCountries(); // Fetch countries on component load
   }, [locale]); // Re-fetch when locale changes
   
-  // Handle search from URL params
+  // Handle search from URL params - only after mount
   useEffect(() => {
-    const urlSearchTerm = searchParams.get('search') || '';
+    if (!mounted) return;
+    
+    const urlSearchTerm = searchParams?.get('search') || '';
     setSearchTerm(urlSearchTerm);
     
     // If there's a search term, automatically switch to Countries tab
     if (urlSearchTerm) {
       setActiveTab('countries');
     }
-  }, [searchParams]);
+  }, [searchParams, mounted]);
   
   // Filter countries based on search term
   useEffect(() => {
