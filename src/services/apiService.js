@@ -107,7 +107,12 @@ const makeAuthenticatedRequest = async (endpoint, options = {}) => {
         throw new Error(errorMsg);
       }
       
-      throw new Error(data.error || `Request failed with status ${response.status}`);
+      // Include status code in error message for better debugging
+      const errorMessage = data.error || `Request failed with status ${response.status}`;
+      const error = new Error(errorMessage);
+      error.status = response.status;
+      error.data = data;
+      throw error;
     }
 
     return data;
@@ -173,19 +178,38 @@ export const apiService = {
   async createOrder({ package_id, quantity = "1", to_email, description, mode }) {
     console.log('📦 Creating order via Python API:', { package_id, quantity, to_email, mode });
     
-    const result = await makeAuthenticatedRequest('/api/user/order', {
-      method: 'POST',
-      body: JSON.stringify({
-        package_id,
-        quantity,
-        to_email,
-        description,
-        mode, // Pass mode to backend
-      }),
-    });
+    if (!package_id) {
+      throw new Error('package_id is required');
+    }
 
-    console.log('✅ Order created:', result);
-    return result;
+    // Validate package_id format (should not be empty and should be a string)
+    if (typeof package_id !== 'string' || package_id.trim() === '') {
+      throw new Error(`Invalid package_id format: ${package_id}`);
+    }
+    
+    try {
+      const result = await makeAuthenticatedRequest('/api/user/order', {
+        method: 'POST',
+        body: JSON.stringify({
+          package_id: package_id.trim(),
+          quantity,
+          to_email,
+          description,
+          mode, // Pass mode to backend
+        }),
+      });
+
+      console.log('✅ Order created:', result);
+      return result;
+    } catch (error) {
+      // Enhanced error handling for 422 errors
+      if (error.status === 422 || (error.message && error.message.includes('422'))) {
+        console.error('❌ Validation error (422) - Invalid package_id:', package_id);
+        const airaloError = error.data?.error || error.message;
+        throw new Error(`Invalid package ID: "${package_id}". Airalo error: ${airaloError}`);
+      }
+      throw error;
+    }
   },
 
   /**
@@ -320,6 +344,39 @@ export const apiService = {
 
     console.log('✅ Mobile data status retrieved:', result);
     return result;
+  },
+
+  /**
+   * Get all packages from Airalo (requires API key)
+   * @returns {Promise<Object>} Packages data with global and regional packages
+   */
+  async getPackages() {
+    console.log('📦 Fetching packages from Airalo API...');
+    
+    try {
+      const apiKey = await getApiKey();
+      const apiBaseUrl = await getApiBaseUrl();
+      
+      const response = await fetch(`${apiBaseUrl}/api/packages`, {
+        method: 'GET',
+        headers: {
+          'X-API-Key': apiKey,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || `Request failed with status ${response.status}`);
+      }
+
+      console.log('✅ Packages fetched successfully');
+      return data;
+    } catch (error) {
+      console.error(`❌ Failed to fetch packages:`, error);
+      throw error;
+    }
   },
 };
 

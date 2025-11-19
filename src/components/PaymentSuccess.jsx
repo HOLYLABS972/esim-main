@@ -271,16 +271,33 @@ const PaymentSuccess = () => {
 
         // Extract plan ID from order ID (format: planId-timestamp-random)
         const extractPlanId = (orderId) => {
+          if (!orderId) return null;
           const parts = orderId.split('-');
-          const timestampIndex = parts.findIndex(part => /^\d+$/.test(part));
+          const timestampIndex = parts.findIndex(part => /^\d{10,}$/.test(part)); // Look for timestamp (10+ digits)
           if (timestampIndex > 0) {
-            return parts.slice(0, timestampIndex).join('-');
+            const extracted = parts.slice(0, timestampIndex).join('-');
+            console.log('📦 Extracted plan ID from order ID:', { orderId, extracted });
+            return extracted;
           }
+          // If no timestamp found, return the original orderId
+          console.log('⚠️ No timestamp found in order ID, using as-is:', orderId);
           return orderId;
         };
 
         const actualPlanId = planId || extractPlanId(orderParam);
-        console.log('📦 Extracted plan ID:', { orderParam, actualPlanId });
+        console.log('📦 Final plan ID to use:', { 
+          orderParam, 
+          planIdFromUrl: planId, 
+          extractedFromOrderId: extractPlanId(orderParam),
+          actualPlanId 
+        });
+
+        if (!actualPlanId) {
+          console.error('❌ No valid plan ID found!', { orderParam, planId });
+          setError('Invalid order: No plan ID found');
+          setProcessing(false);
+          return;
+        }
 
         // Support both authenticated and guest users
         const isGuest = !currentUser;
