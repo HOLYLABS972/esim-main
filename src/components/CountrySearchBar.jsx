@@ -117,42 +117,6 @@ const CountrySearchBar = ({ onSearch, showCountryCount = true }) => {
             </svg>
           </button>
         </div>
-        
-        {/* Search Suggestions */}
-        <div className="mt-3 flex flex-wrap justify-center gap-2 px-2">
-          {popularCountries.map((country) => {
-            const translatedName = translateCountryName(country.code, country.name, locale);
-            return (
-              <button
-                key={country.code}
-                type="button"
-                onClick={() => {
-                  setSearchValue(country.name); // Use English name for search
-                  const langPrefix = getLanguagePrefix();
-                  
-                  // If on store/esim-plans page, update URL query parameter
-                  if (isOnStorePage) {
-                    const params = new URLSearchParams(searchParams);
-                    params.set('search', country.name);
-                    router.push(`${pathname}?${params.toString()}`, { scroll: false });
-                  } else {
-                    // If on landing page, navigate to store page with search
-                    const storePath = `${langPrefix}/store?search=${encodeURIComponent(country.name)}`;
-                    router.push(storePath);
-                  }
-                  
-                  // Also call onSearch callback if provided
-                  if (onSearch) {
-                    onSearch(country.name);
-                  }
-                }}
-                className="text-xs sm:text-sm px-3 py-1 rounded-full bg-white/80 hover:bg-cobalt-blue/10 border border-jordy-blue/30 hover:border-cobalt-blue transition-all duration-200 text-gray-700 hover:text-cobalt-blue font-medium"
-              >
-                {translatedName}
-              </button>
-            );
-          })}
-        </div>
       </form>
     </div>
   );

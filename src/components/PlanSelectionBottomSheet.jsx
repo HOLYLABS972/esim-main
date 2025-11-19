@@ -312,7 +312,7 @@ const PlanSelectionBottomSheet = ({
         returnUrl = `${langPrefix}${returnUrl}`;
       } else {
         // Fallback to pathname detection
-        const langMatch = pathname.match(/^\/(ar|de|es|fr|he|ru)\//);
+      const langMatch = pathname.match(/^\/(ar|de|es|fr|he|ru)\//);
         langPrefix = langMatch ? `/${langMatch[1]}` : '';
         if (langPrefix) {
           returnUrl = `${langPrefix}${returnUrl}`;

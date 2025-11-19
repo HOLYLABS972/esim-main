@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Globe, MapPin, Wifi, Calendar, Flag, Loader2, AlertCircle } from 'lucide-react';
 import { getCountriesWithPricing } from '../../services/plansService';
 import { translateCountries } from '../../utils/countryTranslations';
@@ -12,6 +12,7 @@ import { db } from '../../firebase/config';
 
 export default function AiraloPackagesSection() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { locale } = useI18n();
   const [packages, setPackages] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -22,15 +23,44 @@ export default function AiraloPackagesSection() {
   
   // Countries tab state
   const [countries, setCountries] = useState([]);
+  const [filteredCountries, setFilteredCountries] = useState([]);
   const [loadingCountries, setLoadingCountries] = useState(false);
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [availablePlans, setAvailablePlans] = useState([]);
   const [loadingPlans, setLoadingPlans] = useState(false);
+  
+  // Search state
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     fetchPackages();
     fetchCountries(); // Fetch countries on component load
   }, [locale]); // Re-fetch when locale changes
+  
+  // Handle search from URL params
+  useEffect(() => {
+    const urlSearchTerm = searchParams.get('search') || '';
+    setSearchTerm(urlSearchTerm);
+    
+    // If there's a search term, automatically switch to Countries tab
+    if (urlSearchTerm) {
+      setActiveTab('countries');
+    }
+  }, [searchParams]);
+  
+  // Filter countries based on search term
+  useEffect(() => {
+    if (!searchTerm || searchTerm.trim() === '') {
+      setFilteredCountries(countries);
+    } else {
+      const term = searchTerm.toLowerCase();
+      const filtered = countries.filter(country => 
+        country.name.toLowerCase().includes(term) ||
+        country.code.toLowerCase().includes(term)
+      );
+      setFilteredCountries(filtered);
+    }
+  }, [searchTerm, countries]);
 
   // Fetch countries when Countries tab is active (fallback if not loaded yet)
   useEffect(() => {
@@ -473,64 +503,77 @@ export default function AiraloPackagesSection() {
   );
 
   return (
-    <section className="py-16 bg-gray-50">
+    <section className="bg-white">
       <div className="container mx-auto px-4">
-        {/* Section Header */}
-        <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">
-            Browse eSIM Packages
-          </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Choose from our global, regional, and country-specific eSIM packages powered by Airalo
-          </p>
-        </div>
-
-        {/* Tabs */}
-        <div className="flex justify-center mb-8 border-b border-gray-200">
+        {/* Compact Chip-style Tabs - Smaller and closer to search */}
+        <div className="flex justify-center gap-2 mb-6">
           <button
             onClick={() => {
               setActiveTab('global');
               setSelectedRegion(null);
               setSelectedCountry(null);
             }}
-            className={`px-6 py-3 font-medium transition-colors ${
+            className={`inline-flex items-center px-3 py-1.5 rounded-full font-medium text-xs transition-all duration-200 ${
               activeTab === 'global'
-                ? 'text-blue-600 border-b-2 border-blue-600'
-                : 'text-gray-600 hover:text-gray-900'
+                ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
+                : 'bg-white text-gray-700 hover:bg-blue-50 hover:text-blue-600 border border-gray-200 hover:border-blue-200'
             }`}
           >
-            <Globe className="w-5 h-5 inline mr-2" />
-            Global ({packages.global.length})
+            <Globe className="w-3.5 h-3.5 mr-1" />
+            <span>Global</span>
+            <span className={`ml-1 px-1.5 py-0.5 rounded-full text-xs font-semibold ${
+              activeTab === 'global'
+                ? 'bg-blue-500 text-white'
+                : 'bg-gray-100 text-gray-600'
+            }`}>
+              {packages.global.length}
+            </span>
           </button>
+          
           <button
             onClick={() => {
               setActiveTab('regional');
               setSelectedRegion(null);
               setSelectedCountry(null);
             }}
-            className={`px-6 py-3 font-medium transition-colors ${
+            className={`inline-flex items-center px-3 py-1.5 rounded-full font-medium text-xs transition-all duration-200 ${
               activeTab === 'regional'
-                ? 'text-blue-600 border-b-2 border-blue-600'
-                : 'text-gray-600 hover:text-gray-900'
+                ? 'bg-green-600 text-white shadow-md shadow-green-600/30'
+                : 'bg-white text-gray-700 hover:bg-green-50 hover:text-green-600 border border-gray-200 hover:border-green-200'
             }`}
           >
-            <MapPin className="w-5 h-5 inline mr-2" />
-            Regional ({regionalPackagesCount})
+            <MapPin className="w-3.5 h-3.5 mr-1" />
+            <span>Regional</span>
+            <span className={`ml-1 px-1.5 py-0.5 rounded-full text-xs font-semibold ${
+              activeTab === 'regional'
+                ? 'bg-green-500 text-white'
+                : 'bg-gray-100 text-gray-600'
+            }`}>
+              {regionalPackagesCount}
+            </span>
           </button>
+          
           <button
             onClick={() => {
               setActiveTab('countries');
               setSelectedRegion(null);
               setSelectedCountry(null);
             }}
-            className={`px-6 py-3 font-medium transition-colors ${
+            className={`inline-flex items-center px-3 py-1.5 rounded-full font-medium text-xs transition-all duration-200 ${
               activeTab === 'countries'
-                ? 'text-blue-600 border-b-2 border-blue-600'
-                : 'text-gray-600 hover:text-gray-900'
+                ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30'
+                : 'bg-white text-gray-700 hover:bg-purple-50 hover:text-purple-600 border border-gray-200 hover:border-purple-200'
             }`}
           >
-            <Flag className="w-5 h-5 inline mr-2" />
-            Countries ({countries.length || 0})
+            <Flag className="w-3.5 h-3.5 mr-1" />
+            <span>Countries</span>
+            <span className={`ml-1 px-1.5 py-0.5 rounded-full text-xs font-semibold ${
+              activeTab === 'countries'
+                ? 'bg-purple-500 text-white'
+                : 'bg-gray-100 text-gray-600'
+            }`}>
+              {countries.length || 0}
+            </span>
           </button>
         </div>
 
@@ -653,42 +696,49 @@ export default function AiraloPackagesSection() {
                 <Loader2 className="w-8 h-8 animate-spin text-blue-600 mr-4" />
                 <p className="text-gray-600">Loading countries...</p>
               </div>
-            ) : countries.length === 0 ? (
+            ) : filteredCountries.length === 0 ? (
               <div className="text-center text-gray-500 py-12">
-                No countries available
+                {searchTerm ? `No countries found matching "${searchTerm}"` : 'No countries available'}
               </div>
             ) : (
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                {countries.map((country) => (
-                  <button
-                    key={country.id || country.code}
-                    onClick={() => handleCountrySelect(country)}
-                    className="w-full px-6 py-4 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-colors duration-200 flex items-center justify-between"
-                  >
-                    <div className="flex items-center space-x-4">
-                      <div className="flex-shrink-0">
-                        {country.flagEmoji ? (
-                          <span className="text-2xl">{country.flagEmoji}</span>
+              <div>
+                {searchTerm && (
+                  <div className="mb-4 text-center text-gray-600 text-sm">
+                    Found {filteredCountries.length} {filteredCountries.length === 1 ? 'country' : 'countries'} matching "{searchTerm}"
+                  </div>
+                )}
+                <div className="space-y-2">
+                  {filteredCountries.map((country) => (
+                    <button
+                      key={country.id || country.code}
+                      onClick={() => handleCountrySelect(country)}
+                      className="w-full px-6 py-4 bg-white rounded-lg shadow-sm hover:shadow-md border border-gray-100 hover:border-blue-200 transition-all duration-200 flex items-center justify-between"
+                    >
+                      <div className="flex items-center space-x-4">
+                        <div className="flex-shrink-0">
+                          {country.flagEmoji ? (
+                            <span className="text-2xl">{country.flagEmoji}</span>
+                          ) : (
+                            <Flag className="w-8 h-8 text-blue-600" />
+                          )}
+                        </div>
+                        <div className="text-left">
+                          <h3 className="text-lg font-semibold text-gray-900">{country.name}</h3>
+                          <p className="text-sm text-gray-500">1GB • 7 Days</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        {country.minPrice && country.minPrice < 999 ? (
+                          <div className="text-lg font-semibold text-gray-900">
+                            ${country.minPrice.toFixed(2)}
+                          </div>
                         ) : (
-                          <Flag className="w-8 h-8 text-blue-600" />
+                          <div className="text-lg font-medium text-gray-500">No plans</div>
                         )}
                       </div>
-                      <div className="text-left">
-                        <h3 className="text-lg font-semibold text-gray-900">{country.name}</h3>
-                        <p className="text-sm text-gray-500">1GB • 7 Days</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      {country.minPrice && country.minPrice < 999 ? (
-                        <div className="text-lg font-semibold text-gray-900">
-                          ${country.minPrice.toFixed(2)}
-                        </div>
-                      ) : (
-                        <div className="text-lg font-medium text-gray-500">No plans</div>
-                      )}
-                    </div>
-                  </button>
-                ))}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
           </div>
