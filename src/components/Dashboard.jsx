@@ -20,7 +20,6 @@ import AccountSettings from './dashboard/AccountSettings';
 import QRCodeModal from './dashboard/QRCodeModal';
 import EsimDetailsModal from './dashboard/EsimDetailsModal';
 import EsimUsageModal from './dashboard/EsimUsageModal';
-import TopupModal from './dashboard/TopupModal';
 
 const Dashboard = () => {
   const { currentUser, userProfile, loadUserProfile, loading: authLoading } = useAuth();
@@ -37,9 +36,6 @@ const Dashboard = () => {
   const [esimUsage, setEsimUsage] = useState(null);
   const [loadingEsimUsage, setLoadingEsimUsage] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
-  const [showTopupModal, setShowTopupModal] = useState(false);
-  const [loadingTopup, setLoadingTopup] = useState(false);
-  const [availableTopupPackages, setAvailableTopupPackages] = useState([]);
   
   const router = useRouter();
 
@@ -701,62 +697,25 @@ const Dashboard = () => {
     }
   };
 
-  const handleTopup = async (packageId) => {
-    if (!selectedOrder || loadingTopup) return;
-    
-    try {
-      setLoadingTopup(true);
-      console.log('📦 Creating topup for order:', selectedOrder);
-      
-      // Get ICCID from the order
-      const iccid = selectedOrder.qrCode?.iccid || selectedOrder.iccid;
-      
-      if (!iccid) {
-        console.log('❌ No ICCID found in order');
-        toast.error(t('dashboard.noIccidFoundTopup', 'No ICCID found in this order. Cannot create topup.'));
-        return;
-      }
-      
-      if (!packageId) {
-        toast.error(t('dashboard.packageRequired', 'Please select a topup package'));
-        return;
-      }
-      
-      console.log('📦 Creating topup via SDK API:', { iccid, packageId });
-      const result = await apiService.createTopup({ iccid, package_id: packageId });
-      
-      if (result.success) {
-        console.log('✅ Topup created:', result);
-        toast.success(t('dashboard.topupCreated', 'Topup created successfully!'));
-        setShowTopupModal(false);
-        
-        // Refresh mobile data to show updated status
-        await handleCheckEsimUsage();
-      } else {
-        console.log('❌ Failed to create topup:', result.error);
-        toast.error(t('dashboard.failedToCreateTopup', 'Failed to create topup: {{error}}', { error: result.error }));
-      }
-    } catch (error) {
-      console.error('❌ Error creating topup:', error);
-      toast.error(t('dashboard.errorCreatingTopup', 'Error creating topup: {{error}}', { error: error.message }));
-    } finally {
-      setLoadingTopup(false);
-    }
-  };
-
   const handleOpenTopupModal = async () => {
     if (!selectedOrder) return;
     
-    try {
-      // Fetch available topup packages (you can customize this based on your needs)
-      // For now, we'll use the same packages endpoint or a dedicated topup packages endpoint
-      const packagesResult = await apiService.healthCheck(); // Placeholder - replace with actual topup packages endpoint
-      
-      setShowTopupModal(true);
-    } catch (error) {
-      console.error('❌ Error opening topup modal:', error);
-      toast.error(t('dashboard.errorOpeningTopup', 'Error opening topup options'));
+    // Get ICCID from the order
+    const iccid = selectedOrder.qrCode?.iccid || 
+                  selectedOrder.iccid || 
+                  selectedOrder.esimData?.iccid ||
+                  selectedOrder.airaloOrderData?.sims?.[0]?.iccid ||
+                  selectedOrder.orderData?.sims?.[0]?.iccid ||
+                  selectedOrder.sims?.[0]?.iccid;
+    
+    if (!iccid) {
+      console.log('❌ No ICCID found in order');
+      toast.error(t('dashboard.noIccidFoundTopup', 'No ICCID found in this order. Cannot create topup.'));
+      return;
     }
+    
+    // Navigate to topup page
+    router.push(`/topup/${iccid}`);
   };
 
   const handleDeleteOrder = async () => {
@@ -888,14 +847,6 @@ const Dashboard = () => {
         onClose={() => setEsimUsage(null)}
       />
 
-      {/* Topup Modal */}
-      <TopupModal 
-        show={showTopupModal}
-        selectedOrder={selectedOrder}
-        onClose={() => setShowTopupModal(false)}
-        onTopup={handleTopup}
-        loadingTopup={loadingTopup}
-      />
     </div>
   );
 };

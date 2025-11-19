@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { QrCode, Copy, Share2, Download, Smartphone, ArrowLeft, Check, MoreVertical, Camera, Settings, CheckCircle, Radio, Globe, Battery, BarChart3, Loader2 } from 'lucide-react';
 import LPAQRCodeDisplay from './dashboard/LPAQRCodeDisplay';
-import TopupModal from './dashboard/TopupModal';
 import { useAuth } from '../contexts/AuthContext';
 import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../firebase/config';
@@ -22,8 +21,6 @@ const QRCodePage = ({ orderId, iccid }) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedDevice, setSelectedDevice] = useState('ios'); // 'ios' or 'android'
   const [completedSteps, setCompletedSteps] = useState([]);
-  const [showTopupModal, setShowTopupModal] = useState(false);
-  const [loadingTopup, setLoadingTopup] = useState(false);
   const [loadingMobileData, setLoadingMobileData] = useState(false);
   const [mobileData, setMobileData] = useState(null);
 
@@ -439,41 +436,13 @@ const QRCodePage = ({ orderId, iccid }) => {
     }
   };
 
-  const handleTopup = async (packageId) => {
+  const handleOpenTopup = () => {
     if (!qrData?.iccid) {
       toast.error('No ICCID found. Cannot create topup.');
       return;
     }
-
-    try {
-      setLoadingTopup(true);
-      const result = await apiService.createTopup({ 
-        iccid: qrData.iccid, 
-        package_id: packageId 
-      });
-
-      if (result.success) {
-        toast.success('Topup created successfully!');
-        setShowTopupModal(false);
-        // Refresh mobile data after topup
-        await handleCheckMobileData();
-      } else {
-        toast.error('Failed to create topup: ' + (result.error || 'Unknown error'));
-      }
-    } catch (error) {
-      console.error('❌ Error creating topup:', error);
-      toast.error('Error creating topup: ' + error.message);
-    } finally {
-      setLoadingTopup(false);
-    }
-  };
-
-  const handleOpenTopupModal = () => {
-    if (!qrData?.iccid) {
-      toast.error('No ICCID found. Cannot create topup.');
-      return;
-    }
-    setShowTopupModal(true);
+    // Navigate to topup page
+    router.push(`/topup/${qrData.iccid}`);
   };
 
   const shareLink = async () => {
@@ -745,7 +714,7 @@ const QRCodePage = ({ orderId, iccid }) => {
                     <button
                       onClick={() => {
                         setShowDropdown(false);
-                        handleOpenTopupModal();
+                        handleOpenTopup();
                       }}
                       className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center border-t border-gray-200"
                     >
@@ -756,17 +725,6 @@ const QRCodePage = ({ orderId, iccid }) => {
                 </div>
               )}
             </div>
-
-            {/* Topup Modal */}
-            {showTopupModal && (
-              <TopupModal
-                show={showTopupModal}
-                selectedOrder={orderInfo ? { iccid: qrData?.iccid, ...orderInfo } : null}
-                onClose={() => setShowTopupModal(false)}
-                onTopup={handleTopup}
-                loadingTopup={loadingTopup}
-              />
-            )}
 
             {/* Interactive Installation Instructions */}
             <div className="mt-8 pt-8 border-t border-gray-200">

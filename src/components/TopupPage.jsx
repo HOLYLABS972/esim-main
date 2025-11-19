@@ -1,18 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import { Battery, X, Loader2, CreditCard, Coins } from 'lucide-react';
-import { apiService } from '../../services/apiService';
-import { paymentService } from '../../services/paymentService';
-import { coinbaseService } from '../../services/coinbaseService';
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { Battery, ArrowLeft, Loader2, CreditCard, Coins } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { db } from '../firebase/config';
+import { apiService } from '../services/apiService';
+import { paymentService } from '../services/paymentService';
+import { coinbaseService } from '../services/coinbaseService';
 import toast from 'react-hot-toast';
 
-const TopupModal = ({ 
-  show, 
-  selectedOrder, 
-  onClose, 
-  onTopup,
-  loadingTopup,
-  customerEmail,
-}) => {
+const TopupPage = ({ iccid }) => {
+  const router = useRouter();
+  const { currentUser, loading: authLoading } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [orderInfo, setOrderInfo] = useState(null);
   const [availablePackages, setAvailablePackages] = useState([]);
   const [loadingPackages, setLoadingPackages] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState(null);
@@ -22,11 +26,19 @@ const TopupModal = ({
   const [coinbaseAvailable, setCoinbaseAvailable] = useState(false);
 
   useEffect(() => {
-    if (show && selectedOrder) {
+    if (authLoading) {
+      return;
+    }
+
+    if (iccid) {
+      fetchOrderByIccid();
       fetchTopupPackages();
       checkCoinbaseAvailability();
+    } else {
+      setError('No ICCID provided');
+      setLoading(false);
     }
-  }, [show, selectedOrder]);
+  }, [iccid, authLoading]);
 
   const checkCoinbaseAvailability = async () => {
     try {
@@ -40,6 +52,101 @@ const TopupModal = ({
     } catch (err) {
       console.error('❌ Error checking Coinbase availability:', err);
       setCoinbaseAvailable(true); // Still show button even if check fails
+    }
+  };
+
+  const fetchOrderByIccid = async () => {
+    try {
+      console.log('📱 Searching for order by ICCID:', iccid);
+      setLoading(true);
+      setError(null);
+
+      // Helper function to normalize ICCID for comparison
+      const normalizeIccid = (iccidValue) => {
+        if (!iccidValue) return null;
+        return String(iccidValue).trim();
+      };
+
+      // Helper function to extract ICCID from order data
+      const extractIccidFromOrder = (orderData) => {
+        const checks = [
+          orderData?.iccid,
+          orderData?.qrCode?.iccid,
+          orderData?.orderResult?.iccid,
+          orderData?.esimData?.iccid,
+          orderData?.airaloOrderData?.sims?.[0]?.iccid,
+          orderData?.orderData?.sims?.[0]?.iccid,
+          orderData?.sims?.[0]?.iccid,
+          orderData?.airaloOrderData?.iccid,
+          orderData?.orderResult?.sims?.[0]?.iccid,
+        ];
+        const found = checks.find(val => val && val !== null && val !== undefined);
+        return normalizeIccid(found);
+      };
+
+      const normalizedSearchIccid = normalizeIccid(iccid);
+      let orderData = null;
+      let orderId = null;
+
+      // Search in user's esims subcollection if authenticated
+      if (currentUser) {
+        try {
+          const esimsRef = collection(db, 'users', currentUser.uid, 'esims');
+          const querySnapshot = await getDocs(esimsRef);
+          
+          for (const docSnap of querySnapshot.docs) {
+            const data = docSnap.data();
+            const foundIccid = extractIccidFromOrder(data);
+            
+            if (foundIccid === normalizedSearchIccid) {
+              orderData = data;
+              orderId = docSnap.id;
+              break;
+            }
+          }
+        } catch (userErr) {
+          console.log('⚠️ Error searching user esims collection:', userErr);
+        }
+      }
+
+      // Search in global orders collection
+      if (!orderData) {
+        try {
+          const globalOrdersRef = collection(db, 'orders');
+          const globalQuerySnapshot = await getDocs(globalOrdersRef);
+          
+          for (const docSnap of globalQuerySnapshot.docs) {
+            const data = docSnap.data();
+            const foundIccid = extractIccidFromOrder(data);
+            
+            if (foundIccid === normalizedSearchIccid) {
+              orderData = data;
+              orderId = docSnap.id;
+              break;
+            }
+          }
+        } catch (globalErr) {
+          console.log('⚠️ Error searching global orders collection:', globalErr);
+        }
+      }
+
+      if (!orderData) {
+        setError(`Order not found for ICCID: ${iccid}`);
+        setLoading(false);
+        return;
+      }
+
+      setOrderInfo({
+        orderId: orderId,
+        planName: orderData.planName || orderData.package_id || orderData.packageId || 'eSIM Plan',
+        customerEmail: orderData.customerEmail || orderData.userEmail || currentUser?.email,
+        iccid: iccid
+      });
+      setLoading(false);
+    } catch (err) {
+      console.error('❌ Error fetching order by ICCID:', err);
+      setError(err.message || 'Failed to load order data');
+      setLoading(false);
     }
   };
 
@@ -77,7 +184,7 @@ const TopupModal = ({
       return;
     }
 
-    if (!selectedOrder?.iccid) {
+    if (!iccid) {
       toast.error('No ICCID found. Cannot create topup.');
       return;
     }
@@ -87,18 +194,18 @@ const TopupModal = ({
       setSelectedPaymentMethod(paymentMethod);
       
       // Generate unique topup order ID
-      const topupOrderId = `topup-${selectedOrder.iccid}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const topupOrderId = `topup-${iccid}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       
       // Create order data for payment
       const orderData = {
         orderId: topupOrderId,
         planId: selectedPackage.id,
         planName: selectedPackage.name,
-        customerEmail: customerEmail || selectedOrder.customerEmail || 'customer@example.com',
+        customerEmail: orderInfo?.customerEmail || currentUser?.email || 'customer@example.com',
         amount: selectedPackage.price,
         currency: 'usd',
         type: 'topup', // Mark as topup
-        iccid: selectedOrder.iccid,
+        iccid: iccid,
         packageId: selectedPackage.id
       };
 
@@ -107,7 +214,7 @@ const TopupModal = ({
       // Store topup info in localStorage for after payment
       localStorage.setItem('pendingTopupOrder', JSON.stringify({
         orderId: topupOrderId,
-        iccid: selectedOrder.iccid,
+        iccid: iccid,
         packageId: selectedPackage.id,
         packageName: selectedPackage.name,
         amount: selectedPackage.price,
@@ -131,40 +238,76 @@ const TopupModal = ({
     }
   };
 
-  if (!show || !selectedOrder) return null;
+  if (authLoading || loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading topup page...</p>
+        </div>
+      </div>
+    );
+  }
 
-  const iccid = selectedOrder.qrCode?.iccid || selectedOrder.iccid;
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Battery className="w-8 h-8 text-red-600" />
+          </div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Error Loading Topup</h2>
+          <p className="text-gray-600 mb-6">{error}</p>
+          <button
+            onClick={() => router.push('/dashboard')}
+            className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Dashboard
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="relative max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-        <div className="absolute inset-px rounded-xl bg-white"></div>
-        <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
-          <div className="px-8 pt-8 pb-8">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <Battery className="w-6 h-6 text-green-600" />
-                <h3 className="text-xl font-medium text-eerie-black">Add Data (Topup)</h3>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="mb-6">
+          <button
+            onClick={() => router.back()}
+            className="flex items-center text-gray-600 hover:text-gray-900 transition-colors mb-4"
+          >
+            <ArrowLeft className="w-5 h-5 mr-2" />
+            Back
+          </button>
+        </div>
+
+        {/* Main Content */}
+        <div className="max-w-2xl mx-auto">
+          <div className="bg-white rounded-2xl shadow-xl p-8 md:p-12">
+            {/* Title */}
+            <div className="text-center mb-8">
+              <div className="flex items-center justify-center gap-3 mb-4">
+                <Battery className="w-8 h-8 text-green-600" />
+                <h1 className="text-3xl font-bold text-gray-900">Add Data (Topup)</h1>
               </div>
-              <button
-                onClick={onClose}
-                className="text-cool-black hover:text-eerie-black transition-colors"
-              >
-                <X className="w-6 h-6" />
-              </button>
             </div>
 
             {/* Order Info */}
-            <div className="bg-gray-50 p-4 rounded-lg mb-6">
-              <p className="text-sm text-gray-600 mb-1">eSIM Order</p>
-              <p className="font-semibold text-gray-900">{selectedOrder.planName || 'Unknown Plan'}</p>
-              {iccid && (
-                <>
-                  <p className="text-xs text-gray-500 mt-2">ICCID</p>
-                  <p className="font-mono text-xs text-gray-700">{iccid}</p>
-                </>
-              )}
-            </div>
+            {orderInfo && (
+              <div className="bg-gray-50 p-4 rounded-lg mb-6">
+                <p className="text-sm text-gray-600 mb-1">eSIM Order</p>
+                <p className="font-semibold text-gray-900">{orderInfo.planName || 'Unknown Plan'}</p>
+                {iccid && (
+                  <>
+                    <p className="text-xs text-gray-500 mt-2">ICCID</p>
+                    <p className="font-mono text-xs text-gray-700">{iccid}</p>
+                  </>
+                )}
+              </div>
+            )}
 
             {/* Package Selection */}
             <div className="mb-6">
@@ -277,23 +420,12 @@ const TopupModal = ({
                 </button>
               </div>
             )}
-
-            {/* Cancel Button */}
-            <div className="flex gap-3">
-              <button
-                onClick={onClose}
-                className="flex-1 px-4 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
-              >
-                Cancel
-              </button>
-            </div>
           </div>
         </div>
-        <div className="pointer-events-none absolute inset-px rounded-xl shadow-sm ring-1 ring-black/5"></div>
       </div>
     </div>
   );
 };
 
-export default TopupModal;
+export default TopupPage;
 

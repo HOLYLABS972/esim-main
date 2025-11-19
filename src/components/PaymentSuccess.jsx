@@ -37,6 +37,29 @@ const PaymentSuccess = () => {
     }
   });
 
+  // Create topup record
+  const createTopupRecord = async (topupData) => {
+    try {
+      console.log('📦 Creating topup after payment...');
+      
+      const result = await apiService.createTopup({
+        iccid: topupData.iccid,
+        package_id: topupData.packageId
+      });
+
+      if (result.success) {
+        console.log('✅ Topup created successfully:', result);
+        toast.success('Topup added successfully!');
+        return { success: true, topupId: result.topupId };
+      } else {
+        throw new Error(result.error || 'Failed to create topup');
+      }
+    } catch (error) {
+      console.error('❌ Error creating topup:', error);
+      throw error;
+    }
+  };
+
   // Create order record in Firebase and process with RoamJet API
   const createOrderRecord = async (orderData) => {
     try {
@@ -179,6 +202,36 @@ const PaymentSuccess = () => {
     try {
       console.log('🎉 Processing payment success...');
       
+      // Check for pending topup order first
+      const pendingTopupOrder = localStorage.getItem('pendingTopupOrder');
+      if (pendingTopupOrder) {
+        try {
+          const topupData = JSON.parse(pendingTopupOrder);
+          console.log('📦 Processing topup order:', topupData);
+          
+          if (topupData.type === 'topup' && topupData.iccid && topupData.packageId) {
+            // Create topup after payment
+            const topupResult = await createTopupRecord(topupData);
+            
+            if (topupResult.success) {
+              // Clear pending topup order
+              localStorage.removeItem('pendingTopupOrder');
+              
+              // Redirect to QR code page or dashboard
+              if (topupData.iccid) {
+                router.push(`/qr/${topupData.iccid}`);
+              } else {
+                router.push('/dashboard');
+              }
+              return;
+            }
+          }
+        } catch (topupError) {
+          console.error('❌ Error processing topup order:', topupError);
+          localStorage.removeItem('pendingTopupOrder');
+        }
+      }
+      
       // Get parameters from URL
       const orderParam = searchParams.get('order_id') || searchParams.get('order');
       const email = searchParams.get('email');
@@ -260,11 +313,49 @@ const PaymentSuccess = () => {
         }
       } 
       // Handle Stripe payment (has session_id, plan)
-      else if (sessionId && planId) {
+      else if (sessionId) {
         console.log('💳 Processing Stripe payment success');
-        // This would use Firebase functions - for now redirect to dashboard
-        router.push('/dashboard');
-        return;
+        
+        // Check for pending topup order for Stripe payments too
+        const pendingTopupOrder = localStorage.getItem('pendingTopupOrder');
+        if (pendingTopupOrder) {
+          try {
+            const topupData = JSON.parse(pendingTopupOrder);
+            console.log('📦 Processing Stripe topup order:', topupData);
+            
+            if (topupData.type === 'topup' && topupData.iccid && topupData.packageId) {
+              // Create topup after payment
+              const topupResult = await createTopupRecord(topupData);
+              
+              if (topupResult.success) {
+                // Clear pending topup order
+                localStorage.removeItem('pendingTopupOrder');
+                
+                // Redirect to QR code page or dashboard
+                if (topupData.iccid) {
+                  router.push(`/qr/${topupData.iccid}`);
+                } else {
+                  router.push('/dashboard');
+                }
+                return;
+              }
+            }
+          } catch (topupError) {
+            console.error('❌ Error processing Stripe topup order:', topupError);
+            localStorage.removeItem('pendingTopupOrder');
+          }
+        }
+        
+        // Regular Stripe order handling
+        if (planId) {
+          // This would use Firebase functions - for now redirect to dashboard
+          router.push('/dashboard');
+          return;
+        } else {
+          // No plan ID, might be a topup - check localStorage again
+          router.push('/dashboard');
+          return;
+        }
       }
       else {
         throw new Error('Missing required payment parameters');
