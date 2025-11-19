@@ -124,12 +124,19 @@ const makePublicRequest = async (endpoint, options = {}) => {
   try {
     const apiBaseUrl = await getApiBaseUrl(); // Get dynamic URL based on mode
     
+    // Ensure we don't include Authorization header for public requests
+    const { headers, ...restOptions } = options;
+    const publicHeaders = {
+      'Content-Type': 'application/json',
+      ...headers,
+    };
+    // Explicitly remove Authorization header if it exists
+    delete publicHeaders.Authorization;
+    delete publicHeaders['Authorization'];
+    
     const response = await fetch(`${apiBaseUrl}${endpoint}`, {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
+      ...restOptions,
+      headers: publicHeaders,
     });
 
     const data = await response.json();
