@@ -33,9 +33,32 @@ export async function OPTIONS(request) {
  * This avoids CORS issues by making the request server-side
  */
 export async function POST(request) {
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  };
+
   try {
-    const body = await request.json();
-    const { iccid, orderId } = body;
+    // Parse request body
+    let body;
+    try {
+      body = await request.json();
+    } catch (parseError) {
+      console.error('❌ Failed to parse request body:', parseError);
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Invalid request body. Expected JSON.',
+        },
+        { 
+          status: 400,
+          headers: corsHeaders,
+        }
+      );
+    }
+
+    const { iccid, orderId } = body || {};
 
     if (!iccid && !orderId) {
       return NextResponse.json(
@@ -43,11 +66,16 @@ export async function POST(request) {
           success: false,
           error: 'Either iccid or orderId is required',
         },
-        { status: 400 }
+        { 
+          status: 400,
+          headers: corsHeaders,
+        }
       );
     }
 
     const apiBaseUrl = getApiBaseUrl();
+    console.log(`🌐 Proxying mobile-data request to: ${apiBaseUrl}/api/user/mobile-data`);
+    
     const headers = {
       'Content-Type': 'application/json',
     };
@@ -56,34 +84,68 @@ export async function POST(request) {
     const authHeader = request.headers.get('authorization');
     if (authHeader) {
       headers['Authorization'] = authHeader;
+      console.log('🔐 Forwarding auth token to external API');
+    } else {
+      console.log('👤 No auth token found, making guest request');
     }
 
     // Forward the request to the external API
-    const response = await fetch(`${apiBaseUrl}/api/user/mobile-data`, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({ iccid, orderId }),
-    });
-
-    let data;
+    let response;
     try {
-      data = await response.json();
-    } catch (jsonError) {
-      // If response is not JSON, return error
-      const text = await response.text();
+      response = await fetch(`${apiBaseUrl}/api/user/mobile-data`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ iccid, orderId }),
+      });
+    } catch (fetchError) {
+      console.error('❌ Fetch error:', fetchError);
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Failed to connect to API: ${fetchError.message}`,
+        },
+        { 
+          status: 503,
+          headers: corsHeaders,
+        }
+      );
+    }
+
+    // Handle response
+    const contentType = response.headers.get('content-type');
+    let data;
+
+    if (contentType && contentType.includes('application/json')) {
+      try {
+        data = await response.json();
+      } catch (jsonError) {
+        console.error('❌ Failed to parse JSON response:', jsonError);
+        const text = await response.text().catch(() => 'Unable to read response');
+        console.error('❌ Response text:', text);
+        return NextResponse.json(
+          {
+            success: false,
+            error: `API returned invalid JSON: ${response.status} ${response.statusText}`,
+          },
+          {
+            status: response.status || 500,
+            headers: corsHeaders,
+          }
+        );
+      }
+    } else {
+      // Non-JSON response
+      const text = await response.text().catch(() => 'Unable to read response');
       console.error('❌ Non-JSON response from API:', text);
       return NextResponse.json(
         {
           success: false,
           error: `API returned non-JSON response: ${response.status} ${response.statusText}`,
+          details: text.substring(0, 200), // Limit details length
         },
         {
           status: response.status || 500,
-          headers: {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'POST, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-          },
+          headers: corsHeaders,
         }
       );
     }
@@ -91,26 +153,20 @@ export async function POST(request) {
     // Return the response with CORS headers
     return NextResponse.json(data, {
       status: response.status,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-      },
+      headers: corsHeaders,
     });
   } catch (error) {
-    console.error('❌ Error proxying mobile-data request:', error);
+    console.error('❌ Unexpected error proxying mobile-data request:', error);
+    console.error('❌ Error stack:', error.stack);
     return NextResponse.json(
       {
         success: false,
         error: error.message || 'Failed to fetch mobile data',
+        details: process.env.NODE_ENV === 'development' ? error.stack : undefined,
       },
       { 
         status: 500,
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'POST, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-        },
+        headers: corsHeaders,
       }
     );
   }

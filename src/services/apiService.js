@@ -416,12 +416,20 @@ export const apiService = {
       }),
     });
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ error: `Request failed with status ${response.status}` }));
-      throw new Error(errorData.error || `Request failed with status ${response.status}`);
+    // Read response body once (can only be read once)
+    let result;
+    try {
+      result = await response.json();
+    } catch (jsonError) {
+      // If response is not JSON, try to get text
+      const text = await response.text().catch(() => `Request failed with status ${response.status}`);
+      throw new Error(`Invalid response: ${text}`);
     }
 
-    const result = await response.json();
+    if (!response.ok) {
+      throw new Error(result.error || `Request failed with status ${response.status}`);
+    }
+
     console.log('✅ Mobile data status retrieved:', result);
     return result;
   },
