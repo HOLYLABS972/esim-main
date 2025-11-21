@@ -85,7 +85,7 @@ export const metadata = {
     other: [
       {
         rel: 'mask-icon',
-        url: '/images/logo_icon/logo.png',
+        url: '/images/logo_icon/logo2.png',
         color: '#468BE6',
       },
     ],
@@ -153,7 +153,7 @@ export default function RootLayout({ children }) {
               "@type": "Organization",
               "name": "RoamJet",
               "url": "https://www.roamjet.net",
-              "logo": "https://www.roamjet.net/images/logo_icon/logo.png",
+              "logo": "https://www.roamjet.net/images/logo_icon/logo2.png",
               "description": "Global eSIM plans for travelers, backpackers, and digital nomads. Instant activation in 200+ countries.",
               "sameAs": [
                 "https://twitter.com/roamjet",

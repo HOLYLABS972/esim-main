@@ -39,7 +39,7 @@ export default function SimpleNavbar() {
               <div className="flex items-center gap-3">
                 <Link 
                   href="/dashboard"
-                  className="flex items-center gap-2 text-sm text-gray-700 hover:text-blue-600 transition-colors"
+                  className="flex items-center gap-2 text-sm text-gray-700 hover:text-tufts-blue transition-colors"
                 >
                   <span className="hidden sm:inline">{currentUser.email}</span>
                 </Link>
@@ -54,7 +54,7 @@ export default function SimpleNavbar() {
             ) : (
               <Link 
                 href={`${langPrefix}/login`}
-                className="flex items-center justify-center text-sm text-gray-600 hover:text-blue-600 transition-colors px-2 py-1 rounded hover:bg-gray-50"
+                className="flex items-center justify-center text-sm text-gray-600 hover:text-tufts-blue transition-colors px-2 py-1 rounded hover:bg-gray-50"
                 title="Login"
               >
                 <LogIn size={18} />

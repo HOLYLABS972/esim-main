@@ -57,7 +57,7 @@ const EsimUsageModal = ({ esimUsage, onClose }) => {
               </div>
 
               {/* Data Usage */}
-              <div className="bg-blue-50 p-4 rounded-lg">
+              <div className="bg-tufts-blue/10 p-4 rounded-lg">
                 <h4 className="font-semibold text-gray-900 mb-3">Data Usage</h4>
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
@@ -82,7 +82,7 @@ const EsimUsageModal = ({ esimUsage, onClose }) => {
                     <>
                       <div className="w-full bg-gray-200 rounded-full h-2">
                         <div 
-                          className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                          className="bg-tufts-blue h-2 rounded-full transition-all duration-300"
                           style={{ 
                             width: `${Math.min(esimUsage.usagePercentage || 0, 100)}%` 
                           }}

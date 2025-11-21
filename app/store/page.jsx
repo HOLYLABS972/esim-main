@@ -9,9 +9,12 @@ export default function StorePage() {
     <div className="min-h-screen">
       <div className="container mx-auto px-4 py-8">
         <div className="text-center mb-8">
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-semibold text-balance text-gray-600 mb-6">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-semibold text-balance text-gray-600 mb-4">
             <span className="text-eerie-black font-semibold">Get instant mobile data worldwide</span>
           </h1>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-6">
+            Browse our complete selection of eSIM data plans for 200+ countries. Real-time pricing with instant activation.
+          </p>
           
           {/* Search Bar */}
           <Suspense fallback={<div className="h-16" />}>

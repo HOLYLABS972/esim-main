@@ -52,7 +52,7 @@ const EsimDetailsModal = ({ esimDetails, onClose }) => {
               </div>
 
               {/* QR Code Information */}
-              <div className="bg-blue-50 p-4 rounded-lg">
+              <div className="bg-tufts-blue/10 p-4 rounded-lg">
                 <h4 className="font-semibold text-gray-900 mb-3">QR Code Information</h4>
                 <div className="space-y-3 text-sm">
                   <div>
@@ -63,7 +63,7 @@ const EsimDetailsModal = ({ esimDetails, onClose }) => {
                   </div>
                   <div>
                     <span className="font-medium text-gray-600">QR Code URL:</span>
-                    <p className="text-blue-600 break-all">
+                    <p className="text-tufts-blue break-all">
                       <a href={esimDetails.qrcode_url} target="_blank" rel="noopener noreferrer" className="hover:underline">
                         {esimDetails.qrcode_url}
                       </a>
@@ -72,7 +72,7 @@ const EsimDetailsModal = ({ esimDetails, onClose }) => {
                   {esimDetails.direct_apple_installation_url && (
                     <div>
                       <span className="font-medium text-gray-600">Apple Installation URL:</span>
-                      <p className="text-blue-600 break-all">
+                      <p className="text-tufts-blue break-all">
                         <a href={esimDetails.direct_apple_installation_url} target="_blank" rel="noopener noreferrer" className="hover:underline">
                           {esimDetails.direct_apple_installation_url}
                         </a>

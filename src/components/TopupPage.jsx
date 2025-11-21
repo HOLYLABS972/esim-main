@@ -727,7 +727,7 @@ const TopupPage = ({ iccid, countryCode: urlCountryCode }) => {
               {selectedPackage && (
                 <button
                   onClick={() => setSelectedPackage(null)}
-                  className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                  className="text-tufts-blue hover:text-tufts-blue-dark text-sm font-medium"
                 >
                   Change Package
                 </button>
@@ -758,7 +758,7 @@ const TopupPage = ({ iccid, countryCode: urlCountryCode }) => {
                       onClick={() => setSelectedPackage(pkg)}
                     className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
                         selectedPackage?.id === pkg.id
-                        ? 'border-blue-500 bg-blue-50'
+                        ? 'border-tufts-blue bg-tufts-blue/10'
                         : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >
@@ -777,7 +777,7 @@ const TopupPage = ({ iccid, countryCode: urlCountryCode }) => {
                         <div className="text-xs text-gray-600 mb-1">Countries</div>
                         <div className="flex flex-wrap gap-1">
                           {pkg.country_codes.slice(0, 3).map((code, index) => (
-                            <span key={index} className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                            <span key={index} className="text-xs bg-tufts-blue/20 text-tufts-blue-dark px-2 py-1 rounded">
                               {code}
                             </span>
                           ))}
@@ -810,7 +810,7 @@ const TopupPage = ({ iccid, countryCode: urlCountryCode }) => {
                       </div>
                     </div>
                     <div className="text-center">
-                      <div className="text-lg font-bold text-blue-600">
+                      <div className="text-lg font-bold text-tufts-blue">
                         ${pkg.price.toFixed(2)}
                       </div>
                     </div>
@@ -834,10 +834,10 @@ const TopupPage = ({ iccid, countryCode: urlCountryCode }) => {
                     type="checkbox"
                     checked={acceptedRefund}
                     onChange={(e) => setAcceptedRefund(e.target.checked)}
-                        className={"mt-1 h-4 w-4 rounded border-gray-300 focus:ring-blue-500 " + (acceptedRefund ? 'text-blue-600' : 'checkbox-red')}
+                        className={"mt-1 h-4 w-4 rounded border-gray-300 focus:ring-tufts-blue/50 " + (acceptedRefund ? 'text-tufts-blue' : 'checkbox-red')}
                   />
                   <span>
-                    I accept the <a href="https://esim.roamjet.net/refund-policy" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">Refund Policy</a>
+                    I accept the <a href="https://esim.roamjet.net/refund-policy" target="_blank" rel="noopener noreferrer" className="text-tufts-blue underline">Refund Policy</a>
                   </span>
                 </label>
               </div>
@@ -850,8 +850,8 @@ const TopupPage = ({ iccid, countryCode: urlCountryCode }) => {
                       disabled={!acceptedRefund || isProcessing}
                   className={`w-full flex items-center justify-center space-x-3 py-4 px-6 rounded-xl transition-all duration-200 font-medium text-lg shadow-lg text-white ${
                     selectedPaymentMethod === 'stripe' 
-                      ? 'bg-blue-700 ring-2 ring-blue-300' 
-                      : 'bg-blue-600 hover:bg-blue-700'
+                      ? 'bg-tufts-blue-dark ring-2 ring-tufts-blue/30' 
+                      : 'bg-tufts-blue hover:bg-tufts-blue-dark'
                       } ${!acceptedRefund || isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                       {isProcessing && selectedPaymentMethod === 'stripe' ? (
@@ -905,8 +905,8 @@ const TopupPage = ({ iccid, countryCode: urlCountryCode }) => {
                       <p className="text-sm text-gray-600">Trusted by millions of travelers worldwide</p>
                     </div>
                     <div className="flex flex-col items-center text-center p-4">
-                      <div className="bg-blue-100 p-3 rounded-full mb-3">
-                        <Globe className="w-8 h-8 text-blue-600" />
+                      <div className="bg-tufts-blue/20 p-3 rounded-full mb-3">
+                        <Globe className="w-8 h-8 text-tufts-blue" />
                       </div>
                       <h4 className="font-semibold text-gray-900 mb-2">Global Coverage</h4>
                       <p className="text-sm text-gray-600">Stay connected wherever you go</p>

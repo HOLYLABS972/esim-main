@@ -166,14 +166,14 @@ const Blog = () => {
                 placeholder={t('blog.searchPlaceholder', 'Search blog posts...')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border-0 shadow-lg rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-3 border-0 shadow-lg rounded-lg focus:ring-2 focus:ring-tufts-blue/50 focus:border-transparent"
               />
             </div>
             <div className="md:w-48">
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full px-3 py-3 border-0 shadow-lg rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-3 border-0 shadow-lg rounded-lg focus:ring-2 focus:ring-tufts-blue/50 focus:border-transparent"
               >
                 <option value="all">{t('blog.allCategories', 'All Categories')}</option>
                 {categories.map(category => (

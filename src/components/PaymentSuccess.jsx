@@ -620,7 +620,7 @@ const PaymentSuccess = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-tufts-blue mx-auto mb-4"></div>
           <p className="text-gray-600">Loading authentication...</p>
         </div>
       </div>
@@ -631,7 +631,7 @@ const PaymentSuccess = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-tufts-blue mx-auto mb-4"></div>
           <p className="text-gray-600">Processing payment and activating eSIM...</p>
         </div>
       </div>
@@ -647,7 +647,7 @@ const PaymentSuccess = () => {
           <p className="text-gray-600 mb-4">{error}</p>
           <button
             onClick={() => router.push('/store')}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="px-4 py-2 bg-tufts-blue text-white rounded-lg hover:bg-tufts-blue-dark transition-colors"
           >
             Go to Store
           </button>
@@ -669,7 +669,7 @@ const PaymentSuccess = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 py-12 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-alice-blue py-12 px-4">
       <div className="max-w-4xl mx-auto">
         {/* Success Header */}
         <div className="text-center mb-12">
@@ -707,7 +707,7 @@ const PaymentSuccess = () => {
         {qrCodeData && qrCodeData.qrCode && (
           <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
             <div className="text-center">
-              <QrCode className="w-12 h-12 text-blue-500 mx-auto mb-4" />
+              <QrCode className="w-12 h-12 text-tufts-blue mx-auto mb-4" />
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">Your eSIM QR Code</h2>
               <p className="text-gray-600 mb-6">Scan this QR code with your device to activate your eSIM</p>
               
@@ -732,7 +732,7 @@ const PaymentSuccess = () => {
                       link.download = `esim-qr-${orderInfo.orderId}.png`;
                       link.click();
                     }}
-                    className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    className="inline-flex items-center px-6 py-3 bg-tufts-blue text-white rounded-lg hover:bg-tufts-blue-dark transition-colors"
                   >
                     <Download className="w-5 h-5 mr-2" />
                     Download QR Code
@@ -760,7 +760,7 @@ const PaymentSuccess = () => {
             {currentUser && (
               <button
                 onClick={() => router.push('/dashboard')}
-                className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="mt-4 px-6 py-2 bg-tufts-blue text-white rounded-lg hover:bg-tufts-blue-dark transition-colors"
               >
                 Go to Dashboard
               </button>

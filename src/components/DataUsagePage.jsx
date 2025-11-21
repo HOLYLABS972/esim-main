@@ -81,14 +81,14 @@ const DataUsagePage = ({ iccid, orderId }) => {
     if (statusLower === 'active') return 'bg-green-100 text-green-800 border-green-300';
     if (statusLower === 'expired') return 'bg-red-100 text-red-800 border-red-300';
     if (statusLower === 'inactive') return 'bg-gray-100 text-gray-800 border-gray-300';
-    return 'bg-blue-100 text-blue-800 border-blue-300';
+    return 'bg-tufts-blue/20 text-tufts-blue-dark border-tufts-blue/30';
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-alice-blue to-alice-blue flex items-center justify-center p-4">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-tufts-blue mx-auto mb-4"></div>
           <p className="text-gray-600">Loading data usage...</p>
         </div>
       </div>
@@ -97,7 +97,7 @@ const DataUsagePage = ({ iccid, orderId }) => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 p-4">
+      <div className="min-h-screen bg-gradient-to-br from-alice-blue to-alice-blue p-4">
         <div className="max-w-2xl mx-auto pt-8">
           <button
             onClick={() => router.back()}
@@ -113,7 +113,7 @@ const DataUsagePage = ({ iccid, orderId }) => {
             <p className="text-gray-600 mb-6">{error}</p>
             <button
               onClick={() => fetchDataUsage()}
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="px-6 py-3 bg-tufts-blue text-white rounded-lg hover:bg-tufts-blue-dark transition-colors"
             >
               Try Again
             </button>
@@ -142,9 +142,9 @@ const DataUsagePage = ({ iccid, orderId }) => {
         {/* Main Card */}
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
           {/* Status Banner */}
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 text-white">
+          <div className="bg-gradient-to-r from-tufts-blue to-tufts-blue-dark p-6 text-white">
             <h1 className="text-2xl font-bold mb-2">Data Usage</h1>
-            <p className="text-blue-100 text-sm break-all">ICCID: {iccid}</p>
+            <p className="text-white/90 text-sm break-all">ICCID: {iccid}</p>
           </div>
 
           {/* Content */}
@@ -185,7 +185,7 @@ const DataUsagePage = ({ iccid, orderId }) => {
               {/* Progress Bar */}
               <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
                 <div 
-                  className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 transition-all duration-500 rounded-full"
+                  className="h-full bg-gradient-to-r from-tufts-blue to-tufts-blue-dark transition-all duration-500 rounded-full"
                   style={{ width: `${Math.min(usagePercentage, 100)}%` }}
                 ></div>
               </div>
@@ -215,12 +215,12 @@ const DataUsagePage = ({ iccid, orderId }) => {
             {(dataInfo?.daysUsed > 0 || dataInfo?.daysRemaining > 0) && (
               <div className="grid grid-cols-2 gap-4">
                 {dataInfo.daysUsed > 0 && (
-                  <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="p-4 bg-tufts-blue/10 rounded-lg border border-tufts-blue/20">
                     <div className="flex items-center mb-2">
-                      <Calendar className="w-4 h-4 text-blue-600 mr-2" />
+                      <Calendar className="w-4 h-4 text-tufts-blue mr-2" />
                       <span className="text-sm text-gray-600">Days Used</span>
                     </div>
-                    <p className="text-2xl font-bold text-blue-700">{dataInfo.daysUsed}</p>
+                    <p className="text-2xl font-bold text-tufts-blue-dark">{dataInfo.daysUsed}</p>
                   </div>
                 )}
                 

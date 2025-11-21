@@ -50,9 +50,9 @@ const PlanCard = ({ plan, isSelected, onClick, index, regularSettings }) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.1 }}
-      className={`relative p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:border-green-300 hover:shadow-md ${
+      className={`relative p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:border-tufts-blue/30 hover:shadow-md ${
         isSelected 
-          ? 'border-green-500 bg-green-50 shadow-lg' 
+          ? 'border-tufts-blue bg-tufts-blue/10 shadow-lg' 
           : 'border-gray-200 bg-white'
       }`}
       onClick={onClick}
@@ -69,9 +69,9 @@ const PlanCard = ({ plan, isSelected, onClick, index, regularSettings }) => {
       {/* Plan Header */}
       <div className={`flex items-start justify-between mb-3 ${isRTL ? 'flex-row-reverse' : ''}`} dir={isRTL ? 'rtl' : 'ltr'}>
         <div className={`flex items-start ${isRTL ? 'space-x-reverse space-x-4' : 'space-x-4'}`}>
-          <div className="flex-shrink-0 bg-blue-100 p-3 rounded-xl">
+          <div className="flex-shrink-0 bg-tufts-blue/20 p-3 rounded-xl">
             <svg 
-              className="w-8 h-8 text-blue-600" 
+              className="w-8 h-8 text-tufts-blue" 
               fill="currentColor" 
               viewBox="0 0 24 24"
             >
@@ -106,11 +106,11 @@ const PlanCard = ({ plan, isSelected, onClick, index, regularSettings }) => {
         <div className={isRTL ? 'text-left' : 'text-right'}>
           {hasDiscount ? (
             <div>
-              <div className="text-2xl font-bold text-red-600">${discountedPrice.toFixed(2)}</div>
+              <div className="text-2xl font-bold text-tufts-blue">${discountedPrice.toFixed(2)}</div>
               <div className="text-sm text-gray-500 line-through">${originalPrice.toFixed(2)}</div>
             </div>
           ) : (
-            <div className="text-2xl font-bold text-green-600">${originalPrice.toFixed(2)}</div>
+            <div className="text-2xl font-bold text-tufts-blue">${originalPrice.toFixed(2)}</div>
           )}
           <div className="text-xs text-gray-500">{plan.currency || 'USD'}</div>
         </div>
@@ -142,7 +142,7 @@ const PlanCard = ({ plan, isSelected, onClick, index, regularSettings }) => {
             {plan.benefits.map((benefit, idx) => (
               <span
                 key={idx}
-                className="inline-flex items-center px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full"
+                className="inline-flex items-center px-2 py-1 bg-tufts-blue/20 text-tufts-blue-dark text-xs rounded-full"
               >
                 <Check size={12} className={`${isRTL ? 'ml-1' : 'mr-1'}`} />
                 {benefit}
@@ -370,7 +370,7 @@ const PlanSelectionBottomSheet = ({
           <div className="space-y-4">
             <div className={`flex items-center justify-between mb-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
               <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-2' : 'space-x-2'}`}>
-                <Smartphone className="w-5 h-5 text-green-600" />
+                <Smartphone className="w-5 h-5 text-tufts-blue" />
                 <h4 className={`font-semibold text-gray-900 text-lg ${isRTL ? 'text-right' : 'text-left'}`}>
                   {t('planSelection.availablePlans', 'Available Plans ({{count}})', { count: availablePlans.length })}
                 </h4>
@@ -395,7 +395,7 @@ const PlanSelectionBottomSheet = ({
           <div className="space-y-6">
             <div className={`flex items-center justify-between mb-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
               <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-2' : 'space-x-2'}`}>
-                <Smartphone className="w-5 h-5 text-green-600" />
+                <Smartphone className="w-5 h-5 text-tufts-blue" />
                 <h4 className={`font-semibold text-gray-900 text-lg ${isRTL ? 'text-right' : 'text-left'}`}>
                   {t('planSelection.availablePlans', 'Available Plans')}
                 </h4>
@@ -448,7 +448,7 @@ const PlanSelectionBottomSheet = ({
                       {countries.map((country) => (
                         <div key={`${days}-${country.id}`} className="col-span-1">
                           <button
-                            className="w-full bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-4 text-left border border-gray-200 hover:border-blue-300 hover:scale-105"
+                            className="w-full bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-4 text-left border border-gray-200 hover:border-tufts-blue/30 hover:scale-105"
                             onClick={() => {
                               // This would trigger loading plans for the country
                               console.log('Selected country:', country.name, 'for', days, 'days');

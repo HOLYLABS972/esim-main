@@ -486,7 +486,7 @@ const QRCodePage = ({ orderId, iccid }) => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-tufts-blue mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading QR code...</p>
         </div>
       </div>
@@ -505,7 +505,7 @@ const QRCodePage = ({ orderId, iccid }) => {
           <div className="space-y-3">
             <button
               onClick={fetchQRCode}
-              className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="w-full px-4 py-2 bg-tufts-blue text-white rounded-lg hover:bg-tufts-blue-dark transition-colors"
             >
               Try Again
             </button>
@@ -628,7 +628,7 @@ const QRCodePage = ({ orderId, iccid }) => {
                       </>
                     ) : (
                       <>
-                        <Smartphone className="w-5 h-5 sm:w-4 sm:h-4 mr-3 text-blue-600 flex-shrink-0" />
+                        <Smartphone className="w-5 h-5 sm:w-4 sm:h-4 mr-3 text-tufts-blue flex-shrink-0" />
                         <span className="text-gray-700 text-sm sm:text-base">Install</span>
                       </>
                     )}
@@ -642,7 +642,7 @@ const QRCodePage = ({ orderId, iccid }) => {
                     }}
                     className="w-full px-4 py-3.5 sm:py-3 text-left active:bg-gray-100 hover:bg-gray-50 transition-colors flex items-center border-t border-gray-200 touch-manipulation min-h-[44px]"
                   >
-                    <Share2 className="w-5 h-5 sm:w-4 sm:h-4 mr-3 text-blue-600 flex-shrink-0" />
+                    <Share2 className="w-5 h-5 sm:w-4 sm:h-4 mr-3 text-tufts-blue flex-shrink-0" />
                     <span className="text-gray-700 text-sm sm:text-base">Share Link</span>
                   </button>
 
@@ -658,12 +658,12 @@ const QRCodePage = ({ orderId, iccid }) => {
                     >
                       {loadingMobileData ? (
                         <>
-                          <Loader2 className="w-5 h-5 sm:w-4 sm:h-4 mr-3 text-blue-600 animate-spin flex-shrink-0" />
+                          <Loader2 className="w-5 h-5 sm:w-4 sm:h-4 mr-3 text-tufts-blue animate-spin flex-shrink-0" />
                           <span className="text-gray-700 text-sm sm:text-base">Loading...</span>
                         </>
                       ) : (
                         <>
-                          <BarChart3 className="w-5 h-5 sm:w-4 sm:h-4 mr-3 text-blue-600 flex-shrink-0" />
+                          <BarChart3 className="w-5 h-5 sm:w-4 sm:h-4 mr-3 text-tufts-blue flex-shrink-0" />
                           <span className="text-gray-700 text-sm sm:text-base">View Data Usage</span>
                         </>
                       )}
@@ -731,7 +731,7 @@ const QRCodePage = ({ orderId, iccid }) => {
                     className={`flex items-start p-3 sm:p-4 rounded-lg border-2 transition-all cursor-pointer touch-manipulation active:scale-[0.98] ${
                       completedSteps.includes(1)
                         ? 'bg-green-50 border-green-300'
-                        : 'bg-blue-50 border-blue-200 active:border-blue-300'
+                        : 'bg-tufts-blue/10 border-tufts-blue/20 active:border-tufts-blue/30'
                     }`}
                     onClick={() => {
                       if (completedSteps.includes(1)) {
@@ -747,14 +747,14 @@ const QRCodePage = ({ orderId, iccid }) => {
                           <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                         </div>
                       ) : (
-                        <div className="w-7 h-7 sm:w-8 sm:h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm sm:text-base">
+                        <div className="w-7 h-7 sm:w-8 sm:h-8 bg-tufts-blue/100 rounded-full flex items-center justify-center text-white font-bold text-sm sm:text-base">
                           1
                         </div>
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center mb-1 sm:mb-2">
-                        <Camera className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-blue-600 flex-shrink-0" />
+                        <Camera className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-tufts-blue flex-shrink-0" />
                         <h4 className="font-semibold text-gray-900 text-sm sm:text-base">Open Camera App</h4>
                       </div>
                       <p className="text-gray-600 text-xs sm:text-sm">Open the Camera app on your iPhone or iPad</p>
@@ -765,7 +765,7 @@ const QRCodePage = ({ orderId, iccid }) => {
                     className={`flex items-start p-3 sm:p-4 rounded-lg border-2 transition-all cursor-pointer touch-manipulation active:scale-[0.98] ${
                       completedSteps.includes(2)
                         ? 'bg-green-50 border-green-300'
-                        : 'bg-blue-50 border-blue-200 active:border-blue-300'
+                        : 'bg-tufts-blue/10 border-tufts-blue/20 active:border-tufts-blue/30'
                     }`}
                     onClick={() => {
                       if (completedSteps.includes(2)) {
@@ -781,14 +781,14 @@ const QRCodePage = ({ orderId, iccid }) => {
                           <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                         </div>
                       ) : (
-                        <div className="w-7 h-7 sm:w-8 sm:h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm sm:text-base">
+                        <div className="w-7 h-7 sm:w-8 sm:h-8 bg-tufts-blue/100 rounded-full flex items-center justify-center text-white font-bold text-sm sm:text-base">
                           2
                         </div>
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center mb-1 sm:mb-2">
-                        <QrCode className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-blue-600 flex-shrink-0" />
+                        <QrCode className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-tufts-blue flex-shrink-0" />
                         <h4 className="font-semibold text-gray-900 text-sm sm:text-base">Scan QR Code</h4>
                       </div>
                       <p className="text-gray-600 text-xs sm:text-sm">Point your camera at the QR code above. A notification will appear at the top of your screen.</p>
@@ -799,7 +799,7 @@ const QRCodePage = ({ orderId, iccid }) => {
                     className={`flex items-start p-3 sm:p-4 rounded-lg border-2 transition-all cursor-pointer touch-manipulation active:scale-[0.98] ${
                       completedSteps.includes(3)
                         ? 'bg-green-50 border-green-300'
-                        : 'bg-blue-50 border-blue-200 active:border-blue-300'
+                        : 'bg-tufts-blue/10 border-tufts-blue/20 active:border-tufts-blue/30'
                     }`}
                     onClick={() => {
                       if (completedSteps.includes(3)) {
@@ -815,14 +815,14 @@ const QRCodePage = ({ orderId, iccid }) => {
                           <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                         </div>
                       ) : (
-                        <div className="w-7 h-7 sm:w-8 sm:h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm sm:text-base">
+                        <div className="w-7 h-7 sm:w-8 sm:h-8 bg-tufts-blue/100 rounded-full flex items-center justify-center text-white font-bold text-sm sm:text-base">
                           3
                         </div>
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center mb-1 sm:mb-2">
-                        <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-blue-600 flex-shrink-0" />
+                        <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-tufts-blue flex-shrink-0" />
                         <h4 className="font-semibold text-gray-900 text-sm sm:text-base">Tap Notification</h4>
                       </div>
                       <p className="text-gray-600 text-xs sm:text-sm">Tap the "Cellular Plan Detected" notification that appears</p>
@@ -833,7 +833,7 @@ const QRCodePage = ({ orderId, iccid }) => {
                     className={`flex items-start p-3 sm:p-4 rounded-lg border-2 transition-all cursor-pointer touch-manipulation active:scale-[0.98] ${
                       completedSteps.includes(4)
                         ? 'bg-green-50 border-green-300'
-                        : 'bg-blue-50 border-blue-200 active:border-blue-300'
+                        : 'bg-tufts-blue/10 border-tufts-blue/20 active:border-tufts-blue/30'
                     }`}
                     onClick={() => {
                       if (completedSteps.includes(4)) {
@@ -849,14 +849,14 @@ const QRCodePage = ({ orderId, iccid }) => {
                           <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                         </div>
                       ) : (
-                        <div className="w-7 h-7 sm:w-8 sm:h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm sm:text-base">
+                        <div className="w-7 h-7 sm:w-8 sm:h-8 bg-tufts-blue/100 rounded-full flex items-center justify-center text-white font-bold text-sm sm:text-base">
                           4
                         </div>
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center mb-1 sm:mb-2">
-                        <Settings className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-blue-600 flex-shrink-0" />
+                        <Settings className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-tufts-blue flex-shrink-0" />
                         <h4 className="font-semibold text-gray-900 text-sm sm:text-base">Follow Setup</h4>
                       </div>
                       <p className="text-gray-600 text-xs sm:text-sm">Follow the on-screen instructions to add the eSIM. You'll be asked to label it (e.g., "Travel" or "Roaming")</p>
@@ -867,7 +867,7 @@ const QRCodePage = ({ orderId, iccid }) => {
                     className={`flex items-start p-3 sm:p-4 rounded-lg border-2 transition-all cursor-pointer touch-manipulation active:scale-[0.98] ${
                       completedSteps.includes(5)
                         ? 'bg-green-50 border-green-300'
-                        : 'bg-blue-50 border-blue-200 active:border-blue-300'
+                        : 'bg-tufts-blue/10 border-tufts-blue/20 active:border-tufts-blue/30'
                     }`}
                     onClick={() => {
                       if (completedSteps.includes(5)) {
@@ -883,14 +883,14 @@ const QRCodePage = ({ orderId, iccid }) => {
                           <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                         </div>
                       ) : (
-                        <div className="w-7 h-7 sm:w-8 sm:h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm sm:text-base">
+                        <div className="w-7 h-7 sm:w-8 sm:h-8 bg-tufts-blue/100 rounded-full flex items-center justify-center text-white font-bold text-sm sm:text-base">
                           5
                         </div>
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center mb-1 sm:mb-2">
-                        <Globe className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-blue-600 flex-shrink-0" />
+                        <Globe className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-tufts-blue flex-shrink-0" />
                         <h4 className="font-semibold text-gray-900 text-sm sm:text-base">Enable Data Roaming</h4>
                       </div>
                       <p className="text-gray-600 text-xs sm:text-sm">Go to Settings → Cellular → [Your eSIM] → Turn on "Data Roaming" to use the eSIM abroad</p>
@@ -906,7 +906,7 @@ const QRCodePage = ({ orderId, iccid }) => {
                     className={`flex items-start p-4 rounded-lg border-2 transition-all cursor-pointer ${
                       completedSteps.includes(1)
                         ? 'bg-green-50 border-green-300'
-                        : 'bg-blue-50 border-blue-200 hover:border-blue-300'
+                        : 'bg-tufts-blue/10 border-tufts-blue/20 hover:border-tufts-blue/30'
                     }`}
                     onClick={() => {
                       if (completedSteps.includes(1)) {
@@ -922,14 +922,14 @@ const QRCodePage = ({ orderId, iccid }) => {
                           <CheckCircle className="w-5 h-5 text-white" />
                         </div>
                       ) : (
-                        <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">
+                        <div className="w-8 h-8 bg-tufts-blue/100 rounded-full flex items-center justify-center text-white font-bold">
                           1
                         </div>
                       )}
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center mb-2">
-                        <Settings className="w-5 h-5 mr-2 text-blue-600" />
+                        <Settings className="w-5 h-5 mr-2 text-tufts-blue" />
                         <h4 className="font-semibold text-gray-900">Open Settings</h4>
                       </div>
                       <p className="text-gray-600">Go to Settings → Network & internet → SIMs → Add eSIM</p>
@@ -940,7 +940,7 @@ const QRCodePage = ({ orderId, iccid }) => {
                     className={`flex items-start p-4 rounded-lg border-2 transition-all cursor-pointer ${
                       completedSteps.includes(2)
                         ? 'bg-green-50 border-green-300'
-                        : 'bg-blue-50 border-blue-200 hover:border-blue-300'
+                        : 'bg-tufts-blue/10 border-tufts-blue/20 hover:border-tufts-blue/30'
                     }`}
                     onClick={() => {
                       if (completedSteps.includes(2)) {
@@ -956,14 +956,14 @@ const QRCodePage = ({ orderId, iccid }) => {
                           <CheckCircle className="w-5 h-5 text-white" />
                         </div>
                       ) : (
-                        <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">
+                        <div className="w-8 h-8 bg-tufts-blue/100 rounded-full flex items-center justify-center text-white font-bold">
                           2
                         </div>
                       )}
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center mb-2">
-                        <QrCode className="w-5 h-5 mr-2 text-blue-600" />
+                        <QrCode className="w-5 h-5 mr-2 text-tufts-blue" />
                         <h4 className="font-semibold text-gray-900">Scan QR Code</h4>
                       </div>
                       <p className="text-gray-600">Select "Use QR code" and scan the QR code above with your camera</p>
@@ -974,7 +974,7 @@ const QRCodePage = ({ orderId, iccid }) => {
                     className={`flex items-start p-4 rounded-lg border-2 transition-all cursor-pointer ${
                       completedSteps.includes(3)
                         ? 'bg-green-50 border-green-300'
-                        : 'bg-blue-50 border-blue-200 hover:border-blue-300'
+                        : 'bg-tufts-blue/10 border-tufts-blue/20 hover:border-tufts-blue/30'
                     }`}
                     onClick={() => {
                       if (completedSteps.includes(3)) {
@@ -990,14 +990,14 @@ const QRCodePage = ({ orderId, iccid }) => {
                           <CheckCircle className="w-5 h-5 text-white" />
                         </div>
                       ) : (
-                        <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">
+                        <div className="w-8 h-8 bg-tufts-blue/100 rounded-full flex items-center justify-center text-white font-bold">
                           3
                         </div>
                       )}
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center mb-2">
-                        <CheckCircle className="w-5 h-5 mr-2 text-blue-600" />
+                        <CheckCircle className="w-5 h-5 mr-2 text-tufts-blue" />
                         <h4 className="font-semibold text-gray-900">Confirm Installation</h4>
                       </div>
                       <p className="text-gray-600">Review the eSIM details and tap "Add" or "Install" to confirm</p>
@@ -1008,7 +1008,7 @@ const QRCodePage = ({ orderId, iccid }) => {
                     className={`flex items-start p-4 rounded-lg border-2 transition-all cursor-pointer ${
                       completedSteps.includes(4)
                         ? 'bg-green-50 border-green-300'
-                        : 'bg-blue-50 border-blue-200 hover:border-blue-300'
+                        : 'bg-tufts-blue/10 border-tufts-blue/20 hover:border-tufts-blue/30'
                     }`}
                     onClick={() => {
                       if (completedSteps.includes(4)) {
@@ -1024,14 +1024,14 @@ const QRCodePage = ({ orderId, iccid }) => {
                           <CheckCircle className="w-5 h-5 text-white" />
                         </div>
                       ) : (
-                        <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">
+                        <div className="w-8 h-8 bg-tufts-blue/100 rounded-full flex items-center justify-center text-white font-bold">
                           4
                         </div>
                       )}
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center mb-2">
-                        <Globe className="w-5 h-5 mr-2 text-blue-600" />
+                        <Globe className="w-5 h-5 mr-2 text-tufts-blue" />
                         <h4 className="font-semibold text-gray-900">Enable Data Roaming</h4>
                       </div>
                       <p className="text-gray-600">Go to Settings → Network & internet → [Your eSIM] → Enable "Data roaming" to use it abroad</p>
@@ -1042,16 +1042,16 @@ const QRCodePage = ({ orderId, iccid }) => {
 
               {/* Progress Indicator */}
               {completedSteps.length > 0 && (
-                <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="mt-6 p-4 bg-tufts-blue/10 rounded-lg border border-tufts-blue/20">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-blue-900">Installation Progress</span>
-                    <span className="text-sm text-blue-700">
+                    <span className="text-sm font-medium text-tufts-blue-dark">Installation Progress</span>
+                    <span className="text-sm text-tufts-blue-dark">
                       {completedSteps.length} / {selectedDevice === 'ios' ? 5 : 4} steps completed
                     </span>
                   </div>
-                  <div className="w-full bg-blue-200 rounded-full h-2">
+                  <div className="w-full bg-tufts-blue/30 rounded-full h-2">
                     <div
-                      className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                      className="bg-tufts-blue h-2 rounded-full transition-all duration-300"
                       style={{
                         width: `${(completedSteps.length / (selectedDevice === 'ios' ? 5 : 4)) * 100}%`
                       }}

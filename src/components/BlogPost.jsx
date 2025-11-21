@@ -130,7 +130,7 @@ const BlogPost = ({ slug }) => {
     return (
       <div className="min-h-screen bg-white py-24 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-tufts-blue mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading blog post...</p>
         </div>
       </div>
@@ -180,7 +180,7 @@ const BlogPost = ({ slug }) => {
         "name": "RoamJet",
         "logo": {
           "@type": "ImageObject",
-          "url": `${baseUrl}/images/logo_icon/logo.png`
+          "url": `${baseUrl}/images/logo_icon/logo2.png`
         }
       },
       "datePublished": post.publishedAt?.toISOString(),
@@ -297,7 +297,7 @@ const BlogPost = ({ slug }) => {
                     <span className={`px-3 py-1 rounded-full text-sm font-medium ${
                       post.isFallback 
                         ? 'bg-orange-500 text-white' 
-                        : 'bg-blue-500 text-white'
+                        : 'bg-tufts-blue/100 text-white'
                     }`}>
                       {post.language?.toUpperCase() || 'EN'} {post.isFallback ? 'Fallback' : 'Version'}
                     </span>
@@ -393,7 +393,7 @@ const BlogPost = ({ slug }) => {
             <div className="space-y-3">
               <button
                 onClick={copyToClipboard}
-                className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-tufts-blue text-white rounded-full hover:bg-blue-700 transition-colors"
+                className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-tufts-blue text-white rounded-full hover:bg-tufts-blue-dark transition-colors"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />

@@ -57,7 +57,7 @@ export default function FeaturesSection() {
         <div className="mt-12 sm:mt-16 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
           
           {/* 1. Global Coverage */}
-          <div className="bg-blue-50 rounded-2xl shadow-lg p-8 hover:shadow-xl transition-shadow">
+          <div className="bg-tufts-blue/10 rounded-2xl shadow-lg p-8 hover:shadow-xl transition-shadow">
             <div className="flex justify-center mb-6">
               <Image 
                 src="/images/frontend/home/361053945_fb50482a-76fc-47ca-82b4-9fd33e920ad6.svg" 
@@ -80,7 +80,7 @@ export default function FeaturesSection() {
           </div>
 
           {/* 2. Device Compatibility */}
-          <div className="bg-blue-50 rounded-2xl shadow-lg p-8 hover:shadow-xl transition-shadow">
+          <div className="bg-tufts-blue/10 rounded-2xl shadow-lg p-8 hover:shadow-xl transition-shadow">
             <div className="flex justify-center mb-4">
               <span className="text-5xl">📱</span>
             </div>
@@ -114,7 +114,7 @@ export default function FeaturesSection() {
           </div>
 
           {/* 3. Secure Payment */}
-          <div className="bg-blue-50 rounded-2xl shadow-lg p-8 hover:shadow-xl transition-shadow sm:col-span-2 lg:col-span-1">
+          <div className="bg-tufts-blue/10 rounded-2xl shadow-lg p-8 hover:shadow-xl transition-shadow sm:col-span-2 lg:col-span-1">
             <h3 className="text-xl font-bold text-gray-900 text-center mb-4">
               {t('features.securePayment.title')}
             </h3>

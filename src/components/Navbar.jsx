@@ -93,9 +93,9 @@ const Navbar = ({ hideLanguageSelector = false }) => {
           <Link href={getLocalizedUrl("/")} className="-m-1.5 p-1.5 flex items-center">
             <span className="sr-only">RoamJet Plans</span>
             <img
-              src="/images/logo_icon/logo.png"
+              src="/images/logo_icon/logo2.png"
               alt="Roam Jet Plans Logo"
-              className="h-8 w-auto"
+              className="h-8 w-auto rounded-none"
             />
             <span className="ml-2 text-xl font-semibold text-gray-900">{t('navbar.logo', 'RoamJet')}</span>
           </Link>
@@ -159,9 +159,9 @@ const Navbar = ({ hideLanguageSelector = false }) => {
                flex items-center" onClick={() => setIsMenuOpen(false)}>
                 <span className="sr-only">RoamJet Plans</span>
                 <img
-                  src="/images/logo_icon/logo.png"
+                  src="/images/logo_icon/logo2.png"
                   alt="RoamJet Plans Logo"
-                  className="h-8 w-auto"
+                  className="h-8 w-auto rounded-none"
                 />
                 <span className="ml-2 text-xl font-bold text-gray-900">RoamJet</span>
               </Link>

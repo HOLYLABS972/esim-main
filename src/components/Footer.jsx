@@ -127,8 +127,8 @@ const Footer = () => {
   ].filter(link => link.url && link.url.trim() !== '');
 
   return (
-    <footer className="footer-area relative bg-gray-900 text-gray-100 overflow-hidden">
-      <div className="bg-gray-800">
+    <footer className="footer-area relative bg-eerie-black text-gray-100 overflow-hidden">
+      <div className="bg-eerie-black">
       {/* Background Decorative Elements */}
       <div className="footer-area__shape absolute inset-0 pointer-events-none">
         <div className="footer-area__shape-left absolute left-0 top-0 w-32 h-full opacity-5 bg-gradient-to-r from-eerie-black to-transparent"></div>
@@ -149,11 +149,12 @@ const Footer = () => {
             >
               <Link href="/" className="footer-item__logo inline-block mb-4 flex items-center">
                 <Image 
-                  src="/images/logo_icon/logo.png" 
+                  src="/images/logo_icon/logo2.png" 
                   alt="RoamJet Logo" 
                   width={120}
                   height={40}
-                  className="h-10 w-auto"
+                  className="h-10 w-auto rounded-none"
+                  unoptimized
                 />
                 <span className="text-2xl font-semibold text-gray-100 ml-2">{getText('footer.brandName', 'RoamJet')}</span>
               </Link>
@@ -168,7 +169,7 @@ const Footer = () => {
                       <li key={index} className="social-list__item">
                         <a 
                           href={social.url} 
-                          className="social-list__link w-10 h-10 bg-cobalt-blue hover:bg-cobalt-blue-700 rounded-full flex items-center justify-center transition-colors duration-200"
+                          className="social-list__link w-10 h-10 bg-cobalt-blue hover:bg-cobalt-blue-dark rounded-full flex items-center justify-center transition-colors duration-200"
                           target="_blank"
                           rel="noopener noreferrer"
                           aria-label={social.name}
@@ -196,7 +197,7 @@ const Footer = () => {
                     {link.external ? (
                       <a 
                         href={link.path} 
-                        className="footer-menu__link text-gray-300 hover:text-blue-400 transition-colors duration-200"
+                        className="footer-menu__link text-gray-300 hover:text-tufts-blue transition-colors duration-200"
                         target="_blank"
                         rel="noopener noreferrer"
                       >
@@ -205,7 +206,7 @@ const Footer = () => {
                     ) : (
                       <Link 
                         href={link.path} 
-                        className="footer-menu__link text-gray-300 hover:text-blue-400 transition-colors duration-200"
+                        className="footer-menu__link text-gray-300 hover:text-tufts-blue transition-colors duration-200"
                       >
                         {link.name}
                       </Link>
@@ -229,7 +230,7 @@ const Footer = () => {
                     {link.external ? (
                       <a 
                         href={link.path} 
-                        className="footer-menu__link text-gray-300 hover:text-blue-400 transition-colors duration-200"
+                        className="footer-menu__link text-gray-300 hover:text-tufts-blue transition-colors duration-200"
                         target="_blank"
                         rel="noopener noreferrer"
                       >
@@ -238,7 +239,7 @@ const Footer = () => {
                     ) : (
                       <Link 
                         href={link.path} 
-                        className="footer-menu__link text-gray-300 hover:text-blue-400 transition-colors duration-200"
+                        className="footer-menu__link text-gray-300 hover:text-tufts-blue transition-colors duration-200"
                       >
                         {link.name}
                       </Link>
@@ -265,7 +266,7 @@ const Footer = () => {
                     </div>
                     <div className="footer-contact-menu__item-content">
                       <a 
-                        className="footer-contact__desc text-gray-300 text-sm hover:text-blue-400 transition-colors duration-200" 
+                        className="footer-contact__desc text-gray-300 text-sm hover:text-tufts-blue transition-colors duration-200" 
                         href={`mailto:${contactInfo.email}`}
                       >
                         {contactInfo.email}
@@ -292,7 +293,7 @@ const Footer = () => {
       </div>
 
       {/* Bottom Footer */}
-      <div className="bottom-footer py-6 border-t border-gray-700">
+      <div className="bottom-footer py-6 border-t border-gray-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <div className="bottom-footer-text text-gray-300">&copy; {currentYear} <Link href="/" className="text-cobalt-blue hover:text-cobalt-blue transition-colors duration-200">RoamJet</Link>{'. All rights reserved.'}</div>

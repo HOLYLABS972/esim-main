@@ -20,6 +20,15 @@ module.exports = {
           800: '#075985',
           900: '#0c4a6e',
         },
+        // New color palette
+        'jordy-blue': '#D9D9D9',
+        'tufts-blue': '#7A5F4A',
+        'tufts-blue-dark': '#5A4535',
+        'alice-blue': '#F2F4F7',
+        'cobalt-blue': '#7A5F4A',
+        'cobalt-blue-dark': '#5A4535',
+        'cool-black': '#1F1F1F',
+        'eerie-black': '#1F1F1F',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],

@@ -133,13 +133,13 @@ const Checkout = ({ plan }) => {
               disabled={isProcessing}
               className={`w-full p-6 border-2 rounded-xl transition-all duration-200 flex items-center justify-between ${
                 selectedPaymentMethod === 'stripe'
-                  ? 'border-blue-600 bg-blue-50'
+                  ? 'border-tufts-blue bg-tufts-blue/10'
                   : 'border-gray-200 hover:border-gray-300 bg-white'
               } ${isProcessing ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
             >
               <div className="flex items-center space-x-4">
                 <div className={`p-3 rounded-lg ${
-                  selectedPaymentMethod === 'stripe' ? 'bg-blue-600' : 'bg-gray-100'
+                  selectedPaymentMethod === 'stripe' ? 'bg-tufts-blue' : 'bg-gray-100'
                 }`}>
                   <CreditCard className={`w-6 h-6 ${
                     selectedPaymentMethod === 'stripe' ? 'text-white' : 'text-gray-600'
@@ -151,7 +151,7 @@ const Checkout = ({ plan }) => {
                 </div>
               </div>
               {isProcessing && selectedPaymentMethod === 'stripe' && (
-                <Loader2 className="w-5 h-5 text-blue-600 animate-spin" />
+                <Loader2 className="w-5 h-5 text-tufts-blue animate-spin" />
               )}
             </button>
 

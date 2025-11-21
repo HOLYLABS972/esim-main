@@ -57,7 +57,7 @@ const QRCodeModal = ({
                 ) : selectedOrder.qrCode && selectedOrder.qrCode.qrCodeUrl ? (
                   // Fallback: Show QR code image from URL
                   <div className="text-center">
-                    <div className="w-64 h-64 mx-auto bg-white p-4 rounded-lg border-2 border-blue-300 shadow-sm">
+                    <div className="w-64 h-64 mx-auto bg-white p-4 rounded-lg border-2 border-tufts-blue/30 shadow-sm">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img 
                         src={selectedOrder.qrCode.qrCodeUrl} 
@@ -101,7 +101,7 @@ const QRCodeModal = ({
                           : selectedOrder.qrCode?.fallbackReason || 'No QR code available'}
                       </p>
                       {selectedOrder.qrCode?.canRetry && (
-                        <p className="text-xs text-blue-600 mt-1">Click "Generate QR Code" to try again</p>
+                        <p className="text-xs text-tufts-blue mt-1">Click "Generate QR Code" to try again</p>
                       )}
                     </div>
                   </div>
@@ -128,7 +128,7 @@ const QRCodeModal = ({
                             setTimeout(() => setLinkCopied(false), 2000);
                           });
                         }}
-                        className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
+                        className="w-full px-4 py-2 bg-tufts-blue text-white rounded-lg hover:bg-tufts-blue-dark transition-colors flex items-center justify-center"
                       >
                         {linkCopied ? (
                           <>
@@ -169,7 +169,7 @@ const QRCodeModal = ({
                           disabled={loadingMobileData}
                           className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center disabled:opacity-50"
                         >
-                          <Activity className="w-4 h-4 mr-3 text-blue-600" />
+                          <Activity className="w-4 h-4 mr-3 text-tufts-blue" />
                           <span className="text-gray-700">
                             {loadingMobileData ? 'Checking...' : 'Check Mobile Data'}
                           </span>
@@ -241,7 +241,7 @@ const QRCodeModal = ({
                           }}
                           className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center border-t border-gray-200"
                         >
-                          <Download className="w-4 h-4 mr-3 text-blue-600" />
+                          <Download className="w-4 h-4 mr-3 text-tufts-blue" />
                           <span className="text-gray-700">Download QR Code</span>
                         </button>
                       )}

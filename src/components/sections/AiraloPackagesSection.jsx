@@ -470,7 +470,7 @@ export default function AiraloPackagesSection() {
       <section className="py-16 bg-gray-50">
         <div className="container mx-auto px-4">
           <div className="text-center">
-            <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-4" />
+            <Loader2 className="w-8 h-8 animate-spin text-tufts-blue mx-auto mb-4" />
             <p className="text-gray-600">Loading packages...</p>
           </div>
         </div>
@@ -487,7 +487,7 @@ export default function AiraloPackagesSection() {
             <p className="text-gray-600">{error}</p>
             <button
               onClick={fetchPackages}
-              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              className="mt-4 px-4 py-2 bg-tufts-blue text-white rounded-lg hover:bg-tufts-blue-dark"
             >
               Try Again
             </button>
@@ -522,15 +522,15 @@ export default function AiraloPackagesSection() {
             }}
             className={`inline-flex items-center px-3 py-1.5 rounded-full font-medium text-xs transition-all duration-200 ${
               activeTab === 'global'
-                ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
-                : 'bg-white text-gray-700 hover:bg-blue-50 hover:text-blue-600 border border-gray-200 hover:border-blue-200'
+                ? 'bg-tufts-blue text-white shadow-md shadow-tufts-blue/30'
+                : 'bg-white text-gray-700 hover:bg-tufts-blue/10 hover:text-tufts-blue border border-gray-200 hover:border-tufts-blue/20'
             }`}
           >
             <Globe className="w-3.5 h-3.5 mr-1" />
             <span>Global</span>
             <span className={`ml-1 px-1.5 py-0.5 rounded-full text-xs font-semibold ${
               activeTab === 'global'
-                ? 'bg-blue-500 text-white'
+                ? 'bg-tufts-blue/100 text-white'
                 : 'bg-gray-100 text-gray-600'
             }`}>
               {packages.global.length}
@@ -545,15 +545,15 @@ export default function AiraloPackagesSection() {
             }}
             className={`inline-flex items-center px-3 py-1.5 rounded-full font-medium text-xs transition-all duration-200 ${
               activeTab === 'regional'
-                ? 'bg-green-600 text-white shadow-md shadow-green-600/30'
-                : 'bg-white text-gray-700 hover:bg-green-50 hover:text-green-600 border border-gray-200 hover:border-green-200'
+                ? 'bg-tufts-blue text-white shadow-md shadow-tufts-blue/30'
+                : 'bg-white text-gray-700 hover:bg-tufts-blue/10 hover:text-tufts-blue border border-gray-200 hover:border-tufts-blue/20'
             }`}
           >
             <MapPin className="w-3.5 h-3.5 mr-1" />
             <span>Regional</span>
             <span className={`ml-1 px-1.5 py-0.5 rounded-full text-xs font-semibold ${
               activeTab === 'regional'
-                ? 'bg-green-500 text-white'
+                ? 'bg-tufts-blue-dark text-white'
                 : 'bg-gray-100 text-gray-600'
             }`}>
               {regionalPackagesCount}
@@ -568,15 +568,15 @@ export default function AiraloPackagesSection() {
             }}
             className={`inline-flex items-center px-3 py-1.5 rounded-full font-medium text-xs transition-all duration-200 ${
               activeTab === 'countries'
-                ? 'bg-yellow-500 text-white shadow-md shadow-yellow-500/30'
-                : 'bg-white text-gray-700 hover:bg-yellow-50 hover:text-yellow-600 border border-gray-200 hover:border-yellow-200'
+                ? 'bg-tufts-blue text-white shadow-md shadow-tufts-blue/30'
+                : 'bg-white text-gray-700 hover:bg-tufts-blue/10 hover:text-tufts-blue border border-gray-200 hover:border-tufts-blue/20'
             }`}
           >
             <Flag className="w-3.5 h-3.5 mr-1" />
             <span>Countries</span>
             <span className={`ml-1 px-1.5 py-0.5 rounded-full text-xs font-semibold ${
               activeTab === 'countries'
-                ? 'bg-yellow-400 text-white'
+                ? 'bg-tufts-blue-dark text-white'
                 : 'bg-gray-100 text-gray-600'
             }`}>
               {countries.length || 0}
@@ -595,7 +595,7 @@ export default function AiraloPackagesSection() {
                   className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer p-6 border border-gray-200"
                 >
                   <div className="flex items-center justify-between mb-4">
-                    <Globe className="w-8 h-8 text-blue-600" />
+                    <Globe className="w-8 h-8 text-tufts-blue" />
                     <span className="text-2xl font-bold text-gray-900">
                       {formatPrice(getPackagePrice(pkg))}
                     </span>
@@ -643,7 +643,7 @@ export default function AiraloPackagesSection() {
                     onClick={() => setSelectedRegion(region)}
                     className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-6 border border-gray-200 text-left"
                   >
-                    <MapPin className="w-6 h-6 text-blue-600 mb-2" />
+                    <MapPin className="w-6 h-6 text-tufts-blue mb-2" />
                     <h3 className="font-semibold text-gray-900">{region}</h3>
                     <p className="text-sm text-gray-600 mt-1">
                       {packages.regional[region].length} packages
@@ -656,7 +656,7 @@ export default function AiraloPackagesSection() {
               <div>
                 <button
                   onClick={() => setSelectedRegion(null)}
-                  className="mb-6 text-blue-600 hover:text-blue-700 flex items-center"
+                  className="mb-6 text-tufts-blue hover:text-tufts-blue-dark flex items-center"
                 >
                   ← Back to Regions
                 </button>
@@ -669,7 +669,7 @@ export default function AiraloPackagesSection() {
                       className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer p-6 border border-gray-200"
                     >
                       <div className="flex items-center justify-between mb-4">
-                        <MapPin className="w-8 h-8 text-green-600" />
+                        <MapPin className="w-8 h-8 text-tufts-blue" />
                         <span className="text-2xl font-bold text-gray-900">
                           {formatPrice(getPackagePrice(pkg))}
                         </span>
@@ -700,7 +700,7 @@ export default function AiraloPackagesSection() {
           <div>
             {loadingCountries ? (
               <div className="flex justify-center items-center min-h-64">
-                <Loader2 className="w-8 h-8 animate-spin text-blue-600 mr-4" />
+                <Loader2 className="w-8 h-8 animate-spin text-tufts-blue mr-4" />
                 <p className="text-gray-600">Loading countries...</p>
               </div>
             ) : filteredCountries.length === 0 ? (
@@ -719,14 +719,14 @@ export default function AiraloPackagesSection() {
                     <button
                       key={country.id || country.code}
                       onClick={() => handleCountrySelect(country)}
-                      className="w-full px-6 py-4 bg-white rounded-lg shadow-sm hover:shadow-md border border-gray-100 hover:border-blue-200 transition-all duration-200 flex items-center justify-between"
+                      className="w-full px-6 py-4 bg-white rounded-lg shadow-sm hover:shadow-md border border-gray-100 hover:border-tufts-blue/20 transition-all duration-200 flex items-center justify-between"
                     >
                       <div className="flex items-center space-x-4">
                         <div className="flex-shrink-0">
                           {country.flagEmoji ? (
                             <span className="text-2xl">{country.flagEmoji}</span>
                           ) : (
-                            <Flag className="w-8 h-8 text-blue-600" />
+                            <Flag className="w-8 h-8 text-tufts-blue" />
                           )}
                         </div>
                         <div className="text-left">

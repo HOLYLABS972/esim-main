@@ -127,9 +127,9 @@ const EsimQrCode = ({ qrCodeData, orderDetails }) => {
       </div>
 
       {/* Instructions */}
-      <div className="bg-blue-50 rounded-lg p-4 mb-6">
-        <h4 className="font-semibold text-blue-900 mb-2">How to activate:</h4>
-        <ol className="text-sm text-blue-800 space-y-1">
+      <div className="bg-tufts-blue/10 rounded-lg p-4 mb-6">
+        <h4 className="font-semibold text-tufts-blue-dark mb-2">How to activate:</h4>
+        <ol className="text-sm text-tufts-blue-dark space-y-1">
           <li>1. Open your phone's camera app</li>
           <li>2. Point it at the QR code above</li>
           <li>3. Follow the prompts to add the eSIM</li>
@@ -141,7 +141,7 @@ const EsimQrCode = ({ qrCodeData, orderDetails }) => {
       <div className="flex gap-3">
         <button
           onClick={handleDownload}
-          className="flex-1 flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
+          className="flex-1 flex items-center justify-center px-4 py-2 bg-tufts-blue text-white rounded-lg hover:bg-tufts-blue-dark transition-colors duration-200"
         >
           <Download className="w-4 h-4 mr-2" />
           {(qrCodeData.qr_code_url || qrCodeData.qr_code)?.startsWith('lpa:') ? 'Copy LPA URL' : 'Download'}

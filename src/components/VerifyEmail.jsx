@@ -134,7 +134,7 @@ const VerifyEmail = () => {
             We&apos;ve sent a 6-digit verification code to your email address.
           </p>
           {email && (
-            <p className="mt-1 text-center text-sm font-medium text-blue-600">
+            <p className="mt-1 text-center text-sm font-medium text-tufts-blue">
               {email}
             </p>
           )}
@@ -157,7 +157,7 @@ const VerifyEmail = () => {
                 required
                 value={otp}
                 onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
-                className="appearance-none relative block w-full pl-10 pr-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm text-center text-lg tracking-widest"
+                className="appearance-none relative block w-full pl-10 pr-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-tufts-blue/50 focus:border-tufts-blue focus:z-10 sm:text-sm text-center text-lg tracking-widest"
                 placeholder="000000"
               />
             </div>
@@ -170,7 +170,7 @@ const VerifyEmail = () => {
             <button
               type="submit"
               disabled={loading || !otp}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-tufts-blue hover:bg-tufts-blue-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-tufts-blue/50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
