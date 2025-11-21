@@ -386,16 +386,42 @@ export const apiService = {
    * @returns {Promise<Object>} Mobile data status
    */
   async getMobileData({ iccid, orderId }) {
-    console.log('📊 Getting mobile data status via SDK API:', { iccid, orderId });
+    console.log('📊 Getting mobile data status via Next.js API proxy:', { iccid, orderId });
     
-    const result = await makeOptionalAuthRequest('/api/user/mobile-data', {
+    // Use relative path to go through Next.js API route (avoids CORS issues)
+    const user = auth.currentUser;
+    const headers = {
+      'Content-Type': 'application/json',
+    };
+    
+    // Add authentication headers if user is logged in
+    if (user) {
+      try {
+        const idToken = await user.getIdToken();
+        headers['Authorization'] = `Bearer ${idToken}`;
+        console.log('🔐 Making authenticated request through proxy');
+      } catch (authError) {
+        console.warn('⚠️ Could not get auth token, making guest request:', authError);
+      }
+    } else {
+      console.log('👤 Making guest request through proxy (no authentication)');
+    }
+    
+    const response = await fetch('/api/user/mobile-data', {
       method: 'POST',
+      headers,
       body: JSON.stringify({
         iccid,
         orderId,
       }),
     });
 
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: `Request failed with status ${response.status}` }));
+      throw new Error(errorData.error || `Request failed with status ${response.status}`);
+    }
+
+    const result = await response.json();
     console.log('✅ Mobile data status retrieved:', result);
     return result;
   },
