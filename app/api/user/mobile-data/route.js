@@ -1,15 +1,20 @@
 import { NextResponse } from 'next/server';
 
-const API_PRODUCTION_URL = process.env.NEXT_PUBLIC_API_URL || 'https://sdk.roamjet.net';
-const API_SANDBOX_URL = process.env.NEXT_PUBLIC_API_SANDBOX_URL || 'https://sandbox.roamjet.net';
+// API URLs - check both environment variable names for compatibility
+const API_PRODUCTION_URL = process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || 'https://sdk.roamjet.net';
+const API_SANDBOX_URL = process.env.NEXT_PUBLIC_API_SANDBOX_URL || process.env.API_SANDBOX_URL || 'https://sandbox.roamjet.net';
 
 /**
  * Get the correct API base URL based on mode
- * This is a simplified version - defaults to production
- * In a full implementation, you might want to check Firestore for stripe mode
+ * For server-side, we default to production unless explicitly set
+ * The client-side code handles mode detection, but we can accept it as a parameter
  */
-const getApiBaseUrl = () => {
-  // Default to production, can be enhanced to check Firestore config
+const getApiBaseUrl = (mode) => {
+  // If mode is explicitly provided (from query param or header), use it
+  if (mode === 'test' || mode === 'sandbox') {
+    return API_SANDBOX_URL;
+  }
+  // Default to production
   return API_PRODUCTION_URL;
 };
 
@@ -73,8 +78,18 @@ export async function POST(request) {
       );
     }
 
-    const apiBaseUrl = getApiBaseUrl();
-    console.log(`🌐 Proxying mobile-data request to: ${apiBaseUrl}/api/user/mobile-data`);
+    // Check for mode in query params or default to production
+    const url = new URL(request.url);
+    const mode = url.searchParams.get('mode');
+    const apiBaseUrl = getApiBaseUrl(mode);
+    
+    // Try both possible endpoint paths
+    const endpointPath = '/api/user/mobile-data';
+    const fullUrl = `${apiBaseUrl}${endpointPath}`;
+    
+    console.log(`🌐 Proxying mobile-data request to: ${fullUrl}`);
+    console.log(`🔍 API Base URL: ${apiBaseUrl}`);
+    console.log(`🔍 Mode: ${mode || 'production (default)'}`);
     
     const headers = {
       'Content-Type': 'application/json',
@@ -92,17 +107,41 @@ export async function POST(request) {
     // Forward the request to the external API
     let response;
     try {
-      response = await fetch(`${apiBaseUrl}/api/user/mobile-data`, {
+      response = await fetch(fullUrl, {
         method: 'POST',
         headers,
         body: JSON.stringify({ iccid, orderId }),
       });
+      
+      console.log(`📡 API Response Status: ${response.status} ${response.statusText}`);
+      
+      // If 404, try alternative endpoint path (without /user)
+      if (response.status === 404) {
+        const altEndpointPath = '/api/mobile-data';
+        const altFullUrl = `${apiBaseUrl}${altEndpointPath}`;
+        console.log(`⚠️ 404 received, trying alternative endpoint: ${altFullUrl}`);
+        
+        const altResponse = await fetch(altFullUrl, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ iccid, orderId }),
+        });
+        
+        if (altResponse.ok || altResponse.status !== 404) {
+          console.log(`✅ Alternative endpoint responded: ${altResponse.status}`);
+          response = altResponse;
+        } else {
+          console.error(`❌ Alternative endpoint also returned ${altResponse.status}`);
+        }
+      }
     } catch (fetchError) {
       console.error('❌ Fetch error:', fetchError);
+      console.error('❌ Failed URL:', fullUrl);
       return NextResponse.json(
         {
           success: false,
           error: `Failed to connect to API: ${fetchError.message}`,
+          details: `Attempted URL: ${fullUrl}`,
         },
         { 
           status: 503,
@@ -137,11 +176,14 @@ export async function POST(request) {
       // Non-JSON response
       const text = await response.text().catch(() => 'Unable to read response');
       console.error('❌ Non-JSON response from API:', text);
+      console.error('❌ Response status:', response.status, response.statusText);
+      console.error('❌ Response URL:', fullUrl);
       return NextResponse.json(
         {
           success: false,
           error: `API returned non-JSON response: ${response.status} ${response.statusText}`,
           details: text.substring(0, 200), // Limit details length
+          attemptedUrl: fullUrl,
         },
         {
           status: response.status || 500,
