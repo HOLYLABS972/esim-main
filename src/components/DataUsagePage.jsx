@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Signal, Calendar, Database, Activity, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Signal, Calendar, Database, AlertCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { apiService } from '../services/apiService';
 import toast from 'react-hot-toast';
@@ -195,21 +195,6 @@ const DataUsagePage = ({ iccid, orderId }) => {
                 <span>Total: {dataInfo?.dataTotal || 'N/A'}</span>
               </div>
             </div>
-
-            {/* Remaining Data */}
-            {dataInfo?.dataRemaining && dataInfo?.dataRemaining !== 'N/A' && (
-              <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200">
-                <div className="flex items-center">
-                  <Activity className="w-5 h-5 text-green-600 mr-3" />
-                  <span className="text-gray-700 font-medium">
-                    {dataInfo?.isUnlimited ? 'Unlimited Data' : 'Data Available'}
-                  </span>
-                </div>
-                <span className="text-xl font-bold text-green-700">
-                  {dataInfo.isUnlimited ? '∞' : dataInfo.dataRemaining}
-                </span>
-              </div>
-            )}
 
             {/* Days Information */}
             {(dataInfo?.daysUsed > 0 || dataInfo?.daysRemaining > 0) && (

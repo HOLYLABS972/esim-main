@@ -43,10 +43,24 @@ export async function OPTIONS(request) {
 }
 
 /**
+ * Handle GET request (for testing/debugging)
+ */
+export async function GET(request) {
+  return NextResponse.json({
+    success: true,
+    message: 'Mobile data API endpoint is active',
+    endpoint: '/api/user/mobile-data',
+    method: 'POST',
+    dataServer: getDataApiBaseUrl(),
+  });
+}
+
+/**
  * Proxy mobile-data requests to external API
  * This avoids CORS issues by making the request server-side
  */
 export async function POST(request) {
+  console.log('🚀 POST /api/user/mobile-data - Route handler called');
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
@@ -122,11 +136,16 @@ export async function POST(request) {
       
       console.log(`📡 API Response Status: ${response.status} ${response.statusText}`);
       
-      // If 404, try alternative endpoint path (without /user)
-      if (response.status === 404) {
+      // Check if response is JSON (even if 404, the data server returns JSON)
+      const contentType = response.headers.get('content-type');
+      const isJsonResponse = contentType && contentType.includes('application/json');
+      
+      // If 404 and NOT JSON, try alternative endpoint (true 404 = endpoint not found)
+      // If 404 but JSON, it's a valid response from the data server (SIM not found)
+      if (response.status === 404 && !isJsonResponse) {
         const altEndpointPath = '/api/mobile-data';
         const altFullUrl = `${dataApiBaseUrl}${altEndpointPath}`;
-        console.log(`⚠️ 404 received, trying alternative endpoint: ${altFullUrl}`);
+        console.log(`⚠️ 404 with non-JSON response, trying alternative endpoint: ${altFullUrl}`);
         
         const altResponse = await fetch(altFullUrl, {
           method: 'POST',
@@ -134,12 +153,16 @@ export async function POST(request) {
           body: JSON.stringify({ iccid, orderId }),
         });
         
-        if (altResponse.ok || altResponse.status !== 404) {
+        if (altResponse.ok || (altResponse.status === 404 && altResponse.headers.get('content-type')?.includes('application/json'))) {
           console.log(`✅ Alternative endpoint responded: ${altResponse.status}`);
           response = altResponse;
         } else {
           console.error(`❌ Alternative endpoint also returned ${altResponse.status}`);
         }
+      } else if (response.status === 404 && isJsonResponse) {
+        console.log(`ℹ️ 404 with JSON response - this is a valid response from data server (SIM not found)`);
+        console.log(`📋 Content-Type: ${contentType}`);
+        console.log(`📋 Response status: ${response.status}`);
       }
     } catch (fetchError) {
       console.error('❌ Fetch error:', fetchError);
@@ -159,6 +182,7 @@ export async function POST(request) {
 
     // Handle response
     const contentType = response.headers.get('content-type');
+    console.log(`📋 Final response status: ${response.status}, Content-Type: ${contentType}`);
     let data;
 
     if (contentType && contentType.includes('application/json')) {
@@ -200,8 +224,19 @@ export async function POST(request) {
     }
 
     // Return the response with CORS headers
+    // If the data server returns 404 with JSON (SIM not found), return 200 OK
+    // so the client can handle the error message in the JSON body
+    // Only forward 404 status if it's a true endpoint not found (non-JSON)
+    const isJson404 = response.status === 404 && contentType && contentType.includes('application/json');
+    const statusCode = isJson404 ? 200 : response.status;
+    
+    if (isJson404) {
+      console.log(`✅ Converting 404 JSON response to 200 OK for client`);
+      console.log(`📦 Response data:`, JSON.stringify(data).substring(0, 200));
+    }
+    
     return NextResponse.json(data, {
-      status: response.status,
+      status: statusCode,
       headers: corsHeaders,
     });
   } catch (error) {
