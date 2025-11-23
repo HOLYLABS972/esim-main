@@ -3,6 +3,8 @@ import { NextResponse } from 'next/server';
 // API URLs - check both environment variable names for compatibility
 const API_PRODUCTION_URL = process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || 'https://sdk.roamjet.net';
 const API_SANDBOX_URL = process.env.NEXT_PUBLIC_API_SANDBOX_URL || process.env.API_SANDBOX_URL || 'https://sandbox.roamjet.net';
+// Data usage server URL - dedicated server for mobile data/balance checks
+const DATA_API_URL = process.env.NEXT_PUBLIC_DATA_API_URL || process.env.DATA_API_URL || 'https://data.roamjet.net';
 
 /**
  * Get the correct API base URL based on mode
@@ -16,6 +18,13 @@ const getApiBaseUrl = (mode) => {
   }
   // Default to production
   return API_PRODUCTION_URL;
+};
+
+/**
+ * Get the data API base URL (always uses dedicated data server)
+ */
+const getDataApiBaseUrl = () => {
+  return DATA_API_URL;
 };
 
 /**
@@ -78,18 +87,16 @@ export async function POST(request) {
       );
     }
 
-    // Check for mode in query params or default to production
-    const url = new URL(request.url);
-    const mode = url.searchParams.get('mode');
-    const apiBaseUrl = getApiBaseUrl(mode);
+    // Use dedicated data server for mobile-data requests
+    const dataApiBaseUrl = getDataApiBaseUrl();
     
     // Try both possible endpoint paths
     const endpointPath = '/api/user/mobile-data';
-    const fullUrl = `${apiBaseUrl}${endpointPath}`;
+    const fullUrl = `${dataApiBaseUrl}${endpointPath}`;
     
     console.log(`🌐 Proxying mobile-data request to: ${fullUrl}`);
-    console.log(`🔍 API Base URL: ${apiBaseUrl}`);
-    console.log(`🔍 Mode: ${mode || 'production (default)'}`);
+    console.log(`🔍 Data API Base URL: ${dataApiBaseUrl}`);
+    console.log(`📡 Using dedicated data server: ${dataApiBaseUrl}`);
     
     const headers = {
       'Content-Type': 'application/json',
@@ -118,7 +125,7 @@ export async function POST(request) {
       // If 404, try alternative endpoint path (without /user)
       if (response.status === 404) {
         const altEndpointPath = '/api/mobile-data';
-        const altFullUrl = `${apiBaseUrl}${altEndpointPath}`;
+        const altFullUrl = `${dataApiBaseUrl}${altEndpointPath}`;
         console.log(`⚠️ 404 received, trying alternative endpoint: ${altFullUrl}`);
         
         const altResponse = await fetch(altFullUrl, {
