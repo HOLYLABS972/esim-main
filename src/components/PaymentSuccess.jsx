@@ -308,20 +308,24 @@ const PaymentSuccess = () => {
         planId
       });
 
-      // Handle Coinbase payment (has order_id, email, total)
-      if (orderParam && email && total) {
-        console.log('💰 Processing Coinbase payment success');
-        
-        // Verify Coinbase charge if chargeId is provided
-        if (chargeId && paymentMethod === 'coinbase') {
-          try {
-            const verified = await coinbaseService.verifyCharge(chargeId);
-            if (!verified) {
-              console.warn('⚠️ Coinbase charge verification failed, but continuing...');
+      // Handle Coinbase or Lemon Squeezy payment (has order_id, email, total)
+      if (orderParam && email && total && (paymentMethod === 'coinbase' || paymentMethod === 'lemonsqueezy')) {
+        if (paymentMethod === 'coinbase') {
+          console.log('💰 Processing Coinbase payment success');
+          
+          // Verify Coinbase charge if chargeId is provided
+          if (chargeId) {
+            try {
+              const verified = await coinbaseService.verifyCharge(chargeId);
+              if (!verified) {
+                console.warn('⚠️ Coinbase charge verification failed, but continuing...');
+              }
+            } catch (coinbaseError) {
+              console.error('⚠️ Error verifying Coinbase payment:', coinbaseError);
             }
-          } catch (coinbaseError) {
-            console.error('⚠️ Error verifying Coinbase payment:', coinbaseError);
           }
+        } else if (paymentMethod === 'lemonsqueezy') {
+          console.log('🍋 Processing Lemon Squeezy payment success');
         }
 
         // Extract plan ID from order ID (format: planId-timestamp-random)

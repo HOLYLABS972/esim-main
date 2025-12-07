@@ -14,7 +14,8 @@ import {
   DollarSign,
   CreditCard,
   Coins,
-  Loader2
+  Loader2,
+  ShoppingCart
 } from 'lucide-react';
 import { useAuth } from '../../../src/contexts/AuthContext';
 import { useI18n } from '../../../src/contexts/I18nContext';
@@ -64,6 +65,7 @@ const SharePackagePage = () => {
   const [balanceInfo, setBalanceInfo] = useState({ balance: 0, hasInsufficientFunds: false, minimumRequired: 4, mode: 'production' });
   const [acceptedRefund, setAcceptedRefund] = useState(false);
   const [coinbaseAvailable, setCoinbaseAvailable] = useState(false);
+  const [lemonSqueezyAvailable, setLemonSqueezyAvailable] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
 
@@ -215,7 +217,25 @@ const SharePackagePage = () => {
       }
     };
 
+    // Check if Lemon Squeezy is available
+    const checkLemonSqueezyAvailability = async () => {
+      try {
+        const { lemonSqueezyService } = await import('../../../src/services/lemonSqueezyService');
+        const available = await lemonSqueezyService.initialize();
+        console.log('🔍 Lemon Squeezy availability check:', available);
+        setLemonSqueezyAvailable(available);
+        
+        if (!available) {
+          console.log('⚠️ Lemon Squeezy credentials not found. Please configure in Firestore config/lemonsqueezy or environment variables.');
+        }
+      } catch (err) {
+        console.error('❌ Error checking Lemon Squeezy availability:', err);
+        setLemonSqueezyAvailable(true);
+      }
+    };
+
     checkCoinbaseAvailability();
+    checkLemonSqueezyAvailability();
   }, []);
 
   const handlePurchase = async (paymentMethod = 'stripe') => {
@@ -342,11 +362,12 @@ const SharePackagePage = () => {
       // Pass email and order info in URL params for iframe compatibility
       if (paymentMethod === 'coinbase') {
         const { coinbaseService } = await import('../../../src/services/coinbaseService');
-        // Modify createCheckoutSession to accept email in URL params
         await coinbaseService.createCheckoutSession(orderData);
+      } else if (paymentMethod === 'lemonsqueezy') {
+        const { lemonSqueezyService } = await import('../../../src/services/lemonSqueezyService');
+        await lemonSqueezyService.createCheckoutSession(orderData);
       } else {
         const { paymentService } = await import('../../../src/services/paymentService');
-        // Modify createCheckoutSession to accept email in URL params
         await paymentService.createCheckoutSession(orderData);
       }
       
@@ -773,6 +794,28 @@ const SharePackagePage = () => {
                       {t('sharePackage.purchaseNow', 'Purchase Now')} - Cryptocurrency
                     </span>
                   </button>
+
+                  {/* Lemon Squeezy Payment Button */}
+                  {lemonSqueezyAvailable && (
+                    <button
+                      onClick={() => handlePurchase('lemonsqueezy')}
+                      disabled={!acceptedRefund || isProcessing}
+                      className={`w-full flex items-center justify-center space-x-3 py-4 px-6 rounded-xl transition-all duration-200 font-medium text-base sm:text-lg shadow-lg text-white ${
+                        selectedPaymentMethod === 'lemonsqueezy' 
+                          ? 'bg-green-700 ring-2 ring-green-300' 
+                          : 'bg-green-600 hover:bg-green-700'
+                      } ${!acceptedRefund || isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                      {isProcessing && selectedPaymentMethod === 'lemonsqueezy' ? (
+                        <Loader2 className="w-6 h-6 animate-spin flex-shrink-0" />
+                      ) : (
+                        <ShoppingCart className="w-6 h-6 flex-shrink-0" />
+                      )}
+                      <span className="whitespace-nowrap">
+                        {t('sharePackage.purchaseNow', 'Purchase Now')} - Lemon Squeezy (Affiliate)
+                      </span>
+                    </button>
+                  )}
                 </div>
               </div>
 
