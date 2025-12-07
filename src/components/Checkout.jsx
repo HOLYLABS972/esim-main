@@ -3,10 +3,9 @@
 import React, { useEffect, useState } from 'react';
 import { paymentService } from '../services/paymentService';
 import { coinbaseService } from '../services/coinbaseService';
-import { lemonSqueezyService } from '../services/lemonSqueezyService';
 import { useAuth } from '../contexts/AuthContext';
 
-import { AlertCircle, CreditCard, Coins, Loader2, ShoppingCart } from 'lucide-react';
+import { AlertCircle, CreditCard, Coins, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 
@@ -18,7 +17,6 @@ const Checkout = ({ plan }) => {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [coinbaseAvailable, setCoinbaseAvailable] = useState(false);
-  const [lemonSqueezyAvailable, setLemonSqueezyAvailable] = useState(false);
 
   useEffect(() => {
     // Detect if we're in an iframe
@@ -35,19 +33,7 @@ const Checkout = ({ plan }) => {
       }
     };
 
-    // Check if Lemon Squeezy is available
-    const checkLemonSqueezyAvailability = async () => {
-      try {
-        const available = await lemonSqueezyService.initialize();
-        setLemonSqueezyAvailable(available);
-      } catch (err) {
-        console.log('⚠️ Lemon Squeezy not available:', err);
-        setLemonSqueezyAvailable(false);
-      }
-    };
-
     checkCoinbaseAvailability();
-    checkLemonSqueezyAvailability();
   }, []);
 
   const handlePaymentMethodSelect = async (paymentMethod) => {
@@ -88,9 +74,8 @@ const Checkout = ({ plan }) => {
       // The actual eSIM order will be created in PaymentSuccess.jsx after payment is confirmed
       if (paymentMethod === 'coinbase') {
         await coinbaseService.createCheckoutSession(orderData);
-      } else if (paymentMethod === 'lemonsqueezy') {
-        await lemonSqueezyService.createCheckoutSession(orderData);
       } else {
+        // Default to Stripe
         await paymentService.createCheckoutSession(orderData);
       }
       
@@ -197,36 +182,6 @@ const Checkout = ({ plan }) => {
                 </div>
                 {isProcessing && selectedPaymentMethod === 'coinbase' && (
                   <Loader2 className="w-5 h-5 text-black animate-spin" />
-                )}
-              </button>
-            )}
-
-            {/* Lemon Squeezy Payment Option */}
-            {lemonSqueezyAvailable && (
-              <button
-                onClick={() => handlePaymentMethodSelect('lemonsqueezy')}
-                disabled={isProcessing}
-                className={`w-full p-6 border-2 rounded-xl transition-all duration-200 flex items-center justify-between ${
-                  selectedPaymentMethod === 'lemonsqueezy'
-                    ? 'border-green-600 bg-green-50'
-                    : 'border-gray-200 hover:border-gray-300 bg-white'
-                } ${isProcessing ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-              >
-                <div className="flex items-center space-x-4">
-                  <div className={`p-3 rounded-lg ${
-                    selectedPaymentMethod === 'lemonsqueezy' ? 'bg-green-600' : 'bg-gray-100'
-                  }`}>
-                    <ShoppingCart className={`w-6 h-6 ${
-                      selectedPaymentMethod === 'lemonsqueezy' ? 'text-white' : 'text-gray-600'
-                    }`} />
-                  </div>
-                  <div className="text-left">
-                    <h3 className="font-semibold text-gray-900">Lemon Squeezy</h3>
-                    <p className="text-sm text-gray-500">Pay with card, PayPal, and more (Affiliate-friendly)</p>
-                  </div>
-                </div>
-                {isProcessing && selectedPaymentMethod === 'lemonsqueezy' && (
-                  <Loader2 className="w-5 h-5 text-green-600 animate-spin" />
                 )}
               </button>
             )}

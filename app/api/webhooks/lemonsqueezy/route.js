@@ -169,7 +169,8 @@ export async function POST(request) {
 
     // Get raw body for signature verification
     const rawBody = await request.text();
-    const signature = request.headers.get('x-signature') || '';
+    // Lemon Squeezy sends signature in X-Signature header (case-insensitive)
+    const signature = request.headers.get('x-signature') || request.headers.get('X-Signature') || '';
 
     // Get webhook secret
     const webhookSecret = await getLemonSqueezyWebhookSecret();
@@ -204,13 +205,21 @@ export async function POST(request) {
           result: createdResult
         });
 
-      case 'order_paid':
+      case 'subscription_payment_success':
         console.log('✅ Payment confirmed');
         const paidResult = await processOrderPaid(order);
         return NextResponse.json({ 
           success: true, 
-          message: 'Order paid',
+          message: 'Payment successful',
           result: paidResult
+        });
+
+      case 'order_refunded':
+        console.log('💰 Order refunded');
+        // Handle refund if needed
+        return NextResponse.json({ 
+          success: true, 
+          message: 'Order refunded' 
         });
 
       case 'subscription_created':

@@ -14,8 +14,7 @@ import {
   DollarSign,
   CreditCard,
   Coins,
-  Loader2,
-  ShoppingCart
+  Loader2
 } from 'lucide-react';
 import { useAuth } from '../../../src/contexts/AuthContext';
 import { useI18n } from '../../../src/contexts/I18nContext';
@@ -65,7 +64,6 @@ const SharePackagePage = () => {
   const [balanceInfo, setBalanceInfo] = useState({ balance: 0, hasInsufficientFunds: false, minimumRequired: 4, mode: 'production' });
   const [acceptedRefund, setAcceptedRefund] = useState(false);
   const [coinbaseAvailable, setCoinbaseAvailable] = useState(false);
-  const [lemonSqueezyAvailable, setLemonSqueezyAvailable] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
 
@@ -217,25 +215,7 @@ const SharePackagePage = () => {
       }
     };
 
-    // Check if Lemon Squeezy is available
-    const checkLemonSqueezyAvailability = async () => {
-      try {
-        const { lemonSqueezyService } = await import('../../../src/services/lemonSqueezyService');
-        const available = await lemonSqueezyService.initialize();
-        console.log('🔍 Lemon Squeezy availability check:', available);
-        setLemonSqueezyAvailable(available);
-        
-        if (!available) {
-          console.log('⚠️ Lemon Squeezy credentials not found. Please configure in Firestore config/lemonsqueezy or environment variables.');
-        }
-      } catch (err) {
-        console.error('❌ Error checking Lemon Squeezy availability:', err);
-        setLemonSqueezyAvailable(true);
-      }
-    };
-
     checkCoinbaseAvailability();
-    checkLemonSqueezyAvailability();
   }, []);
 
   const handlePurchase = async (paymentMethod = 'stripe') => {
@@ -363,10 +343,8 @@ const SharePackagePage = () => {
       if (paymentMethod === 'coinbase') {
         const { coinbaseService } = await import('../../../src/services/coinbaseService');
         await coinbaseService.createCheckoutSession(orderData);
-      } else if (paymentMethod === 'lemonsqueezy') {
-        const { lemonSqueezyService } = await import('../../../src/services/lemonSqueezyService');
-        await lemonSqueezyService.createCheckoutSession(orderData);
       } else {
+        // Default to Stripe
         const { paymentService } = await import('../../../src/services/paymentService');
         await paymentService.createCheckoutSession(orderData);
       }
@@ -757,13 +735,16 @@ const SharePackagePage = () => {
                 <div className="space-y-3 max-w-md mx-auto">
                   {/* Stripe Payment Button */}
                   <button
-                    onClick={() => handlePurchase('stripe')}
+                    onClick={() => {
+                      if (!acceptedRefund || isProcessing) return;
+                      handlePurchase('stripe');
+                    }}
                     disabled={!acceptedRefund || isProcessing}
                     className={`w-full flex items-center justify-center space-x-3 py-4 px-6 rounded-xl transition-all duration-200 font-medium text-base sm:text-lg shadow-lg text-white ${
                       selectedPaymentMethod === 'stripe' 
                         ? 'bg-blue-700 ring-2 ring-blue-300' 
                         : 'bg-blue-600 hover:bg-blue-700'
-                    } ${!acceptedRefund || isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    } ${!acceptedRefund || isProcessing ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}`}
                   >
                     {isProcessing && selectedPaymentMethod === 'stripe' ? (
                       <Loader2 className="w-6 h-6 animate-spin flex-shrink-0" />
@@ -777,13 +758,16 @@ const SharePackagePage = () => {
 
                   {/* Coinbase Payment Button - Always show */}
                   <button
-                    onClick={() => handlePurchase('coinbase')}
+                    onClick={() => {
+                      if (!acceptedRefund || isProcessing) return;
+                      handlePurchase('coinbase');
+                    }}
                     disabled={!acceptedRefund || isProcessing}
                     className={`w-full flex items-center justify-center space-x-3 py-4 px-6 rounded-xl transition-all duration-200 font-medium text-base sm:text-lg shadow-lg text-white ${
                       selectedPaymentMethod === 'coinbase' 
                         ? 'bg-gray-900 ring-2 ring-gray-400' 
                         : 'bg-black hover:bg-gray-900'
-                    } ${!acceptedRefund || isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    } ${!acceptedRefund || isProcessing ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}`}
                   >
                     {isProcessing && selectedPaymentMethod === 'coinbase' ? (
                       <Loader2 className="w-6 h-6 animate-spin flex-shrink-0" />
@@ -795,27 +779,6 @@ const SharePackagePage = () => {
                     </span>
                   </button>
 
-                  {/* Lemon Squeezy Payment Button */}
-                  {lemonSqueezyAvailable && (
-                    <button
-                      onClick={() => handlePurchase('lemonsqueezy')}
-                      disabled={!acceptedRefund || isProcessing}
-                      className={`w-full flex items-center justify-center space-x-3 py-4 px-6 rounded-xl transition-all duration-200 font-medium text-base sm:text-lg shadow-lg text-white ${
-                        selectedPaymentMethod === 'lemonsqueezy' 
-                          ? 'bg-green-700 ring-2 ring-green-300' 
-                          : 'bg-green-600 hover:bg-green-700'
-                      } ${!acceptedRefund || isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
-                    >
-                      {isProcessing && selectedPaymentMethod === 'lemonsqueezy' ? (
-                        <Loader2 className="w-6 h-6 animate-spin flex-shrink-0" />
-                      ) : (
-                        <ShoppingCart className="w-6 h-6 flex-shrink-0" />
-                      )}
-                      <span className="whitespace-nowrap">
-                        {t('sharePackage.purchaseNow', 'Purchase Now')} - Lemon Squeezy (Affiliate)
-                      </span>
-                    </button>
-                  )}
                 </div>
               </div>
 

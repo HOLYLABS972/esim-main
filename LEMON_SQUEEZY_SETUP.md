@@ -35,27 +35,153 @@ Add your Lemon Squeezy credentials to Firestore:
 
 ### 3. Set Up Webhook (Important for Payment Confirmation)
 
+You can create the webhook in two ways:
+
+#### Option A: Create Webhook via Dashboard (Recommended for beginners)
+
+#### Option B: Create Webhook via API (Programmatic)
+
+If you prefer to create the webhook programmatically, you can use one of these methods:
+
+**Method 1: Using the Node.js script**
+
+```bash
+# Set environment variables
+export LEMON_SQUEEZY_API_KEY="your-api-key"
+export LEMON_SQUEEZY_STORE_ID="your-store-id"
+export WEBHOOK_URL="https://yourdomain.com/api/webhooks/lemonsqueezy"
+export LEMON_SQUEEZY_WEBHOOK_SECRET="e4c2e3a2b39ea58a4005c6066293282432b45c8ef859b9678e0c78d92af77f5c"
+
+# Run the script
+node scripts/create-lemonsqueezy-webhook.js
+```
+
+**Method 2: Using the API endpoint**
+
+Make a POST request to your API:
+
+```bash
+curl -X POST "https://yourdomain.com/api/lemonsqueezy/create-webhook" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "webhookUrl": "https://yourdomain.com/api/webhooks/lemonsqueezy",
+    "webhookSecret": "e4c2e3a2b39ea58a4005c6066293282432b45c8ef859b9678e0c78d92af77f5c",
+    "events": ["order_created", "order_paid"]
+  }'
+```
+
+**Method 3: Using curl directly to Lemon Squeezy API**
+
+Replace the placeholders with your actual values:
+- `{api_key}` → Your Lemon Squeezy API key
+- `1` → Your Store ID (from Lemon Squeezy dashboard)
+- `https://mysite.com/webhooks/` → Your webhook URL (e.g., `https://yourdomain.com/api/webhooks/lemonsqueezy`)
+- `SIGNING_SECRET` → Your webhook secret (use: `e4c2e3a2b39ea58a4005c6066293282432b45c8ef859b9678e0c78d92af77f5c`)
+
+```bash
+curl -X "POST" "https://api.lemonsqueezy.com/v1/webhooks" \
+  -H 'Accept: application/vnd.api+json' \
+  -H 'Content-Type: application/vnd.api+json' \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -d '{
+    "data": {
+      "type": "webhooks",
+      "attributes": {
+        "url": "https://yourdomain.com/api/webhooks/lemonsqueezy",
+        "events": [
+          "order_created",
+          "order_paid",
+          "subscription_created",
+          "subscription_updated",
+          "subscription_cancelled"
+        ],
+        "secret": "e4c2e3a2b39ea58a4005c6066293282432b45c8ef859b9678e0c78d92af77f5c"
+      },
+      "relationships": {
+        "store": {
+          "data": {
+            "type": "stores",
+            "id": "YOUR_STORE_ID"
+          }
+        }
+      }
+    }
+  }'
+```
+
+**Example with actual values:**
+
+```bash
+curl -X "POST" "https://api.lemonsqueezy.com/v1/webhooks" \
+  -H 'Accept: application/vnd.api+json' \
+  -H 'Content-Type: application/vnd.api+json' \
+  -H "Authorization: Bearer ls_abc123xyz789..." \
+  -d '{
+    "data": {
+      "type": "webhooks",
+      "attributes": {
+        "url": "https://esim.roamjet.net/api/webhooks/lemonsqueezy",
+        "events": [
+          "order_created",
+          "order_paid"
+        ],
+        "secret": "e4c2e3a2b39ea58a4005c6066293282432b45c8ef859b9678e0c78d92af77f5c"
+      },
+      "relationships": {
+        "store": {
+          "data": {
+            "type": "stores",
+            "id": "12345"
+          }
+        }
+      }
+    }
+  }'
+```
+
+---
+
+#### Option A: Create Webhook via Dashboard (Recommended for beginners)
+
+**⚠️ IMPORTANT: The webhook secret is REQUIRED and must be the same in both places!**
+
 1. Generate a secure webhook secret (or use the one below):
    ```bash
    openssl rand -hex 32
    ```
    
-   **Example webhook secret:**
+   **Ready-to-use webhook secret (copy this):**
    ```
    e4c2e3a2b39ea58a4005c6066293282432b45c8ef859b9678e0c78d92af77f5c
    ```
 
 2. In Lemon Squeezy dashboard, go to **Settings** → **Webhooks**
-3. Add a new webhook endpoint:
-   - **URL:** `https://yourdomain.com/api/webhooks/lemonsqueezy`
-   - **Signing Secret:** Use the webhook secret you generated above
-   - **Events to listen for:**
-     - `order_created`
-     - `order_paid`
-     - `subscription_created` (if you plan to use subscriptions)
-     - `subscription_updated`
-     - `subscription_cancelled`
-4. Add the same webhook secret to your Firestore config (see step 2 above)
+3. Click **"Create Webhook"** or **"Add Webhook"**
+4. Fill in the webhook form:
+   - **Webhook URL:** `https://yourdomain.com/api/webhooks/lemonsqueezy`
+     - Replace `yourdomain.com` with your actual domain
+     - Example: `https://esim.roamjet.net/api/webhooks/lemonsqueezy`
+   
+   - **Signing Secret:** ⚠️ **REQUIRED FIELD** - Paste the webhook secret from step 1:
+     ```
+     e4c2e3a2b39ea58a4005c6066293282432b45c8ef859b9678e0c78d92af77f5c
+     ```
+     - This secret is used to verify webhook requests via the `X-Signature` header
+     - Must be between 6-40 characters (our generated secret is 64 hex characters, which is fine)
+     - **You MUST use the same secret in both Lemon Squeezy AND your Firestore config**
+   
+   - **Events to listen for:** Select these events:
+     - ✅ `order_created`
+     - ✅ `order_paid`
+     - ✅ `subscription_created` (optional, if you plan to use subscriptions)
+     - ✅ `subscription_updated` (optional)
+     - ✅ `subscription_cancelled` (optional)
+
+5. **Save the webhook** in Lemon Squeezy dashboard
+
+6. **Add the SAME webhook secret to your Firestore config** (see step 2 above)
+   - The secret in Firestore must match exactly the one you entered in Lemon Squeezy
+   - This is critical for webhook signature verification to work
 
 ### 4. Environment Variables (Alternative to Firestore)
 
@@ -108,9 +234,16 @@ You can view affiliate performance in your Lemon Squeezy dashboard under **Affil
 
 ### Webhook not receiving events
 - Verify webhook URL is accessible (not localhost)
-- Check webhook secret matches in both Lemon Squeezy and Firestore
+- **Check webhook secret matches EXACTLY in both Lemon Squeezy and Firestore** (this is critical!)
+- Verify the "Signing Secret" field is filled in Lemon Squeezy dashboard (it's required)
 - Review webhook logs in Lemon Squeezy dashboard
 - Check server logs for webhook errors
+- Verify the `X-Signature` header is being received and validated correctly
+
+### "The {0} field is required" error in Lemon Squeezy
+- This means the **Signing Secret** field is empty
+- You MUST enter a webhook secret (use the one provided: `e4c2e3a2b39ea58a4005c6066293282432b45c8ef859b9678e0c78d92af77f5c`)
+- The secret must be the same in both Lemon Squeezy dashboard AND your Firestore config
 
 ### Payment success page not processing
 - Verify URL parameters are being passed correctly
