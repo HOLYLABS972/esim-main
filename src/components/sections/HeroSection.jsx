@@ -139,7 +139,7 @@ export default function HeroSection() {
             <div className="mt-8 sm:mt-10 flex items-center justify-center px-4 sm:px-0">
               <button
                 onClick={handleDownloadApp}
-                className="btn-primary w-full sm:w-auto"
+                className="w-full sm:w-auto text-white font-semibold transition-all duration-200 bg-black hover:bg-gray-900 rounded-[30px] px-6 py-3 shadow-lg"
               >
                 {t('hero.downloadApp')}
               </button>

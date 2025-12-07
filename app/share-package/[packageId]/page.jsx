@@ -738,18 +738,18 @@ const SharePackagePage = () => {
                   <button
                     onClick={() => handlePurchase('stripe')}
                     disabled={!acceptedRefund || isProcessing}
-                    className={`w-full flex items-center justify-center space-x-3 py-4 px-6 rounded-xl transition-all duration-200 font-medium text-lg shadow-lg text-white ${
+                    className={`w-full flex items-center justify-center space-x-3 py-4 px-6 rounded-xl transition-all duration-200 font-medium text-base sm:text-lg shadow-lg text-white ${
                       selectedPaymentMethod === 'stripe' 
                         ? 'bg-blue-700 ring-2 ring-blue-300' 
                         : 'bg-blue-600 hover:bg-blue-700'
                     } ${!acceptedRefund || isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     {isProcessing && selectedPaymentMethod === 'stripe' ? (
-                      <Loader2 className="w-6 h-6 animate-spin" />
+                      <Loader2 className="w-6 h-6 animate-spin flex-shrink-0" />
                     ) : (
-                      <CreditCard className="w-6 h-6" />
+                      <CreditCard className="w-6 h-6 flex-shrink-0" />
                     )}
-                    <span>
+                    <span className="whitespace-nowrap">
                       {t('sharePackage.purchaseNow', 'Purchase Now')} - Credit/Debit Card
                     </span>
                   </button>
@@ -758,18 +758,18 @@ const SharePackagePage = () => {
                   <button
                     onClick={() => handlePurchase('coinbase')}
                     disabled={!acceptedRefund || isProcessing}
-                    className={`w-full flex items-center justify-center space-x-3 py-4 px-6 rounded-xl transition-all duration-200 font-medium text-lg shadow-lg text-white ${
+                    className={`w-full flex items-center justify-center space-x-3 py-4 px-6 rounded-xl transition-all duration-200 font-medium text-base sm:text-lg shadow-lg text-white ${
                       selectedPaymentMethod === 'coinbase' 
                         ? 'bg-gray-900 ring-2 ring-gray-400' 
                         : 'bg-black hover:bg-gray-900'
                     } ${!acceptedRefund || isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     {isProcessing && selectedPaymentMethod === 'coinbase' ? (
-                      <Loader2 className="w-6 h-6 animate-spin" />
+                      <Loader2 className="w-6 h-6 animate-spin flex-shrink-0" />
                     ) : (
-                      <Coins className="w-6 h-6" />
+                      <Coins className="w-6 h-6 flex-shrink-0" />
                     )}
-                    <span>
+                    <span className="whitespace-nowrap">
                       {t('sharePackage.purchaseNow', 'Purchase Now')} - Cryptocurrency
                     </span>
                   </button>
