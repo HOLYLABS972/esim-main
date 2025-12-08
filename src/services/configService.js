@@ -357,56 +357,6 @@ class ConfigService {
     }
   }
 
-  // Get Lemon Squeezy API configuration
-  async getLemonSqueezyConfig() {
-    try {
-      // First try to get from Firestore config/lemonsqueezy
-      const configRef = doc(db, 'config', 'lemonsqueezy');
-      const configDoc = await getDoc(configRef);
-      
-      if (configDoc.exists()) {
-        const configData = configDoc.data();
-        if (configData.api_key || configData.apiKey) {
-          console.log('✅ Lemon Squeezy API key loaded from Firestore');
-          return {
-            apiKey: configData.api_key || configData.apiKey,
-            storeId: configData.store_id || configData.storeId,
-            webhookSecret: configData.webhook_secret || configData.webhookSecret
-          };
-        }
-      }
-      
-      // Fallback to environment variables
-      const envApiKey = process.env.LEMON_SQUEEZY_API_KEY;
-      const envStoreId = process.env.LEMON_SQUEEZY_STORE_ID;
-      const envWebhookSecret = process.env.LEMON_SQUEEZY_WEBHOOK_SECRET;
-      
-      if (envApiKey) {
-        console.log('✅ Lemon Squeezy API key loaded from environment variable');
-        return {
-          apiKey: envApiKey,
-          storeId: envStoreId,
-          webhookSecret: envWebhookSecret
-        };
-      }
-      
-      // No API key found
-      console.log('⚠️ No Lemon Squeezy API key found');
-      return {
-        apiKey: null,
-        storeId: null,
-        webhookSecret: null
-      };
-    } catch (error) {
-      console.error('❌ Error loading Lemon Squeezy configuration:', error);
-      return {
-        apiKey: null,
-        storeId: null,
-        webhookSecret: null
-      };
-    }
-  }
-
   // Get OpenRouter API configuration (for AI-generated content)
   async getOpenRouterConfig() {
     try {

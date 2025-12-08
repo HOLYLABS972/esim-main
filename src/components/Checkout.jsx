@@ -75,7 +75,6 @@ const Checkout = ({ plan }) => {
       if (paymentMethod === 'coinbase') {
         await coinbaseService.createCheckoutSession(orderData);
       } else {
-        // Default to Stripe
         await paymentService.createCheckoutSession(orderData);
       }
       

@@ -135,7 +135,7 @@ export default function ActivationSection() {
                               alt="iOS" 
                               width={20}
                               height={20}
-                              className="w-5 h-5 mr-2"
+                              className="w-5 h-5 mr-2 brightness-0 invert"
                             />
                             {t('activation.downloadForIOS')}
                           </a>
@@ -152,7 +152,7 @@ export default function ActivationSection() {
                               alt="Android" 
                               width={20}
                               height={20}
-                              className="w-5 h-5 mr-2"
+                              className="w-5 h-5 mr-2 brightness-0"
                             />
                             {t('activation.downloadForAndroid')}
                           </a>

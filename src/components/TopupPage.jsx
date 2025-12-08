@@ -83,136 +83,30 @@ const TopupPage = ({ iccid, countryCode: urlCountryCode }) => {
   };
 
   const fetchOrderInfo = async () => {
-    console.log('🚀 [DEBUG] fetchOrderInfo started');
+    console.log('🚀 [DEBUG] fetchOrderInfo started - Using ICCID from URL');
     try {
       setLoading(true);
       
-      // Helper function to normalize ICCID for comparison
-      const normalizeIccid = (iccidValue) => {
-        if (!iccidValue) return null;
-        return String(iccidValue).trim();
-      };
+      // Don't check Firebase database - topup packages will be fetched from Firestore topups collection
+      // Just create basic order info from ICCID and URL parameters
+      console.log('📦 Creating order info for ICCID:', iccid);
+      console.log('🌍 Country code from URL:', urlCountryCode);
       
-      // Helper function to extract ICCID from order data
-      const extractIccidFromOrder = (orderData) => {
-        const checks = [
-          orderData?.iccid,
-          orderData?.qrCode?.iccid,
-          orderData?.orderResult?.iccid,
-          orderData?.esimData?.iccid,
-          orderData?.airaloOrderData?.sims?.[0]?.iccid,
-          orderData?.orderData?.sims?.[0]?.iccid,
-          orderData?.sims?.[0]?.iccid,
-        ];
-        const found = checks.find(val => val && val !== null && val !== undefined);
-        return normalizeIccid(found);
-      };
-      
-      // Search for existing eSIM order by ICCID in Firebase collections
-      let orderData = null;
-      
-      console.log('🔍 [DEBUG] Searching for existing eSIM order by ICCID:', iccid);
-      const { collection, getDocs } = await import('firebase/firestore');
-      const { db } = await import('../firebase/config');
-      
-      const normalizedSearchIccid = normalizeIccid(iccid);
-      
-      // Try user collection first if authenticated
-      if (currentUser) {
-        console.log('🔍 [DEBUG] Searching user collection for authenticated user');
-        const esimsRef = collection(db, 'users', currentUser.uid, 'esims');
-        const querySnapshot = await getDocs(esimsRef);
-        
-        // Search through user's orders to find matching ICCID
-        for (const docSnap of querySnapshot.docs) {
-          const data = docSnap.data();
-          const foundIccid = extractIccidFromOrder(data);
-          
-          if (foundIccid === normalizedSearchIccid) {
-            orderData = data;
-            console.log('🔍 [SERVER] Found existing eSIM order:', docSnap.id);
-            console.log('🔍 [SERVER] Full order data structure:', JSON.stringify(data, null, 2));
-            console.log('🔍 [SERVER] Country fields:', { 
-              countryCode: data.countryCode, 
-              countryName: data.countryName,
-              packageId: data.package_id || data.packageId,
-              planId: data.planId,
-              airaloPackageId: data.airaloOrderData?.package_id,
-              airaloCountryCode: data.airaloOrderData?.country_code
-            });
-            break;
-          }
-        }
-      }
-      
-      // If not found in user collection or user not authenticated, search global orders
-      if (!orderData) {
-        console.log('🔍 [DEBUG] Searching global orders collection');
-        const globalOrdersRef = collection(db, 'orders');
-        const globalQuerySnapshot = await getDocs(globalOrdersRef);
-        
-        for (const docSnap of globalQuerySnapshot.docs) {
-          const data = docSnap.data();
-          const foundIccid = extractIccidFromOrder(data);
-          
-          if (foundIccid === normalizedSearchIccid) {
-            orderData = data;
-            console.log('🔍 [DEBUG] Found order in global collection:', docSnap.id);
-            console.log('🔍 [DEBUG] Global order data:', JSON.stringify(data, null, 2));
-            break;
-          }
-        }
-      }
-      
-      if (orderData) {
-        // Get country code from multiple possible locations
-        let countryCode = orderData.countryCode || 
-                         orderData.airaloOrderData?.country_code ||
-                         orderData.orderResult?.country_code;
-        
-        let countryName = orderData.countryName || 
-                         orderData.airaloOrderData?.country_name ||
-                         orderData.orderResult?.country_name;
-        
-        // Extract country name from airaloOrderData installation text if not found
-        if (!countryName && orderData.airaloOrderData?.manual_installation) {
-          const coverageMatch = orderData.airaloOrderData.manual_installation.match(/<b>Coverage:\s*<\/b>([^<]+)/);
-          if (coverageMatch) {
-            countryName = coverageMatch[1].trim();
-            console.log('🌍 Extracted country from coverage text:', countryName);
-          }
-        }
-        
-        console.log('🔍 [SERVER] Final country info:', { countryCode, countryName });
-        
-        // Use the found order data with country information
-        // Prioritize URL country code if provided
-        setOrderInfo({
-          iccid: iccid,
-          customerEmail: orderData.customerEmail || currentUser?.email || 'customer@example.com',
-          countryCode: urlCountryCode || countryCode, // URL parameter takes priority
-          countryName: countryName,
-          planId: orderData.planId || orderData.packageId,
-          planName: orderData.planName || orderData.packageName,
-          airaloPackageId: orderData.airaloOrderData?.package_id,
-          packageName: orderData.airaloOrderData?.package
-        });
-      } else {
-        console.log('⚠️ No existing order found, creating basic order info');
-        // Fallback: create basic order info from ICCID and URL country code if available
-        setOrderInfo({
-          iccid: iccid,
-          customerEmail: currentUser?.email || 'customer@example.com',
-          countryCode: urlCountryCode || null // Use URL country code if available
-        });
-      }
-      
-    } catch (error) {
-      console.error('❌ Error fetching order info:', error);
-      // Create basic order info even if API fails
       setOrderInfo({
         iccid: iccid,
-        customerEmail: currentUser?.email || 'customer@example.com'
+        customerEmail: currentUser?.email || 'customer@example.com',
+        countryCode: urlCountryCode || null // Use URL country code if available
+      });
+      
+      console.log('✅ Order info created - will fetch topup packages from Firestore');
+      
+    } catch (error) {
+      console.error('❌ Error creating order info:', error);
+      // Create basic order info even if there's an error
+      setOrderInfo({
+        iccid: iccid,
+        customerEmail: currentUser?.email || 'customer@example.com',
+        countryCode: urlCountryCode || null
       });
     } finally {
       setLoading(false);
@@ -848,11 +742,7 @@ const TopupPage = ({ iccid, countryCode: urlCountryCode }) => {
                 <button
                       onClick={() => handlePurchase('stripe')}
                       disabled={!acceptedRefund || isProcessing}
-                  className={`w-full flex items-center justify-center space-x-3 py-4 px-6 rounded-xl transition-all duration-200 font-medium text-lg shadow-lg text-white ${
-                    selectedPaymentMethod === 'stripe' 
-                      ? 'bg-tufts-blue-dark ring-2 ring-tufts-blue/30' 
-                      : 'bg-tufts-blue hover:bg-tufts-blue-dark'
-                      } ${!acceptedRefund || isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      className="w-full flex items-center justify-center space-x-3 py-4 px-6 rounded-xl transition-all duration-200 font-medium text-lg shadow-lg text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                       {isProcessing && selectedPaymentMethod === 'stripe' ? (
                     <Loader2 className="w-6 h-6 animate-spin" />

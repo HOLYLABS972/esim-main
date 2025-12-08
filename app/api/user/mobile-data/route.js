@@ -3,6 +3,8 @@ import { NextResponse } from 'next/server';
 // API URLs - check both environment variable names for compatibility
 const API_PRODUCTION_URL = process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || 'https://sdk.roamjet.net';
 const API_SANDBOX_URL = process.env.NEXT_PUBLIC_API_SANDBOX_URL || process.env.API_SANDBOX_URL || 'https://sandbox.roamjet.net';
+// Data usage server URL - dedicated server for mobile data/balance checks
+const DATA_API_URL = process.env.NEXT_PUBLIC_DATA_API_URL || process.env.DATA_API_URL || 'https://data.roamjet.net';
 
 /**
  * Get the correct API base URL based on mode
@@ -16,6 +18,13 @@ const getApiBaseUrl = (mode) => {
   }
   // Default to production
   return API_PRODUCTION_URL;
+};
+
+/**
+ * Get the data API base URL (always uses dedicated data server)
+ */
+const getDataApiBaseUrl = () => {
+  return DATA_API_URL;
 };
 
 /**
@@ -34,16 +43,24 @@ export async function OPTIONS(request) {
 }
 
 /**
+ * Handle GET request (for testing/debugging)
+ */
+export async function GET(request) {
+  return NextResponse.json({
+    success: true,
+    message: 'Mobile data API endpoint is active',
+    endpoint: '/api/user/mobile-data',
+    method: 'POST',
+    dataServer: getDataApiBaseUrl(),
+  });
+}
+
+/**
  * Proxy mobile-data requests to external API
  * This avoids CORS issues by making the request server-side
  */
 export async function POST(request) {
-  const requestStartTime = Date.now();
-  const requestId = Math.random().toString(36).substring(7);
-  
-  console.log(`\n🚀 [${requestId}] ===== Mobile Data Request Started =====`);
-  console.log(`⏰ [${requestId}] Request timestamp: ${new Date().toISOString()}`);
-  
+  console.log('🚀 POST /api/user/mobile-data - Route handler called');
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
@@ -55,9 +72,8 @@ export async function POST(request) {
     let body;
     try {
       body = await request.json();
-      console.log(`📦 [${requestId}] Request body parsed successfully`);
     } catch (parseError) {
-      console.error(`❌ [${requestId}] Failed to parse request body:`, parseError);
+      console.error('❌ Failed to parse request body:', parseError);
       return NextResponse.json(
         {
           success: false,
@@ -71,7 +87,6 @@ export async function POST(request) {
     }
 
     const { iccid, orderId } = body || {};
-    console.log(`📋 [${requestId}] Request params:`, { iccid: iccid?.substring(0, 10) + '...', orderId });
 
     if (!iccid && !orderId) {
       return NextResponse.json(
@@ -86,18 +101,16 @@ export async function POST(request) {
       );
     }
 
-    // Check for mode in query params or default to production
-    const url = new URL(request.url);
-    const mode = url.searchParams.get('mode');
-    const apiBaseUrl = getApiBaseUrl(mode);
+    // Use dedicated data server for mobile-data requests
+    const dataApiBaseUrl = getDataApiBaseUrl();
     
     // Try both possible endpoint paths
     const endpointPath = '/api/user/mobile-data';
-    const fullUrl = `${apiBaseUrl}${endpointPath}`;
+    const fullUrl = `${dataApiBaseUrl}${endpointPath}`;
     
     console.log(`🌐 Proxying mobile-data request to: ${fullUrl}`);
-    console.log(`🔍 API Base URL: ${apiBaseUrl}`);
-    console.log(`🔍 Mode: ${mode || 'production (default)'}`);
+    console.log(`🔍 Data API Base URL: ${dataApiBaseUrl}`);
+    console.log(`📡 Using dedicated data server: ${dataApiBaseUrl}`);
     
     const headers = {
       'Content-Type': 'application/json',
@@ -112,98 +125,48 @@ export async function POST(request) {
       console.log('👤 No auth token found, making guest request');
     }
 
-    // Forward the request to the external API with timeout
+    // Forward the request to the external API
     let response;
-    const TIMEOUT_MS = 30000; // 30 seconds timeout
-    
     try {
-      // Create AbortController for timeout
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
+      response = await fetch(fullUrl, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ iccid, orderId }),
+      });
       
-      try {
-        response = await fetch(fullUrl, {
+      console.log(`📡 API Response Status: ${response.status} ${response.statusText}`);
+      
+      // Check if response is JSON (even if 404, the data server returns JSON)
+      const contentType = response.headers.get('content-type');
+      const isJsonResponse = contentType && contentType.includes('application/json');
+      
+      // If 404 and NOT JSON, try alternative endpoint (true 404 = endpoint not found)
+      // If 404 but JSON, it's a valid response from the data server (SIM not found)
+      if (response.status === 404 && !isJsonResponse) {
+        const altEndpointPath = '/api/mobile-data';
+        const altFullUrl = `${dataApiBaseUrl}${altEndpointPath}`;
+        console.log(`⚠️ 404 with non-JSON response, trying alternative endpoint: ${altFullUrl}`);
+        
+        const altResponse = await fetch(altFullUrl, {
           method: 'POST',
           headers,
           body: JSON.stringify({ iccid, orderId }),
-          signal: controller.signal,
         });
         
-        clearTimeout(timeoutId);
-        console.log(`📡 API Response Status: ${response.status} ${response.statusText}`);
-        
-        // If 404, try alternative endpoint path (without /user)
-        if (response.status === 404) {
-          const altEndpointPath = '/api/mobile-data';
-          const altFullUrl = `${apiBaseUrl}${altEndpointPath}`;
-          console.log(`⚠️ 404 received, trying alternative endpoint: ${altFullUrl}`);
-          
-          // Create new controller for alternative request
-          const altController = new AbortController();
-          const altTimeoutId = setTimeout(() => altController.abort(), TIMEOUT_MS);
-          
-          try {
-            const altResponse = await fetch(altFullUrl, {
-              method: 'POST',
-              headers,
-              body: JSON.stringify({ iccid, orderId }),
-              signal: altController.signal,
-            });
-            
-            clearTimeout(altTimeoutId);
-            
-            if (altResponse.ok || altResponse.status !== 404) {
-              console.log(`✅ Alternative endpoint responded: ${altResponse.status}`);
-              response = altResponse;
-            } else {
-              console.error(`❌ Alternative endpoint also returned ${altResponse.status}`);
-            }
-          } catch (altError) {
-            clearTimeout(altTimeoutId);
-            if (altError.name === 'AbortError') {
-              console.error('❌ Alternative endpoint request timed out');
-              throw new Error('Request timeout: Alternative endpoint did not respond within 30 seconds');
-            }
-            throw altError;
-          }
+        if (altResponse.ok || (altResponse.status === 404 && altResponse.headers.get('content-type')?.includes('application/json'))) {
+          console.log(`✅ Alternative endpoint responded: ${altResponse.status}`);
+          response = altResponse;
+        } else {
+          console.error(`❌ Alternative endpoint also returned ${altResponse.status}`);
         }
-      } catch (fetchError) {
-        clearTimeout(timeoutId);
-        if (fetchError.name === 'AbortError') {
-          console.error('❌ Request timed out after 30 seconds');
-          return NextResponse.json(
-            {
-              success: false,
-              error: 'Request timeout: The API server did not respond within 30 seconds. Please try again later.',
-              details: `Attempted URL: ${fullUrl}`,
-            },
-            { 
-              status: 504,
-              headers: corsHeaders,
-            }
-          );
-        }
-        throw fetchError;
+      } else if (response.status === 404 && isJsonResponse) {
+        console.log(`ℹ️ 404 with JSON response - this is a valid response from data server (SIM not found)`);
+        console.log(`📋 Content-Type: ${contentType}`);
+        console.log(`📋 Response status: ${response.status}`);
       }
     } catch (fetchError) {
       console.error('❌ Fetch error:', fetchError);
       console.error('❌ Failed URL:', fullUrl);
-      
-      // Check if it's a timeout error
-      if (fetchError.message && fetchError.message.includes('timeout')) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: 'Request timeout: The API server did not respond within 30 seconds. Please try again later.',
-            details: `Attempted URL: ${fullUrl}`,
-          },
-          { 
-            status: 504,
-            headers: corsHeaders,
-          }
-        );
-      }
-      
       return NextResponse.json(
         {
           success: false,
@@ -219,6 +182,7 @@ export async function POST(request) {
 
     // Handle response
     const contentType = response.headers.get('content-type');
+    console.log(`📋 Final response status: ${response.status}, Content-Type: ${contentType}`);
     let data;
 
     if (contentType && contentType.includes('application/json')) {
@@ -260,8 +224,19 @@ export async function POST(request) {
     }
 
     // Return the response with CORS headers
+    // If the data server returns 404 with JSON (SIM not found), return 200 OK
+    // so the client can handle the error message in the JSON body
+    // Only forward 404 status if it's a true endpoint not found (non-JSON)
+    const isJson404 = response.status === 404 && contentType && contentType.includes('application/json');
+    const statusCode = isJson404 ? 200 : response.status;
+    
+    if (isJson404) {
+      console.log(`✅ Converting 404 JSON response to 200 OK for client`);
+      console.log(`📦 Response data:`, JSON.stringify(data).substring(0, 200));
+    }
+    
     return NextResponse.json(data, {
-      status: response.status,
+      status: statusCode,
       headers: corsHeaders,
     });
   } catch (error) {

@@ -342,10 +342,11 @@ const SharePackagePage = () => {
       // Pass email and order info in URL params for iframe compatibility
       if (paymentMethod === 'coinbase') {
         const { coinbaseService } = await import('../../../src/services/coinbaseService');
+        // Modify createCheckoutSession to accept email in URL params
         await coinbaseService.createCheckoutSession(orderData);
       } else {
-        // Default to Stripe
         const { paymentService } = await import('../../../src/services/paymentService');
+        // Modify createCheckoutSession to accept email in URL params
         await paymentService.createCheckoutSession(orderData);
       }
       
@@ -735,50 +736,43 @@ const SharePackagePage = () => {
                 <div className="space-y-3 max-w-md mx-auto">
                   {/* Stripe Payment Button */}
                   <button
-                    onClick={() => {
-                      if (!acceptedRefund || isProcessing) return;
-                      handlePurchase('stripe');
-                    }}
+                    onClick={() => handlePurchase('stripe')}
                     disabled={!acceptedRefund || isProcessing}
-                    className={`w-full flex items-center justify-center space-x-3 py-4 px-6 rounded-xl transition-all duration-200 font-medium text-base sm:text-lg shadow-lg text-white ${
+                    className={`w-full flex items-center justify-center space-x-3 py-4 px-6 rounded-xl transition-all duration-200 font-medium text-lg shadow-lg text-white ${
                       selectedPaymentMethod === 'stripe' 
                         ? 'bg-blue-700 ring-2 ring-blue-300' 
                         : 'bg-blue-600 hover:bg-blue-700'
-                    } ${!acceptedRefund || isProcessing ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}`}
+                    } ${!acceptedRefund || isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     {isProcessing && selectedPaymentMethod === 'stripe' ? (
-                      <Loader2 className="w-6 h-6 animate-spin flex-shrink-0" />
+                      <Loader2 className="w-6 h-6 animate-spin" />
                     ) : (
-                      <CreditCard className="w-6 h-6 flex-shrink-0" />
+                      <CreditCard className="w-6 h-6" />
                     )}
-                    <span className="whitespace-nowrap">
+                    <span>
                       {t('sharePackage.purchaseNow', 'Purchase Now')} - Credit/Debit Card
                     </span>
                   </button>
 
                   {/* Coinbase Payment Button - Always show */}
                   <button
-                    onClick={() => {
-                      if (!acceptedRefund || isProcessing) return;
-                      handlePurchase('coinbase');
-                    }}
+                    onClick={() => handlePurchase('coinbase')}
                     disabled={!acceptedRefund || isProcessing}
-                    className={`w-full flex items-center justify-center space-x-3 py-4 px-6 rounded-xl transition-all duration-200 font-medium text-base sm:text-lg shadow-lg text-white ${
+                    className={`w-full flex items-center justify-center space-x-3 py-4 px-6 rounded-xl transition-all duration-200 font-medium text-lg shadow-lg text-white ${
                       selectedPaymentMethod === 'coinbase' 
                         ? 'bg-gray-900 ring-2 ring-gray-400' 
                         : 'bg-black hover:bg-gray-900'
-                    } ${!acceptedRefund || isProcessing ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}`}
+                    } ${!acceptedRefund || isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     {isProcessing && selectedPaymentMethod === 'coinbase' ? (
-                      <Loader2 className="w-6 h-6 animate-spin flex-shrink-0" />
+                      <Loader2 className="w-6 h-6 animate-spin" />
                     ) : (
-                      <Coins className="w-6 h-6 flex-shrink-0" />
+                      <Coins className="w-6 h-6" />
                     )}
-                    <span className="whitespace-nowrap">
+                    <span>
                       {t('sharePackage.purchaseNow', 'Purchase Now')} - Cryptocurrency
                     </span>
                   </button>
-
                 </div>
               </div>
 
