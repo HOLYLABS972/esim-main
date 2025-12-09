@@ -1,5 +1,10 @@
-import BlogPost from '../../../../src/components/BlogPost';
+import { Suspense } from 'react';
+import { notFound } from 'next/navigation';
+import BlogPostClient from '../../../../src/components/BlogPostClient';
+import Loading from '../../../../src/components/Loading';
 import blogService from '../../../../src/services/blogService';
+
+export const revalidate = 60; // Revalidate every 60 seconds
 
 export async function generateMetadata({ params }) {
   try {
@@ -44,8 +49,8 @@ export async function generateMetadata({ params }) {
           },
         ],
         article: {
-          publishedTime: post.publishedAt?.toISOString(),
-          modifiedTime: post.updatedAt?.toISOString(),
+          publishedTime: post.publishedAt ? (post.publishedAt instanceof Date ? post.publishedAt.toISOString() : new Date(post.publishedAt).toISOString()) : undefined,
+          modifiedTime: post.updatedAt ? (post.updatedAt instanceof Date ? post.updatedAt.toISOString() : new Date(post.updatedAt).toISOString()) : undefined,
           author: post.author,
           section: post.category,
           tags: post.tags,
@@ -89,6 +94,30 @@ export async function generateMetadata({ params }) {
   }
 }
 
-export default function GermanBlogPostPage({ params }) {
-  return <BlogPost slug={params.id} />;
+export default async function GermanBlogPostPage({ params }) {
+  // Fetch post data on the server
+  let post = null;
+  try {
+    post = await blogService.getPostBySlug(params.id, 'de');
+    if (!post) {
+      notFound();
+    }
+    
+    // Serialize dates to ISO strings for client component
+    post = {
+      ...post,
+      publishedAt: post.publishedAt ? (post.publishedAt instanceof Date ? post.publishedAt.toISOString() : new Date(post.publishedAt).toISOString()) : null,
+      createdAt: post.createdAt ? (post.createdAt instanceof Date ? post.createdAt.toISOString() : new Date(post.createdAt).toISOString()) : null,
+      updatedAt: post.updatedAt ? (post.updatedAt instanceof Date ? post.updatedAt.toISOString() : new Date(post.updatedAt).toISOString()) : null,
+    };
+  } catch (error) {
+    console.error('Error fetching blog post:', error);
+    notFound();
+  }
+
+  return (
+    <Suspense fallback={<Loading />}>
+      <BlogPostClient initialPost={post} slug={params.id} language="de" />
+    </Suspense>
+  );
 }

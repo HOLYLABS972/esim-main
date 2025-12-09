@@ -28,7 +28,15 @@ export default async function ArabicBlogPage() {
   
   try {
     const result = await blogService.getPublishedPosts(20, null, 'ar');
-    initialPosts = result.posts.filter(post => !post.isFallback);
+    // Serialize dates to ISO strings for client component
+    initialPosts = result.posts
+      .filter(post => !post.isFallback)
+      .map(post => ({
+        ...post,
+        publishedAt: post.publishedAt ? (post.publishedAt instanceof Date ? post.publishedAt.toISOString() : new Date(post.publishedAt).toISOString()) : null,
+        createdAt: post.createdAt ? (post.createdAt instanceof Date ? post.createdAt.toISOString() : new Date(post.createdAt).toISOString()) : null,
+        updatedAt: post.updatedAt ? (post.updatedAt instanceof Date ? post.updatedAt.toISOString() : new Date(post.updatedAt).toISOString()) : null,
+      }));
     categories = await blogService.getCategories();
   } catch (error) {
     console.error('Error fetching blog posts:', error);

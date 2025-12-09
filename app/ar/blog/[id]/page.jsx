@@ -49,8 +49,8 @@ export async function generateMetadata({ params }) {
           },
         ],
         article: {
-          publishedTime: post.publishedAt?.toISOString(),
-          modifiedTime: post.updatedAt?.toISOString(),
+          publishedTime: post.publishedAt ? (post.publishedAt instanceof Date ? post.publishedAt.toISOString() : new Date(post.publishedAt).toISOString()) : undefined,
+          modifiedTime: post.updatedAt ? (post.updatedAt instanceof Date ? post.updatedAt.toISOString() : new Date(post.updatedAt).toISOString()) : undefined,
           author: post.author,
           section: post.category,
           tags: post.tags,
@@ -102,6 +102,14 @@ export default async function ArabicBlogPostPage({ params }) {
     if (!post) {
       notFound();
     }
+    
+    // Serialize dates to ISO strings for client component
+    post = {
+      ...post,
+      publishedAt: post.publishedAt ? (post.publishedAt instanceof Date ? post.publishedAt.toISOString() : new Date(post.publishedAt).toISOString()) : null,
+      createdAt: post.createdAt ? (post.createdAt instanceof Date ? post.createdAt.toISOString() : new Date(post.createdAt).toISOString()) : null,
+      updatedAt: post.updatedAt ? (post.updatedAt instanceof Date ? post.updatedAt.toISOString() : new Date(post.updatedAt).toISOString()) : null,
+    };
   } catch (error) {
     console.error('Error fetching blog post:', error);
     notFound();
