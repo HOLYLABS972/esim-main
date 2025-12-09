@@ -1,10 +1,11 @@
 'use client';
 
+import React, { Suspense } from 'react';
 import { useI18n } from '../../contexts/I18nContext';
 import { getLanguageDirection, detectLanguageFromPath } from '../../utils/languageUtils';
-import { translateCountryName } from '../../utils/countryTranslations';
 import { usePathname } from 'next/navigation';
-import { Globe } from 'lucide-react';
+import CountrySearchBar from '../CountrySearchBar';
+import AiraloPackagesSection from './AiraloPackagesSection';
 
 export default function PlansSection() {
   const { t, locale, isLoading } = useI18n();
@@ -22,59 +23,6 @@ export default function PlansSection() {
 
   const currentLanguage = getCurrentLanguage();
   const isRTL = getLanguageDirection(currentLanguage) === 'rtl';
-  
-  // Function to handle plan card click - redirect to app download
-  const handlePlanClick = () => {
-    // Use OneLink for smart routing to correct app store
-    if (typeof window !== 'undefined' && window.APPSFLYER_ONELINK_URL) {
-      console.log('📱 Opening AppsFlyer OneLink from plan card');
-      window.open(window.APPSFLYER_ONELINK_URL, '_blank');
-      return;
-    }
-    
-    // Fallback: scroll to download section if OneLink not ready
-    console.log('🖥️ OneLink not ready, scrolling to download section');
-    const downloadSection = document.getElementById('how-it-works');
-    if (downloadSection) {
-      downloadSection.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
-  
-  // Hardcoded popular plans for landing page
-  const popularPlans = [
-    {
-      country: 'United States',
-      countryCode: 'US',
-      flag: '🇺🇸',
-      data: '1GB',
-      days: '7 Days',
-      price: '$4.00'
-    },
-    {
-      country: 'Poland',
-      countryCode: 'PL',
-      flag: '🇵🇱',
-      data: '1GB',
-      days: '7 Days',
-      price: '$4.00'
-    },
-    {
-      country: 'Thailand',
-      countryCode: 'TH',
-      flag: '🇹🇭',
-      data: '1GB',
-      days: '7 Days',
-      price: '$4.00'
-    },
-    {
-      country: 'Japan',
-      countryCode: 'JP',
-      flag: '🇯🇵',
-      data: '1GB',
-      days: '7 Days',
-      price: '$4.00'
-    }
-  ];
   
   if (isLoading) {
     return (
@@ -100,78 +48,31 @@ export default function PlansSection() {
       <div className="container mx-auto px-4 relative z-10">
         
         {/* Section Header */}
-        <div className="text-center mb-16 max-w-4xl mx-auto">
+        <div className="text-center mb-8 max-w-4xl mx-auto">
          <p className="mx-auto max-w-4xl text-center text-4xl font-semibold tracking-tight text-eerie-black sm:text-5xl">                                                                                        
             {t('plans.subtitle')}
           </p>
-          <div className={`text-eerie-black max-w-3xl mx-auto mt-4 ${isRTL ? 'text-right' : 'text-left'}`}>
+          <div className="text-eerie-black max-w-3xl mx-auto mt-4 mb-8 text-center">
             {t('plans.description').split('\n').map((line, index) => (
               <p key={index} className={index > 0 ? 'mt-2' : ''}>{line}</p>
             ))}
           </div>
+          
+          {/* Search Bar */}
+          <Suspense fallback={<div className="h-16" />}>
+            <CountrySearchBar showCountryCount={true} />
+          </Suspense>
         </div>
 
-        {/* Hardcoded Popular Plans Preview */}
-        <div className="max-w-4xl mx-auto mb-12">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-            {popularPlans.map((plan, index) => (
-              <button
-                key={index}
-                className={`w-full px-4 py-2 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-colors duration-200 flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}
-                onClick={handlePlanClick}
-              >
-                {isRTL ? (
-                  <>
-                    <div className="text-left">
-                      <div className="text-lg font-semibold text-gray-900">{plan.price}</div>
-                    </div>
-                    <div className={`flex items-center space-x-4`}>
-                      <div className="text-right">
-                        <h3 className="text-lg font-semibold text-gray-900">
-                          {translateCountryName(plan.countryCode, plan.country, locale)}
-                        </h3>
-                        <p className="text-sm text-gray-500">1GB • 7 Days</p>
-                      </div>
-                      <div className="flex-shrink-0" style={{ padding: '10px' }}>
-                        <span className="text-2xl">{plan.flag}</span>
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className={`flex items-center space-x-4`}>
-                      <div className="flex-shrink-0">
-                        <span className="text-2xl">{plan.flag}</span>
-                      </div>
-                      <div className="text-left">
-                        <h3 className="text-lg font-semibold text-gray-900">
-                          {translateCountryName(plan.countryCode, plan.country, locale)}
-                        </h3>
-                        <p className="text-sm text-gray-500">1GB • 7 Days</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-lg font-semibold text-gray-900">{plan.price}</div>
-                    </div>
-                  </>
-                )}
-              </button>
-            ))}
+        {/* Airalo Packages Section with Tabs (Global, Regional, Countries) */}
+        <Suspense fallback={
+          <div className="text-center py-16">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <p className="mt-4 text-gray-600">{t('plans.loadingPlans', 'Loading packages...')}</p>
           </div>
-        </div>
-        
-        {/* Get 35% OFF Button */}
-        <div className="text-center mt-12">
-          <button
-            onClick={handlePlanClick}
-            className={`btn-secondary inline-flex items-center ${isRTL ? 'flex-row-reverse gap-2' : 'gap-2'}`}
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-            </svg>
-            <span>{t('discount.get35Off', 'Get 35% OFF')}</span>
-          </button>
-        </div>
+        }>
+          <AiraloPackagesSection />
+        </Suspense>
         
         {/* Bottom Gradient Blob */}
         <div aria-hidden="true" className="absolute inset-x-0 top-[calc(100%-13rem)] -z-10 transform-gpu overflow-hidden blur-3xl sm:top-[calc(100%-30rem)]">                                                           

@@ -1,5 +1,10 @@
-import BlogPost from '../../../../src/components/BlogPost';
+import { Suspense } from 'react';
+import { notFound } from 'next/navigation';
+import BlogPostClient from '../../../../src/components/BlogPostClient';
+import Loading from '../../../../src/components/Loading';
 import blogService from '../../../../src/services/blogService';
+
+export const revalidate = 60; // Revalidate every 60 seconds
 
 export async function generateMetadata({ params }) {
   try {
@@ -89,6 +94,22 @@ export async function generateMetadata({ params }) {
   }
 }
 
-export default function ArabicBlogPostPage({ params }) {
-  return <BlogPost slug={params.id} />;
+export default async function ArabicBlogPostPage({ params }) {
+  // Fetch post data on the server
+  let post = null;
+  try {
+    post = await blogService.getPostBySlug(params.id, 'ar');
+    if (!post) {
+      notFound();
+    }
+  } catch (error) {
+    console.error('Error fetching blog post:', error);
+    notFound();
+  }
+
+  return (
+    <Suspense fallback={<Loading />}>
+      <BlogPostClient initialPost={post} slug={params.id} language="ar" />
+    </Suspense>
+  );
 }

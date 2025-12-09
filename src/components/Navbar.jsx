@@ -126,9 +126,6 @@ const Navbar = ({ hideLanguageSelector = false }) => {
           <Link href={getLocalizedBlogListUrl(currentLanguage)} className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
             {t('navbar.blog', 'Blog')}
           </Link>
-          <Link href={getLocalizedUrl("/store")} className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
-            {t('navbar.store', 'Store')}
-          </Link>
           {currentUser && (
             <Link href={getLocalizedUrl("/dashboard")} className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
               {t('navbar.dashboard', 'Dashboard')}
@@ -197,13 +194,6 @@ const Navbar = ({ hideLanguageSelector = false }) => {
                     onClick={() => setIsMenuOpen(false)}
                   >
                     {t('navbar.blog', 'Blog')}
-                  </Link>
-                  <Link
-                    href={getLocalizedUrl("/store")}
-                    className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    {t('navbar.store', 'Store')}
                   </Link>
                   {currentUser && (
                     <Link

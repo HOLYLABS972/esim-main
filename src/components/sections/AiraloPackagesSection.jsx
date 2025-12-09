@@ -510,7 +510,7 @@ export default function AiraloPackagesSection() {
   );
 
   return (
-    <section className="bg-white">
+    <section className="bg-transparent">
       <div className="container mx-auto px-4">
         {/* Compact Chip-style Tabs - Smaller and closer to search */}
         <div className="flex justify-center gap-2 mb-6">
@@ -719,7 +719,7 @@ export default function AiraloPackagesSection() {
                     <button
                       key={country.id || country.code}
                       onClick={() => handleCountrySelect(country)}
-                      className="w-full px-6 py-4 bg-white rounded-lg shadow-sm hover:shadow-md border border-gray-100 hover:border-tufts-blue/20 transition-all duration-200 flex items-center justify-between"
+                      className="w-full px-6 py-4 bg-transparent rounded-lg shadow-sm hover:shadow-md border border-gray-100 hover:border-tufts-blue/20 transition-all duration-200 flex items-center justify-between"
                     >
                       <div className="flex items-center space-x-4">
                         <div className="flex-shrink-0">

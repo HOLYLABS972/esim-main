@@ -1,13 +1,14 @@
 import { Suspense } from 'react';
 import Script from 'next/script';
-import Blog from '../../src/components/Blog';
+import BlogClient from '../../src/components/BlogClient';
 import Loading from '../../src/components/Loading';
+import blogService from '../../src/services/blogService';
 
 export const metadata = {
-  title: 'eSIM Blog - Technology Insights & Travel Guides | RoamJet',
+  title: 'eSIM Insights - Stay Updated with eSIM Technology | RoamJet',
   description: 'Discover the latest trends, guides, and insights in eSIM technology and global connectivity solutions.',
   openGraph: {
-    title: 'eSIM Blog - Technology Insights & Travel Guides | RoamJet',
+    title: 'eSIM Insights - Stay Updated with eSIM Technology | RoamJet',
     description: 'Discover the latest trends, guides, and insights in eSIM technology and global connectivity solutions.',
     type: 'website',
     locale: 'en_US',
@@ -18,11 +19,25 @@ export const metadata = {
   },
 }
 
-export default function BlogPage() {
+export const revalidate = 60; // Revalidate every 60 seconds
+
+export default async function BlogPage() {
+  // Fetch blog posts on the server
+  let initialPosts = [];
+  let categories = [];
+  
+  try {
+    const result = await blogService.getPublishedPosts(20, null, 'en');
+    initialPosts = result.posts.filter(post => !post.isFallback);
+    categories = await blogService.getCategories();
+  } catch (error) {
+    console.error('Error fetching blog posts:', error);
+  }
+
   return (
     <>
       <Suspense fallback={<Loading />}>
-        <Blog />
+        <BlogClient initialPosts={initialPosts} initialCategories={categories} language="en" />
       </Suspense>
       
       {/* AppsFlyer Banner SDK */}

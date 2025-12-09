@@ -99,7 +99,7 @@ const Footer = () => {
   const quickLinks = [
     { name: 'FAQ', path: `${langPrefix}/faq` },
     { name: getText('footer.blog', 'Blog'), path: '/blog' },
-    { name: getText('navbar.store', 'Store'), path: `${langPrefix}/store` },
+    { name: getText('navbar.partnership', 'Partnership'), path: 'https://biz.roamjet.net', external: true },
     { name: getText('footer.contact', 'Contact'), path: 'https://www.holylabs.net/', external: true }
   ];
 

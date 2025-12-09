@@ -646,10 +646,10 @@ const PaymentSuccess = () => {
           <h2 className="text-xl font-semibold text-gray-900 mb-2">Payment Error</h2>
           <p className="text-gray-600 mb-4">{error}</p>
           <button
-            onClick={() => router.push('/store')}
+            onClick={() => router.push('/')}
             className="px-4 py-2 bg-tufts-blue text-white rounded-lg hover:bg-tufts-blue-dark transition-colors"
           >
-            Go to Store
+            Go to Home
           </button>
         </div>
       </div>

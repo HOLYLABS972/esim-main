@@ -1,5 +1,25 @@
-import BlogPost from '../../../src/components/BlogPost';
+import { Suspense } from 'react';
+import { notFound } from 'next/navigation';
+import BlogPostClient from '../../../src/components/BlogPostClient';
+import Loading from '../../../src/components/Loading';
 import blogService from '../../../src/services/blogService';
+
+export const revalidate = 60; // Revalidate every 60 seconds
+
+export async function generateStaticParams() {
+  try {
+    // Fetch all published posts to generate static pages
+    const result = await blogService.getPublishedPosts(100, null, 'en');
+    return result.posts
+      .filter(post => !post.isFallback)
+      .map((post) => ({
+        id: post.baseSlug || post.slug,
+      }));
+  } catch (error) {
+    console.error('Error generating static params for blog posts:', error);
+    return [];
+  }
+}
 
 export async function generateMetadata({ params }) {
   try {
@@ -89,6 +109,22 @@ export async function generateMetadata({ params }) {
   }
 }
 
-export default function BlogPostPage({ params }) {
-  return <BlogPost slug={params.id} />;
+export default async function BlogPostPage({ params }) {
+  // Fetch post data on the server
+  let post = null;
+  try {
+    post = await blogService.getPostBySlug(params.id, 'en');
+    if (!post) {
+      notFound();
+    }
+  } catch (error) {
+    console.error('Error fetching blog post:', error);
+    notFound();
+  }
+
+  return (
+    <Suspense fallback={<Loading />}>
+      <BlogPostClient initialPost={post} slug={params.id} language="en" />
+    </Suspense>
+  );
 }
