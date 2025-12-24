@@ -432,49 +432,80 @@ export const apiService = {
   },
 
   /**
-   * Get current user balance
+   * Get current user balance via Firebase Cloud Function
    * @returns {Promise<Object>} Balance information
    */
   async getBalance() {
-    console.log('💰 Fetching user balance from backend');
+    console.log('💰 Fetching user balance via Cloud Function');
     
-    const result = await makeAuthenticatedRequest('/api/user/balance', {
-      method: 'GET',
-    });
-
-    console.log('✅ Balance fetched:', result);
-    return result;
+    try {
+      const { httpsCallable } = await import('firebase/functions');
+      const { functions } = await import('../firebase/config');
+      
+      const getBalanceFn = httpsCallable(functions, 'get_user_balance');
+      
+      const result = await getBalanceFn();
+      
+      console.log('✅ Balance fetched via Cloud Function:', result.data);
+      return result.data;
+    } catch (error) {
+      console.error('❌ Error getting balance:', error);
+      throw error;
+    }
   },
 
   /**
-   * Create topup for existing eSIM (supports both authenticated and public access)
+   * Create topup for existing eSIM via Firebase Cloud Function
    * @param {Object} topupData - Topup details
    * @param {string} topupData.iccid - SIM ICCID
    * @param {string} topupData.package_id - Topup package ID
    * @returns {Promise<Object>} Topup result
    */
   async createTopup({ iccid, package_id }) {
-    console.log('📦 Creating topup via SDK API:', { iccid, package_id });
+    console.log('📦 Creating topup via Cloud Function:', { iccid, package_id });
     
-    // Check if user is authenticated
-    const user = auth.currentUser;
-    const isAuthenticated = !!user;
-    
-    console.log(`📦 Topup request: ${isAuthenticated ? 'Authenticated' : 'Public'}`);
-    
-    // Use authenticated request if user is logged in, otherwise use public request
-    const requestFn = isAuthenticated ? makeAuthenticatedRequest : makePublicRequest;
-    
-    const result = await requestFn('/api/user/topup', {
-      method: 'POST',
-      body: JSON.stringify({
-        iccid,
-        package_id,
-      }),
-    });
+    try {
+      const { httpsCallable } = await import('firebase/functions');
+      const { functions } = await import('../firebase/config');
+      
+      // Get Airalo client ID from Firestore config
+      const { doc, getDoc } = await import('firebase/firestore');
+      const { db } = await import('../firebase/config');
+      const configRef = doc(db, 'config', 'airalo');
+      const configDoc = await getDoc(configRef);
+      let airaloClientId = null;
+      if (configDoc.exists) {
+        const configData = configDoc.data();
+        airaloClientId = configData.api_key || configData.client_id;
+      }
+      
+      const createTopupFn = httpsCallable(functions, 'create_topup');
+      
+      const result = await createTopupFn({
+        iccid: iccid,
+        package_id: package_id.trim(),
+        airalo_client_id: airaloClientId,
+      });
 
-    console.log('✅ Topup created:', result);
-    return result;
+      console.log('✅ Topup created via Cloud Function:', result.data);
+      return result.data;
+    } catch (error) {
+      console.error('❌ Error creating topup:', error);
+      
+      // Enhanced error handling for validation errors
+      if (error.code === 'invalid-argument' || (error.message && error.message.includes('required'))) {
+        const errorMsg = error.message || 'Invalid topup data';
+        throw new Error(`Invalid topup: ${errorMsg}`);
+      }
+      
+      // Enhanced error handling for Airalo API errors
+      if (error.details || (error.message && error.message.includes('422'))) {
+        const airaloError = error.details || error.message;
+        throw new Error(`Topup package "${package_id}" is not compatible with your eSIM. Airalo error: ${airaloError}`);
+      }
+      
+      throw error;
+    }
   },
 
   /**
