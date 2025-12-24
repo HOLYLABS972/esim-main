@@ -9,6 +9,7 @@ import { getRegularSettings } from '../services/settingsService';
 import { useRouter, usePathname } from 'next/navigation';
 import { useI18n } from '../contexts/I18nContext';
 import { getLanguageDirection, detectLanguageFromPath } from '../utils/languageUtils';
+import { detectPlatform } from '../utils/platformDetection';
 
 const PlanCard = ({ plan, isSelected, onClick, index, regularSettings }) => {
   const { t, locale } = useI18n();
@@ -293,35 +294,48 @@ const PlanSelectionBottomSheet = ({
     
     // Check if user is logged in
     if (!currentUser) {
-      console.log('🔐 User not logged in, redirecting to login');
+      console.log('🔐 User not logged in, redirecting to mobile app');
       
-      // Store the intended destination to redirect back after login
-      const countryCode = plan.country_codes?.[0] || plan.country_code;
-      const countryFlag = countryCode ? (() => {
-        const codePoints = countryCode.toUpperCase().split('').map(char => 127397 + char.charCodeAt());
-        return String.fromCodePoint(...codePoints);
-      })() : '🌍';
-      
-      // Build return URL with language prefix
-      let returnUrl = `/share-package/${plan.id}?country=${countryCode || ''}&flag=${countryFlag}`;
-      
-      // Get language prefix - use locale from context first, then pathname
-      let langPrefix = '';
-      if (locale && locale !== 'en') {
-        langPrefix = `/${locale}`;
-        returnUrl = `${langPrefix}${returnUrl}`;
+      // Redirect to mobile app using AppsFlyer OneLink if available, otherwise use platform detection
+      if (typeof window !== 'undefined' && window.APPSFLYER_ONELINK_URL) {
+        console.log('📱 Redirecting to AppsFlyer OneLink:', window.APPSFLYER_ONELINK_URL);
+        window.location.href = window.APPSFLYER_ONELINK_URL;
       } else {
-        // Fallback to pathname detection
-      const langMatch = pathname.match(/^\/(ar|de|es|fr|he|ru)\//);
-        langPrefix = langMatch ? `/${langMatch[1]}` : '';
-        if (langPrefix) {
-          returnUrl = `${langPrefix}${returnUrl}`;
+        // Fallback to platform detection
+        const platformInfo = detectPlatform();
+        if (platformInfo.downloadUrl) {
+          console.log('📱 Redirecting to app store:', platformInfo.downloadUrl);
+          window.location.href = platformInfo.downloadUrl;
+        } else {
+          console.log('⚠️ No mobile app URL available, user is on desktop - redirecting to login');
+          // For desktop users, redirect to login
+          const countryCode = plan.country_codes?.[0] || plan.country_code;
+          const countryFlag = countryCode ? (() => {
+            const codePoints = countryCode.toUpperCase().split('').map(char => 127397 + char.charCodeAt());
+            return String.fromCodePoint(...codePoints);
+          })() : '🌍';
+          
+          // Build return URL with language prefix
+          let returnUrl = `/share-package/${plan.id}?country=${countryCode || ''}&flag=${countryFlag}`;
+          
+          // Get language prefix - use locale from context first, then pathname
+          let langPrefix = '';
+          if (locale && locale !== 'en') {
+            langPrefix = `/${locale}`;
+            returnUrl = `${langPrefix}${returnUrl}`;
+          } else {
+            // Fallback to pathname detection
+            const langMatch = pathname.match(/^\/(ar|de|es|fr|he|ru)\//);
+            langPrefix = langMatch ? `/${langMatch[1]}` : '';
+            if (langPrefix) {
+              returnUrl = `${langPrefix}${returnUrl}`;
+            }
+          }
+          
+          console.log('🔍 DEBUG: Redirecting to:', `${langPrefix}/login?returnUrl=${encodeURIComponent(returnUrl)}`);
+          router.push(`${langPrefix}/login?returnUrl=${encodeURIComponent(returnUrl)}`);
         }
       }
-      
-      console.log('🔍 DEBUG: Redirecting to:', `${langPrefix}/login?returnUrl=${encodeURIComponent(returnUrl)}`);
-      // Redirect to login with return URL
-      router.push(`${langPrefix}/login?returnUrl=${encodeURIComponent(returnUrl)}`);
       return;
     }
     

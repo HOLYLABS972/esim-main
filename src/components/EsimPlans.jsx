@@ -366,7 +366,7 @@ const EsimPlans = () => {
     console.log('🔍 DEBUG: handleCountrySelect called');
     console.log('🛒 User selected country:', country.name);
     
-    // Always open bottom sheet to show plans
+    // Always open bottom sheet to show plans (users can browse even if not logged in)
     setShowCheckoutModal(true);
     setLoadingPlans(true);
     await loadAvailablePlansForCountry(country.code);
