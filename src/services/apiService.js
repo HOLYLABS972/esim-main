@@ -211,25 +211,28 @@ const makeOptionalAuthRequest = async (endpoint, options = {}) => {
 
 export const apiService = {
   /**
-   * Create an eSIM order through the Python API
+   * Create an eSIM order through Firebase Cloud Function
    * @param {Object} orderData - Order details
-   * @param {string} orderData.package_id - Airalo package ID
+   * @param {string} orderData.package_id - Airalo package ID (or planId for compatibility)
    * @param {string} orderData.quantity - Number of eSIMs (default: "1")
    * @param {string} orderData.to_email - Customer email
    * @param {string} orderData.description - Order description
    * @param {string} orderData.mode - Mode (test/live) - tells backend whether to use mock or real data
    * @returns {Promise<Object>} Order result with orderId and airaloOrderId
    */
-  async createOrder({ package_id, quantity = "1", to_email, description, mode, isGuest = false }) {
-    console.log('📦 Creating order via Python API:', { package_id, quantity, to_email, mode, isGuest });
+  async createOrder({ package_id, planId, quantity = "1", to_email, description, mode, isGuest = false }) {
+    // Support both package_id and planId for compatibility
+    const plan_id = package_id || planId;
     
-    if (!package_id) {
-      throw new Error('package_id is required');
+    console.log('📦 Creating order via Firebase Cloud Function:', { plan_id, quantity, to_email, mode, isGuest });
+    
+    if (!plan_id) {
+      throw new Error('package_id or planId is required');
     }
 
-    // Validate package_id format (should not be empty and should be a string)
-    if (typeof package_id !== 'string' || package_id.trim() === '') {
-      throw new Error(`Invalid package_id format: ${package_id}`);
+    // Validate plan_id format (should not be empty and should be a string)
+    if (typeof plan_id !== 'string' || plan_id.trim() === '') {
+      throw new Error(`Invalid package_id format: ${plan_id}`);
     }
     
     try {
@@ -237,84 +240,180 @@ export const apiService = {
       const user = auth.currentUser;
       const isAuthenticated = !!user && !isGuest;
       
-      console.log(`📦 Order request: ${isAuthenticated ? 'Authenticated' : 'Public'}`);
+      if (!isAuthenticated) {
+        throw new Error('User must be authenticated to create an order');
+      }
       
-      // Use authenticated request if user is logged in, otherwise use public request
-      const requestFn = isAuthenticated ? makeAuthenticatedRequest : makePublicRequest;
+      console.log(`📦 Order request: Authenticated user ${user.uid}`);
       
-      const result = await requestFn('/api/user/order', {
-        method: 'POST',
-        body: JSON.stringify({
-          package_id: package_id.trim(),
-          quantity,
-          to_email,
-          description,
-          mode, // Pass mode to backend
-        }),
+      // Use Firebase Cloud Function instead of SDK server
+      const { httpsCallable } = await import('firebase/functions');
+      const { functions } = await import('../firebase/config');
+      
+      const createOrderFn = httpsCallable(functions, 'create_order');
+      
+      // Get Airalo client ID from Firestore config
+      const { doc, getDoc } = await import('firebase/firestore');
+      const { db } = await import('../firebase/config');
+      const configRef = doc(db, 'config', 'airalo');
+      const configDoc = await getDoc(configRef);
+      let airaloClientId = null;
+      if (configDoc.exists()) {
+        const configData = configDoc.data();
+        airaloClientId = configData.api_key || configData.client_id;
+      }
+      
+      const result = await createOrderFn({
+        planId: plan_id.trim(), // Cloud Function expects 'planId'
+        quantity: quantity,
+        to_email: to_email,
+        description: description || `eSIM order for ${to_email}`,
+        airalo_client_id: airaloClientId, // Get client_id from config
       });
 
-      console.log('✅ Order created:', result);
-      return result;
+      console.log('✅ Order created via Cloud Function:', result.data);
+      
+      // Transform response to match expected format
+      return {
+        orderId: result.data.orderId,
+        airaloOrderId: result.data.airaloOrderId,
+        orderData: result.data.orderData,
+        esimData: result.data.esimData,
+        qrCode: result.data.qrCode,
+        iccid: result.data.iccid,
+        success: true
+      };
     } catch (error) {
-      // Enhanced error handling for 422 errors
-      if (error.status === 422 || (error.message && error.message.includes('422'))) {
-        console.error('❌ Validation error (422) - Invalid package_id:', package_id);
-        const airaloError = error.data?.error || error.message;
-        throw new Error(`Invalid package ID: "${package_id}". Airalo error: ${airaloError}`);
+      console.error('❌ Error creating order:', error);
+      
+      // Enhanced error handling for validation errors
+      if (error.code === 'invalid-argument' || (error.message && error.message.includes('required'))) {
+        const errorMsg = error.message || 'Invalid order data';
+        throw new Error(`Invalid order: ${errorMsg}`);
       }
+      
+      // Enhanced error handling for 422 errors (if passed through)
+      if (error.details || (error.message && error.message.includes('422'))) {
+        const airaloError = error.details || error.message;
+        throw new Error(`Invalid package ID: "${plan_id}". Airalo error: ${airaloError}`);
+      }
+      
       throw error;
     }
   },
 
   /**
-   * Get QR code for an order
-   * @param {string} orderId - Firebase order ID
-   * @returns {Promise<Object>} QR code data
+   * Get Airalo client ID from Firestore config
+   * @returns {Promise<string>} Airalo client ID
    */
-  async getQrCode(orderId) {
-    console.log('📱 Getting QR code via Python API for order:', orderId);
-    
-    const result = await makeAuthenticatedRequest('/api/user/qr-code', {
-      method: 'POST',
-      body: JSON.stringify({ orderId }),
-    });
-
-    console.log('✅ QR code retrieved:', result.success);
-    return result;
+  async getAiraloClientId() {
+    try {
+      const { doc, getDoc } = await import('firebase/firestore');
+      const { db } = await import('../firebase/config');
+      
+      const configRef = doc(db, 'config', 'airalo');
+      const configDoc = await getDoc(configRef);
+      
+      if (configDoc.exists()) {
+        const configData = configDoc.data();
+        const clientId = configData.api_key || configData.client_id;
+        if (clientId) {
+          return clientId;
+        }
+      }
+      
+      throw new Error('Airalo client ID not found in Firestore config');
+    } catch (error) {
+      console.error('❌ Error getting Airalo client ID:', error);
+      throw new Error('Airalo configuration not found. Please configure Airalo credentials in the admin panel.');
+    }
   },
 
   /**
-   * Get SIM details by ICCID
+   * Get QR code for an order via Firebase Cloud Function
+   * @param {string} orderId - Firebase order ID (or esimId for compatibility)
+   * @returns {Promise<Object>} QR code data
+   */
+  async getQrCode(orderId) {
+    console.log('📱 Getting QR code via Cloud Function for order:', orderId);
+    
+    try {
+      const { httpsCallable } = await import('firebase/functions');
+      const { functions } = await import('../firebase/config');
+      
+      const getQrCodeFn = httpsCallable(functions, 'get_esim_qr_code');
+      
+      // Get Airalo client ID from Firestore config
+      const { doc, getDoc } = await import('firebase/firestore');
+      const { db } = await import('../firebase/config');
+      const configRef = doc(db, 'config', 'airalo');
+      const configDoc = await getDoc(configRef);
+      let airaloClientId = null;
+      if (configDoc.exists()) {
+        const configData = configDoc.data();
+        airaloClientId = configData.api_key || configData.client_id;
+      }
+      
+      const result = await getQrCodeFn({
+        esimId: orderId, // Cloud Function expects 'esimId' or 'orderId'
+        orderId: orderId,
+        airalo_client_id: airaloClientId,
+      });
+
+      console.log('✅ QR code retrieved via Cloud Function:', result.data.success);
+      return result.data;
+    } catch (error) {
+      console.error('❌ Error getting QR code:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Get SIM details by ICCID via Firebase Cloud Function
    * @param {string} iccid - SIM ICCID
    * @returns {Promise<Object>} SIM details
    */
   async getSimDetails(iccid) {
-    console.log('📱 Getting SIM details via Python API for ICCID:', iccid);
+    console.log('📱 Getting SIM details via Cloud Function for ICCID:', iccid);
     
-    const result = await makeAuthenticatedRequest('/api/user/sim-details', {
-      method: 'POST',
-      body: JSON.stringify({ iccid }),
-    });
+    try {
+      const { httpsCallable } = await import('firebase/functions');
+      const { functions } = await import('../firebase/config');
+      
+      const getSimDetailsFn = httpsCallable(functions, 'get_esim_details_by_iccid');
+      
+      const result = await getSimDetailsFn({ iccid });
 
-    console.log('✅ SIM details retrieved');
-    return result;
+      console.log('✅ SIM details retrieved via Cloud Function');
+      return result.data;
+    } catch (error) {
+      console.error('❌ Error getting SIM details:', error);
+      throw error;
+    }
   },
 
   /**
-   * Get SIM usage by ICCID
+   * Get SIM usage by ICCID via Firebase Cloud Function
    * @param {string} iccid - SIM ICCID
    * @returns {Promise<Object>} Usage data
    */
   async getSimUsage(iccid) {
-    console.log('📊 Getting SIM usage via Python API for ICCID:', iccid);
+    console.log('📊 Getting SIM usage via Cloud Function for ICCID:', iccid);
     
-    const result = await makeAuthenticatedRequest('/api/user/sim-usage', {
-      method: 'POST',
-      body: JSON.stringify({ iccid }),
-    });
+    try {
+      const { httpsCallable } = await import('firebase/functions');
+      const { functions } = await import('../firebase/config');
+      
+      const getSimUsageFn = httpsCallable(functions, 'get_esim_usage_by_iccid');
+      
+      const result = await getSimUsageFn({ iccid });
 
-    console.log('✅ SIM usage retrieved');
-    return result;
+      console.log('✅ SIM usage retrieved via Cloud Function');
+      return result.data;
+    } catch (error) {
+      console.error('❌ Error getting SIM usage:', error);
+      throw error;
+    }
   },
 
   /**
