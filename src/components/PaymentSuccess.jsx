@@ -361,8 +361,11 @@ const PaymentSuccess = () => {
         planId
       });
 
-      // Handle Coinbase payment (has order_id, email, total)
-      if (orderParam && email && total) {
+      // Handle Stripe payment FIRST (has session_id) - check before Coinbase
+      // Handle Coinbase payment (has order_id, email, total, but NO session_id)
+      if (sessionId) {
+        // This is a Stripe payment - handled below
+      } else if (orderParam && email && total) {
         console.log('💰 Processing Coinbase payment success');
         
         // Verify Coinbase charge if chargeId is provided
