@@ -153,9 +153,9 @@ const PaymentSuccess = () => {
       }
 
       // Step 2: Save order to Firebase global orders collection
-      await setDoc(globalOrderRef, {
+      // Filter out undefined values (Firestore doesn't accept undefined)
+      const orderDoc = {
         orderId: orderData.orderId,
-        airaloOrderId: airaloOrderResult.airaloOrderId,
         userId: orderData.userId || null,
         planId: orderData.planId,
         planName: orderData.planName,
@@ -164,13 +164,22 @@ const PaymentSuccess = () => {
         customerEmail: orderData.customerEmail,
         status: 'active',
         createdAt: serverTimestamp(),
-        airaloOrderData: airaloOrderResult.orderData,
         isTestMode: isTestMode,
         stripeMode: stripeMode,
         isGuest: isGuest,
         countryCode: countryInfo.code,
         countryName: countryInfo.name
-      });
+      };
+      
+      // Only add fields that are not undefined
+      if (airaloOrderResult.airaloOrderId) {
+        orderDoc.airaloOrderId = airaloOrderResult.airaloOrderId;
+      }
+      if (airaloOrderResult.orderData) {
+        orderDoc.airaloOrderData = airaloOrderResult.orderData;
+      }
+      
+      await setDoc(globalOrderRef, orderDoc);
 
       // Also save to user collection if authenticated
       if (userOrderRef) {
@@ -184,10 +193,17 @@ const PaymentSuccess = () => {
           customerEmail: orderData.customerEmail,
           countryCode: countryInfo.code,
           countryName: countryInfo.name,
-          createdAt: serverTimestamp(),
-          airaloOrderId: airaloOrderResult.airaloOrderId,
-          airaloOrderData: airaloOrderResult.orderData
+          createdAt: serverTimestamp()
         };
+        
+        // Only add fields that are not undefined
+        if (airaloOrderResult.airaloOrderId) {
+          esimData.airaloOrderId = airaloOrderResult.airaloOrderId;
+        }
+        if (airaloOrderResult.orderData) {
+          esimData.airaloOrderData = airaloOrderResult.orderData;
+        }
+        
         await setDoc(userOrderRef, esimData);
       }
 
@@ -546,45 +562,96 @@ const PaymentSuccess = () => {
       else if (sessionId) {
         console.log('💳 Processing Stripe payment success');
         
-        // Check for pending topup order for Stripe payments too
-        const pendingTopupOrder = localStorage.getItem('pendingTopupOrder');
-        if (pendingTopupOrder) {
-          try {
-            const topupData = JSON.parse(pendingTopupOrder);
-            console.log('📦 Processing Stripe topup order:', topupData);
+        if (!planId) {
+          console.error('❌ No plan ID found in Stripe payment success');
+          setError('Missing plan information. Please contact support.');
+          setProcessing(false);
+          return;
+        }
+
+        // Check if user is authenticated (required for backend order creation)
+        if (!currentUser) {
+          console.error('❌ User not authenticated for Stripe order');
+          setError('Please log in to complete your order.');
+          setProcessing(false);
+          return;
+        }
+
+        try {
+          // Call backend Firebase function to create order
+          // Backend will handle all eSIM creation and Firestore records
+          console.log('📞 Calling backend create_order function with:', { planId, sessionId });
+          
+          const { httpsCallable } = await import('firebase/functions');
+          const { functions } = await import('../firebase/config');
+          const createOrderFn = httpsCallable(functions, 'create_order');
+          
+          // Get Airalo client ID from Firestore config
+          const configRef = doc(db, 'config', 'airalo');
+          const configDoc = await getDoc(configRef);
+          let airaloClientId = null;
+          if (configDoc.exists()) {
+            const configData = configDoc.data();
+            airaloClientId = configData.api_key || configData.client_id;
+          }
+
+          const orderResult = await createOrderFn({
+            planId: planId,
+            quantity: "1",
+            to_email: currentUser.email || email,
+            description: `eSIM order for ${currentUser.email || email}`,
+            airalo_client_id: airaloClientId
+          });
+
+          console.log('✅ Backend order created:', orderResult.data);
+          
+          const backendOrderId = orderResult.data.orderId;
+          
+          // Wait for order to be processed (poll order_status collection)
+          console.log('⏳ Waiting for order to be processed...');
+          let orderStatus = null;
+          let attempts = 0;
+          const maxAttempts = 30; // 30 seconds max wait
+          
+          while (attempts < maxAttempts) {
+            const statusRef = doc(db, 'order_status', backendOrderId);
+            const statusDoc = await getDoc(statusRef);
             
-            if (topupData.type === 'topup' && topupData.iccid && topupData.packageId) {
-              // Create topup after payment
-              const topupResult = await createTopupRecord(topupData);
+            if (statusDoc.exists()) {
+              orderStatus = statusDoc.data();
+              console.log(`📊 Order status (attempt ${attempts + 1}):`, orderStatus.status);
               
-              if (topupResult.success) {
-                // Clear pending topup order
-                localStorage.removeItem('pendingTopupOrder');
-                
-                // Redirect to QR code page or dashboard
-                if (topupData.iccid) {
-                  router.push(`/qr/${topupData.iccid}`);
-                } else {
-                  router.push('/dashboard');
-                }
-                return;
+              if (orderStatus.status === 'completed' || orderStatus.status === 'success') {
+                console.log('✅ Order completed successfully');
+                break;
+              } else if (orderStatus.status === 'failed') {
+                throw new Error(orderStatus.error || 'Order processing failed');
               }
             }
-          } catch (topupError) {
-            console.error('❌ Error processing Stripe topup order:', topupError);
-            localStorage.removeItem('pendingTopupOrder');
+            
+            // Wait 1 second before next check
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            attempts++;
           }
-        }
-        
-        // Regular Stripe order handling
-        if (planId) {
-          // This would use Firebase functions - for now redirect to dashboard
-          router.push('/dashboard');
-          return;
-        } else {
-          // No plan ID, might be a topup - check localStorage again
-          router.push('/dashboard');
-          return;
+          
+          if (!orderStatus || orderStatus.status !== 'completed') {
+            console.warn('⚠️ Order still processing, but showing success page');
+          }
+
+          // Set order info for display
+          setOrderInfo({
+            orderId: backendOrderId,
+            planId: planId,
+            planName: decodeURIComponent(name || 'eSIM Plan'),
+            customerEmail: currentUser.email || email
+          });
+          
+          setOrderComplete(true);
+          toast.success('Payment successful! Your eSIM order is being processed.');
+          
+        } catch (orderError) {
+          console.error('❌ Error creating order via backend:', orderError);
+          setError(`Failed to create order: ${orderError.message || 'Unknown error'}. Please contact support.`);
         }
       }
       else {

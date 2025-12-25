@@ -232,7 +232,7 @@ export async function POST(request) {
           quantity: 1,
         }],
         mode: 'payment',
-        success_url: `${domainClean}/payment-success?order=${order}&email=${email}&total=${total}&name=${name}&currency=${currency}`,
+        success_url: `${domainClean}/payment-success?order=${order}&email=${encodeURIComponent(email)}&total=${total}&name=${encodeURIComponent(name || '')}&currency=${currency}&plan=${encodeURIComponent(plan || '')}`,
         cancel_url: `${domainClean}/cart`,
         customer_email: email,
         metadata: {
