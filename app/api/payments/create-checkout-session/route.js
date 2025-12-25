@@ -10,14 +10,33 @@ function getStripeKey() {
   // Check if we're in test mode
   const isTest = process.env.STRIPE_MODE === 'test' || process.env.STRIPE_MODE === 'sandbox';
   
-  const key = isTest
-    ? process.env.STRIPE_TEST_SECRET_KEY || process.env.STRIPE_TEST_KEY
-    : process.env.STRIPE_LIVE_SECRET_KEY || process.env.STRIPE_SECRET_KEY || process.env.STRIPE_KEY;
-  
-  if (!key) {
-    throw new Error(`Stripe ${isTest ? 'test' : 'live'} secret key not found in environment variables`);
+  let key;
+  if (isTest) {
+    key = process.env.STRIPE_TEST_SECRET_KEY || process.env.STRIPE_TEST_KEY;
+    console.log('🔍 Looking for Stripe TEST secret key...');
+    console.log('   STRIPE_TEST_SECRET_KEY:', process.env.STRIPE_TEST_SECRET_KEY ? 'SET' : 'NOT SET');
+    console.log('   STRIPE_TEST_KEY:', process.env.STRIPE_TEST_KEY ? 'SET' : 'NOT SET');
+  } else {
+    key = process.env.STRIPE_LIVE_SECRET_KEY || process.env.STRIPE_SECRET_KEY || process.env.STRIPE_KEY;
+    console.log('🔍 Looking for Stripe LIVE secret key...');
+    console.log('   STRIPE_LIVE_SECRET_KEY:', process.env.STRIPE_LIVE_SECRET_KEY ? 'SET' : 'NOT SET');
+    console.log('   STRIPE_SECRET_KEY:', process.env.STRIPE_SECRET_KEY ? 'SET' : 'NOT SET');
+    console.log('   STRIPE_KEY:', process.env.STRIPE_KEY ? 'SET' : 'NOT SET');
+    console.log('   STRIPE_MODE:', process.env.STRIPE_MODE || 'not set (defaulting to live)');
   }
   
+  if (!key) {
+    const availableVars = Object.keys(process.env)
+      .filter(k => k.includes('STRIPE') && k.includes('SECRET'))
+      .join(', ');
+    throw new Error(
+      `Stripe ${isTest ? 'test' : 'live'} secret key not found in environment variables. ` +
+      `Available Stripe env vars: ${availableVars || 'none'}. ` +
+      `Please set ${isTest ? 'STRIPE_TEST_SECRET_KEY' : 'STRIPE_LIVE_SECRET_KEY'} in Vercel environment variables.`
+    );
+  }
+  
+  console.log(`✅ Stripe ${isTest ? 'test' : 'live'} secret key found (length: ${key.length})`);
   return key;
 }
 
@@ -59,7 +78,36 @@ export async function POST(request) {
     }
     
     // Get Stripe key and initialize Stripe
-    const stripeKey = getStripeKey();
+    let stripeKey;
+    try {
+      stripeKey = getStripeKey();
+    } catch (keyError) {
+      console.error('❌ Error getting Stripe key:', keyError);
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Stripe configuration error: ${keyError.message}. Please ensure STRIPE_LIVE_SECRET_KEY or STRIPE_SECRET_KEY is set in environment variables.`,
+        },
+        {
+          status: 500,
+          headers: corsHeaders,
+        }
+      );
+    }
+    
+    if (!stripeKey) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Stripe secret key not configured. Please set STRIPE_LIVE_SECRET_KEY or STRIPE_SECRET_KEY in environment variables.',
+        },
+        {
+          status: 500,
+          headers: corsHeaders,
+        }
+      );
+    }
+    
     const stripe = new Stripe(stripeKey, { apiVersion: '2023-10-16' });
     
     const domainClean = domain.replace(/\/$/, '');
