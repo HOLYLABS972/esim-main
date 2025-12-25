@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { Airalo } from 'airalo-sdk';
 
 export const dynamic = 'force-dynamic';
 
@@ -75,26 +74,38 @@ async function getAiraloCredentials() {
 }
 
 /**
- * Initialize Airalo SDK instance
+ * Get Airalo access token directly (no SDK - avoids cache directory issues in serverless)
  */
-async function getAiraloSdk() {
-  try {
-    const { clientId, clientSecret } = await getAiraloCredentials();
-    
-    const airalo = new Airalo({
+async function getAiraloAccessToken() {
+  const { clientId, clientSecret } = await getAiraloCredentials();
+  
+  const tokenResponse = await fetch('https://partners-api.airalo.com/v2/token', {
+    method: 'POST',
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: new URLSearchParams({
       client_id: clientId,
       client_secret: clientSecret,
-      env: 'production' // Use 'sandbox' for testing
-    });
-    
-    await airalo.initialize();
-    console.log('✅ Airalo SDK initialized successfully');
-    
-    return airalo;
-  } catch (error) {
-    console.error('❌ Error initializing Airalo SDK:', error);
-    throw error;
+      grant_type: 'client_credentials'
+    }),
+    signal: AbortSignal.timeout(30000)
+  });
+  
+  if (!tokenResponse.ok) {
+    const errorText = await tokenResponse.text();
+    throw new Error(`Airalo authentication failed: ${tokenResponse.status} - ${errorText}`);
   }
+  
+  const tokenData = await tokenResponse.json();
+  const accessToken = tokenData.data?.access_token;
+  
+  if (!accessToken) {
+    throw new Error('No access token received from Airalo');
+  }
+  
+  return accessToken;
 }
 
 /**
@@ -159,102 +170,59 @@ export async function GET(request) {
     console.log(`🔐 Authenticated user: ${user.email}`);
 
     try {
-      // Initialize Airalo SDK
-      const airalo = await getAiraloSdk();
+      // Get access token directly (no SDK to avoid cache directory issues in serverless)
+      console.log(`📡 Fetching balance from Airalo API`);
       
-      // Fetch balance using SDK's access token for direct API call
-      console.log(`📡 Fetching balance from Airalo API using SDK credentials`);
+      const accessToken = await getAiraloAccessToken();
       
-      let balanceInfo = null;
-      
-      try {
-        // Get access token from SDK (SDK handles auth internally)
-        let accessToken = null;
-        
-        // Try to get access token from SDK if it exposes it
-        if (typeof airalo.getAccessToken === 'function') {
-          accessToken = await airalo.getAccessToken();
-        } else if (airalo.accessToken) {
-          accessToken = airalo.accessToken;
-        } else {
-          // SDK doesn't expose token, get credentials and make direct API call
-          const { clientId, clientSecret } = await getAiraloCredentials();
-          const tokenResponse = await fetch('https://partners-api.airalo.com/v2/token', {
-            method: 'POST',
-            headers: {
-              'Accept': 'application/json',
-              'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: new URLSearchParams({
-              client_id: clientId,
-              client_secret: clientSecret,
-              grant_type: 'client_credentials'
-            }),
-            signal: AbortSignal.timeout(30000)
-          });
-          
-          if (tokenResponse.ok) {
-            const tokenData = await tokenResponse.json();
-            accessToken = tokenData.data?.access_token;
-          }
+      // Fetch balance using access token
+      const balanceResponse = await fetch(
+        `https://partners-api.airalo.com/v2/balance`,
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Accept': 'application/json',
+          },
+          signal: AbortSignal.timeout(30000)
         }
-        
-        if (!accessToken) {
-          throw new Error('Failed to get Airalo access token');
-        }
-        
-        // Fetch balance using access token
-        const balanceResponse = await fetch(
-          `https://partners-api.airalo.com/v2/balance`,
+      );
+      
+      console.log(`📡 Balance API response status: ${balanceResponse.status}`);
+      
+      if (!balanceResponse.ok) {
+        const errorText = await balanceResponse.text();
+        console.error(`❌ Balance API error: ${balanceResponse.status} - ${errorText}`);
+        return NextResponse.json(
           {
-            method: 'GET',
-            headers: {
-              'Authorization': `Bearer ${accessToken}`,
-              'Accept': 'application/json',
-            },
-            signal: AbortSignal.timeout(30000)
+            success: false,
+            error: `Airalo API error: ${balanceResponse.status}`,
+            details: errorText.substring(0, 200),
+          },
+          { 
+            status: balanceResponse.status,
+            headers: corsHeaders,
           }
         );
-        
-        console.log(`📡 Balance API response status: ${balanceResponse.status}`);
-        
-        if (!balanceResponse.ok) {
-          const errorText = await balanceResponse.text();
-          console.error(`❌ Balance API error: ${balanceResponse.status} - ${errorText}`);
-          return NextResponse.json(
-            {
-              success: false,
-              error: `Airalo API error: ${balanceResponse.status}`,
-              details: errorText.substring(0, 200),
-            },
-            { 
-              status: balanceResponse.status,
-              headers: corsHeaders,
-            }
-          );
-        }
-        
-        const balanceData = await balanceResponse.json();
-        console.log(`✅ Got balance data from Airalo API`);
-        
-        if (!balanceData.data) {
-          return NextResponse.json(
-            {
-              success: false,
-              error: 'Invalid response format from Airalo API',
-            },
-            { 
-              status: 500,
-              headers: corsHeaders,
-            }
-          );
-        }
-        
-        balanceInfo = balanceData.data;
-      } catch (apiError) {
-        console.error(`❌ Failed to get balance: ${apiError.message}`);
-        throw apiError;
       }
+      
+      const balanceData = await balanceResponse.json();
+      console.log(`✅ Got balance data from Airalo API`);
+      
+      if (!balanceData.data) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Invalid response format from Airalo API',
+          },
+          { 
+            status: 500,
+            headers: corsHeaders,
+          }
+        );
+      }
+      
+      const balanceInfo = balanceData.data;
 
       if (!balanceInfo) {
         return NextResponse.json(

@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { Airalo } from 'airalo-sdk';
 
 export const dynamic = 'force-dynamic';
 
@@ -75,26 +74,38 @@ async function getAiraloCredentials() {
 }
 
 /**
- * Initialize Airalo SDK instance
+ * Get Airalo access token directly (no SDK - avoids cache directory issues in serverless)
  */
-async function getAiraloSdk() {
-  try {
-    const { clientId, clientSecret } = await getAiraloCredentials();
-    
-    const airalo = new Airalo({
+async function getAiraloAccessToken() {
+  const { clientId, clientSecret } = await getAiraloCredentials();
+  
+  const tokenResponse = await fetch('https://partners-api.airalo.com/v2/token', {
+    method: 'POST',
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: new URLSearchParams({
       client_id: clientId,
       client_secret: clientSecret,
-      env: 'production' // Use 'sandbox' for testing
-    });
-    
-    await airalo.initialize();
-    console.log('✅ Airalo SDK initialized successfully');
-    
-    return airalo;
-  } catch (error) {
-    console.error('❌ Error initializing Airalo SDK:', error);
-    throw error;
+      grant_type: 'client_credentials'
+    }),
+    signal: AbortSignal.timeout(30000)
+  });
+  
+  if (!tokenResponse.ok) {
+    const errorText = await tokenResponse.text();
+    throw new Error(`Airalo authentication failed: ${tokenResponse.status} - ${errorText}`);
   }
+  
+  const tokenData = await tokenResponse.json();
+  const accessToken = tokenData.data?.access_token;
+  
+  if (!accessToken) {
+    throw new Error('No access token received from Airalo');
+  }
+  
+  return accessToken;
 }
 
 /**
@@ -210,118 +221,72 @@ export async function POST(request) {
     console.log(`🚀 Getting mobile data status via Airalo SDK for ICCID: ${iccid}`);
 
     try {
-      // Initialize Airalo SDK
-      const airalo = await getAiraloSdk();
+      // Get access token directly (no SDK to avoid cache directory issues in serverless)
+      console.log(`📡 Fetching SIM usage from Airalo API`);
       
-      // Fetch SIM usage using SDK credentials
-      // Use SDK to get access token, then make direct API call (like Python server does)
-      console.log(`📡 Fetching SIM usage from Airalo API using SDK credentials`);
+      const accessToken = await getAiraloAccessToken();
       
-      let simData = null;
-      
-      try {
-        // Get access token - SDK handles authentication
-        // The SDK initializes with credentials, so we can use it to get token
-        let accessToken = null;
-        
-        // Try to get access token from SDK if it exposes it
-        if (typeof airalo.getAccessToken === 'function') {
-          accessToken = await airalo.getAccessToken();
-        } else if (airalo.accessToken) {
-          accessToken = airalo.accessToken;
-        } else {
-          // SDK doesn't expose token directly, get credentials and make token request
-          // (SDK already initialized with credentials, so we can reuse them)
-          const { clientId, clientSecret } = await getAiraloCredentials();
-          const tokenResponse = await fetch('https://partners-api.airalo.com/v2/token', {
-            method: 'POST',
-            headers: {
-              'Accept': 'application/json',
-              'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: new URLSearchParams({
-              client_id: clientId,
-              client_secret: clientSecret,
-              grant_type: 'client_credentials'
-            }),
-            signal: AbortSignal.timeout(30000)
-          });
-          
-          if (tokenResponse.ok) {
-            const tokenData = await tokenResponse.json();
-            accessToken = tokenData.data?.access_token;
-          }
+      // Fetch SIM usage using access token (direct API call like Python server)
+      const usageResponse = await fetch(
+        `https://partners-api.airalo.com/v2/sims/${iccid}/usage`,
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Accept': 'application/json',
+          },
+          signal: AbortSignal.timeout(30000)
         }
-        
-        if (!accessToken) {
-          throw new Error('Failed to get Airalo access token');
-        }
-        
-        // Fetch SIM usage using access token (direct API call like Python server)
-        const usageResponse = await fetch(
-          `https://partners-api.airalo.com/v2/sims/${iccid}/usage`,
+      );
+      
+      console.log(`📡 SIM usage API response status: ${usageResponse.status}`);
+      
+      if (usageResponse.status === 404) {
+        return NextResponse.json(
           {
-            method: 'GET',
-            headers: {
-              'Authorization': `Bearer ${accessToken}`,
-              'Accept': 'application/json',
-            },
-            signal: AbortSignal.timeout(30000)
+            success: false,
+            error: `No data found for ICCID: ${iccid}. The SIM may not exist or may not be accessible.`,
+          },
+          { 
+            status: 404,
+            headers: corsHeaders,
           }
         );
-        
-        console.log(`📡 SIM usage API response status: ${usageResponse.status}`);
-        
-        if (usageResponse.status === 404) {
-          return NextResponse.json(
-            {
-              success: false,
-              error: `No data found for ICCID: ${iccid}. The SIM may not exist or may not be accessible.`,
-            },
-            { 
-              status: 404,
-              headers: corsHeaders,
-            }
-          );
-        }
-        
-        if (!usageResponse.ok) {
-          const errorText = await usageResponse.text();
-          console.error(`❌ SIM usage API error: ${usageResponse.status} - ${errorText}`);
-          return NextResponse.json(
-            {
-              success: false,
-              error: `Airalo API error: ${usageResponse.status}`,
-              details: errorText.substring(0, 200),
-            },
-            { 
-              status: usageResponse.status,
-              headers: corsHeaders,
-            }
-          );
-        }
-        
-        const usageData = await usageResponse.json();
-        console.log(`✅ Got SIM usage data from Airalo API`);
-        
-        if (!usageData.data) {
-          return NextResponse.json(
-            {
-              success: false,
-              error: 'Invalid response format from Airalo API',
-            },
-            { 
-              status: 500,
-              headers: corsHeaders,
-            }
-          );
-        }
-        
-        simData = usageData.data;
-      } catch (apiError) {
-        console.error(`❌ Failed to get SIM usage: ${apiError.message}`);
-        throw apiError;
       }
+      
+      if (!usageResponse.ok) {
+        const errorText = await usageResponse.text();
+        console.error(`❌ SIM usage API error: ${usageResponse.status} - ${errorText}`);
+        return NextResponse.json(
+          {
+            success: false,
+            error: `Airalo API error: ${usageResponse.status}`,
+            details: errorText.substring(0, 200),
+          },
+          { 
+            status: usageResponse.status,
+            headers: corsHeaders,
+          }
+        );
+      }
+      
+      const usageData = await usageResponse.json();
+      console.log(`✅ Got SIM usage data from Airalo API`);
+      
+      if (!usageData.data) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Invalid response format from Airalo API',
+          },
+          { 
+            status: 500,
+            headers: corsHeaders,
+          }
+        );
+      }
+      
+      const simData = usageData.data;
 
       if (!simData) {
         return NextResponse.json(
