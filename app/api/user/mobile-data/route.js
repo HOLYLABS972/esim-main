@@ -1,6 +1,4 @@
 import { NextResponse } from 'next/server';
-import { db } from '../../../../src/firebase/config';
-import { doc, getDoc } from 'firebase/firestore';
 import { Airalo } from 'airalo-sdk';
 
 export const dynamic = 'force-dynamic';
@@ -54,36 +52,26 @@ async function authenticateFirebaseToken(idToken) {
 }
 
 /**
- * Get Airalo credentials from Firestore config
+ * Get Airalo credentials from Vercel environment variables (like before)
+ * This matches the pattern used in admin-app API routes
  */
 async function getAiraloCredentials() {
-  try {
-    const configRef = doc(db, 'config', 'airalo');
-    const configDoc = await getDoc(configRef);
-    
-    if (configDoc.exists()) {
-      const configData = configDoc.data();
-      const clientId = configData.api_key || configData.client_id;
-      const clientSecret = configData.client_secret || configData.secret;
-      
-      if (clientId && clientSecret) {
-        return { clientId, clientSecret };
-      }
-    }
-    
-    // Fallback to environment variables
-    const envClientId = process.env.AIRALO_CLIENT_ID || process.env.AIRALO_API_KEY;
-    const envClientSecret = process.env.AIRALO_CLIENT_SECRET || process.env.AIRALO_SECRET || process.env.AIRALO_CLIENT_SECRET_PRODUCTION;
-    
-    if (envClientId && envClientSecret) {
-      return { clientId: envClientId, clientSecret: envClientSecret };
-    }
-    
-    throw new Error('Airalo credentials not found in Firestore config or environment variables');
-  } catch (error) {
-    console.error('❌ Error getting Airalo credentials:', error);
-    throw error;
+  // Use Vercel environment variables directly (same as admin-app)
+  const clientId = process.env.AIRALO_CLIENT_ID || process.env.AIRALO_API_KEY;
+  const clientSecret = process.env.AIRALO_CLIENT_SECRET || process.env.AIRALO_SECRET || process.env.AIRALO_CLIENT_SECRET_PRODUCTION;
+  
+  console.log(`🔧 Using Airalo credentials from Vercel env vars - Client ID: ${clientId ? clientId.substring(0, 10) + '...' : 'NOT SET'}`);
+  console.log(`🔑 Client Secret: ${clientSecret ? 'SET' : 'NOT SET'}`);
+  
+  if (!clientId) {
+    throw new Error('Airalo API key not found. Please set AIRALO_CLIENT_ID or AIRALO_API_KEY in Vercel environment variables.');
   }
+  
+  if (!clientSecret) {
+    throw new Error('Airalo client secret not found. Please set AIRALO_CLIENT_SECRET, AIRALO_SECRET, or AIRALO_CLIENT_SECRET_PRODUCTION in Vercel environment variables.');
+  }
+  
+  return { clientId, clientSecret };
 }
 
 /**
