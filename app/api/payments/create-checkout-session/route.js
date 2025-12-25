@@ -3,40 +3,131 @@ import Stripe from 'stripe';
 
 export const dynamic = 'force-dynamic';
 
+// Lazy load Firebase Admin to avoid initialization issues
+let db = null;
+
+async function getFirestore() {
+  if (db) return db;
+
+  try {
+    const admin = await import('firebase-admin/app');
+    const firestore = await import('firebase-admin/firestore');
+
+    // Initialize Firebase Admin if not already initialized
+    if (!admin.getApps().length) {
+      const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT_KEY
+        ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY)
+        : undefined;
+
+      if (serviceAccount) {
+        admin.initializeApp({
+          credential: admin.cert(serviceAccount),
+        });
+      } else {
+        // Use default credentials (for Firebase hosting/Cloud Run/Vercel)
+        admin.initializeApp();
+      }
+    }
+
+    db = firestore.getFirestore();
+    return db;
+  } catch (error) {
+    console.error('❌ Firebase Admin initialization error:', error);
+    throw error;
+  }
+}
+
 /**
- * Get Stripe key from environment variables
+ * Get Stripe key from Firestore remote config (like other apps) or environment variables
  */
-function getStripeKey() {
+async function getStripeKey() {
   // Check if we're in test mode
   const isTest = process.env.STRIPE_MODE === 'test' || process.env.STRIPE_MODE === 'sandbox';
   
-  let key;
+  console.log(`🔍 Getting Stripe ${isTest ? 'test' : 'live'} secret key...`);
+  
+  let key = null;
+  
+  // First, try Firestore remote config (like other apps)
+  try {
+    const firestore = await getFirestore();
+    const { doc, getDoc } = await import('firebase-admin/firestore');
+    
+    const configRef = doc(firestore, 'config', 'stripe');
+    const configDoc = await getDoc(configRef);
+    
+    if (configDoc.exists()) {
+      const configData = configDoc.data();
+      console.log('📋 Stripe config found in Firestore');
+      
+      if (isTest) {
+        key = configData.testSecretKey || configData.test_secret_key;
+        if (key) {
+          console.log('✅ Using TEST secret key from Firestore remote config');
+          return key;
+        }
+      } else {
+        key = configData.liveSecretKey || configData.live_secret_key;
+        if (key) {
+          console.log('✅ Using LIVE secret key from Firestore remote config');
+          return key;
+        }
+      }
+      
+      console.log(`⚠️ No ${isTest ? 'test' : 'live'} secret key found in Firestore config`);
+    } else {
+      console.log('📝 No Stripe config document found in Firestore');
+    }
+  } catch (firestoreError) {
+    console.warn('⚠️ Could not load from Firestore remote config:', firestoreError.message);
+  }
+  
+  // Fallback to environment variables
+  console.log('🔍 Falling back to environment variables...');
+  
   if (isTest) {
-    key = process.env.STRIPE_TEST_SECRET_KEY || process.env.STRIPE_TEST_KEY;
-    console.log('🔍 Looking for Stripe TEST secret key...');
-    console.log('   STRIPE_TEST_SECRET_KEY:', process.env.STRIPE_TEST_SECRET_KEY ? 'SET' : 'NOT SET');
-    console.log('   STRIPE_TEST_KEY:', process.env.STRIPE_TEST_KEY ? 'SET' : 'NOT SET');
+    key = process.env.STRIPE_TEST_SECRET_KEY 
+      || process.env.STRIPE_TEST_KEY
+      || process.env.NEXT_PUBLIC_STRIPE_TEST_SECRET_KEY
+      || process.env.NEXT_PUBLIC_STRIPE_TEST_KEY;
+    console.log('   STRIPE_TEST_SECRET_KEY:', process.env.STRIPE_TEST_SECRET_KEY ? 'SET ✅' : 'NOT SET');
+    console.log('   STRIPE_TEST_KEY:', process.env.STRIPE_TEST_KEY ? 'SET ✅' : 'NOT SET');
+    console.log('   NEXT_PUBLIC_STRIPE_TEST_SECRET_KEY:', process.env.NEXT_PUBLIC_STRIPE_TEST_SECRET_KEY ? 'SET ⚠️' : 'NOT SET');
   } else {
-    key = process.env.STRIPE_LIVE_SECRET_KEY || process.env.STRIPE_SECRET_KEY || process.env.STRIPE_KEY;
-    console.log('🔍 Looking for Stripe LIVE secret key...');
-    console.log('   STRIPE_LIVE_SECRET_KEY:', process.env.STRIPE_LIVE_SECRET_KEY ? 'SET' : 'NOT SET');
-    console.log('   STRIPE_SECRET_KEY:', process.env.STRIPE_SECRET_KEY ? 'SET' : 'NOT SET');
-    console.log('   STRIPE_KEY:', process.env.STRIPE_KEY ? 'SET' : 'NOT SET');
+    key = process.env.STRIPE_LIVE_SECRET_KEY 
+      || process.env.STRIPE_SECRET_KEY 
+      || process.env.STRIPE_KEY
+      || process.env.NEXT_PUBLIC_STRIPE_LIVE_SECRET_KEY
+      || process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY
+      || process.env.NEXT_PUBLIC_STRIPE_KEY;
+    console.log('   STRIPE_LIVE_SECRET_KEY:', process.env.STRIPE_LIVE_SECRET_KEY ? 'SET ✅' : 'NOT SET');
+    console.log('   STRIPE_SECRET_KEY:', process.env.STRIPE_SECRET_KEY ? 'SET ✅' : 'NOT SET');
+    console.log('   STRIPE_KEY:', process.env.STRIPE_KEY ? 'SET ✅' : 'NOT SET');
+    console.log('   NEXT_PUBLIC_STRIPE_LIVE_SECRET_KEY:', process.env.NEXT_PUBLIC_STRIPE_LIVE_SECRET_KEY ? 'SET ⚠️' : 'NOT SET');
     console.log('   STRIPE_MODE:', process.env.STRIPE_MODE || 'not set (defaulting to live)');
   }
   
   if (!key) {
-    const availableVars = Object.keys(process.env)
-      .filter(k => k.includes('STRIPE') && k.includes('SECRET'))
+    // List all Stripe-related env vars for debugging
+    const allStripeVars = Object.keys(process.env)
+      .filter(k => k.toUpperCase().includes('STRIPE'))
+      .map(k => `${k} (${process.env[k] ? 'SET' : 'NOT SET'})`)
       .join(', ');
     throw new Error(
-      `Stripe ${isTest ? 'test' : 'live'} secret key not found in environment variables. ` +
-      `Available Stripe env vars: ${availableVars || 'none'}. ` +
-      `Please set ${isTest ? 'STRIPE_TEST_SECRET_KEY' : 'STRIPE_LIVE_SECRET_KEY'} in Vercel environment variables.`
+      `Stripe ${isTest ? 'test' : 'live'} secret key not found.\n` +
+      `Checked: Firestore remote config (config/stripe) and environment variables.\n` +
+      `Environment variables found: ${allStripeVars || 'none'}.\n` +
+      `💡 Solution: Add ${isTest ? 'testSecretKey' : 'liveSecretKey'} to Firestore config/stripe document, ` +
+      `or set ${isTest ? 'STRIPE_TEST_SECRET_KEY' : 'STRIPE_LIVE_SECRET_KEY'} in Vercel environment variables.`
     );
   }
   
-  console.log(`✅ Stripe ${isTest ? 'test' : 'live'} secret key found (length: ${key.length})`);
+  // Warn if using NEXT_PUBLIC_ prefix (not secure for secret keys)
+  if (key && (process.env.NEXT_PUBLIC_STRIPE_TEST_SECRET_KEY || process.env.NEXT_PUBLIC_STRIPE_LIVE_SECRET_KEY)) {
+    console.warn('⚠️ WARNING: Using NEXT_PUBLIC_ prefix for secret key is not recommended for security!');
+  }
+  
+  console.log(`✅ Stripe ${isTest ? 'test' : 'live'} secret key found from ${key === process.env.NEXT_PUBLIC_STRIPE_TEST_SECRET_KEY || key === process.env.NEXT_PUBLIC_STRIPE_LIVE_SECRET_KEY ? 'environment variables' : 'Firestore'} (length: ${key.length})`);
   return key;
 }
 
@@ -77,16 +168,16 @@ export async function POST(request) {
       );
     }
     
-    // Get Stripe key and initialize Stripe
+    // Get Stripe key and initialize Stripe (from Firestore remote config or environment variables)
     let stripeKey;
     try {
-      stripeKey = getStripeKey();
+      stripeKey = await getStripeKey();
     } catch (keyError) {
       console.error('❌ Error getting Stripe key:', keyError);
       return NextResponse.json(
         {
           success: false,
-          error: `Stripe configuration error: ${keyError.message}. Please ensure STRIPE_LIVE_SECRET_KEY or STRIPE_SECRET_KEY is set in environment variables.`,
+          error: `Stripe configuration error: ${keyError.message}`,
         },
         {
           status: 500,
