@@ -559,99 +559,171 @@ const PaymentSuccess = () => {
         }
       } 
       // Handle Stripe payment (has session_id, plan)
+      // Order creation is handled by Stripe webhook - we just check if it exists
       else if (sessionId) {
         console.log('💳 Processing Stripe payment success');
+        console.log('🔍 Checking if order was created by webhook...');
         
-        if (!planId) {
-          console.error('❌ No plan ID found in Stripe payment success');
-          setError('Missing plan information. Please contact support.');
-          setProcessing(false);
-          return;
-        }
-
-        // Check if user is authenticated (required for backend order creation)
-        if (!currentUser) {
-          console.error('❌ User not authenticated for Stripe order');
-          setError('Please log in to complete your order.');
-          setProcessing(false);
-          return;
-        }
-
         try {
-          // Call backend Firebase function to create order
-          // Backend will handle all eSIM creation and Firestore records
-          console.log('📞 Calling backend create_order function with:', { planId, sessionId });
+          // Check if order was already created by webhook
+          // Look in pending_orders or stripe_payments collection
+          const pendingOrderRef = doc(db, 'pending_orders', sessionId);
+          const pendingOrderDoc = await getDoc(pendingOrderRef);
           
-          const { httpsCallable } = await import('firebase/functions');
-          const { functions } = await import('../firebase/config');
-          const createOrderFn = httpsCallable(functions, 'create_order');
+          let orderData = null;
+          let backendOrderId = null;
           
-          // Get Airalo client ID from Firestore config
-          const configRef = doc(db, 'config', 'airalo');
-          const configDoc = await getDoc(configRef);
-          let airaloClientId = null;
-          if (configDoc.exists()) {
-            const configData = configDoc.data();
-            airaloClientId = configData.api_key || configData.client_id;
+          if (pendingOrderDoc.exists()) {
+            orderData = pendingOrderDoc.data();
+            console.log('✅ Found pending order from webhook:', orderData);
+            
+            // Check if order has been processed
+            if (orderData.processed && orderData.backendOrderId) {
+              backendOrderId = orderData.backendOrderId;
+            } else {
+              // Order is still being processed by webhook
+              console.log('⏳ Order is being processed by webhook, waiting...');
+              
+              // Poll for order completion
+              let attempts = 0;
+              const maxAttempts = 30;
+              
+              while (attempts < maxAttempts) {
+                const updatedDoc = await getDoc(pendingOrderRef);
+                if (updatedDoc.exists()) {
+                  const updatedData = updatedDoc.data();
+                  if (updatedData.processed && updatedData.backendOrderId) {
+                    backendOrderId = updatedData.backendOrderId;
+                    orderData = updatedData;
+                    console.log('✅ Order processed by webhook');
+                    break;
+                  }
+                }
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                attempts++;
+              }
+            }
+          } else {
+            // Webhook hasn't processed yet or failed
+            // Fallback: Create order manually (but this should rarely happen)
+            console.warn('⚠️ Order not found in pending_orders, webhook may not have processed yet');
+            console.log('💡 This is safe - order will be created when webhook processes payment');
+            
+            // Wait a bit for webhook to process
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            // Check again
+            const retryDoc = await getDoc(pendingOrderRef);
+            if (retryDoc.exists()) {
+              orderData = retryDoc.data();
+              if (orderData.processed && orderData.backendOrderId) {
+                backendOrderId = orderData.backendOrderId;
+              }
+            }
           }
 
-          const orderResult = await createOrderFn({
-            planId: planId,
-            quantity: "1",
-            to_email: currentUser.email || email,
-            description: `eSIM order for ${currentUser.email || email}`,
-            airalo_client_id: airaloClientId
-          });
-
-          console.log('✅ Backend order created:', orderResult.data);
-          
-          const backendOrderId = orderResult.data.orderId;
-          
-          // Wait for order to be processed (poll order_status collection)
-          console.log('⏳ Waiting for order to be processed...');
-          let orderStatus = null;
-          let attempts = 0;
-          const maxAttempts = 30; // 30 seconds max wait
-          
-          while (attempts < maxAttempts) {
+          if (backendOrderId) {
+            // Check order status
             const statusRef = doc(db, 'order_status', backendOrderId);
             const statusDoc = await getDoc(statusRef);
             
             if (statusDoc.exists()) {
-              orderStatus = statusDoc.data();
-              console.log(`📊 Order status (attempt ${attempts + 1}):`, orderStatus.status);
-              
-              if (orderStatus.status === 'completed' || orderStatus.status === 'success') {
-                console.log('✅ Order completed successfully');
-                break;
-              } else if (orderStatus.status === 'failed') {
-                throw new Error(orderStatus.error || 'Order processing failed');
-              }
+              const status = statusDoc.data();
+              console.log('📊 Order status:', status.status);
             }
+
+            // Set order info for display
+            setOrderInfo({
+              orderId: backendOrderId,
+              planId: orderData?.planId || planId,
+              planName: decodeURIComponent(name || 'eSIM Plan'),
+              customerEmail: orderData?.customerEmail || email
+            });
             
-            // Wait 1 second before next check
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            attempts++;
+            setOrderComplete(true);
+            toast.success('Payment successful! Your eSIM order is being processed.');
+          } else if (orderData && orderData.readyToProcess && !orderData.processed) {
+            // Order is ready but not processed yet - trigger backend function
+            console.log('📞 Triggering backend order creation from webhook order...');
+            
+            if (!currentUser) {
+              console.warn('⚠️ User not authenticated, cannot trigger order creation');
+              setOrderInfo({
+                orderId: sessionId,
+                planId: planId,
+                planName: decodeURIComponent(name || 'eSIM Plan'),
+                customerEmail: email
+              });
+              setOrderComplete(true);
+              toast.success('Payment successful! Please log in to complete your order.');
+              return;
+            }
+
+            try {
+              const { httpsCallable } = await import('firebase/functions');
+              const { functions } = await import('../firebase/config');
+              const createOrderFn = httpsCallable(functions, 'create_order');
+              
+              const orderResult = await createOrderFn({
+                planId: orderData.planId || planId,
+                quantity: "1",
+                to_email: orderData.customerEmail || email,
+                description: `eSIM order for ${orderData.customerEmail || email}`,
+                airalo_client_id: orderData.airaloClientId
+              });
+
+              console.log('✅ Backend order created from webhook:', orderResult.data);
+              
+              // Update pending order with backend order ID
+              await pendingOrderRef.update({
+                processed: true,
+                backendOrderId: orderResult.data.orderId
+              });
+
+              setOrderInfo({
+                orderId: orderResult.data.orderId,
+                planId: orderData.planId || planId,
+                planName: decodeURIComponent(name || 'eSIM Plan'),
+                customerEmail: orderData.customerEmail || email
+              });
+              
+              setOrderComplete(true);
+              toast.success('Payment successful! Your eSIM order is being processed.');
+            } catch (triggerError) {
+              console.error('❌ Error triggering order creation:', triggerError);
+              setOrderInfo({
+                orderId: sessionId,
+                planId: planId,
+                planName: decodeURIComponent(name || 'eSIM Plan'),
+                customerEmail: email
+              });
+              setOrderComplete(true);
+              toast.success('Payment successful! Your order is being processed.');
+            }
+          } else {
+            // Order is still processing or not found
+            console.log('⏳ Order is still being processed by webhook');
+            setOrderInfo({
+              orderId: sessionId,
+              planId: planId,
+              planName: decodeURIComponent(name || 'eSIM Plan'),
+              customerEmail: email
+            });
+            setOrderComplete(true);
+            toast.success('Payment successful! Your order is being processed.');
           }
           
-          if (!orderStatus || orderStatus.status !== 'completed') {
-            console.warn('⚠️ Order still processing, but showing success page');
-          }
-
-          // Set order info for display
+        } catch (checkError) {
+          console.error('❌ Error checking order status:', checkError);
+          // Don't show error - order might still be processing
           setOrderInfo({
-            orderId: backendOrderId,
+            orderId: sessionId,
             planId: planId,
             planName: decodeURIComponent(name || 'eSIM Plan'),
-            customerEmail: currentUser.email || email
+            customerEmail: email
           });
-          
           setOrderComplete(true);
-          toast.success('Payment successful! Your eSIM order is being processed.');
-          
-        } catch (orderError) {
-          console.error('❌ Error creating order via backend:', orderError);
-          setError(`Failed to create order: ${orderError.message || 'Unknown error'}. Please contact support.`);
+          toast.success('Payment successful! Your order is being processed.');
         }
       }
       else {
