@@ -72,7 +72,17 @@ export const paymentService = {
       const { httpsCallable } = await import('firebase/functions');
       const { functions } = await import('../firebase/config');
       
+      // Verify functions is initialized
+      if (!functions) {
+        throw new Error('Firebase Functions not initialized');
+      }
+      
+      console.log('🔧 Firebase Functions instance:', functions);
+      console.log('🔧 Function region:', functions.region || 'default');
+      
       const createCheckoutSessionFn = httpsCallable(functions, 'create_checkout_session');
+      
+      console.log('📞 Calling create_checkout_session function...');
       
       const result = await createCheckoutSessionFn({
         order: orderData.orderId,
@@ -88,15 +98,28 @@ export const paymentService = {
       console.log('✅ Checkout session created via Firebase Functions:', result.data);
       
       // Redirect immediately to Stripe checkout
-      if (result.data.sessionUrl) {
+      if (result.data && result.data.sessionUrl) {
         window.location.href = result.data.sessionUrl;
         return result.data;
       } else {
-        console.error('❌ Response missing sessionUrl:', result.data);
+        console.error('❌ Response missing sessionUrl:', result);
         throw new Error('No session URL received from Firebase Function');
       }
     } catch (error) {
       console.error('❌ Error creating checkout session:', error);
+      console.error('❌ Error code:', error.code);
+      console.error('❌ Error message:', error.message);
+      console.error('❌ Error details:', error.details);
+      
+      // Provide more helpful error messages
+      if (error.code === 'functions/internal') {
+        throw new Error(`Firebase Function error: ${error.message}. Check Firebase Console → Functions → Logs for details.`);
+      } else if (error.code === 'functions/unauthenticated') {
+        throw new Error('Authentication required. Please log in and try again.');
+      } else if (error.code === 'functions/permission-denied') {
+        throw new Error('Permission denied. Please check your account permissions.');
+      }
+      
       throw error;
     }
   },
