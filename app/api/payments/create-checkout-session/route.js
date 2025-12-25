@@ -5,44 +5,34 @@ export const dynamic = 'force-dynamic';
 
 /**
  * Get Stripe secret key from environment variables (Vercel Stripe integration)
- * Priority: Vercel integration STRIPE_SECRET_KEY > mode-specific keys > fallback keys
+ * Priority: Vercel integration STRIPE_SECRET_KEY (always use if available) > mode-specific keys > fallback keys
  */
 function getStripeKey() {
-  // Check if we're in test mode
-  const isTest = process.env.STRIPE_MODE === 'test' || process.env.STRIPE_MODE === 'sandbox';
-  
-  console.log(`🔍 Getting Stripe ${isTest ? 'test' : 'live'} secret key from environment variables...`);
-  
-  let key = null;
+  console.log('🔍 Getting Stripe secret key from environment variables...');
   
   // Priority 1: Vercel Stripe Integration (automatically provided by Vercel)
+  // Always use this if available, regardless of mode - Vercel knows which key to provide
   if (process.env.STRIPE_SECRET_KEY) {
     const vercelKey = process.env.STRIPE_SECRET_KEY;
     const isVercelKeyTest = vercelKey.startsWith('sk_test_');
     const isVercelKeyLive = vercelKey.startsWith('sk_live_');
+    const keyType = isVercelKeyTest ? 'TEST' : isVercelKeyLive ? 'LIVE' : 'UNKNOWN';
     
-    // Use Vercel key if mode matches or if we can't determine mode
-    if ((isTest && isVercelKeyTest) || (!isTest && isVercelKeyLive) || (!isVercelKeyTest && !isVercelKeyLive)) {
-      key = vercelKey;
-      console.log(`✅ Using STRIPE_SECRET_KEY from Vercel integration (${isVercelKeyTest ? 'TEST' : isVercelKeyLive ? 'LIVE' : 'UNKNOWN'} mode)`);
-      return key;
-    } else {
-      console.log(`⚠️ Vercel STRIPE_SECRET_KEY is ${isVercelKeyTest ? 'TEST' : 'LIVE'} but requested mode is ${isTest ? 'TEST' : 'LIVE'}, trying mode-specific keys...`);
-    }
+    console.log(`✅ Using STRIPE_SECRET_KEY from Vercel integration (${keyType} mode)`);
+    return vercelKey;
   }
   
-  // Priority 2: Mode-specific environment variables
+  // Priority 2: Mode-specific environment variables (only if STRIPE_SECRET_KEY not available)
+  const isTest = process.env.STRIPE_MODE === 'test' || process.env.STRIPE_MODE === 'sandbox';
+  
   if (isTest) {
-    key = process.env.STRIPE_TEST_SECRET_KEY 
-      || process.env.STRIPE_TEST_KEY;
+    const key = process.env.STRIPE_TEST_SECRET_KEY || process.env.STRIPE_TEST_KEY;
     if (key) {
       console.log('✅ Using test secret key from environment variables');
       return key;
     }
   } else {
-    key = process.env.STRIPE_LIVE_SECRET_KEY 
-      || process.env.STRIPE_SECRET_KEY  // Fallback to Vercel key if mode-specific not found
-      || process.env.STRIPE_KEY;
+    const key = process.env.STRIPE_LIVE_SECRET_KEY || process.env.STRIPE_KEY;
     if (key) {
       console.log('✅ Using live secret key from environment variables');
       return key;
@@ -50,20 +40,16 @@ function getStripeKey() {
   }
   
   // Error if no key found
-  if (!key) {
-    const allStripeVars = Object.keys(process.env)
-      .filter(k => k.toUpperCase().includes('STRIPE'))
-      .map(k => `${k} (${process.env[k] ? 'SET' : 'NOT SET'})`)
-      .join(', ');
-    throw new Error(
-      `Stripe ${isTest ? 'test' : 'live'} secret key not found.\n` +
-      `Checked environment variables: ${allStripeVars || 'none found'}.\n` +
-      `💡 Solution: Connect Stripe integration in Vercel (provides STRIPE_SECRET_KEY automatically) ` +
-      `or set ${isTest ? 'STRIPE_TEST_SECRET_KEY' : 'STRIPE_LIVE_SECRET_KEY'} in Vercel environment variables.`
-    );
-  }
-  
-  return key;
+  const allStripeVars = Object.keys(process.env)
+    .filter(k => k.toUpperCase().includes('STRIPE'))
+    .map(k => `${k} (${process.env[k] ? 'SET' : 'NOT SET'})`)
+    .join(', ');
+  throw new Error(
+    `Stripe secret key not found.\n` +
+    `Checked environment variables: ${allStripeVars || 'none found'}.\n` +
+    `💡 Solution: Connect Stripe integration in Vercel (provides STRIPE_SECRET_KEY automatically) ` +
+    `or set STRIPE_SECRET_KEY, STRIPE_LIVE_SECRET_KEY, or STRIPE_TEST_SECRET_KEY in Vercel environment variables.`
+  );
 }
 
 export async function OPTIONS() {
@@ -156,26 +142,33 @@ export async function POST(request) {
     try {
       stripe = new Stripe(stripeKey, { apiVersion: '2023-10-16' });
       console.log('✅ Stripe initialized successfully');
+      
+      // Verify Stripe object has required methods
+      if (!stripe || typeof stripe.checkout?.sessions?.create !== 'function') {
+        console.error('❌ Stripe object is invalid:', { 
+          hasStripe: !!stripe, 
+          hasCheckout: !!stripe?.checkout,
+          hasSessions: !!stripe?.checkout?.sessions,
+          hasCreate: typeof stripe?.checkout?.sessions?.create
+        });
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Stripe initialization failed. Please check your Stripe key and library version.',
+          },
+          {
+            status: 500,
+            headers: corsHeaders,
+          }
+        );
+      }
     } catch (stripeInitError) {
       console.error('❌ Error initializing Stripe:', stripeInitError);
+      console.error('❌ Stripe key prefix:', stripeKey.substring(0, 10));
       return NextResponse.json(
         {
           success: false,
           error: `Failed to initialize Stripe: ${stripeInitError.message}`,
-        },
-        {
-          status: 500,
-          headers: corsHeaders,
-        }
-      );
-    }
-    
-    if (!stripe || !stripe.checkout || !stripe.checkout.Session) {
-      console.error('❌ Stripe object is invalid:', { hasStripe: !!stripe, hasCheckout: !!stripe?.checkout, hasSession: !!stripe?.checkout?.Session });
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Stripe initialization failed. Please check your Stripe key.',
         },
         {
           status: 500,
@@ -193,7 +186,7 @@ export async function POST(request) {
     if (isYearly !== undefined && isYearly !== null) {
       // Subscription payment
       const interval = isYearly ? 'year' : 'month';
-      session = await stripe.checkout.Session.create({
+      session = await stripe.checkout.sessions.create({
         payment_method_types: ['card'],
         line_items: [{
           price_data: {
@@ -226,7 +219,7 @@ export async function POST(request) {
       });
     } else {
       // One-time payment
-      session = await stripe.checkout.Session.create({
+      session = await stripe.checkout.sessions.create({
         payment_method_types: ['card'],
         line_items: [{
           price_data: {
