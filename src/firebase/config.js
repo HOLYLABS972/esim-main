@@ -12,7 +12,7 @@ const firebaseConfig = {
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "esim-f0e3e",
   storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "esim-f0e3e.firebasestorage.app",
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "482450515497",
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:482450515497:web:08533fb9536c8e6aa39e38",
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:482450515497:web:5f15bfaf97b55221a39e38",
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID || "G-T0YBW024Z8"
 };
 
