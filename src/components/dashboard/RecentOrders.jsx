@@ -3,28 +3,7 @@ import { Globe, QrCode } from 'lucide-react';
 import { useI18n } from '../../contexts/I18nContext';
 import { getLanguageDirection, detectLanguageFromPath } from '../../utils/languageUtils';
 import { usePathname } from 'next/navigation';
-
-// Helper function to get flag emoji from country code
-const getFlagEmoji = (countryCode) => {
-  if (!countryCode || countryCode.length !== 2) return '🌍';
-  
-  // Handle special cases like PT-MA, multi-region codes, etc.
-  if (countryCode.includes('-') || countryCode.length > 2) {
-    return '🌍';
-  }
-  
-  try {
-    const codePoints = countryCode
-      .toUpperCase()
-      .split('')
-      .map(char => 127397 + char.charCodeAt());
-    
-    return String.fromCodePoint(...codePoints);
-  } catch (error) {
-    console.warn('Invalid country code: ' + countryCode, error);
-    return '🌍';
-  }
-};
+import { getOrderFlag, getOrderCountryName } from '../../utils/countryFlags';
 
 const RecentOrders = ({ orders, loading, onViewQRCode }) => {
   const { t, locale } = useI18n();
@@ -74,7 +53,7 @@ const RecentOrders = ({ orders, loading, onViewQRCode }) => {
                       >
                         <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-3' : 'space-x-3'}`}>
                           <div className="text-2xl">
-                            {getFlagEmoji(order.countryCode)}
+                            {order.flagEmoji || getOrderFlag(order)}
                           </div>
                           <div>
                             <p className={`font-medium text-eerie-black ${isRTL ? 'text-right' : 'text-left'}`}>
@@ -84,14 +63,26 @@ const RecentOrders = ({ orders, loading, onViewQRCode }) => {
                               {t('dashboard.orderNumber', 'Order #{{number}}', { number: order.orderId || order.id || t('dashboard.unknown', 'Unknown') })}
                             </p>
                             <p className={`text-xs text-cool-black/60 ${isRTL ? 'text-right' : 'text-left'}`}>
-                              {order.countryName || order.countryCode || t('dashboard.unknownCountry', 'Unknown Country')}
+                              {(() => {
+                                // Debug: Log country data for Hallo Mobil orders
+                                if (order.planName?.includes('Hallo')) {
+                                  console.log('🔍 RecentOrders - Hallo Mobil order:', {
+                                    countryName: order.countryName,
+                                    countryCode: order.countryCode,
+                                    flagEmoji: order.flagEmoji,
+                                    extractedCountryName: getOrderCountryName(order),
+                                    packageId: order.package_id,
+                                    planName: order.planName,
+                                  });
+                                }
+                                return order.countryName || getOrderCountryName(order) || order.countryCode || t('dashboard.unknownCountry', 'Unknown Country');
+                              })()}
                             </p>
                           </div>
                         </div>
                         <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-4' : 'space-x-4'}`}>
                           <div className={isRTL ? 'text-left' : 'text-right'}>
-                            <p className="font-medium text-eerie-black">${Math.round(order.amount || 0)}</p>
-                            <div className={`hidden md:flex items-center ${isRTL ? 'justify-start space-x-reverse space-x-2' : 'justify-end space-x-2'}`}>
+                            <div className={`flex items-center ${isRTL ? 'justify-start space-x-reverse space-x-2' : 'justify-end space-x-2'}`}>
                               <div className={`w-2 h-2 rounded-full ${
                                 order.status === 'active' ? 'bg-green-500' :
                                 order.status === 'pending' ? 'bg-yellow-500' : 'bg-gray-500'

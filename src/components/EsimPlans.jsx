@@ -15,28 +15,7 @@ import { detectPlatform, shouldRedirectToDownload, isMobileDevice } from '../uti
 import { getMobileCountries } from '../data/mobileCountries';
 import { getLanguageDirection, detectLanguageFromPath } from '../utils/languageUtils';
 import { translateCountries } from '../utils/countryTranslations';
-
-// Helper function to get flag emoji from country code
-const getFlagEmoji = (countryCode) => {
-  if (!countryCode || countryCode.length !== 2) return '🌍';
-  
-  // Handle special cases like PT-MA, multi-region codes, etc.
-  if (countryCode.includes('-') || countryCode.length > 2) {
-    return '🌍';
-  }
-  
-  try {
-    const codePoints = countryCode
-      .toUpperCase()
-      .split('')
-      .map(char => 127397 + char.charCodeAt());
-    
-    return String.fromCodePoint(...codePoints);
-  } catch (error) {
-    console.warn('Invalid country code: ' + countryCode, error);
-    return '🌍';
-  }
-};
+import { getFlagEmoji } from '../utils/countryFlags';
 
 // Country name aliases for better search
 const countryAliases = {

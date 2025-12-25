@@ -195,18 +195,40 @@ const PaymentSuccess = () => {
       await setDoc(globalOrderRef, orderDoc);
 
       // Also save to user collection if authenticated
+      // IMPORTANT: Save same structure as backend function for consistency with mobile app
       if (userOrderRef) {
+        const airaloData = airaloOrderResult.orderData || {};
+        const packageName = airaloData.package || orderData.planName || 'eSIM Plan';
+        const dataAmount = airaloData.data || '';
+        const validityDays = airaloData.validity || 0;
+        const airaloPrice = airaloData.price || airaloData.net_price || orderData.amount || 0;
+        
         const esimData = {
+          id: orderData.orderId,
           orderId: orderData.orderId,
           planId: orderData.planId,
-          planName: orderData.planName,
-          amount: orderData.amount,
-          currency: orderData.currency,
+          packageId: orderData.planId,  // Save as packageId for mobile compatibility
+          package_id: orderData.planId,  // Save as package_id for web compatibility
+          planName: packageName,
+          dataAmount: dataAmount,  // Save as dataAmount for mobile compatibility
+          capacity: dataAmount,  // Also save as capacity for EsimModel compatibility
+          validity: validityDays,  // Save as validity for mobile compatibility
+          period: validityDays,  // Also save as period for EsimModel compatibility
+          periodDays: validityDays,  // Also save as periodDays for compatibility
+          amount: airaloPrice,  // Save as amount (backend convention)
+          price: airaloPrice,  // Also save as price for EsimModel compatibility
+          currency: orderData.currency || 'USD',
           status: 'active',
           customerEmail: orderData.customerEmail,
           countryCode: countryInfo.code,
           countryName: countryInfo.name,
-          createdAt: serverTimestamp()
+          country: countryInfo.name,  // Also save as country for mobile compatibility
+          provider: 'airalo',
+          isActive: true,
+          isArchived: false,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+          userEmail: orderData.customerEmail
         };
         
         // Only add fields that are not undefined
@@ -215,9 +237,42 @@ const PaymentSuccess = () => {
         }
         if (airaloOrderResult.orderData) {
           esimData.airaloOrderData = airaloOrderResult.orderData;
+          
+          // Extract and save esimData structure (same as backend function)
+          const simsData = airaloOrderResult.orderData.sims || [];
+          if (simsData && simsData.length > 0) {
+            const simData = simsData[0];
+            esimData.esimData = {
+              package_id: orderData.planId,  // Save package_id inside esimData
+              package: packageName,
+              price: airaloPrice,
+              net_price: airaloData.net_price || airaloPrice,
+              qrcode: simData.qrcode,
+              qrcode_url: simData.qrcode_url,
+              direct_apple_installation_url: simData.direct_apple_installation_url,
+              iccid: simData.iccid,
+              lpa: simData.lpa,
+              matching_id: simData.matching_id,
+              manual_installation: airaloOrderResult.orderData.manual_installation,
+              qrcode_installation: airaloOrderResult.orderData.qrcode_installation,
+              installation_guides: airaloOrderResult.orderData.installation_guides
+            };
+            
+            // Also save QR code fields at top level for easy access
+            esimData.qrCode = simData.qrcode;
+            esimData.qrCodeUrl = simData.qrcode_url;
+            esimData.directAppleInstallationUrl = simData.direct_apple_installation_url;
+            esimData.iccid = simData.iccid;
+            esimData.lpa = simData.lpa;
+            esimData.matchingId = simData.matching_id;
+            esimData.manualInstallation = airaloOrderResult.orderData.manual_installation;
+            esimData.qrcodeInstallation = airaloOrderResult.orderData.qrcode_installation;
+            esimData.installationGuides = airaloOrderResult.orderData.installation_guides;
+          }
         }
         
         await setDoc(userOrderRef, esimData);
+        console.log('✅ Order saved to user collection with complete structure matching mobile app');
       }
 
       // Step 3: Try to get QR code immediately
@@ -247,14 +302,19 @@ const PaymentSuccess = () => {
           }, { merge: true });
           
           if (userOrderRef) {
-            await setDoc(userOrderRef, {
+            // Update user collection with QR code (merge to preserve existing structure)
+            const qrUpdate = {
               qrCode: qrResult.qrCode,
               qrCodeUrl: qrResult.qrCodeUrl,
               iccid: qrResult.iccid,
               activationCode: qrResult.activationCode,
               directAppleInstallationUrl: qrResult.directAppleInstallationUrl,
               updatedAt: serverTimestamp()
-            }, { merge: true });
+            };
+            
+            // Also update nested esimData if it exists (Firestore doesn't support nested updates with dot notation in setDoc)
+            // We'll update the whole esimData object if it exists
+            await setDoc(userOrderRef, qrUpdate, { merge: true });
           }
         }
       } catch (qrError) {

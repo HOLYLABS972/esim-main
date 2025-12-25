@@ -3,13 +3,14 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useI18n } from '../contexts/I18nContext';
-import { collection, query, getDocs, doc, setDoc, getDoc, deleteDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { collection, query, getDocs, doc, setDoc, getDoc, deleteDoc, serverTimestamp, updateDoc, where } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useRouter, usePathname } from 'next/navigation';
 import { esimService } from '../services/esimService';
 import { apiService } from '../services/apiService';
 import { getLanguageDirection, detectLanguageFromPath } from '../utils/languageUtils';
 import { translateCountryName } from '../utils/countryTranslations';
+import { extractCountryInfo, getOrderFlag, getOrderCountryName, getCountryFromOperator, getFlagEmoji, getCountryCodeFromName, operatorCountryMap } from '../utils/countryFlags';
 import toast from 'react-hot-toast';
 
 // Dashboard Components
@@ -39,28 +40,6 @@ const Dashboard = () => {
   
   const router = useRouter();
 
-  // Helper function to get country from operator slug
-  const getCountryFromOperator = (operatorSlug) => {
-    if (!operatorSlug) return null;
-    
-    // Common operator to country mappings (most common ones)
-    const operatorCountryMap = {
-      // Egypt
-      'giza-mobile': { code: 'EG', name: 'Egypt' },
-      'nile-mobile': { code: 'EG', name: 'Egypt' },
-      // UAE
-      'roamify': { code: 'AE', name: 'United Arab Emirates' },
-      // Turkey  
-      'turk-telecom': { code: 'TR', name: 'Turkey' },
-      // USA
-      'change': { code: 'US', name: 'United States' },
-      // Georgia
-      'kargi': { code: 'GE', name: 'Georgia' },
-      // Add more as needed...
-    };
-    
-    return operatorCountryMap[operatorSlug] || null;
-  };
 
   // Get current language for RTL detection
   const getCurrentLanguage = () => {
@@ -101,58 +80,238 @@ const Dashboard = () => {
         console.log('🔍 Current user:', currentUser.email);
         console.log('🔍 Firebase db:', db);
         
-        // Fetch eSIMs from user's collection (guest orders are automatically migrated on login)
-        console.log('📱 Fetching eSIMs from user collection...');
+        // Fetch eSIMs from user's collection AND global orders collection
+        // Some orders might only be in global orders collection (especially older orders)
+        console.log('📱 Fetching eSIMs from user collection and global orders...');
+        
+        // First, get orders from user's esims subcollection
         const esimsQuery = query(
           collection(db, 'users', currentUser.uid, 'esims')
         );
-        
-        console.log('📝 eSIMs query created');
         const esimsSnapshot = await getDocs(esimsQuery);
-        console.log('📝 eSIMs snapshot received:', esimsSnapshot.size, 'documents');
+        console.log('📝 User esims collection:', esimsSnapshot.size, 'documents');
         
-        const ordersData = esimsSnapshot.docs.map(doc => {
+        // Also get orders from global orders collection where userId matches
+        const globalOrdersQuery = query(
+          collection(db, 'orders'),
+          where('userId', '==', currentUser.uid)
+        );
+        const globalOrdersSnapshot = await getDocs(globalOrdersQuery);
+        console.log('📝 Global orders collection:', globalOrdersSnapshot.size, 'documents');
+        
+        // Combine both collections, using user esims as primary (more complete data)
+        const userEsimsMap = new Map();
+        esimsSnapshot.docs.forEach(doc => {
+          userEsimsMap.set(doc.id, doc);
+        });
+        
+        // Add global orders that aren't in user esims collection
+        // Also copy them to user collection for consistency
+        for (const globalDoc of globalOrdersSnapshot.docs) {
+          if (!userEsimsMap.has(globalDoc.id)) {
+            userEsimsMap.set(globalDoc.id, globalDoc);
+            console.log('➕ Adding order from global collection:', globalDoc.id);
+            
+            // Copy to user collection for consistency (async, don't wait)
+            const globalData = globalDoc.data();
+            const userOrderRef = doc(db, 'users', currentUser.uid, 'esims', globalDoc.id);
+            setDoc(userOrderRef, {
+              ...globalData,
+              // Ensure we have the required fields
+              id: globalDoc.id,
+              orderId: globalData.orderId || globalDoc.id,
+              userId: currentUser.uid,
+              updatedAt: serverTimestamp()
+            }, { merge: true }).catch(err => {
+              console.log('⚠️ Could not copy order to user collection:', err);
+            });
+          }
+        }
+        
+        // Convert map to array for processing
+        const allEsimsDocs = Array.from(userEsimsMap.values());
+        console.log('📝 Total unique eSIMs:', allEsimsDocs.length, 'documents');
+        
+        const ordersData = allEsimsDocs.map(esimDoc => {
           try {
-            const data = doc.data();
-            
-            // Extract country code from multiple sources
-            let countryCode = data.countryCode || data.orderResult?.countryCode;
-            let countryName = data.countryName || data.orderResult?.countryName;
-            
-            // If no country code, try to extract from package_id or airaloOrderData
-            if (!countryCode || countryCode === 'US') {
-              const packageId = data.planId || data.package_id || data.airaloOrderData?.package_id;
-              const packageName = data.airaloOrderData?.package || data.planName;
-              
-              // Extract operator slug from package_id (e.g., "giza-mobile-15days-2gb" -> "giza-mobile")
-              if (packageId) {
-                const operatorSlug = packageId.split('-').slice(0, 2).join('-'); // Get first two parts
-                console.log(`📦 Extracting country from package_id: ${packageId} -> operator: ${operatorSlug}`);
-                
-                // Try to match against operator (giza-mobile, nile-mobile, etc.)
-                const countryInfo = getCountryFromOperator(operatorSlug);
-                if (countryInfo) {
+            const data = esimDoc.data();
+
+            // EXACT COPY FROM MOBILE APP - Use same extraction logic
+            // Mobile app uses: data.planName, data.countryCode, data.countryName directly
+
+            // Plan Name - exactly like mobile: data.planName ?? 'Unknown Plan'
+            const planName = data.planName?.toString() || 'Unknown Plan';
+
+            // Country Code - exactly like mobile: data.countryCode ?? null
+            let countryCode = data.countryCode?.toString() || null;
+
+            // Country Name - exactly like mobile: data.countryName ?? data.country ?? null
+            let countryName = data.countryName?.toString() || data.country?.toString() || null;
+
+            // If countryCode is missing, try multiple extraction methods (like backend function does)
+            // Check multiple locations for package_id
+            const packageId = data.package_id ||
+                             data.packageId ||
+                             data.planId ||
+                             data.esimData?.package_id ||
+                             data.esimData?.id ||
+                             data.airaloOrderData?.package_id ||
+                             data.orderResult?.package_id ||
+                             '';
+
+            // DEBUG: Log the order data to see what we're working with
+            if (planName.includes('Hallo')) {
+              console.log('🔍 DEBUG: Order data for Hallo Mobil:', {
+                planName,
+                packageId,
+                countryCode,
+                countryName,
+                hasEsimData: !!data.esimData,
+                esimDataKeys: data.esimData ? Object.keys(data.esimData).slice(0, 15) : [],
+                topLevelKeys: Object.keys(data).slice(0, 20),
+              });
+            }
+
+            // CRITICAL FIX: If country is still unknown, try extracting from plan name directly
+            // Plan name like "Hallo! Mobil-1 GB - 7 Days" contains "Hallo Mobil" which maps to Germany
+            if (!countryCode || !countryName) {
+              const planNameLower = planName.toLowerCase().replace(/[!.,]/g, ''); // Remove punctuation
+              // Check if plan name contains known operator names
+              for (const [operator, countryInfo] of Object.entries(operatorCountryMap)) {
+                const operatorNormalized = operator.replace(/-/g, ' '); // "hallo-mobil" -> "hallo mobil"
+                const operatorHyphen = operator; // "hallo-mobil"
+
+                // Check if plan name includes operator (with space or hyphen)
+                if (planNameLower.includes(operatorNormalized) ||
+                    planNameLower.includes(operatorHyphen) ||
+                    planNameLower.startsWith(operatorNormalized.split(' ')[0])) { // "hallo"
                   countryCode = countryInfo.code;
                   countryName = countryInfo.name;
-                  console.log(`✅ Found country from operator: ${countryName} (${countryCode})`);
+                  console.log('✅ Extracted country from plan name:', { planName, operator, countryInfo });
+                  break;
+                }
+              }
+            }
+
+            if (!countryCode) {
+              console.log('🔍 No countryCode found, trying extraction methods...');
+              
+              // Method 1: Extract from package_id operator slug (like backend function)
+              if (packageId) {
+                console.log('🔍 Method 1: Trying package_id:', packageId);
+                const parts = packageId.split('-');
+                if (parts.length >= 2) {
+                  // Try operator slug (first two parts): "hallo-mobil-7days-1gb" -> "hallo-mobil"
+                  const operatorSlug = `${parts[0]}-${parts[1]}`;
+                  console.log('🔍 Trying operator slug:', operatorSlug);
+                  const countryInfo = getCountryFromOperator(operatorSlug);
+                  if (countryInfo) {
+                    countryCode = countryInfo.code;
+                    countryName = countryInfo.name;
+                    console.log('✅ Extracted country from operator slug:', countryInfo);
+                  } else {
+                    // Also try just the first part in case it's a single-word operator
+                    const singleOperator = parts[0];
+                    console.log('🔍 Trying single operator:', singleOperator);
+                    const countryInfo2 = getCountryFromOperator(singleOperator);
+                    if (countryInfo2) {
+                      countryCode = countryInfo2.code;
+                      countryName = countryInfo2.name;
+                      console.log('✅ Extracted country from single operator:', countryInfo2);
+                    }
+                  }
+                }
+              }
+              
+              // Method 2: Extract from HTML coverage text (like backend function does)
+              if (!countryCode && data.esimData) {
+                console.log('🔍 Method 2: Trying HTML coverage extraction...');
+                const html = data.esimData.qrcode_installation || 
+                            data.esimData.manual_installation || 
+                            data.esimData.qrcodeInstallation ||
+                            data.esimData.manualInstallation ||
+                            '';
+                if (html) {
+                  const coverageMatch = html.match(/Coverage:\s*<\/b>([^<]+)/i) || 
+                                       html.match(/Coverage:\s*([^<\n]+)/i);
+                  if (coverageMatch && coverageMatch[1]) {
+                    const coverage = coverageMatch[1].trim();
+                    console.log('🔍 Found coverage in HTML:', coverage);
+                    const coverageCode = getCountryCodeFromName(coverage);
+                    if (coverageCode) {
+                      countryCode = coverageCode;
+                      countryName = coverage;
+                      console.log('✅ Extracted country from HTML coverage:', { countryCode, countryName });
+                    }
+                  }
+                }
+              }
+              
+              // Method 3: Try airaloOrderData for country
+              if (!countryCode && data.airaloOrderData) {
+                console.log('🔍 Method 3: Trying airaloOrderData...');
+                const airaloCountry = data.airaloOrderData.country_code || data.airaloOrderData.country;
+                if (airaloCountry) {
+                  const airaloCountryCode = airaloCountry.length === 2 ? airaloCountry : getCountryCodeFromName(airaloCountry);
+                  if (airaloCountryCode) {
+                    countryCode = airaloCountryCode;
+                    countryName = data.airaloOrderData.country_name || data.airaloOrderData.country || airaloCountry;
+                    console.log('✅ Extracted country from airaloOrderData:', { countryCode, countryName });
+                  }
                 }
               }
             }
             
-            return {
-                id: doc.id,
-                ...data,
-                // Map mobile app fields to web app expected fields
-                orderId: data.orderId || data.orderResult?.orderId || data.order_id || data.id,
-                planName: data.planName || data.orderResult?.planName || 'Unknown Plan',
-                amount: data.amount || data.price || data.orderResult?.price || 0,
-                status: data.status || data.orderResult?.status || 'unknown',
-                customerEmail: data.customerEmail || currentUser.email,
-                createdAt: data.createdAt || data.purchaseDate || data.created_at,
-                updatedAt: data.updatedAt || data.updated_at,
-                // Map country information with translation
+            // Flag Emoji - use getFlagEmoji with countryCode (exactly like mobile app)
+            // Mobile app: if countryCode is null/empty, tries to derive from countryName, then returns '🌍'
+            let flagEmoji = '🌍';
+            if (countryCode && countryCode.trim()) {
+              flagEmoji = getFlagEmoji(countryCode.trim().toUpperCase(), planName, packageId);
+            } else if (countryName) {
+              // Try to derive country code from country name (like mobile app does in UI)
+              const derivedCode = getCountryCodeFromName(countryName);
+              if (derivedCode) {
+                countryCode = derivedCode;
+                flagEmoji = getFlagEmoji(derivedCode, planName, packageId);
+              }
+            }
+            
+            // Get price (backend saves both amount and price) - exactly like mobile
+            const price = data.price || data.amount || 0;
+            
+            // If we extracted country info but it's not saved in Firebase, update it
+            if (countryCode && (!data.countryCode || data.countryCode === 'US' || data.countryCode === 'Unknown')) {
+              // Update the document in Firebase with extracted country info (async, don't wait)
+              const orderRef = doc(db, 'users', currentUser.uid, 'esims', esimDoc.id);
+              updateDoc(orderRef, {
                 countryCode: countryCode,
-                countryName: translateCountryName(countryCode, countryName, locale),
+                countryName: countryName,
+                package_id: packageId || data.packageId || data.package_id, // Ensure package_id is saved
+                updatedAt: serverTimestamp()
+              }).catch(err => {
+                console.log('⚠️ Could not update country info in Firebase:', err);
+              });
+            }
+
+            return {
+                id: esimDoc.id,
+                ...data,
+                // EXACT COPY FROM MOBILE APP - Use same field names and extraction
+                orderId: data.orderId || data.id,
+                planName: planName, // Use extracted planName (same as mobile)
+                amount: price,
+                status: data.status || 'unknown',
+                customerEmail: data.customerEmail || currentUser.email,
+                createdAt: data.createdAt || data.created_at,
+                updatedAt: data.updatedAt || data.updated_at,
+                // Country information - exactly like mobile app
+                countryCode: countryCode, // Direct from data.countryCode
+                countryName: countryName, // Use extracted countryName directly (translation disabled in translateCountryName)
+                flagEmoji: flagEmoji, // Get flag from countryCode
+                // Preserve package_id for reference
+                package_id: data.package_id || data.packageId || data.planId || '',
+                // Preserve esimData if it exists
+                esimData: data.esimData || data,
                 // Map QR code data
                 qrCode: {
                   qrCode: data.qrCode || data.orderResult?.qrCode,
@@ -181,7 +340,7 @@ const Dashboard = () => {
                 airaloOrderData: data.airaloOrderData
               };
           } catch (docError) {
-            console.error('❌ Error processing document:', doc.id, docError);
+            console.error('❌ Error processing document:', esimDoc.id, docError);
             return null;
           }
         }).filter(Boolean); // Remove null entries
@@ -192,10 +351,21 @@ const Dashboard = () => {
           const bTime = b.createdAt?.toMillis?.() || b.createdAt?.seconds * 1000 || 0;
           return bTime - aTime;
         });
-        
+
         setOrders(ordersData);
         console.log('📊 Fetched eSIMs:', ordersData.length);
         console.log('📊 eSIMs data:', ordersData);
+
+        // DEBUG: Log all plan names and country data
+        ordersData.forEach((order, index) => {
+          console.log(`📊 Order ${index + 1}:`, {
+            planName: order.planName,
+            countryCode: order.countryCode,
+            countryName: order.countryName,
+            package_id: order.package_id,
+            flagEmoji: order.flagEmoji,
+          });
+        });
       } catch (error) {
         console.error('❌ Error fetching eSIMs:', error);
         console.error('❌ Error details:', {
