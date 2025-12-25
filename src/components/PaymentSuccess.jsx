@@ -95,21 +95,54 @@ const PaymentSuccess = () => {
   // Create order record in Firebase and process with RoamJet API
   const createOrderRecord = async (orderData) => {
     try {
+      // CRITICAL: Check if order already exists to prevent duplicate charges
+      const globalOrderRef = doc(db, 'orders', orderData.orderId);
+      const existingOrder = await getDoc(globalOrderRef);
+      
+      if (existingOrder.exists()) {
+        console.log('⚠️ Order already exists! Preventing duplicate creation:', orderData.orderId);
+        const existingData = existingOrder.data();
+        
+        // Return existing order data
+        return {
+          success: true,
+          orderId: orderData.orderId,
+          qrCodeData: existingData.qrCode ? {
+            qrCode: existingData.qrCode,
+            qrCodeUrl: existingData.qrCodeUrl,
+            activationCode: existingData.activationCode,
+            iccid: existingData.iccid,
+            directAppleInstallationUrl: existingData.directAppleInstallationUrl
+          } : null,
+          alreadyExists: true
+        };
+      }
+
       // Check if we're in test mode
       const stripeMode = await configService.getStripeMode();
       const isTestMode = stripeMode === 'test' || stripeMode === 'sandbox';
       
-      console.log('🛒 Creating RoamJet order...');
+      console.log('🛒 Creating NEW RoamJet order...');
       console.log('🔍 Stripe Mode:', stripeMode, '| Test Mode:', isTestMode);
       
       // For guest users, store in global orders collection
       const isGuest = !orderData.userId || orderData.isGuest;
       
-      // Global order reference (for all users)
-      const globalOrderRef = doc(db, 'orders', orderData.orderId);
-      
       // User-specific order reference (only for authenticated users)
       const userOrderRef = isGuest ? null : doc(db, 'users', orderData.userId, 'esims', orderData.orderId);
+      
+      // Check user collection too if authenticated
+      if (userOrderRef) {
+        const existingUserOrder = await getDoc(userOrderRef);
+        if (existingUserOrder.exists()) {
+          console.log('⚠️ Order already exists in user collection! Preventing duplicate creation');
+          return {
+            success: true,
+            orderId: orderData.orderId,
+            alreadyExists: true
+          };
+        }
+      }
       
       // Step 1: Create order via Python API
       console.log(`📞 Creating order via API (${isTestMode ? 'TEST' : 'LIVE'} mode)`);
@@ -545,16 +578,49 @@ const PaymentSuccess = () => {
           // Regular order flow
           console.log('📦 Processing as regular order');
 
-        // Create order record
-        const orderResult = await createOrderRecord(orderData);
-        
-        if (orderResult.success) {
-          console.log('✅ Order created successfully');
-          setOrderInfo(orderData);
-          if (orderResult.qrCodeData) {
-            setQrCodeData(orderResult.qrCodeData);
+          // CRITICAL: Check if order already exists before creating
+          const globalOrderRef = doc(db, 'orders', orderData.orderId);
+          const existingOrder = await getDoc(globalOrderRef);
+          
+          if (existingOrder.exists()) {
+            console.log('⚠️ Order already exists! Displaying existing order:', orderData.orderId);
+            const existingData = existingOrder.data();
+            
+            setOrderInfo({
+              ...orderData,
+              airaloOrderId: existingData.airaloOrderId
+            });
+            
+            if (existingData.qrCode) {
+              setQrCodeData({
+                qrCode: existingData.qrCode,
+                qrCodeUrl: existingData.qrCodeUrl,
+                activationCode: existingData.activationCode,
+                iccid: existingData.iccid,
+                directAppleInstallationUrl: existingData.directAppleInstallationUrl
+              });
+            }
+            
+            setOrderComplete(true);
+            toast.success('Order already processed. Displaying existing order.');
+            return;
           }
-          setOrderComplete(true);
+
+          // Create order record (only if it doesn't exist)
+          const orderResult = await createOrderRecord(orderData);
+          
+          if (orderResult.success) {
+            if (orderResult.alreadyExists) {
+              console.log('✅ Order already existed, displaying it');
+              toast.success('Order already processed.');
+            } else {
+              console.log('✅ Order created successfully');
+            }
+            setOrderInfo(orderData);
+            if (orderResult.qrCodeData) {
+              setQrCodeData(orderResult.qrCodeData);
+            }
+            setOrderComplete(true);
           }
         }
       } 
