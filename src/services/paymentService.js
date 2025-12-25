@@ -64,60 +64,53 @@ export const paymentService = {
     }
   },
 
-  // Create checkout session - USE FIREBASE FUNCTIONS (direct call)
+  // Create checkout session - USE NEXT.JS API ROUTE (Vercel Stripe Integration)
   async createCheckoutSession(orderData) {
     try {
-      console.log('🔍 Creating checkout session via Firebase Functions:', orderData);
+      console.log('🔍 Creating checkout session via Next.js API route:', orderData);
       
-      const { httpsCallable } = await import('firebase/functions');
-      const { functions } = await import('../firebase/config');
-      
-      // Verify functions is initialized
-      if (!functions) {
-        throw new Error('Firebase Functions not initialized');
-      }
-      
-      console.log('🔧 Firebase Functions instance:', functions);
-      console.log('🔧 Function region:', functions.region || 'default');
-      
-      const createCheckoutSessionFn = httpsCallable(functions, 'create_checkout_session');
-      
-      console.log('📞 Calling create_checkout_session function...');
-      
-      const result = await createCheckoutSessionFn({
-        order: orderData.orderId,
-        email: orderData.customerEmail,
-        name: orderData.planName,
-        total: orderData.amount,
-        currency: orderData.currency || 'usd',
-        domain: window.location.origin,
-        plan: orderData.planId,
-        isYearly: orderData.isYearly
+      const response = await fetch('/api/payments/create-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          order: orderData.orderId,
+          email: orderData.customerEmail,
+          name: orderData.planName,
+          total: orderData.amount,
+          currency: orderData.currency || 'usd',
+          domain: window.location.origin,
+          plan: orderData.planId,
+          isYearly: orderData.isYearly
+        })
       });
       
-      console.log('✅ Checkout session created via Firebase Functions:', result.data);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(errorData.error || `Server error: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      console.log('✅ Checkout session created via Next.js API:', result);
       
       // Redirect immediately to Stripe checkout
-      if (result.data && result.data.sessionUrl) {
-        window.location.href = result.data.sessionUrl;
-        return result.data;
+      if (result && result.sessionUrl) {
+        window.location.href = result.sessionUrl;
+        return result;
       } else {
         console.error('❌ Response missing sessionUrl:', result);
-        throw new Error('No session URL received from Firebase Function');
+        throw new Error('No session URL received from API');
       }
     } catch (error) {
       console.error('❌ Error creating checkout session:', error);
-      console.error('❌ Error code:', error.code);
       console.error('❌ Error message:', error.message);
-      console.error('❌ Error details:', error.details);
       
       // Provide more helpful error messages
-      if (error.code === 'functions/internal') {
-        throw new Error(`Firebase Function error: ${error.message}. Check Firebase Console → Functions → Logs for details.`);
-      } else if (error.code === 'functions/unauthenticated') {
-        throw new Error('Authentication required. Please log in and try again.');
-      } else if (error.code === 'functions/permission-denied') {
-        throw new Error('Permission denied. Please check your account permissions.');
+      if (error.message.includes('CORS')) {
+        throw new Error('CORS error. Please check API route configuration.');
+      } else if (error.message.includes('Stripe configuration')) {
+        throw new Error('Stripe configuration error. Please check Vercel Stripe integration settings.');
       }
       
       throw error;

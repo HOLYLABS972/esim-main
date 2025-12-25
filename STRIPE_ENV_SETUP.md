@@ -1,10 +1,19 @@
 # Stripe Environment Variables Setup
 
-## Required Environment Variables
+## Using Vercel Stripe Integration (Recommended)
 
-### For Vercel Deployment
+The easiest way to set up Stripe is through Vercel's Stripe integration:
 
-Add these environment variables in your Vercel project settings:
+1. Go to your Vercel project dashboard
+2. Navigate to **Settings** → **Integrations**
+3. Find and connect the **Stripe** integration
+4. This automatically provides `STRIPE_SECRET_KEY` and `STRIPE_PUBLISHABLE_KEY` environment variables
+
+The checkout session endpoint (`/api/payments/create-checkout-session`) will automatically use these variables.
+
+## Manual Environment Variables Setup
+
+If you prefer to set environment variables manually, add these in your Vercel project settings:
 
 #### Stripe Publishable Keys (Frontend - Public)
 These are safe to expose in the frontend and must start with `NEXT_PUBLIC_`:
@@ -81,24 +90,24 @@ The code checks for keys in this order:
 3. Environment variable: `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY_LIVE`
 4. Environment variable: `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`
 
-### Secret Key (Backend):
-1. Environment variable: `STRIPE_LIVE_SECRET_KEY` (for live mode)
-2. Environment variable: `STRIPE_SECRET_KEY` (for live mode)
-3. Environment variable: `STRIPE_KEY` (for live mode)
-4. Environment variable: `STRIPE_TEST_SECRET_KEY` (for test mode)
-5. Environment variable: `STRIPE_TEST_KEY` (for test mode)
-6. Firestore config: `config/stripe` → `liveSecretKey` or `live_secret_key`
+### Secret Key (Backend - Checkout Session Endpoint):
+1. **Vercel Stripe Integration**: `STRIPE_SECRET_KEY` (automatically provided by Vercel integration)
+2. Environment variable: `STRIPE_LIVE_SECRET_KEY` (for live mode)
+3. Environment variable: `STRIPE_SECRET_KEY` (fallback if not from integration)
+4. Environment variable: `STRIPE_KEY` (for live mode)
+5. Environment variable: `STRIPE_TEST_SECRET_KEY` (for test mode)
+6. Environment variable: `STRIPE_TEST_KEY` (for test mode)
 
-## Alternative: Firestore Configuration
+**Note**: The checkout session endpoint (`/api/payments/create-checkout-session`) uses only environment variables and no longer uses Firebase Remote Config.
 
-Instead of environment variables, you can store keys in Firestore:
+## Checkout Session Endpoint
 
-1. Go to Firestore Console
-2. Create/Update document: `config/stripe`
-3. Add fields:
-   - `livePublishableKey`: `pk_live_...`
-   - `liveSecretKey`: `sk_live_...` (for server-side use)
-   - `mode`: `live` or `test`
+The `/api/payments/create-checkout-session` endpoint uses environment variables only:
+- **Priority 1**: `STRIPE_SECRET_KEY` from Vercel Stripe integration
+- **Priority 2**: Mode-specific keys (`STRIPE_LIVE_SECRET_KEY` or `STRIPE_TEST_SECRET_KEY`)
+- **Priority 3**: Fallback keys (`STRIPE_KEY`, `STRIPE_TEST_KEY`)
+
+This endpoint no longer uses Firebase Remote Config or Firestore.
 
 ## Testing
 

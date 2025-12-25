@@ -4,193 +4,65 @@ import Stripe from 'stripe';
 export const dynamic = 'force-dynamic';
 
 /**
- * Get Stripe key from Firebase Remote Config (like mobile app) or environment variables
+ * Get Stripe secret key from environment variables (Vercel Stripe integration)
+ * Priority: Vercel integration STRIPE_SECRET_KEY > mode-specific keys > fallback keys
  */
-async function getStripeKey() {
+function getStripeKey() {
   // Check if we're in test mode
   const isTest = process.env.STRIPE_MODE === 'test' || process.env.STRIPE_MODE === 'sandbox';
   
-  console.log(`🔍 Getting Stripe ${isTest ? 'test' : 'live'} secret key...`);
+  console.log(`🔍 Getting Stripe ${isTest ? 'test' : 'live'} secret key from environment variables...`);
   
   let key = null;
   
-  // First, try Firebase Remote Config (like mobile app)
-  try {
-    const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'esim-f0e3e';
+  // Priority 1: Vercel Stripe Integration (automatically provided by Vercel)
+  if (process.env.STRIPE_SECRET_KEY) {
+    const vercelKey = process.env.STRIPE_SECRET_KEY;
+    const isVercelKeyTest = vercelKey.startsWith('sk_test_');
+    const isVercelKeyLive = vercelKey.startsWith('sk_live_');
     
-    // Get access token for Firebase Remote Config API
-    let accessToken = null;
-    
-    try {
-      const { GoogleAuth } = await import('google-auth-library');
-      const auth = new GoogleAuth({
-        scopes: ['https://www.googleapis.com/auth/firebase.remoteconfig'],
-        projectId: projectId
-      });
-      const client = await auth.getClient();
-      const tokenResponse = await client.getAccessToken();
-      accessToken = tokenResponse.token;
-    } catch (authError) {
-      console.warn('⚠️ Could not get access token for Remote Config:', authError.message);
+    // Use Vercel key if mode matches or if we can't determine mode
+    if ((isTest && isVercelKeyTest) || (!isTest && isVercelKeyLive) || (!isVercelKeyTest && !isVercelKeyLive)) {
+      key = vercelKey;
+      console.log(`✅ Using STRIPE_SECRET_KEY from Vercel integration (${isVercelKeyTest ? 'TEST' : isVercelKeyLive ? 'LIVE' : 'UNKNOWN'} mode)`);
+      return key;
+    } else {
+      console.log(`⚠️ Vercel STRIPE_SECRET_KEY is ${isVercelKeyTest ? 'TEST' : 'LIVE'} but requested mode is ${isTest ? 'TEST' : 'LIVE'}, trying mode-specific keys...`);
     }
-    
-    if (accessToken) {
-      // Fetch Remote Config values using REST API
-      const remoteConfigUrl = `https://firebaseremoteconfig.googleapis.com/v1/projects/${projectId}/remoteConfig`;
-      const response = await fetch(remoteConfigUrl, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Accept': 'application/json'
-        }
-      });
-      
-      if (response.ok) {
-        const remoteConfig = await response.json();
-        const parameters = remoteConfig.parameters || {};
-        
-        console.log('📋 Firebase Remote Config fetched successfully');
-        console.log('📋 Remote Config structure:', JSON.stringify(remoteConfig, null, 2).substring(0, 500));
-        console.log('📋 Available parameter keys:', Object.keys(parameters).join(', ') || 'none');
-        
-        // Log all parameter names for debugging
-        if (Object.keys(parameters).length > 0) {
-          console.log('📋 All parameters:', Object.keys(parameters));
-          // Log first parameter structure to understand format
-          const firstParam = Object.keys(parameters)[0];
-          console.log(`📋 Sample parameter "${firstParam}" structure:`, JSON.stringify(parameters[firstParam], null, 2));
-        }
-        
-        // Use the same parameter names as Python functions and mobile app
-        // Python functions use: 'stripe_test_key' and 'stripe_server_key'
-        const paramName = isTest ? 'stripe_test_key' : 'stripe_server_key';
-        const param = parameters[paramName];
-        
-        if (param) {
-          console.log(`🔍 Found parameter "${paramName}", structure:`, Object.keys(param));
-          
-          // Try serverValue first (for server-side parameters) - like Python functions do
-          if (param.serverValue) {
-            const serverVal = param.serverValue;
-            if (typeof serverVal === 'object' && serverVal.value) {
-              key = serverVal.value;
-              console.log(`✅ Found ${isTest ? 'TEST' : 'LIVE'} secret key from serverValue (length: ${key.length})`);
-            } else if (typeof serverVal === 'string') {
-              key = serverVal;
-              console.log(`✅ Found ${isTest ? 'TEST' : 'LIVE'} secret key from serverValue (length: ${key.length})`);
-            }
-          }
-          
-          // Fallback to defaultValue (for client-side parameters) - like Python functions do
-          if (!key && param.defaultValue) {
-            const defaultVal = param.defaultValue;
-            if (typeof defaultVal === 'object' && defaultVal.value) {
-              key = defaultVal.value;
-              console.log(`✅ Found ${isTest ? 'TEST' : 'LIVE'} secret key from defaultValue (length: ${key.length})`);
-            } else if (typeof defaultVal === 'string') {
-              key = defaultVal;
-              console.log(`✅ Found ${isTest ? 'TEST' : 'LIVE'} secret key from defaultValue (length: ${key.length})`);
-            }
-          }
-          
-          if (key) {
-            console.log(`✅ Using ${isTest ? 'TEST' : 'LIVE'} secret key from Firebase Remote Config (parameter: "${paramName}")`);
-            return key;
-          } else {
-            console.log(`⚠️ Parameter "${paramName}" exists but has no serverValue or defaultValue`);
-            console.log(`   Parameter structure:`, JSON.stringify(param, null, 2));
-          }
-        } else {
-          // Also try alternative names as fallback
-          const altParamNames = isTest 
-            ? ['stripe_test_secret_key', 'stripeTestSecretKey']
-            : ['stripe_live_secret_key', 'stripeLiveSecretKey', 'stripe_live_key'];
-          
-          for (const altName of altParamNames) {
-            const altParam = parameters[altName];
-            if (altParam) {
-              console.log(`🔍 Found alternative parameter "${altName}"`);
-              // Try same extraction logic
-              if (altParam.serverValue) {
-                const serverVal = altParam.serverValue;
-                key = (typeof serverVal === 'object' && serverVal.value) ? serverVal.value : (typeof serverVal === 'string' ? serverVal : null);
-              }
-              if (!key && altParam.defaultValue) {
-                const defaultVal = altParam.defaultValue;
-                key = (typeof defaultVal === 'object' && defaultVal.value) ? defaultVal.value : (typeof defaultVal === 'string' ? defaultVal : null);
-              }
-              if (key) {
-                console.log(`✅ Using ${isTest ? 'TEST' : 'LIVE'} secret key from alternative parameter "${altName}"`);
-                return key;
-              }
-            }
-          }
-        }
-        
-        console.log(`⚠️ No ${isTest ? 'test' : 'live'} secret key found in Remote Config`);
-        console.log(`   Looking for: "${isTest ? 'stripe_test_key' : 'stripe_server_key'}" (same as Python functions)`);
-      } else {
-        const errorText = await response.text();
-        console.error('❌ Could not fetch Remote Config:', response.status, errorText);
-        console.error('❌ Response headers:', Object.fromEntries(response.headers.entries()));
-      }
-    }
-  } catch (remoteConfigError) {
-    console.warn('⚠️ Could not load from Firebase Remote Config:', remoteConfigError.message);
   }
   
-  // Fallback to environment variables
-  console.log('🔍 Falling back to environment variables...');
-  
+  // Priority 2: Mode-specific environment variables
   if (isTest) {
     key = process.env.STRIPE_TEST_SECRET_KEY 
-      || process.env.STRIPE_TEST_KEY
-      || process.env.NEXT_PUBLIC_STRIPE_TEST_SECRET_KEY
-      || process.env.NEXT_PUBLIC_STRIPE_TEST_KEY;
-    console.log('   STRIPE_TEST_SECRET_KEY:', process.env.STRIPE_TEST_SECRET_KEY ? 'SET ✅' : 'NOT SET');
-    console.log('   STRIPE_TEST_KEY:', process.env.STRIPE_TEST_KEY ? 'SET ✅' : 'NOT SET');
-    console.log('   NEXT_PUBLIC_STRIPE_TEST_SECRET_KEY:', process.env.NEXT_PUBLIC_STRIPE_TEST_SECRET_KEY ? 'SET ⚠️' : 'NOT SET');
+      || process.env.STRIPE_TEST_KEY;
+    if (key) {
+      console.log('✅ Using test secret key from environment variables');
+      return key;
+    }
   } else {
     key = process.env.STRIPE_LIVE_SECRET_KEY 
-      || process.env.STRIPE_SECRET_KEY 
-      || process.env.STRIPE_KEY
-      || process.env.NEXT_PUBLIC_STRIPE_LIVE_SECRET_KEY
-      || process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY
-      || process.env.NEXT_PUBLIC_STRIPE_KEY;
-    console.log('   STRIPE_LIVE_SECRET_KEY:', process.env.STRIPE_LIVE_SECRET_KEY ? 'SET ✅' : 'NOT SET');
-    console.log('   STRIPE_SECRET_KEY:', process.env.STRIPE_SECRET_KEY ? 'SET ✅' : 'NOT SET');
-    console.log('   STRIPE_KEY:', process.env.STRIPE_KEY ? 'SET ✅' : 'NOT SET');
-    console.log('   NEXT_PUBLIC_STRIPE_LIVE_SECRET_KEY:', process.env.NEXT_PUBLIC_STRIPE_LIVE_SECRET_KEY ? 'SET ⚠️' : 'NOT SET');
-    console.log('   STRIPE_MODE:', process.env.STRIPE_MODE || 'not set (defaulting to live)');
+      || process.env.STRIPE_SECRET_KEY  // Fallback to Vercel key if mode-specific not found
+      || process.env.STRIPE_KEY;
+    if (key) {
+      console.log('✅ Using live secret key from environment variables');
+      return key;
+    }
   }
   
+  // Error if no key found
   if (!key) {
-    // List all Stripe-related env vars for debugging
     const allStripeVars = Object.keys(process.env)
       .filter(k => k.toUpperCase().includes('STRIPE'))
       .map(k => `${k} (${process.env[k] ? 'SET' : 'NOT SET'})`)
       .join(', ');
     throw new Error(
       `Stripe ${isTest ? 'test' : 'live'} secret key not found.\n` +
-      `Checked: Firebase Remote Config parameter "${isTest ? 'stripe_test_secret_key' : 'stripe_live_secret_key'}" (not found or not published).\n` +
-      `Also checked environment variables: ${allStripeVars || 'none found'}.\n` +
-      `💡 Solution: Add parameter "${isTest ? 'stripe_test_key' : 'stripe_server_key'}" to Firebase Remote Config and PUBLISH it. ` +
-      `Go to Firebase Console → Remote Config → Add parameter → Name: "${isTest ? 'stripe_test_key' : 'stripe_server_key'}" → Value: "sk_${isTest ? 'test' : 'live'}_..." → Publish. ` +
-      `(Note: Use "stripe_test_key" and "stripe_server_key" - same names as Python functions)`
+      `Checked environment variables: ${allStripeVars || 'none found'}.\n` +
+      `💡 Solution: Connect Stripe integration in Vercel (provides STRIPE_SECRET_KEY automatically) ` +
+      `or set ${isTest ? 'STRIPE_TEST_SECRET_KEY' : 'STRIPE_LIVE_SECRET_KEY'} in Vercel environment variables.`
     );
   }
   
-  // Warn if using NEXT_PUBLIC_ prefix (not secure for secret keys)
-  if (key && (process.env.NEXT_PUBLIC_STRIPE_TEST_SECRET_KEY || process.env.NEXT_PUBLIC_STRIPE_LIVE_SECRET_KEY)) {
-    console.warn('⚠️ WARNING: Using NEXT_PUBLIC_ prefix for secret key is not recommended for security!');
-  }
-  
-  const source = key === process.env.NEXT_PUBLIC_STRIPE_TEST_SECRET_KEY || key === process.env.NEXT_PUBLIC_STRIPE_LIVE_SECRET_KEY 
-    ? 'environment variables' 
-    : (key === process.env.STRIPE_TEST_SECRET_KEY || key === process.env.STRIPE_LIVE_SECRET_KEY || key === process.env.STRIPE_SECRET_KEY || key === process.env.STRIPE_KEY
-      ? 'environment variables'
-      : 'Firebase Remote Config');
-  console.log(`✅ Stripe ${isTest ? 'test' : 'live'} secret key found from ${source} (length: ${key.length})`);
   return key;
 }
 
@@ -231,10 +103,10 @@ export async function POST(request) {
       );
     }
     
-    // Get Stripe key and initialize Stripe (from Firebase Remote Config or environment variables)
+    // Get Stripe key and initialize Stripe (from Vercel integration or environment variables)
     let stripeKey;
     try {
-      stripeKey = await getStripeKey();
+      stripeKey = getStripeKey();
       console.log('🔑 Stripe key retrieved:', stripeKey ? `Found (length: ${stripeKey.length})` : 'NOT FOUND');
     } catch (keyError) {
       console.error('❌ Error getting Stripe key:', keyError);
@@ -256,7 +128,7 @@ export async function POST(request) {
       return NextResponse.json(
         {
           success: false,
-          error: 'Stripe secret key not configured. Please add stripe_live_secret_key to Firebase Remote Config or set STRIPE_LIVE_SECRET_KEY in environment variables.',
+          error: 'Stripe secret key not configured. Please connect Stripe integration in Vercel or set STRIPE_SECRET_KEY/STRIPE_LIVE_SECRET_KEY in environment variables.',
         },
         {
           status: 500,
