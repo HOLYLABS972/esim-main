@@ -175,7 +175,7 @@ export async function POST(request) {
           }
         }
 
-        // DIRECTLY CALL AIRALO API (Firestore trigger has permission issues, so we do it here)
+        // DIRECTLY CALL AIRALO API - No Firebase Functions needed for web purchases
         try {
           console.log('🚀 Calling Airalo API directly from webhook...');
           
@@ -326,15 +326,24 @@ export async function POST(request) {
           });
 
           console.log('✅ Order created and saved successfully!');
+          console.log('✅ Order ID:', finalOrderId);
+          console.log('✅ Airalo Order ID:', airaloData.id);
+          console.log('✅ SIMs count:', simsData.length);
           
         } catch (apiError) {
           console.error('❌ Error calling Airalo API:', apiError);
+          console.error('❌ Error stack:', apiError.stack);
           await pendingOrderRef.update({
             processed: false,
             error: apiError.message,
+            errorStack: apiError.stack,
             errorAt: FieldValue.serverTimestamp()
           });
-          throw apiError;
+          // Return error so Stripe knows webhook failed
+          return NextResponse.json({
+            success: false,
+            error: `Failed to create order: ${apiError.message}`
+          }, { status: 500 });
         }
 
         // Also store in stripe_payments collection for tracking
@@ -359,9 +368,11 @@ export async function POST(request) {
 
       } catch (firebaseError) {
         console.error('❌ Error storing order in Firestore:', firebaseError);
+        console.error('❌ Error stack:', firebaseError.stack);
         return NextResponse.json({
           success: false,
-          error: firebaseError.message
+          error: firebaseError.message,
+          details: firebaseError.stack
         }, { status: 500 });
       }
     }

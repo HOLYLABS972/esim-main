@@ -579,43 +579,107 @@ const PaymentSuccess = () => {
             return;
           }
         } else {
-          // Regular order flow - ONLY FETCH, NO CREATION
-          console.log('📦 Fetching order data (read-only mode)');
+          // Regular order flow - ONLY FETCH, NO CREATION (like Stripe)
+          // Order creation is handled by Coinbase webhook - we just check if it exists
+          console.log('💰 Processing Coinbase payment success (read-only mode)');
+          console.log('🔍 Checking if order was created by webhook...');
 
-          // Fetch existing order from Firestore
-          const globalOrderRef = doc(db, 'orders', orderData.orderId);
-          const existingOrder = await getDoc(globalOrderRef);
-          
-          if (existingOrder.exists()) {
-            console.log('✅ Order found! Displaying:', orderData.orderId);
-            const existingData = existingOrder.data();
-            
-            setOrderInfo({
-              ...orderData,
-              airaloOrderId: existingData.airaloOrderId,
-              status: existingData.status
-            });
-            
-            if (existingData.qrCode) {
-              setQrCodeData({
-                qrCode: existingData.qrCode,
-                qrCodeUrl: existingData.qrCodeUrl,
-                activationCode: existingData.activationCode,
-                iccid: existingData.iccid,
-                directAppleInstallationUrl: existingData.directAppleInstallationUrl
+          try {
+            // Check if order was already created by webhook in the 'orders' collection
+            const orderRef = doc(db, 'orders', orderData.orderId);
+            let orderDoc = await getDoc(orderRef);
+
+            if (orderDoc.exists()) {
+              console.log('✅ Order found in Firestore (created by webhook). Displaying order details.');
+              const existingOrderData = orderDoc.data();
+
+              setOrderInfo({
+                orderId: orderData.orderId,
+                planId: existingOrderData.planId || orderData.planId,
+                planName: existingOrderData.planName || orderData.planName,
+                amount: existingOrderData.amount || orderData.amount,
+                currency: existingOrderData.currency || orderData.currency,
+                customerEmail: existingOrderData.customerEmail || orderData.customerEmail,
+                userId: existingOrderData.userId || orderData.userId,
+                paymentMethod: 'coinbase',
+                airaloOrderId: existingOrderData.airaloOrderId
               });
+
+              if (existingOrderData.esimData) {
+                setQrCodeData({
+                  qrCode: existingOrderData.esimData.qrcode,
+                  qrCodeUrl: existingOrderData.esimData.qrcode_url,
+                  activationCode: existingOrderData.esimData.activation_code,
+                  iccid: existingOrderData.esimData.iccid,
+                  directAppleInstallationUrl: existingOrderData.esimData.direct_apple_installation_url
+                });
+              } else if (existingOrderData.qrCode) {
+                // Fallback to old format
+                setQrCodeData({
+                  qrCode: existingOrderData.qrCode,
+                  qrCodeUrl: existingOrderData.qrCodeUrl,
+                  activationCode: existingOrderData.activationCode,
+                  iccid: existingOrderData.iccid,
+                  directAppleInstallationUrl: existingOrderData.directAppleInstallationUrl
+                });
+              }
+              setOrderComplete(true);
+              toast.success('Payment successful! Your eSIM is ready.');
+            } else {
+              console.log('⏳ Order not yet found in Firestore. Waiting for webhook to process...');
+              // Poll for order status if not immediately available
+              let attempts = 0;
+              const maxAttempts = 30; // 30 seconds max wait
+              const pollInterval = 1000; // 1 second
+
+              while (attempts < maxAttempts) {
+                orderDoc = await getDoc(orderRef); // Re-fetch
+                if (orderDoc.exists()) {
+                  console.log('✅ Order found after polling. Displaying order details.');
+                  const existingOrderData = orderDoc.data();
+
+                  setOrderInfo({
+                    orderId: orderData.orderId,
+                    planId: existingOrderData.planId || orderData.planId,
+                    planName: existingOrderData.planName || orderData.planName,
+                    amount: existingOrderData.amount || orderData.amount,
+                    currency: existingOrderData.currency || orderData.currency,
+                    customerEmail: existingOrderData.customerEmail || orderData.customerEmail,
+                    userId: existingOrderData.userId || orderData.userId,
+                    paymentMethod: 'coinbase',
+                    airaloOrderId: existingOrderData.airaloOrderId
+                  });
+
+                  if (existingOrderData.esimData) {
+                    setQrCodeData({
+                      qrCode: existingOrderData.esimData.qrcode,
+                      qrCodeUrl: existingOrderData.esimData.qrcode_url,
+                      activationCode: existingOrderData.esimData.activation_code,
+                      iccid: existingOrderData.esimData.iccid,
+                      directAppleInstallationUrl: existingOrderData.esimData.direct_apple_installation_url
+                    });
+                  } else if (existingOrderData.qrCode) {
+                    // Fallback to old format
+                    setQrCodeData({
+                      qrCode: existingOrderData.qrCode,
+                      qrCodeUrl: existingOrderData.qrCodeUrl,
+                      activationCode: existingOrderData.activationCode,
+                      iccid: existingOrderData.iccid,
+                      directAppleInstallationUrl: existingOrderData.directAppleInstallationUrl
+                    });
+                  }
+                  setOrderComplete(true);
+                  toast.success('Payment successful! Your eSIM is ready.');
+                  return;
+                }
+                attempts++;
+                await new Promise(resolve => setTimeout(resolve, pollInterval));
+              }
+              throw new Error('Order not found after payment. Please contact support.');
             }
-            
-            setOrderComplete(true);
-            toast.success('Order found!');
-          } else {
-            // Order doesn't exist yet - backend function should create it
-            console.log('⏳ Order not found yet. Backend function should create it.');
-            console.log('💡 Order will be created by webhook or backend function');
-            
-            setOrderInfo(orderData);
-            setOrderComplete(true);
-            toast.success('Payment successful! Your order is being processed by the backend.');
+          } catch (coinbaseProcessError) {
+            console.error('❌ Error processing Coinbase payment success:', coinbaseProcessError);
+            setError(`Error processing Coinbase payment: ${coinbaseProcessError.message}. Please contact support.`);
           }
         }
       } 
@@ -626,90 +690,123 @@ const PaymentSuccess = () => {
         console.log('🔍 Checking if order was created by webhook...');
         
         try {
-          // Check if order was already created by webhook
-          // Look in pending_orders or stripe_payments collection
+          // Get order ID from URL params - webhook saves with orderId from metadata
+          const orderIdFromUrl = searchParams.get('order');
+          // The webhook saves order with orderId from metadata, or sessionId as fallback
+          const orderId = orderIdFromUrl || sessionId;
+          
+          console.log('🔍 Looking for order with ID:', orderId, '(sessionId:', sessionId, ')');
+          
+          // CRITICAL: First check if order already exists in orders collection (idempotency)
+          // Try orderId first, then sessionId as fallback
+          let orderRef = doc(db, 'orders', orderId);
+          let orderDoc = await getDoc(orderRef);
+          
+          // If not found with orderId, try sessionId
+          if (!orderDoc.exists() && sessionId && sessionId !== orderId) {
+            console.log('🔍 Order not found with orderId, trying sessionId...');
+            orderRef = doc(db, 'orders', sessionId);
+            orderDoc = await getDoc(orderRef);
+          }
+          
+          if (orderDoc.exists()) {
+            console.log('✅ Order already exists in Firestore (created by webhook). Displaying order details.');
+            const existingOrderData = orderDoc.data();
+            const foundOrderId = orderDoc.id; // Use the actual document ID
+
+            setOrderInfo({
+              orderId: foundOrderId,
+              planId: existingOrderData.planId || planId,
+              planName: decodeURIComponent(name || existingOrderData.planName || 'eSIM Plan'),
+              customerEmail: existingOrderData.customerEmail || email,
+              userId: existingOrderData.userId,
+              paymentMethod: 'stripe',
+              airaloOrderId: existingOrderData.airaloOrderId
+            });
+
+            if (existingOrderData.esimData) {
+              setQrCodeData({
+                qrCode: existingOrderData.esimData.qrcode,
+                qrCodeUrl: existingOrderData.esimData.qrcode_url,
+                activationCode: existingOrderData.esimData.activationCode,
+                iccid: existingOrderData.esimData.iccid,
+                directAppleInstallationUrl: existingOrderData.esimData.direct_apple_installation_url
+              });
+            }
+            
+            setOrderComplete(true);
+            toast.success('Payment successful! Your eSIM is ready.');
+            return; // Exit early - order already exists, safe to revisit
+          }
+          
+          // Order doesn't exist yet - check pending_orders to see if webhook is processing
           const pendingOrderRef = doc(db, 'pending_orders', sessionId);
           const pendingOrderDoc = await getDoc(pendingOrderRef);
           
-          let orderData = null;
-          let backendOrderId = null;
-          
           if (pendingOrderDoc.exists()) {
-            orderData = pendingOrderDoc.data();
-            console.log('✅ Found pending order from webhook:', orderData);
+            const pendingData = pendingOrderDoc.data();
+            console.log('⏳ Order found in pending_orders, webhook is processing...');
             
-            // Check if order has been processed
-            if (orderData.processed && orderData.backendOrderId) {
-              backendOrderId = orderData.backendOrderId;
-            } else {
-              // Order is still being processed by webhook
-              console.log('⏳ Order is being processed by webhook, waiting...');
+            // Poll for order to appear in orders collection (webhook creates it)
+            let attempts = 0;
+            const maxAttempts = 30; // 30 seconds max wait
+            
+            while (attempts < maxAttempts) {
+              // Check both orderId and sessionId
+              let checkOrderDoc = await getDoc(doc(db, 'orders', orderId));
+              if (!checkOrderDoc.exists() && sessionId && sessionId !== orderId) {
+                checkOrderDoc = await getDoc(doc(db, 'orders', sessionId));
+              }
               
-              // Poll for order completion
-              let attempts = 0;
-              const maxAttempts = 30;
-              
-              while (attempts < maxAttempts) {
-                const updatedDoc = await getDoc(pendingOrderRef);
-                if (updatedDoc.exists()) {
-                  const updatedData = updatedDoc.data();
-                  if (updatedData.processed && updatedData.backendOrderId) {
-                    backendOrderId = updatedData.backendOrderId;
-                    orderData = updatedData;
-                    console.log('✅ Order processed by webhook');
-                    break;
-                  }
+              if (checkOrderDoc.exists()) {
+                console.log('✅ Order found after polling. Displaying order details.');
+                const existingOrderData = checkOrderDoc.data();
+                const foundOrderId = checkOrderDoc.id;
+
+                setOrderInfo({
+                  orderId: foundOrderId,
+                  planId: existingOrderData.planId || planId,
+                  planName: decodeURIComponent(name || existingOrderData.planName || 'eSIM Plan'),
+                  customerEmail: existingOrderData.customerEmail || email,
+                  userId: existingOrderData.userId,
+                  paymentMethod: 'stripe',
+                  airaloOrderId: existingOrderData.airaloOrderId
+                });
+
+                if (existingOrderData.esimData) {
+                  setQrCodeData({
+                    qrCode: existingOrderData.esimData.qrcode,
+                    qrCodeUrl: existingOrderData.esimData.qrcode_url,
+                    activationCode: existingOrderData.esimData.activationCode,
+                    iccid: existingOrderData.esimData.iccid,
+                    directAppleInstallationUrl: existingOrderData.esimData.direct_apple_installation_url
+                  });
                 }
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                attempts++;
+                
+                setOrderComplete(true);
+                toast.success('Payment successful! Your eSIM is ready.');
+                return; // Safe to revisit - order exists
               }
+              
+              attempts++;
+              await new Promise(resolve => setTimeout(resolve, 1000));
             }
-          } else {
-            // Webhook hasn't processed yet or failed
-            // Fallback: Create order manually (but this should rarely happen)
-            console.warn('⚠️ Order not found in pending_orders, webhook may not have processed yet');
-            console.log('💡 This is safe - order will be created when webhook processes payment');
             
-            // Wait a bit for webhook to process
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            
-            // Check again
-            const retryDoc = await getDoc(pendingOrderRef);
-            if (retryDoc.exists()) {
-              orderData = retryDoc.data();
-              if (orderData.processed && orderData.backendOrderId) {
-                backendOrderId = orderData.backendOrderId;
-              }
-            }
-          }
-
-          if (backendOrderId) {
-            // Check order status
-            const statusRef = doc(db, 'order_status', backendOrderId);
-            const statusDoc = await getDoc(statusRef);
-            
-            if (statusDoc.exists()) {
-              const status = statusDoc.data();
-              console.log('📊 Order status:', status.status);
-            }
-
-            // Set order info for display
+            // After polling, if still not found, show processing message
+            console.log('⏳ Order still processing by webhook after polling');
             setOrderInfo({
-              orderId: backendOrderId,
-              planId: orderData?.planId || planId,
+              orderId: orderId,
+              planId: pendingData.planId || planId,
               planName: decodeURIComponent(name || 'eSIM Plan'),
-              customerEmail: orderData?.customerEmail || email
+              customerEmail: pendingData.customerEmail || email
             });
-            
             setOrderComplete(true);
-            toast.success('Payment successful! Your eSIM order is being processed.');
+            toast.success('Payment successful! Your order is being processed.');
           } else {
-            // Order is being processed by backend - just display status
-            console.log('⏳ Order is being processed by backend function/webhook');
-            // Order is still processing or not found
-            console.log('⏳ Order is still being processed by webhook');
+            // No pending order found - webhook may not have processed yet
+            console.log('⏳ Order not found yet. Webhook may still be processing...');
             setOrderInfo({
-              orderId: sessionId,
+              orderId: orderId,
               planId: planId,
               planName: decodeURIComponent(name || 'eSIM Plan'),
               customerEmail: email
@@ -722,7 +819,7 @@ const PaymentSuccess = () => {
           console.error('❌ Error checking order status:', checkError);
           // Don't show error - order might still be processing
           setOrderInfo({
-            orderId: sessionId,
+            orderId: orderParam || sessionId,
             planId: planId,
             planName: decodeURIComponent(name || 'eSIM Plan'),
             customerEmail: email
