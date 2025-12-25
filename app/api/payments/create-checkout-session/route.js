@@ -52,18 +52,25 @@ async function getStripeKey() {
         console.log('📋 Firebase Remote Config fetched successfully');
         
         // Try different parameter name formats (snake_case and camelCase)
+        // Remote Config parameters can have defaultValue.value or just value
         if (isTest) {
           key = parameters['stripe_test_secret_key']?.defaultValue?.value 
+            || parameters['stripe_test_secret_key']?.defaultValue
+            || parameters['stripe_test_secret_key']?.value
             || parameters['stripeTestSecretKey']?.defaultValue?.value
-            || parameters['stripe_test_secret_key']?.defaultValue?.value;
+            || parameters['stripeTestSecretKey']?.defaultValue
+            || parameters['stripeTestSecretKey']?.value;
           if (key) {
             console.log('✅ Using TEST secret key from Firebase Remote Config');
             return key;
           }
         } else {
           key = parameters['stripe_live_secret_key']?.defaultValue?.value 
+            || parameters['stripe_live_secret_key']?.defaultValue
+            || parameters['stripe_live_secret_key']?.value
             || parameters['stripeLiveSecretKey']?.defaultValue?.value
-            || parameters['stripe_live_secret_key']?.defaultValue?.value;
+            || parameters['stripeLiveSecretKey']?.defaultValue
+            || parameters['stripeLiveSecretKey']?.value;
           if (key) {
             console.log('✅ Using LIVE secret key from Firebase Remote Config');
             return key;
@@ -71,7 +78,8 @@ async function getStripeKey() {
         }
         
         console.log(`⚠️ No ${isTest ? 'test' : 'live'} secret key found in Remote Config`);
-        console.log('   Available parameters:', Object.keys(parameters).join(', '));
+        console.log('   Available parameters:', Object.keys(parameters).join(', ') || 'none');
+        console.log(`   Looking for: "${isTest ? 'stripe_test_secret_key' : 'stripe_live_secret_key'}" or "${isTest ? 'stripeTestSecretKey' : 'stripeLiveSecretKey'}"`);
       } else {
         const errorText = await response.text();
         console.warn('⚠️ Could not fetch Remote Config:', response.status, errorText);
@@ -114,10 +122,10 @@ async function getStripeKey() {
       .join(', ');
     throw new Error(
       `Stripe ${isTest ? 'test' : 'live'} secret key not found.\n` +
-      `Checked: Firestore remote config (config/stripe) and environment variables.\n` +
-      `Environment variables found: ${allStripeVars || 'none'}.\n` +
-      `💡 Solution: Add ${isTest ? 'testSecretKey' : 'liveSecretKey'} to Firestore config/stripe document, ` +
-      `or set ${isTest ? 'STRIPE_TEST_SECRET_KEY' : 'STRIPE_LIVE_SECRET_KEY'} in Vercel environment variables.`
+      `Checked: Firebase Remote Config parameter "${isTest ? 'stripe_test_secret_key' : 'stripe_live_secret_key'}" (not found or not published).\n` +
+      `Also checked environment variables: ${allStripeVars || 'none found'}.\n` +
+      `💡 Solution: Add parameter "${isTest ? 'stripe_test_secret_key' : 'stripe_live_secret_key'}" to Firebase Remote Config and PUBLISH it. ` +
+      `Go to Firebase Console → Remote Config → Add parameter → Name: "${isTest ? 'stripe_test_secret_key' : 'stripe_live_secret_key'}" → Value: "sk_${isTest ? 'test' : 'live'}_..." → Publish.`
     );
   }
   
@@ -126,7 +134,12 @@ async function getStripeKey() {
     console.warn('⚠️ WARNING: Using NEXT_PUBLIC_ prefix for secret key is not recommended for security!');
   }
   
-  console.log(`✅ Stripe ${isTest ? 'test' : 'live'} secret key found from ${key === process.env.NEXT_PUBLIC_STRIPE_TEST_SECRET_KEY || key === process.env.NEXT_PUBLIC_STRIPE_LIVE_SECRET_KEY ? 'environment variables' : 'Firestore'} (length: ${key.length})`);
+  const source = key === process.env.NEXT_PUBLIC_STRIPE_TEST_SECRET_KEY || key === process.env.NEXT_PUBLIC_STRIPE_LIVE_SECRET_KEY 
+    ? 'environment variables' 
+    : (key === process.env.STRIPE_TEST_SECRET_KEY || key === process.env.STRIPE_LIVE_SECRET_KEY || key === process.env.STRIPE_SECRET_KEY || key === process.env.STRIPE_KEY
+      ? 'environment variables'
+      : 'Firebase Remote Config');
+  console.log(`✅ Stripe ${isTest ? 'test' : 'live'} secret key found from ${source} (length: ${key.length})`);
   return key;
 }
 
@@ -167,12 +180,14 @@ export async function POST(request) {
       );
     }
     
-    // Get Stripe key and initialize Stripe (from Firestore remote config or environment variables)
+    // Get Stripe key and initialize Stripe (from Firebase Remote Config or environment variables)
     let stripeKey;
     try {
       stripeKey = await getStripeKey();
+      console.log('🔑 Stripe key retrieved:', stripeKey ? `Found (length: ${stripeKey.length})` : 'NOT FOUND');
     } catch (keyError) {
       console.error('❌ Error getting Stripe key:', keyError);
+      console.error('❌ Error stack:', keyError.stack);
       return NextResponse.json(
         {
           success: false,
@@ -186,10 +201,11 @@ export async function POST(request) {
     }
     
     if (!stripeKey) {
+      console.error('❌ Stripe key is null or undefined');
       return NextResponse.json(
         {
           success: false,
-          error: 'Stripe secret key not configured. Please set STRIPE_LIVE_SECRET_KEY or STRIPE_SECRET_KEY in environment variables.',
+          error: 'Stripe secret key not configured. Please add stripe_live_secret_key to Firebase Remote Config or set STRIPE_LIVE_SECRET_KEY in environment variables.',
         },
         {
           status: 500,
@@ -198,7 +214,52 @@ export async function POST(request) {
       );
     }
     
-    const stripe = new Stripe(stripeKey, { apiVersion: '2023-10-16' });
+    if (typeof stripeKey !== 'string' || stripeKey.trim().length === 0) {
+      console.error('❌ Stripe key is invalid:', typeof stripeKey, stripeKey);
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Stripe secret key is invalid. Please check your configuration.',
+        },
+        {
+          status: 500,
+          headers: corsHeaders,
+        }
+      );
+    }
+    
+    console.log('🔐 Initializing Stripe with key:', stripeKey.substring(0, 7) + '...');
+    let stripe;
+    try {
+      stripe = new Stripe(stripeKey, { apiVersion: '2023-10-16' });
+      console.log('✅ Stripe initialized successfully');
+    } catch (stripeInitError) {
+      console.error('❌ Error initializing Stripe:', stripeInitError);
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Failed to initialize Stripe: ${stripeInitError.message}`,
+        },
+        {
+          status: 500,
+          headers: corsHeaders,
+        }
+      );
+    }
+    
+    if (!stripe || !stripe.checkout || !stripe.checkout.Session) {
+      console.error('❌ Stripe object is invalid:', { hasStripe: !!stripe, hasCheckout: !!stripe?.checkout, hasSession: !!stripe?.checkout?.Session });
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Stripe initialization failed. Please check your Stripe key.',
+        },
+        {
+          status: 500,
+          headers: corsHeaders,
+        }
+      );
+    }
     
     const domainClean = domain.replace(/\/$/, '');
     const currencyLower = currency.toLowerCase();
