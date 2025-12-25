@@ -64,63 +64,36 @@ export const paymentService = {
     }
   },
 
-  // Create checkout session - USE NEXT.JS API ROUTE (proxies to Firebase Function to avoid CORS)
+  // Create checkout session - USE FIREBASE FUNCTIONS (direct call)
   async createCheckoutSession(orderData) {
     try {
-      console.log('🔍 Creating checkout session via Next.js API (proxies to Firebase Function):', orderData);
+      console.log('🔍 Creating checkout session via Firebase Functions:', orderData);
       
-      // Get auth token if user is logged in
-      const { auth } = await import('../firebase/config');
-      const user = auth.currentUser;
-      let idToken = null;
+      const { httpsCallable } = await import('firebase/functions');
+      const { functions } = await import('../firebase/config');
       
-      if (user) {
-        try {
-          idToken = await user.getIdToken();
-        } catch (authError) {
-          console.warn('⚠️ Could not get auth token:', authError);
-        }
-      }
+      const createCheckoutSessionFn = httpsCallable(functions, 'create_checkout_session');
       
-      const headers = {
-        'Content-Type': 'application/json',
-      };
-      
-      if (idToken) {
-        headers['Authorization'] = `Bearer ${idToken}`;
-      }
-      
-      // Call Next.js API route which proxies to Firebase Function
-      const response = await fetch('/api/payments/create-checkout-session', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          order: orderData.orderId,
-          email: orderData.customerEmail,
-          name: orderData.planName,
-          total: orderData.amount,
-          currency: orderData.currency || 'usd',
-          domain: window.location.origin,
-          plan: orderData.planId,
-          isYearly: orderData.isYearly
-        })
+      const result = await createCheckoutSessionFn({
+        order: orderData.orderId,
+        email: orderData.customerEmail,
+        name: orderData.planName,
+        total: orderData.amount,
+        currency: orderData.currency || 'usd',
+        domain: window.location.origin,
+        plan: orderData.planId,
+        isYearly: orderData.isYearly
       });
       
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `Request failed with status ${response.status}`);
-      }
-      
-      const result = await response.json();
-      console.log('✅ Checkout session created:', result);
+      console.log('✅ Checkout session created via Firebase Functions:', result.data);
       
       // Redirect immediately to Stripe checkout
-      if (result.sessionUrl) {
-        window.location.href = result.sessionUrl;
-        return result;
+      if (result.data.sessionUrl) {
+        window.location.href = result.data.sessionUrl;
+        return result.data;
       } else {
-        console.error('❌ Response missing sessionUrl:', result);
-        throw new Error('No session URL received');
+        console.error('❌ Response missing sessionUrl:', result.data);
+        throw new Error('No session URL received from Firebase Function');
       }
     } catch (error) {
       console.error('❌ Error creating checkout session:', error);
