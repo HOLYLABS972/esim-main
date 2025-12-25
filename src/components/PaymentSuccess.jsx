@@ -92,8 +92,12 @@ const PaymentSuccess = () => {
     }
   };
 
-  // Create order record in Firebase and process with RoamJet API
+  // DEPRECATED: Order creation is now handled by backend functions only
+  // This function is kept for reference but should not be called
+  // All order creation should happen via webhooks or backend functions
   const createOrderRecord = async (orderData) => {
+    console.warn('⚠️ createOrderRecord should not be called! Order creation is handled by backend.');
+    throw new Error('Order creation is handled by backend functions. This function should not be called.');
     try {
       // CRITICAL: Check if order already exists to prevent duplicate charges
       const globalOrderRef = doc(db, 'orders', orderData.orderId);
@@ -575,20 +579,21 @@ const PaymentSuccess = () => {
             return;
           }
         } else {
-          // Regular order flow
-          console.log('📦 Processing as regular order');
+          // Regular order flow - ONLY FETCH, NO CREATION
+          console.log('📦 Fetching order data (read-only mode)');
 
-          // CRITICAL: Check if order already exists before creating
+          // Fetch existing order from Firestore
           const globalOrderRef = doc(db, 'orders', orderData.orderId);
           const existingOrder = await getDoc(globalOrderRef);
           
           if (existingOrder.exists()) {
-            console.log('⚠️ Order already exists! Displaying existing order:', orderData.orderId);
+            console.log('✅ Order found! Displaying:', orderData.orderId);
             const existingData = existingOrder.data();
             
             setOrderInfo({
               ...orderData,
-              airaloOrderId: existingData.airaloOrderId
+              airaloOrderId: existingData.airaloOrderId,
+              status: existingData.status
             });
             
             if (existingData.qrCode) {
@@ -602,25 +607,15 @@ const PaymentSuccess = () => {
             }
             
             setOrderComplete(true);
-            toast.success('Order already processed. Displaying existing order.');
-            return;
-          }
-
-          // Create order record (only if it doesn't exist)
-          const orderResult = await createOrderRecord(orderData);
-          
-          if (orderResult.success) {
-            if (orderResult.alreadyExists) {
-              console.log('✅ Order already existed, displaying it');
-              toast.success('Order already processed.');
-            } else {
-              console.log('✅ Order created successfully');
-            }
+            toast.success('Order found!');
+          } else {
+            // Order doesn't exist yet - backend function should create it
+            console.log('⏳ Order not found yet. Backend function should create it.');
+            console.log('💡 Order will be created by webhook or backend function');
+            
             setOrderInfo(orderData);
-            if (orderResult.qrCodeData) {
-              setQrCodeData(orderResult.qrCodeData);
-            }
             setOrderComplete(true);
+            toast.success('Payment successful! Your order is being processed by the backend.');
           }
         }
       } 
@@ -708,65 +703,9 @@ const PaymentSuccess = () => {
             
             setOrderComplete(true);
             toast.success('Payment successful! Your eSIM order is being processed.');
-          } else if (orderData && orderData.readyToProcess && !orderData.processed) {
-            // Order is ready but not processed yet - trigger backend function
-            console.log('📞 Triggering backend order creation from webhook order...');
-            
-            if (!currentUser) {
-              console.warn('⚠️ User not authenticated, cannot trigger order creation');
-              setOrderInfo({
-                orderId: sessionId,
-                planId: planId,
-                planName: decodeURIComponent(name || 'eSIM Plan'),
-                customerEmail: email
-              });
-              setOrderComplete(true);
-              toast.success('Payment successful! Please log in to complete your order.');
-              return;
-            }
-
-            try {
-              const { httpsCallable } = await import('firebase/functions');
-              const { functions } = await import('../firebase/config');
-              const createOrderFn = httpsCallable(functions, 'create_order');
-              
-              const orderResult = await createOrderFn({
-                planId: orderData.planId || planId,
-                quantity: "1",
-                to_email: orderData.customerEmail || email,
-                description: `eSIM order for ${orderData.customerEmail || email}`,
-                airalo_client_id: orderData.airaloClientId
-              });
-
-              console.log('✅ Backend order created from webhook:', orderResult.data);
-              
-              // Update pending order with backend order ID
-              await pendingOrderRef.update({
-                processed: true,
-                backendOrderId: orderResult.data.orderId
-              });
-
-              setOrderInfo({
-                orderId: orderResult.data.orderId,
-                planId: orderData.planId || planId,
-                planName: decodeURIComponent(name || 'eSIM Plan'),
-                customerEmail: orderData.customerEmail || email
-              });
-              
-              setOrderComplete(true);
-              toast.success('Payment successful! Your eSIM order is being processed.');
-            } catch (triggerError) {
-              console.error('❌ Error triggering order creation:', triggerError);
-              setOrderInfo({
-                orderId: sessionId,
-                planId: planId,
-                planName: decodeURIComponent(name || 'eSIM Plan'),
-                customerEmail: email
-              });
-              setOrderComplete(true);
-              toast.success('Payment successful! Your order is being processed.');
-            }
           } else {
+            // Order is being processed by backend - just display status
+            console.log('⏳ Order is being processed by backend function/webhook');
             // Order is still processing or not found
             console.log('⏳ Order is still being processed by webhook');
             setOrderInfo({
