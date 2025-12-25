@@ -251,12 +251,20 @@ const EsimPlans = () => {
       for (const doc of querySnapshot.docs) {
         const countryData = { id: doc.id, ...doc.data() };
         
+        // Skip hidden countries
+        if (countryData.hidden === true) {
+          continue;
+        }
+        
         // Check if country name matches search term (including aliases)
         if (matchesCountrySearch(countryData.name, term)) {
           // Get plans for this country using country_codes array
           const plansQuery = query(collection(db, 'dataplans'), where('country_codes', 'array-contains', countryData.code));
           const plansSnapshot = await getDocs(plansQuery);
-          const plans = plansSnapshot.docs.map(planDoc => planDoc.data());
+          const plans = plansSnapshot.docs
+            .map(planDoc => planDoc.data())
+            // Filter out hidden and disabled plans
+            .filter(plan => plan.enabled !== false && plan.hidden !== true);
           
           // Filter out plans with invalid prices and calculate minimum
           const validPrices = plans
@@ -375,20 +383,168 @@ const EsimPlans = () => {
   // Load available plans for a specific country
   const loadAvailablePlansForCountry = async (countryCode) => {
     try {
-      // Query for plans that include this country
-      const plansQuery = query(
+      // Query for plans that include this country directly
+      const directPlansQuery = query(
         collection(db, 'dataplans'),
         where('country_codes', 'array-contains', countryCode)
       );
-      const querySnapshot = await getDocs(plansQuery);
+      const directPlansSnapshot = await getDocs(directPlansQuery);
       
-      const plans = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
+      const directPlans = directPlansSnapshot.docs
+        .map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }))
+        // Filter out hidden and disabled plans
+        .filter(plan => plan.enabled !== false && plan.hidden !== true);
       
-      // Filter out disabled plans (enabled !== false means enabled by default)
-      const enabledPlans = plans.filter(plan => plan.enabled !== false);
+      // Also query for regional plans that might include this country
+      // Regional plans might have country codes that don't include this country
+      // but are still valid for this country (e.g., "americanmex" plans for Mexico)
+      const allPlansQuery = query(collection(db, 'dataplans'));
+      const allPlansSnapshot = await getDocs(allPlansQuery);
+      
+      // Filter regional plans that might be relevant
+      const regionalPlans = allPlansSnapshot.docs
+        .map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }))
+        // Filter out hidden and disabled plans first
+        .filter(plan => plan.enabled !== false && plan.hidden !== true)
+        .filter(plan => {
+          // Check if it's a regional plan
+          const isRegional = plan.is_regional === true || 
+                           plan.type === 'regional' ||
+                           (plan.country_codes && plan.country_codes.length >= 2 && plan.country_codes.length < 10);
+          
+          if (!isRegional) return false;
+          
+          // Check if plan name/slug suggests it includes this country
+          const planName = (plan.name || plan.slug || '').toLowerCase();
+          const countryCodeLower = countryCode.toLowerCase();
+          
+          // Check if plan name includes country code or common country name patterns
+          const countryPatterns = {
+            'mx': ['mexico', 'mex', 'americanmex'],
+            'us': ['usa', 'united states', 'america', 'americanmex'],
+            'ca': ['canada', 'can'],
+            'gb': ['uk', 'united kingdom', 'britain'],
+            'ae': ['uae', 'united arab emirates', 'emirates'],
+            'kr': ['korea', 'south korea'],
+            'au': ['australia'],
+            'nz': ['new zealand'],
+            'za': ['south africa'],
+            'jp': ['japan'],
+            'cn': ['china'],
+            'in': ['india'],
+            'br': ['brazil'],
+            'fr': ['france'],
+            'de': ['germany'],
+            'it': ['italy'],
+            'es': ['spain'],
+            'nl': ['netherlands', 'holland'],
+            'ch': ['switzerland', 'swiss'],
+            'at': ['austria'],
+            'be': ['belgium'],
+            'dk': ['denmark'],
+            'se': ['sweden'],
+            'no': ['norway'],
+            'fi': ['finland'],
+            'pl': ['poland'],
+            'pt': ['portugal'],
+            'gr': ['greece'],
+            'ie': ['ireland'],
+            'cz': ['czech', 'czechia'],
+            'hu': ['hungary'],
+            'ro': ['romania'],
+            'bg': ['bulgaria'],
+            'hr': ['croatia'],
+            'sk': ['slovakia'],
+            'si': ['slovenia'],
+            'ee': ['estonia'],
+            'lv': ['latvia'],
+            'lt': ['lithuania'],
+            'mt': ['malta'],
+            'cy': ['cyprus'],
+            'lu': ['luxembourg'],
+            'is': ['iceland'],
+            'li': ['liechtenstein'],
+            'mc': ['monaco'],
+            'ad': ['andorra'],
+            'sm': ['san marino'],
+            'va': ['vatican'],
+            'ru': ['russia'],
+            'ua': ['ukraine'],
+            'tr': ['turkey'],
+            'eg': ['egypt'],
+            'sa': ['saudi arabia'],
+            'il': ['israel'],
+            'jo': ['jordan'],
+            'lb': ['lebanon'],
+            'kw': ['kuwait'],
+            'qa': ['qatar'],
+            'bh': ['bahrain'],
+            'om': ['oman'],
+            'my': ['malaysia'],
+            'sg': ['singapore'],
+            'th': ['thailand'],
+            'id': ['indonesia'],
+            'ph': ['philippines'],
+            'vn': ['vietnam'],
+            'tw': ['taiwan'],
+            'hk': ['hong kong'],
+            'mo': ['macau'],
+            'ar': ['argentina', 'latamlink', 'latam'],
+            'cl': ['chile', 'latamlink', 'latam'],
+            'co': ['colombia', 'latamlink', 'latam'],
+            'pe': ['peru', 'latamlink', 'latam'],
+            'ec': ['ecuador', 'latamlink', 'latam'],
+            'uy': ['uruguay', 'latamlink', 'latam'],
+            'py': ['paraguay', 'latamlink', 'latam'],
+            'bo': ['bolivia', 'latamlink', 'latam'],
+            've': ['venezuela', 'latamlink', 'latam'],
+            'cr': ['costa rica', 'latamlink', 'latam'],
+            'pa': ['panama', 'latamlink', 'latam'],
+            'gt': ['guatemala', 'latamlink', 'latam'],
+            'hn': ['honduras', 'latamlink', 'latam'],
+            'ni': ['nicaragua', 'latamlink', 'latam'],
+            'sv': ['el salvador', 'latamlink', 'latam'],
+            'do': ['dominican republic', 'dr', 'latamlink', 'latam'],
+            'jm': ['jamaica', 'latamlink', 'latam'],
+            'tt': ['trinidad', 'latamlink', 'latam'],
+            'bb': ['barbados', 'latamlink', 'latam'],
+            'bs': ['bahamas', 'latamlink', 'latam'],
+            'bz': ['belize', 'latamlink', 'latam'],
+            'gy': ['guyana', 'latamlink', 'latam'],
+            'sr': ['suriname', 'latamlink', 'latam'],
+            'gf': ['french guiana', 'latamlink', 'latam'],
+            'br': ['brazil', 'latamlink', 'latam']
+          };
+          
+          const patterns = countryPatterns[countryCodeLower] || [];
+          const matchesPattern = patterns.some(pattern => planName.includes(pattern));
+          
+          // Also check if plan name includes the country code
+          const matchesCode = planName.includes(countryCodeLower);
+          
+          return matchesPattern || matchesCode;
+        });
+      
+      // Combine direct plans and relevant regional plans, removing duplicates
+      const allPlans = [...directPlans, ...regionalPlans];
+      const uniquePlans = allPlans.filter((plan, index, self) => 
+        index === self.findIndex(p => p.id === plan.id)
+      );
+      
+      // Filter out disabled and hidden plans
+      // enabled !== false means enabled by default
+      // hidden !== true means visible by default
+      const enabledPlans = uniquePlans.filter(plan => 
+        plan.enabled !== false && plan.hidden !== true
+      );
+      
+      console.log(`📦 Loaded ${enabledPlans.length} plans for ${countryCode} (${directPlans.length} direct, ${regionalPlans.length} regional)`);
       
       setAvailablePlans(enabledPlans);
     } catch (error) {

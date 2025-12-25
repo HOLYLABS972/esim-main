@@ -97,8 +97,9 @@ export default function AiraloPackagesSection() {
       plansSnapshot.forEach((doc) => {
         const planData = doc.data();
         
-        // Only include enabled plans
-        if (planData.enabled === false) {
+        // Only include enabled and visible plans
+        // Skip if explicitly disabled or hidden
+        if (planData.enabled === false || planData.hidden === true) {
           return;
         }
         
@@ -197,19 +198,169 @@ export default function AiraloPackagesSection() {
 
   const loadAvailablePlansForCountry = async (countryCode) => {
     try {
-      const plansQuery = query(
+      // Query for plans that include this country directly
+      const directPlansQuery = query(
         collection(db, 'dataplans'),
         where('country_codes', 'array-contains', countryCode)
       );
-      const querySnapshot = await getDocs(plansQuery);
+      const directPlansSnapshot = await getDocs(directPlansQuery);
       
-      const plans = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
+      const directPlans = directPlansSnapshot.docs
+        .map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }))
+        // Filter out hidden and disabled plans
+        .filter(plan => plan.enabled !== false && plan.hidden !== true);
       
-      // Filter out disabled plans
-      const enabledPlans = plans.filter(plan => plan.enabled !== false);
+      // Also query for regional plans that might include this country
+      // Regional plans might have country codes that don't include this country
+      // but are still valid for this country (e.g., "americanmex" plans for Mexico)
+      const allPlansQuery = query(collection(db, 'dataplans'));
+      const allPlansSnapshot = await getDocs(allPlansQuery);
+      
+      // Filter regional plans that might be relevant
+      const regionalPlans = allPlansSnapshot.docs
+        .map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }))
+        // Filter out hidden and disabled plans first
+        .filter(plan => plan.enabled !== false && plan.hidden !== true)
+        .filter(plan => {
+          // Check if it's a regional plan
+          const isRegional = plan.is_regional === true || 
+                           plan.type === 'regional' ||
+                           (plan.country_codes && plan.country_codes.length >= 2 && plan.country_codes.length < 10);
+          
+          if (!isRegional) return false;
+          
+          // Check if plan name/slug suggests it includes this country
+          const planName = (plan.name || plan.slug || '').toLowerCase();
+          const countryCodeLower = countryCode.toLowerCase();
+          
+          // Check if plan name includes country code or common country name patterns
+          const countryPatterns = {
+            'mx': ['mexico', 'mex', 'americanmex'],
+            'us': ['usa', 'united states', 'america', 'americanmex'],
+            'ca': ['canada', 'can'],
+            'gb': ['uk', 'united kingdom', 'britain'],
+            'ae': ['uae', 'united arab emirates', 'emirates'],
+            'kr': ['korea', 'south korea'],
+            'au': ['australia'],
+            'nz': ['new zealand'],
+            'za': ['south africa'],
+            'jp': ['japan'],
+            'cn': ['china'],
+            'in': ['india'],
+            'br': ['brazil'],
+            'fr': ['france'],
+            'de': ['germany'],
+            'it': ['italy'],
+            'es': ['spain'],
+            'nl': ['netherlands', 'holland'],
+            'ch': ['switzerland', 'swiss'],
+            'at': ['austria'],
+            'be': ['belgium'],
+            'dk': ['denmark'],
+            'se': ['sweden'],
+            'no': ['norway'],
+            'fi': ['finland'],
+            'pl': ['poland'],
+            'pt': ['portugal'],
+            'gr': ['greece'],
+            'ie': ['ireland'],
+            'cz': ['czech', 'czechia'],
+            'hu': ['hungary'],
+            'ro': ['romania'],
+            'bg': ['bulgaria'],
+            'hr': ['croatia'],
+            'sk': ['slovakia'],
+            'si': ['slovenia'],
+            'ee': ['estonia'],
+            'lv': ['latvia'],
+            'lt': ['lithuania'],
+            'mt': ['malta'],
+            'cy': ['cyprus'],
+            'lu': ['luxembourg'],
+            'is': ['iceland'],
+            'li': ['liechtenstein'],
+            'mc': ['monaco'],
+            'ad': ['andorra'],
+            'sm': ['san marino'],
+            'va': ['vatican'],
+            'ru': ['russia'],
+            'ua': ['ukraine'],
+            'tr': ['turkey'],
+            'eg': ['egypt'],
+            'sa': ['saudi arabia'],
+            'il': ['israel'],
+            'jo': ['jordan'],
+            'lb': ['lebanon'],
+            'kw': ['kuwait'],
+            'qa': ['qatar'],
+            'bh': ['bahrain'],
+            'om': ['oman'],
+            'my': ['malaysia'],
+            'sg': ['singapore'],
+            'th': ['thailand'],
+            'id': ['indonesia'],
+            'ph': ['philippines'],
+            'vn': ['vietnam'],
+            'tw': ['taiwan'],
+            'hk': ['hong kong'],
+            'mo': ['macau'],
+            'ar': ['argentina', 'latamlink', 'latam'],
+            'cl': ['chile', 'latamlink', 'latam'],
+            'co': ['colombia', 'latamlink', 'latam'],
+            'pe': ['peru', 'latamlink', 'latam'],
+            'ec': ['ecuador', 'latamlink', 'latam'],
+            'uy': ['uruguay', 'latamlink', 'latam'],
+            'py': ['paraguay', 'latamlink', 'latam'],
+            'bo': ['bolivia', 'latamlink', 'latam'],
+            've': ['venezuela', 'latamlink', 'latam'],
+            'cr': ['costa rica', 'latamlink', 'latam'],
+            'pa': ['panama', 'latamlink', 'latam'],
+            'gt': ['guatemala', 'latamlink', 'latam'],
+            'hn': ['honduras', 'latamlink', 'latam'],
+            'ni': ['nicaragua', 'latamlink', 'latam'],
+            'sv': ['el salvador', 'latamlink', 'latam'],
+            'do': ['dominican republic', 'dr', 'latamlink', 'latam'],
+            'jm': ['jamaica', 'latamlink', 'latam'],
+            'tt': ['trinidad', 'latamlink', 'latam'],
+            'bb': ['barbados', 'latamlink', 'latam'],
+            'bs': ['bahamas', 'latamlink', 'latam'],
+            'bz': ['belize', 'latamlink', 'latam'],
+            'gy': ['guyana', 'latamlink', 'latam'],
+            'sr': ['suriname', 'latamlink', 'latam'],
+            'gf': ['french guiana', 'latamlink', 'latam'],
+            'br': ['brazil', 'latamlink', 'latam']
+          };
+          
+          const patterns = countryPatterns[countryCodeLower] || [];
+          const matchesPattern = patterns.some(pattern => planName.includes(pattern));
+          
+          // Also check if plan name includes the country code
+          const matchesCode = planName.includes(countryCodeLower);
+          
+          return matchesPattern || matchesCode;
+        });
+      
+      // Combine direct plans and relevant regional plans, removing duplicates
+      const allPlans = [...directPlans, ...regionalPlans];
+      const uniquePlans = allPlans.filter((plan, index, self) => 
+        index === self.findIndex(p => p.id === plan.id)
+      );
+      
+      // Filter out disabled and hidden plans
+      // enabled !== false means enabled by default
+      // hidden !== true means visible by default
+      const enabledPlans = uniquePlans.filter(plan => 
+        plan.enabled !== false && plan.hidden !== true
+      );
+      
+      console.log(`📦 Loaded ${enabledPlans.length} plans for ${countryCode} (${directPlans.length} direct, ${regionalPlans.length} regional)`);
+      
       setAvailablePlans(enabledPlans);
     } catch (error) {
       console.error('Error loading plans for country:', error);
@@ -217,6 +368,73 @@ export default function AiraloPackagesSection() {
     } finally {
       setLoadingPlans(false);
     }
+  };
+
+  // Map technical region identifiers to human-friendly names
+  const getFriendlyRegionName = (regionIdentifier) => {
+    if (!regionIdentifier) return 'Regional Plans';
+    
+    const lowerIdentifier = regionIdentifier.toLowerCase().trim();
+    
+    // Mapping of technical identifiers to friendly names
+    const regionMap = {
+      'eu': 'Europe',
+      'europe': 'Europe',
+      'european-union': 'Europe',
+      'eastern-europe': 'Eastern Europe',
+      'western-europe': 'Western Europe',
+      'scandinavia': 'Scandinavia',
+      'asia': 'Asia',
+      'asean': 'Southeast Asia',
+      'mena': 'Middle East & North Africa',
+      'middle-east': 'Middle East',
+      'middle east': 'Middle East',
+      'middle-east-and-north-africa': 'Middle East & North Africa',
+      'middle-east-north-africa': 'Middle East & North Africa',
+      'gcc': 'Gulf Countries',
+      'americas': 'Americas',
+      'north-america': 'North America',
+      'south-america': 'South America',
+      'central-america': 'Central America',
+      'latin-america': 'Latin America',
+      'latin america': 'Latin America',
+      'caribbean': 'Caribbean',
+      'africa': 'Africa',
+      'oceania': 'Oceania & Pacific',
+      'pacific': 'Oceania & Pacific',
+      'americanmex': 'Americas',
+      'america-mexico': 'Americas',
+      'us-mx': 'Americas',
+      'usa-mexico': 'Americas',
+      'north-america-mexico': 'Americas',
+      'americas-mexico': 'Americas',
+      'oceanlink': 'Oceania & Pacific',
+      'ocean-link': 'Oceania & Pacific',
+      'latamlink': 'Latin America',
+      'latam-link': 'Latin America',
+      'latam': 'Latin America',
+      'latin-america-link': 'Latin America',
+      'regional plans': 'Regional Plans',
+      'regional': 'Regional Plans'
+    };
+    
+    // Check exact match first
+    if (regionMap[lowerIdentifier]) {
+      return regionMap[lowerIdentifier];
+    }
+    
+    // Check if identifier contains any mapped key
+    for (const [key, friendlyName] of Object.entries(regionMap)) {
+      if (lowerIdentifier.includes(key) || key.includes(lowerIdentifier)) {
+        return friendlyName;
+      }
+    }
+    
+    // If no match, capitalize words nicely
+    return regionIdentifier
+      .split(/[-_\s]+/)
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
   };
 
   const organizePackages = (packagesData) => {
@@ -275,35 +493,39 @@ export default function AiraloPackagesSection() {
         // Determine region name for grouping
         let region = planRegion;
         
-        // If no region field set, try to infer from package slug or use a meaningful default
-        if (!region || region === '') {
-          // Try to extract region from slug (e.g., "europe-5gb" -> "europe")
-          if (planSlug) {
-            const regionalIdentifiers = [
-              'asia', 'europe', 'africa', 'americas', 'middle-east', 'middle east',
-              'oceania', 'caribbean', 'latin-america', 'latin america',
-              'north-america', 'south-america', 'central-america',
-              'eastern-europe', 'western-europe', 'scandinavia',
-              'asean', 'gcc', 'european-union', 'eu', 'mena'
-            ];
-            
-            // Check if slug contains any regional identifier
-            for (const identifier of regionalIdentifiers) {
-              if (planSlug.includes(identifier)) {
-                // Capitalize first letter of each word
-                region = identifier.split('-').map(word => 
-                  word.charAt(0).toUpperCase() + word.slice(1)
-                ).join(' ');
-                break;
+          // If no region field set, try to infer from package slug or use a meaningful default
+          if (!region || region === '') {
+            // Try to extract region from slug (e.g., "europe-5gb" -> "europe", "americanmex" -> "Americas")
+            if (planSlug || planName) {
+              const regionalIdentifiers = [
+                'asia', 'europe', 'africa', 'americas', 'middle-east', 'middle east',
+                'oceania', 'caribbean', 'latin-america', 'latin america',
+                'north-america', 'south-america', 'central-america',
+                'eastern-europe', 'western-europe', 'scandinavia',
+                'asean', 'gcc', 'european-union', 'eu', 'mena',
+                'americanmex', 'america-mexico', 'us-mx', 'usa-mexico',
+                'oceanlink', 'ocean-link', 'pacific', 'pacific-islands',
+                'latamlink', 'latam-link', 'latam', 'latin-america-link'
+              ];
+              
+              // Check if slug or name contains any regional identifier
+              for (const identifier of regionalIdentifiers) {
+                if (planSlug.includes(identifier) || planName.includes(identifier)) {
+                  // Use friendly region name mapping
+                  region = getFriendlyRegionName(identifier);
+                  break;
+                }
               }
+            }
+            
+            // If still no region found, use a generic name
+            if (!region || region === '') {
+              region = 'Regional Plans';
             }
           }
           
-          // If still no region found, use a generic name
-          if (!region || region === '') {
-            region = 'Regional Plans';
-          }
-        }
+          // Apply friendly name transformation to the final region
+          region = getFriendlyRegionName(region);
         
         if (!regional[region]) {
           regional[region] = [];
@@ -318,20 +540,34 @@ export default function AiraloPackagesSection() {
       // Regional packages typically have:
       // 1. Has type === 'regional'
       // 2. Name/slug matches known regional identifiers
+      // 3. Has multiple country codes (2-10 countries)
+      // 4. Contains regional keywords in name/slug
       const regionalIdentifiers = [
         'asia', 'europe', 'africa', 'americas', 'middle-east', 'middle east',
         'oceania', 'caribbean', 'latin-america', 'latin america',
         'north-america', 'south-america', 'central-america',
         'eastern-europe', 'western-europe', 'scandinavia',
         'asean', 'gcc', 'european-union', 'eu', 'mena',
-        'middle-east-and-north-africa', 'middle-east-north-africa'
+        'middle-east-and-north-africa', 'middle-east-north-africa',
+        'americanmex', 'america-mexico', 'us-mx', 'usa-mexico',
+        'north-america-mexico', 'americas-mexico',
+        'oceanlink', 'ocean-link', 'pacific', 'pacific-islands',
+        'latamlink', 'latam-link', 'latam', 'latin-america-link'
       ];
+      
+      // Check if plan name/slug contains any regional identifier (not just exact match)
+      const containsRegionalIdentifier = regionalIdentifiers.some(identifier => 
+        planSlug.includes(identifier) || planName.includes(identifier)
+      );
+      
+      // Check if plan has multiple country codes (2-10) - indicates regional
+      const hasMultipleCountries = countryCodes.length >= 2 && countryCodes.length < 10;
       
       const isRegional = 
         planType === 'regional' ||
-        regionalIdentifiers.includes(planSlug) ||
-        regionalIdentifiers.includes(planName) ||
-        (planRegion && planRegion !== '' && planRegion !== 'global' && regionalIdentifiers.includes(planRegion));
+        containsRegionalIdentifier ||
+        (planRegion && planRegion !== '' && planRegion !== 'global' && regionalIdentifiers.some(id => planRegion.includes(id))) ||
+        (hasMultipleCountries && !isGlobal); // Multiple countries but not global = regional
       
       // Categorize package (from dataplans collection, no nested packages)
       if (isGlobal) {
@@ -348,11 +584,33 @@ export default function AiraloPackagesSection() {
           // Try to find which regional identifier matched
           for (const identifier of regionalIdentifiers) {
             if (planSlug.includes(identifier) || planName.includes(identifier)) {
-              // Capitalize first letter of each word
-              region = identifier.split('-').map(word => 
-                word.charAt(0).toUpperCase() + word.slice(1)
-              ).join(' ');
+              // Use friendly region name mapping
+              region = getFriendlyRegionName(identifier);
               break;
+            }
+          }
+          
+          // If still no region but has multiple countries, try to infer from country codes
+          if ((!region || region === '') && hasMultipleCountries && countryCodes.length > 0) {
+            // Check if it's an Americas/Mexico regional plan
+            if (countryCodes.includes('MX') && countryCodes.includes('US')) {
+              region = 'Americas';
+            } else if (countryCodes.some(code => ['US', 'CA', 'MX'].includes(code))) {
+              region = 'Americas';
+            } else if (countryCodes.some(code => ['AU', 'NZ', 'FJ', 'PG', 'NC', 'PF'].includes(code))) {
+              // Oceania countries
+              region = 'Oceania & Pacific';
+            } else if (countryCodes.some(code => ['AE', 'SA', 'KW', 'QA', 'BH', 'OM'].includes(code))) {
+              // GCC countries
+              region = 'Gulf Countries';
+            } else if (countryCodes.some(code => ['SG', 'MY', 'TH', 'ID', 'PH', 'VN'].includes(code))) {
+              // ASEAN countries
+              region = 'Southeast Asia';
+            } else if (countryCodes.some(code => ['EG', 'MA', 'DZ', 'TN', 'LY'].includes(code))) {
+              // North Africa
+              region = 'Middle East & North Africa';
+            } else {
+              region = 'Regional Plans';
             }
           }
           
@@ -361,6 +619,9 @@ export default function AiraloPackagesSection() {
             region = 'Regional Plans';
           }
         }
+        
+        // Apply friendly name transformation to the final region
+        region = getFriendlyRegionName(region);
         
         if (!regional[region]) {
           regional[region] = [];

@@ -203,10 +203,14 @@ const TopupPage = ({ iccid, countryCode: urlCountryCode }) => {
         const data = doc.data();
         const packageSlug = data.slug || doc.id;
         
-        // Skip only if explicitly disabled or missing required fields
-        // Don't skip if enabled is undefined (assume enabled by default)
+        // Skip only if explicitly disabled, hidden, or missing required fields
+        // Don't skip if enabled/hidden is undefined (assume enabled/visible by default)
         if (data.enabled === false) {
           skippedPackages.push({ slug: packageSlug, reason: 'enabled === false' });
+          return;
+        }
+        if (data.hidden === true) {
+          skippedPackages.push({ slug: packageSlug, reason: 'hidden === true' });
           return;
         }
         if (!data.slug) {

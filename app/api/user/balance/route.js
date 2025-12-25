@@ -6,8 +6,8 @@ import { Airalo } from 'airalo-sdk';
 export const dynamic = 'force-dynamic';
 
 /**
- * Authenticate Firebase ID token (optional - supports guest users)
- * Uses Firebase Admin SDK if available, otherwise skips auth
+ * Authenticate Firebase ID token
+ * Uses Firebase Admin SDK if available
  */
 async function authenticateFirebaseToken(idToken) {
   try {
@@ -16,7 +16,7 @@ async function authenticateFirebaseToken(idToken) {
     const adminAuth = await import('firebase-admin/auth').catch(() => null);
     
     if (!adminApp || !adminAuth) {
-      console.log('⚠️ Firebase Admin not available - skipping auth verification');
+      console.log('⚠️ Firebase Admin not available - auth verification disabled');
       return null;
     }
 
@@ -117,7 +117,7 @@ export async function OPTIONS(request) {
     status: 200,
     headers: {
       'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Methods': 'GET, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization',
       'Access-Control-Max-Age': '86400',
     },
@@ -125,115 +125,62 @@ export async function OPTIONS(request) {
 }
 
 /**
- * Handle GET request (for testing/debugging)
+ * Get user balance from Airalo API
+ * Requires authentication
  */
 export async function GET(request) {
-  return NextResponse.json({
-    success: true,
-    message: 'Mobile data API endpoint is active',
-    endpoint: '/api/user/mobile-data',
-    method: 'POST',
-    description: 'Get mobile data usage for eSIM by ICCID',
-    note: 'Uses Airalo API directly - no external server required',
-  });
-}
-
-/**
- * Get mobile data usage/status for eSIM using Airalo API
- * Supports both authenticated and guest users
- */
-export async function POST(request) {
-  console.log('🚀 POST /api/user/mobile-data - Route handler called');
+  console.log('🚀 GET /api/user/balance - Route handler called');
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Methods': 'GET, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
   };
 
   try {
-    // Parse request body
-    let body;
-    try {
-      body = await request.json();
-    } catch (parseError) {
-      console.error('❌ Failed to parse request body:', parseError);
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Invalid request body. Expected JSON.',
-        },
-        { 
-          status: 400,
-          headers: corsHeaders,
-        }
-      );
-    }
-
-    const { iccid, orderId } = body || {};
-
-    if (!iccid && !orderId) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Either iccid or orderId is required',
-        },
-        { 
-          status: 400,
-          headers: corsHeaders,
-        }
-      );
-    }
-
-    // Authenticate user if token provided (optional - supports guest users)
-    let user = null;
+    // Require authentication
     const authHeader = request.headers.get('authorization');
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      const idToken = authHeader.substring(7);
-      try {
-        user = await authenticateFirebaseToken(idToken);
-        if (user) {
-          console.log(`🔐 Authenticated user: ${user.email}`);
-        }
-      } catch (authError) {
-        console.log(`⚠️ Authentication failed, continuing as guest: ${authError.message}`);
-      }
-    } else {
-      console.log('👤 Processing request as public user (no authentication)');
-    }
-
-    // Require ICCID - if only orderId provided, we can't look it up without Firestore
-    if (orderId && !iccid) {
-      console.log('⚠️ OrderId provided but no ICCID - cannot look up without Firestore. Please provide ICCID directly.');
-    }
-
-    if (!iccid) {
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return NextResponse.json(
         {
           success: false,
-          error: 'iccid is required',
+          error: 'Missing or invalid authorization header',
         },
         { 
-          status: 400,
+          status: 401,
           headers: corsHeaders,
         }
       );
     }
 
-    console.log(`🚀 Getting mobile data status via Airalo SDK for ICCID: ${iccid}`);
+    const idToken = authHeader.substring(7);
+    const user = await authenticateFirebaseToken(idToken);
+
+    if (!user) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Unauthorized',
+        },
+        { 
+          status: 401,
+          headers: corsHeaders,
+        }
+      );
+    }
+
+    console.log(`🔐 Authenticated user: ${user.email}`);
 
     try {
       // Initialize Airalo SDK
       const airalo = await getAiraloSdk();
       
-      // Fetch SIM usage using SDK credentials
-      // Use SDK to get access token, then make direct API call (like Python server does)
-      console.log(`📡 Fetching SIM usage from Airalo API using SDK credentials`);
+      // Fetch balance using SDK's access token for direct API call
+      console.log(`📡 Fetching balance from Airalo API using SDK credentials`);
       
-      let simData = null;
+      let balanceInfo = null;
       
       try {
-        // Get access token - SDK handles authentication
-        // The SDK initializes with credentials, so we can use it to get token
+        // Get access token from SDK (SDK handles auth internally)
         let accessToken = null;
         
         // Try to get access token from SDK if it exposes it
@@ -242,8 +189,7 @@ export async function POST(request) {
         } else if (airalo.accessToken) {
           accessToken = airalo.accessToken;
         } else {
-          // SDK doesn't expose token directly, get credentials and make token request
-          // (SDK already initialized with credentials, so we can reuse them)
+          // SDK doesn't expose token, get credentials and make direct API call
           const { clientId, clientSecret } = await getAiraloCredentials();
           const tokenResponse = await fetch('https://partners-api.airalo.com/v2/token', {
             method: 'POST',
@@ -269,9 +215,9 @@ export async function POST(request) {
           throw new Error('Failed to get Airalo access token');
         }
         
-        // Fetch SIM usage using access token (direct API call like Python server)
-        const usageResponse = await fetch(
-          `https://partners-api.airalo.com/v2/sims/${iccid}/usage`,
+        // Fetch balance using access token
+        const balanceResponse = await fetch(
+          `https://partners-api.airalo.com/v2/balance`,
           {
             method: 'GET',
             headers: {
@@ -282,41 +228,28 @@ export async function POST(request) {
           }
         );
         
-        console.log(`📡 SIM usage API response status: ${usageResponse.status}`);
+        console.log(`📡 Balance API response status: ${balanceResponse.status}`);
         
-        if (usageResponse.status === 404) {
+        if (!balanceResponse.ok) {
+          const errorText = await balanceResponse.text();
+          console.error(`❌ Balance API error: ${balanceResponse.status} - ${errorText}`);
           return NextResponse.json(
             {
               success: false,
-              error: `No data found for ICCID: ${iccid}. The SIM may not exist or may not be accessible.`,
-            },
-            { 
-              status: 404,
-              headers: corsHeaders,
-            }
-          );
-        }
-        
-        if (!usageResponse.ok) {
-          const errorText = await usageResponse.text();
-          console.error(`❌ SIM usage API error: ${usageResponse.status} - ${errorText}`);
-          return NextResponse.json(
-            {
-              success: false,
-              error: `Airalo API error: ${usageResponse.status}`,
+              error: `Airalo API error: ${balanceResponse.status}`,
               details: errorText.substring(0, 200),
             },
             { 
-              status: usageResponse.status,
+              status: balanceResponse.status,
               headers: corsHeaders,
             }
           );
         }
         
-        const usageData = await usageResponse.json();
-        console.log(`✅ Got SIM usage data from Airalo API`);
+        const balanceData = await balanceResponse.json();
+        console.log(`✅ Got balance data from Airalo API`);
         
-        if (!usageData.data) {
+        if (!balanceData.data) {
           return NextResponse.json(
             {
               success: false,
@@ -329,51 +262,34 @@ export async function POST(request) {
           );
         }
         
-        simData = usageData.data;
+        balanceInfo = balanceData.data;
       } catch (apiError) {
-        console.error(`❌ Failed to get SIM usage: ${apiError.message}`);
+        console.error(`❌ Failed to get balance: ${apiError.message}`);
         throw apiError;
       }
 
-      if (!simData) {
+      if (!balanceInfo) {
         return NextResponse.json(
           {
             success: false,
-            error: `No data found for ICCID: ${iccid}. The SIM may not exist or may not be accessible.`,
+            error: 'Invalid response format from Airalo SDK/API',
           },
           { 
-            status: 404,
+            status: 500,
             headers: corsHeaders,
           }
         );
       }
-
-      // Process SIM usage data (format: remaining, total, expired_at, status)
-      const totalMb = parseFloat(simData.total || 0);
-      const remainingMb = parseFloat(simData.remaining || 0);
-      const usedMb = totalMb - remainingMb;
-      const usagePercentage = totalMb > 0 ? (usedMb / totalMb * 100) : 0;
-
-      const mobileDataResponse = {
-        iccid: iccid,
-        status: (simData.status || 'active').toUpperCase(),
-        dataUsed: `${Math.round(usedMb)}MB`,
-        dataRemaining: `${Math.round(remainingMb)}MB`,
-        dataTotal: `${Math.round(totalMb)}MB`,
-        usagePercentage: Math.round(usagePercentage * 100) / 100,
-        daysUsed: 0, // Not available in usage API
-        daysRemaining: 0, // Not available in usage API
-        expiresAt: simData.expired_at || '',
-        lastUpdated: '',
-      };
-
-      console.log(`✅ Mobile data status retrieved successfully`);
+      const balance = parseFloat(balanceInfo.balance || 0);
+      const minimumRequired = parseFloat(balanceInfo.minimum_required || 4.0);
 
       return NextResponse.json(
         {
           success: true,
-          data: mobileDataResponse,
-          isTestMode: false,
+          balance: balance,
+          hasInsufficientFunds: balance < minimumRequired,
+          minimumRequired: minimumRequired,
+          mode: 'production',
         },
         {
           status: 200,
@@ -382,7 +298,7 @@ export async function POST(request) {
       );
 
     } catch (error) {
-      console.error('❌ Error fetching SIM usage from Airalo:', error);
+      console.error('❌ Error fetching balance from Airalo:', error);
       
       if (error.name === 'AbortError') {
         return NextResponse.json(
@@ -400,7 +316,7 @@ export async function POST(request) {
       return NextResponse.json(
         {
           success: false,
-          error: error.message || 'Failed to fetch mobile data from Airalo',
+          error: error.message || 'Failed to fetch balance from Airalo',
         },
         { 
           status: 500,
@@ -409,11 +325,11 @@ export async function POST(request) {
       );
     }
   } catch (error) {
-    console.error('❌ Unexpected error in mobile-data endpoint:', error);
+    console.error('❌ Unexpected error in balance endpoint:', error);
     return NextResponse.json(
       {
         success: false,
-        error: error.message || 'Failed to fetch mobile data',
+        error: error.message || 'Failed to fetch balance',
         details: process.env.NODE_ENV === 'development' ? error.stack : undefined,
       },
       { 

@@ -612,15 +612,27 @@ const SharePackagePage = () => {
                         'north-america', 'south-america', 'central-america',
                         'eastern-europe', 'western-europe', 'scandinavia',
                         'asean', 'gcc', 'european-union', 'eu', 'mena',
-                        'middle-east-and-north-africa', 'middle-east-north-africa'
+                        'middle-east-and-north-africa', 'middle-east-north-africa',
+                        'americanmex', 'america-mexico', 'us-mx', 'usa-mexico',
+                        'oceanlink', 'ocean-link', 'pacific', 'pacific-islands',
+                        'latamlink', 'latam-link', 'latam', 'latin-america-link'
                       ];
+                      
+                      // Check if plan name/slug contains any regional identifier (substring match)
+                      const containsRegionalIdentifier = regionalIdentifiers.some(identifier => 
+                        planSlug.includes(identifier) || planName.includes(identifier)
+                      );
+                      
+                      // Check if plan has multiple country codes (2-10) - indicates regional
+                      const countryCodes = packageData.country_codes || [];
+                      const hasMultipleCountries = countryCodes.length >= 2 && countryCodes.length < 10;
                       
                       const isRegional = 
                         packageData.is_regional === true ||
                         planType === 'regional' ||
-                        regionalIdentifiers.includes(planSlug) ||
-                        regionalIdentifiers.includes(planName) ||
-                        (planRegion && planRegion !== '' && planRegion !== 'global' && regionalIdentifiers.includes(planRegion));
+                        containsRegionalIdentifier ||
+                        (planRegion && planRegion !== '' && planRegion !== 'global' && regionalIdentifiers.some(id => planRegion.includes(id))) ||
+                        (hasMultipleCountries && !isGlobal);
                       
                       // Return appropriate emoji
                       if (isGlobal) {
@@ -671,23 +683,94 @@ const SharePackagePage = () => {
                           'north-america', 'south-america', 'central-america',
                           'eastern-europe', 'western-europe', 'scandinavia',
                           'asean', 'gcc', 'european-union', 'eu', 'mena',
-                          'middle-east-and-north-africa', 'middle-east-north-africa'
+                          'middle-east-and-north-africa', 'middle-east-north-africa',
+                          'americanmex', 'america-mexico', 'us-mx', 'usa-mexico',
+                          'oceanlink', 'ocean-link', 'pacific', 'pacific-islands',
+                          'latamlink', 'latam-link', 'latam', 'latin-america-link'
                         ];
+                        
+                        // Check if plan name/slug contains any regional identifier (substring match)
+                        const containsRegionalIdentifier = regionalIdentifiers.some(identifier => 
+                          planSlug.includes(identifier) || planName.includes(identifier)
+                        );
+                        
+                        // Check if plan has multiple country codes (2-10) - indicates regional
+                        const countryCodes = packageData.country_codes || [];
+                        const hasMultipleCountries = countryCodes.length >= 2 && countryCodes.length < 10;
                         
                         const isRegional = 
                           packageData.is_regional === true ||
                           planType === 'regional' ||
-                          regionalIdentifiers.includes(planSlug) ||
-                          regionalIdentifiers.includes(planName) ||
-                          (planRegion && planRegion !== '' && planRegion !== 'global' && regionalIdentifiers.includes(planRegion));
+                          containsRegionalIdentifier ||
+                          (planRegion && planRegion !== '' && planRegion !== 'global' && regionalIdentifiers.some(id => planRegion.includes(id))) ||
+                          (hasMultipleCountries && !isGlobal);
+                        
+                        // Helper function to get friendly region name
+                        const getFriendlyRegionName = (regionIdentifier) => {
+                          if (!regionIdentifier) return 'Regional';
+                          const lowerIdentifier = regionIdentifier.toLowerCase().trim();
+                          const regionMap = {
+                            'eu': 'Europe',
+                            'europe': 'Europe',
+                            'european-union': 'Europe',
+                            'eastern-europe': 'Eastern Europe',
+                            'western-europe': 'Western Europe',
+                            'scandinavia': 'Scandinavia',
+                            'asia': 'Asia',
+                            'asean': 'Southeast Asia',
+                            'mena': 'Middle East & North Africa',
+                            'middle-east': 'Middle East',
+                            'middle east': 'Middle East',
+                            'gcc': 'Gulf Countries',
+                            'americas': 'Americas',
+                            'north-america': 'North America',
+                            'south-america': 'South America',
+                            'central-america': 'Central America',
+                            'latin-america': 'Latin America',
+                            'latin america': 'Latin America',
+                            'caribbean': 'Caribbean',
+                            'africa': 'Africa',
+                            'oceania': 'Oceania & Pacific',
+                            'pacific': 'Oceania & Pacific',
+                            'oceanlink': 'Oceania & Pacific',
+                            'ocean-link': 'Oceania & Pacific',
+                            'latamlink': 'Latin America',
+                            'latam-link': 'Latin America',
+                            'latam': 'Latin America',
+                            'latin-america-link': 'Latin America',
+                            'americanmex': 'Americas',
+                            'america-mexico': 'Americas',
+                            'us-mx': 'Americas',
+                            'usa-mexico': 'Americas'
+                          };
+                          if (regionMap[lowerIdentifier]) return regionMap[lowerIdentifier];
+                          for (const [key, friendlyName] of Object.entries(regionMap)) {
+                            if (lowerIdentifier.includes(key) || key.includes(lowerIdentifier)) {
+                              return friendlyName;
+                            }
+                          }
+                          return regionIdentifier.split(/[-_\s]+/).map(word => 
+                            word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+                          ).join(' ');
+                        };
                         
                         // Return appropriate text
                         if (isGlobal) {
                           return t('sharePackage.global', 'Global');
                         }
                         if (isRegional) {
-                          const regionName = packageData.region || packageData.region_slug || 'Regional';
-                          return regionName.charAt(0).toUpperCase() + regionName.slice(1);
+                          // Try to get friendly region name from plan data or slug
+                          let regionName = packageData.region || packageData.region_slug || '';
+                          if (!regionName) {
+                            // Try to extract from slug/name
+                            for (const identifier of regionalIdentifiers) {
+                              if (planSlug.includes(identifier) || planName.includes(identifier)) {
+                                regionName = identifier;
+                                break;
+                              }
+                            }
+                          }
+                          return getFriendlyRegionName(regionName) || 'Regional';
                         }
                         // For country-specific plans
                         if (urlCountryCode) {

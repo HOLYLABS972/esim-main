@@ -2,13 +2,15 @@
 import { auth } from '../firebase/config';
 import { configService } from './configService';
 
-// API URLs
-const API_PRODUCTION_URL = process.env.NEXT_PUBLIC_API_URL || 'https://sdk.roamjet.net';
-const API_SANDBOX_URL = process.env.NEXT_PUBLIC_API_SANDBOX_URL || 'https://sandbox.roamjet.net';
+// API URLs - Using Firebase Functions instead of external SDK server
+// const API_PRODUCTION_URL = process.env.NEXT_PUBLIC_API_URL || 'https://sdk.roamjet.net'; // REMOVED
+// const API_SANDBOX_URL = process.env.NEXT_PUBLIC_API_SANDBOX_URL || 'https://sandbox.roamjet.net'; // REMOVED
 
 /**
  * Get the correct API base URL based on mode
+ * NOTE: This function is deprecated - we now use Firebase Functions directly
  * @returns {Promise<string>} API base URL
+ * @deprecated Use Firebase Functions instead
  */
 const getApiBaseUrl = async () => {
   try {
@@ -16,14 +18,14 @@ const getApiBaseUrl = async () => {
     const stripeMode = await configService.getStripeMode();
     const isTestMode = stripeMode === 'test' || stripeMode === 'sandbox';
     
-    const apiUrl = isTestMode ? API_SANDBOX_URL : API_PRODUCTION_URL;
+    // All operations now use Firebase Functions, not external API
+    console.log(`🌐 Using Firebase Functions (mode: ${isTestMode ? 'SANDBOX' : 'PRODUCTION'})`);
     
-    console.log(`🌐 Using ${isTestMode ? 'SANDBOX' : 'PRODUCTION'} API:`, apiUrl);
-    
-    return apiUrl;
+    // Return empty string to indicate we're using Firebase Functions
+    return '';
   } catch (error) {
-    console.warn('⚠️ Could not determine mode, defaulting to production API');
-    return API_PRODUCTION_URL;
+    console.warn('⚠️ Could not determine mode, using Firebase Functions');
+    return '';
   }
 };
 

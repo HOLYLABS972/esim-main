@@ -26,7 +26,7 @@ const getFlagEmoji = (countryCode) => {
   }
 };
 
-// Get all plans from Firebase (only enabled plans)
+// Get all plans from Firebase (only enabled and visible plans)
 export const getAllPlans = async () => {
   try {
     const plansSnapshot = await getDocs(collection(db, 'dataplans'));
@@ -35,10 +35,14 @@ export const getAllPlans = async () => {
       ...doc.data()
     }));
     
-    // Filter out disabled plans (enabled !== false means enabled by default)
-    const enabledPlans = allPlans.filter(plan => plan.enabled !== false);
+    // Filter out disabled and hidden plans
+    // enabled !== false means enabled by default
+    // hidden !== true means visible by default
+    const visiblePlans = allPlans.filter(plan => 
+      plan.enabled !== false && plan.hidden !== true
+    );
     
-    return enabledPlans;
+    return visiblePlans;
   } catch (error) {
     console.error('Error getting all plans:', error);
     throw error;
@@ -61,14 +65,17 @@ export const getCountriesWithPricing = async () => {
   try {
     // Get all countries
     const countriesSnapshot = await getDocs(collection(db, 'countries'));
-    const countries = countriesSnapshot.docs.map(doc => {
-      const data = doc.data();
-      return {
-        id: doc.id,
-        ...data,
-        flagEmoji: data.flagEmoji || getFlagEmoji(data.code)
-      };
-    });
+    const countries = countriesSnapshot.docs
+      .map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          flagEmoji: data.flagEmoji || getFlagEmoji(data.code)
+        };
+      })
+      // Filter out hidden countries (hidden !== true means visible by default)
+      .filter(country => country.hidden !== true);
     
     // Get all plans (already filtered for enabled plans)
     const allPlans = await getAllPlans();

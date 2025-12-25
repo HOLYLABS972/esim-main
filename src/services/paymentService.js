@@ -1,8 +1,8 @@
 import { loadStripe } from '@stripe/stripe-js';
 import { configService } from './configService';
 
-// Server payments service URL
-const SERVER_PAYMENTS_URL = 'https://pay.roamjet.net';
+// Using Firebase Functions instead of external server
+// const SERVER_PAYMENTS_URL = 'https://pay.roamjet.net'; // REMOVED - Using Firebase Functions
 
 // Stripe instance cache
 let stripeInstance = null;
@@ -35,12 +35,16 @@ async function getStripeInstance() {
 }
 
 export const paymentService = {
-  // Create payment intent and redirect to external payment page
+  // Get Stripe instance
+  async getStripe() {
+    return await getStripeInstance();
+  },
+
+  // Create payment intent - USE FIREBASE FUNCTIONS
   async createPaymentIntent(amount, currency = 'usd', metadata = {}) {
     try {
-      console.log('🔍 Creating payment redirect with:', { amount, currency, metadata });
+      console.log('🔍 Creating payment intent via Firebase Functions:', { amount, currency, metadata });
       
-      // Use Firebase Functions directly instead of external service
       const { httpsCallable } = await import('firebase/functions');
       const { functions } = await import('../firebase/config');
       
@@ -52,7 +56,7 @@ export const paymentService = {
         metadata: metadata
       });
       
-      console.log('✅ Payment intent created via Firebase:', result.data);
+      console.log('✅ Payment intent created via Firebase Functions:', result.data);
       return result.data;
     } catch (error) {
       console.error('❌ Error creating payment intent:', error);
@@ -60,211 +64,104 @@ export const paymentService = {
     }
   },
 
-
-
-  // Confirm payment (not needed for external redirect flow)
-  async confirmPayment(paymentIntentId) {
-    try {
-      console.log('✅ Payment confirmed via external service:', paymentIntentId);
-      return { status: 'confirmed' };
-    } catch (error) {
-      console.error('Error confirming payment:', error);
-      throw error;
-    }
-  },
-
-  // Get Stripe instance
-  async getStripe() {
-    return await getStripeInstance();
-  },
-
-  // Get the appropriate endpoint based on mode
-  async getEndpoint(endpoint) {
-    const mode = await configService.getStripeMode();
-    const isTestMode = mode === 'test' || mode === 'sandbox';
-    
-    if (isTestMode) {
-      // Use test routes for test mode
-      const testEndpoint = `/test${endpoint}`;
-      console.log(`🧪 TEST MODE: Using test endpoint ${testEndpoint}`);
-      return testEndpoint;
-    }
-    
-    return endpoint;
-  },
-
-  // Create payment intent
-  async createPaymentIntent(amount, currency = 'usd', metadata = {}) {
-    try {
-      const endpoint = await this.getEndpoint('/create-payment-intent');
-      console.log('🔍 Creating payment intent:', { amount, currency, endpoint });
-      
-      const response = await fetch(`${SERVER_PAYMENTS_URL}${endpoint}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          amount,
-          currency,
-          metadata
-        })
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
-      }
-
-      const result = await response.json();
-      console.log('✅ Payment intent created:', result);
-      return result;
-    } catch (error) {
-      console.error('❌ Error creating payment intent:', error);
-      throw error;
-    }
-  },
-
-  // Create checkout session - USE YOUR SERVER (SINGLE ORDER)
+  // Create checkout session - USE FIREBASE FUNCTIONS
   async createCheckoutSession(orderData) {
     try {
-      const endpoint = await this.getEndpoint('/create-payment-order');
-      console.log('🔍 Creating single order checkout via server:', orderData);
-      console.log('🌐 Payment server URL:', SERVER_PAYMENTS_URL);
-      console.log('🎯 Using endpoint:', endpoint);
+      console.log('🔍 Creating checkout session via Firebase Functions:', orderData);
       
-      // Prepare the payload to send to payment server
-      const paymentPayload = {
-        order: orderData.orderId, // Use unique order ID instead of plan ID
+      const { httpsCallable } = await import('firebase/functions');
+      const { functions } = await import('../firebase/config');
+      
+      const createCheckoutSessionFn = httpsCallable(functions, 'create_checkout_session');
+      
+      const result = await createCheckoutSessionFn({
+        order: orderData.orderId,
         email: orderData.customerEmail,
         name: orderData.planName,
         total: orderData.amount,
         currency: orderData.currency || 'usd',
         domain: window.location.origin,
-        plan: orderData.planId // Include the real package slug for topups
-      };
-      
-      console.log('📤 SENDING TO PAYMENT SERVER pay.roamjet.net:');
-      console.log('🔗 Full URL:', `${SERVER_PAYMENTS_URL}${endpoint}`);
-      console.log('📦 Payload being sent:', JSON.stringify(paymentPayload, null, 2));
-      console.log('🎯 Order ID:', paymentPayload.order);
-      console.log('📧 Email:', paymentPayload.email);
-      console.log('💰 Amount:', paymentPayload.total);
-      console.log('📱 Plan ID:', paymentPayload.plan);
-      console.log('🌍 Domain:', paymentPayload.domain);
-      
-      // Use your server's create-payment-order endpoint for single orders
-      const response = await fetch(`${SERVER_PAYMENTS_URL}${endpoint}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(paymentPayload)
+        plan: orderData.planId,
+        isYearly: orderData.isYearly
       });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ Server error response:', errorText);
-        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
-      }
-
-      const result = await response.json();
       
-      // Redirect immediately to Stripe checkout - no delays
-      if (result.sessionUrl) {
-        window.location.href = result.sessionUrl;
-        return result;
+      console.log('✅ Checkout session created via Firebase Functions:', result.data);
+      
+      // Redirect immediately to Stripe checkout
+      if (result.data.sessionUrl) {
+        window.location.href = result.data.sessionUrl;
+        return result.data;
       } else {
-        console.error('❌ Server response missing sessionUrl:', result);
-        throw new Error('No session URL received from server');
+        console.error('❌ Response missing sessionUrl:', result.data);
+        throw new Error('No session URL received from Firebase Function');
       }
     } catch (error) {
-      console.error('❌ Error creating single order checkout:', error);
+      console.error('❌ Error creating checkout session:', error);
       throw error;
     }
   },
 
-  // Retrieve session
+  // Retrieve session - USE FIREBASE FUNCTIONS
   async retrieveSession(sessionId) {
     try {
-      const endpoint = await this.getEndpoint('/retrieve-session');
-      console.log('🔍 Retrieving session:', sessionId);
+      console.log('🔍 Retrieving session via Firebase Functions:', sessionId);
       
-      const response = await fetch(`${SERVER_PAYMENTS_URL}${endpoint}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ session_id: sessionId })
+      const { httpsCallable } = await import('firebase/functions');
+      const { functions } = await import('../firebase/config');
+      
+      const retrieveCheckoutSessionFn = httpsCallable(functions, 'retrieve_checkout_session');
+      
+      const result = await retrieveCheckoutSessionFn({
+        session_id: sessionId
       });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
-      }
-
-      const result = await response.json();
-      console.log('✅ Session retrieved:', result);
-      return result;
+      
+      console.log('✅ Session retrieved via Firebase Functions:', result.data);
+      return result.data;
     } catch (error) {
       console.error('❌ Error retrieving session:', error);
       throw error;
     }
   },
 
-  // Create customer portal session
+  // Create customer portal session - USE FIREBASE FUNCTIONS
   async createCustomerPortalSession(customerId, returnUrl) {
     try {
-      const endpoint = await this.getEndpoint('/create-customer-portal-session');
-      console.log('🔍 Creating customer portal session:', customerId);
+      console.log('🔍 Creating customer portal session via Firebase Functions:', customerId);
       
-      const response = await fetch(`${SERVER_PAYMENTS_URL}${endpoint}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          customer_id: customerId,
-          return_url: returnUrl || window.location.origin
-        })
+      const { httpsCallable } = await import('firebase/functions');
+      const { functions } = await import('../firebase/config');
+      
+      const createCustomerPortalSessionFn = httpsCallable(functions, 'create_customer_portal_session');
+      
+      const result = await createCustomerPortalSessionFn({
+        customer_id: customerId,
+        return_url: returnUrl || window.location.origin
       });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
-      }
-
-      const result = await response.json();
-      console.log('✅ Customer portal session created:', result);
-      return result;
+      
+      console.log('✅ Customer portal session created via Firebase Functions:', result.data);
+      return result.data;
     } catch (error) {
       console.error('❌ Error creating customer portal session:', error);
       throw error;
     }
   },
 
-  // Check subscription status
+  // Check subscription status - USE FIREBASE FUNCTIONS
   async checkSubscriptionStatus(customerId) {
     try {
-      const endpoint = await this.getEndpoint('/check-subscription-status');
-      console.log('🔍 Checking subscription status:', customerId);
+      console.log('🔍 Checking subscription status via Firebase Functions:', customerId);
       
-      const response = await fetch(`${SERVER_PAYMENTS_URL}${endpoint}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ customer_id: customerId })
+      const { httpsCallable } = await import('firebase/functions');
+      const { functions } = await import('../firebase/config');
+      
+      const checkSubscriptionStatusFn = httpsCallable(functions, 'check_subscription_status');
+      
+      const result = await checkSubscriptionStatusFn({
+        customer_id: customerId
       });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
-      }
-
-      const result = await response.json();
-      console.log('✅ Subscription status checked:', result);
-      return result;
+      
+      console.log('✅ Subscription status checked via Firebase Functions:', result.data);
+      return result.data;
     } catch (error) {
       console.error('❌ Error checking subscription status:', error);
       throw error;
