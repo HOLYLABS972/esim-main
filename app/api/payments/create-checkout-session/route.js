@@ -3,42 +3,8 @@ import Stripe from 'stripe';
 
 export const dynamic = 'force-dynamic';
 
-// Lazy load Firebase Admin to avoid initialization issues
-let db = null;
-
-async function getFirestore() {
-  if (db) return db;
-
-  try {
-    const admin = await import('firebase-admin/app');
-    const firestore = await import('firebase-admin/firestore');
-
-    // Initialize Firebase Admin if not already initialized
-    if (!admin.getApps().length) {
-      const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT_KEY
-        ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY)
-        : undefined;
-
-      if (serviceAccount) {
-        admin.initializeApp({
-          credential: admin.cert(serviceAccount),
-        });
-      } else {
-        // Use default credentials (for Firebase hosting/Cloud Run/Vercel)
-        admin.initializeApp();
-      }
-    }
-
-    db = firestore.getFirestore();
-    return db;
-  } catch (error) {
-    console.error('❌ Firebase Admin initialization error:', error);
-    throw error;
-  }
-}
-
 /**
- * Get Stripe key from Firestore remote config (like other apps) or environment variables
+ * Get Stripe key from Firebase Remote Config (like mobile app) or environment variables
  */
 async function getStripeKey() {
   // Check if we're in test mode
@@ -48,38 +14,71 @@ async function getStripeKey() {
   
   let key = null;
   
-  // First, try Firestore remote config (like other apps)
+  // First, try Firebase Remote Config (like mobile app)
   try {
-    const firestore = await getFirestore();
-    const { doc, getDoc } = await import('firebase-admin/firestore');
+    const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'esim-f0e3e';
     
-    const configRef = doc(firestore, 'config', 'stripe');
-    const configDoc = await getDoc(configRef);
+    // Get access token for Firebase Remote Config API
+    let accessToken = null;
     
-    if (configDoc.exists()) {
-      const configData = configDoc.data();
-      console.log('📋 Stripe config found in Firestore');
-      
-      if (isTest) {
-        key = configData.testSecretKey || configData.test_secret_key;
-        if (key) {
-          console.log('✅ Using TEST secret key from Firestore remote config');
-          return key;
-        }
-      } else {
-        key = configData.liveSecretKey || configData.live_secret_key;
-        if (key) {
-          console.log('✅ Using LIVE secret key from Firestore remote config');
-          return key;
-        }
-      }
-      
-      console.log(`⚠️ No ${isTest ? 'test' : 'live'} secret key found in Firestore config`);
-    } else {
-      console.log('📝 No Stripe config document found in Firestore');
+    try {
+      const { GoogleAuth } = await import('google-auth-library');
+      const auth = new GoogleAuth({
+        scopes: ['https://www.googleapis.com/auth/firebase.remoteconfig'],
+        projectId: projectId
+      });
+      const client = await auth.getClient();
+      const tokenResponse = await client.getAccessToken();
+      accessToken = tokenResponse.token;
+    } catch (authError) {
+      console.warn('⚠️ Could not get access token for Remote Config:', authError.message);
     }
-  } catch (firestoreError) {
-    console.warn('⚠️ Could not load from Firestore remote config:', firestoreError.message);
+    
+    if (accessToken) {
+      // Fetch Remote Config values using REST API
+      const remoteConfigUrl = `https://firebaseremoteconfig.googleapis.com/v1/projects/${projectId}/remoteConfig`;
+      const response = await fetch(remoteConfigUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Accept': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        const remoteConfig = await response.json();
+        const parameters = remoteConfig.parameters || {};
+        
+        console.log('📋 Firebase Remote Config fetched successfully');
+        
+        // Try different parameter name formats (snake_case and camelCase)
+        if (isTest) {
+          key = parameters['stripe_test_secret_key']?.defaultValue?.value 
+            || parameters['stripeTestSecretKey']?.defaultValue?.value
+            || parameters['stripe_test_secret_key']?.defaultValue?.value;
+          if (key) {
+            console.log('✅ Using TEST secret key from Firebase Remote Config');
+            return key;
+          }
+        } else {
+          key = parameters['stripe_live_secret_key']?.defaultValue?.value 
+            || parameters['stripeLiveSecretKey']?.defaultValue?.value
+            || parameters['stripe_live_secret_key']?.defaultValue?.value;
+          if (key) {
+            console.log('✅ Using LIVE secret key from Firebase Remote Config');
+            return key;
+          }
+        }
+        
+        console.log(`⚠️ No ${isTest ? 'test' : 'live'} secret key found in Remote Config`);
+        console.log('   Available parameters:', Object.keys(parameters).join(', '));
+      } else {
+        const errorText = await response.text();
+        console.warn('⚠️ Could not fetch Remote Config:', response.status, errorText);
+      }
+    }
+  } catch (remoteConfigError) {
+    console.warn('⚠️ Could not load from Firebase Remote Config:', remoteConfigError.message);
   }
   
   // Fallback to environment variables
