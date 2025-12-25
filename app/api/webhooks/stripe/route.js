@@ -175,36 +175,166 @@ export async function POST(request) {
           }
         }
 
-        // Trigger backend order creation via HTTP call to Firebase Function
-        // We'll call it directly since we have the planId and user info
+        // DIRECTLY CALL AIRALO API (Firestore trigger has permission issues, so we do it here)
         try {
-          const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'esim-f0e3e';
-          const functionsUrl = `https://us-central1-${projectId}.cloudfunctions.net`;
+          console.log('🚀 Calling Airalo API directly from webhook...');
           
-          // Get Airalo client ID from config
+          // Get Airalo credentials from Firestore config
           const configRef = db.collection('config').doc('airalo');
           const configDoc = await configRef.get();
-          let airaloClientId = null;
-          if (configDoc.exists) {
-            const configData = configDoc.data();
-            airaloClientId = configData.api_key || configData.client_id;
+          
+          if (!configDoc.exists) {
+            throw new Error('Airalo config not found in Firestore');
+          }
+          
+          const configData = configDoc.data();
+          const airaloClientId = configData.api_key || configData.client_id;
+          const airaloClientSecret = configData.client_secret;
+          const baseUrl = configData.base_url || 'https://partners-api.airalo.com';
+          
+          if (!airaloClientId || !airaloClientSecret) {
+            throw new Error('Airalo credentials not configured');
           }
 
-          // Call the backend function via HTTP
-          // Note: This requires the function to accept unauthenticated calls or use a service account
-          console.log('📞 Calling backend create_order function via HTTP...');
+          console.log('🔐 Authenticating with Airalo...');
           
-          // For now, mark as ready for frontend to trigger
-          // The frontend will call the function when user visits success page
-          await pendingOrderRef.update({
-            readyToProcess: true,
-            airaloClientId: airaloClientId
+          // Step 1: Get access token
+          const tokenResponse = await fetch(`${baseUrl}/v2/token`, {
+            method: 'POST',
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+              client_id: airaloClientId,
+              client_secret: airaloClientSecret,
+              grant_type: 'client_credentials'
+            })
           });
+
+          if (!tokenResponse.ok) {
+            const errorText = await tokenResponse.text();
+            throw new Error(`Airalo auth failed: ${tokenResponse.status} - ${errorText}`);
+          }
+
+          const tokenData = await tokenResponse.json();
+          const accessToken = tokenData.data?.access_token;
           
-          console.log('✅ Order marked as ready for processing');
-        } catch (triggerError) {
-          console.error('⚠️ Could not trigger backend function:', triggerError);
-          // Order is still stored, frontend can trigger it
+          if (!accessToken) {
+            throw new Error('No access token from Airalo');
+          }
+
+          console.log('✅ Airalo authenticated, creating order...');
+          
+          // Step 2: Create order with Airalo
+          const orderData = {
+            package_id: planId,
+            quantity: "1",
+            type: "sim",
+            to_email: customerEmail,
+            description: `eSIM order for ${customerEmail}`,
+            sharing_option: ["link"]
+          };
+
+          console.log('📞 Making Airalo API call:', JSON.stringify(orderData, null, 2));
+          
+          const orderResponse = await fetch(`${baseUrl}/v2/orders`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${accessToken}`,
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(orderData)
+          });
+
+          console.log('📡 Airalo API response status:', orderResponse.status);
+
+          if (!orderResponse.ok) {
+            const errorText = await orderResponse.text();
+            console.error('❌ Airalo order creation failed:', errorText);
+            throw new Error(`Airalo order failed: ${orderResponse.status} - ${errorText}`);
+          }
+
+          const orderResult = await orderResponse.json();
+          console.log('✅ Airalo order created:', JSON.stringify(orderResult, null, 2));
+
+          // Step 3: Save order to Firestore
+          const finalOrderId = orderId || session.id;
+          const orderRef = db.collection('orders').doc(finalOrderId);
+          
+          const airaloData = orderResult.data || {};
+          const simsData = airaloData.sims || [];
+          
+          await orderRef.set({
+            id: finalOrderId,
+            orderId: finalOrderId,
+            planId: planId,
+            package_id: planId,
+            status: simsData.length > 0 ? 'completed' : 'processing',
+            provider: 'airalo',
+            airaloOrderId: airaloData.id,
+            airaloOrderData: airaloData,
+            userId: userId,
+            userEmail: customerEmail,
+            customerEmail: customerEmail,
+            paymentMethod: 'stripe',
+            paymentStatus: 'completed',
+            stripeSessionId: session.id,
+            createdAt: FieldValue.serverTimestamp(),
+            updatedAt: FieldValue.serverTimestamp(),
+            ...(simsData.length > 0 && {
+              esimData: {
+                qrcode: simsData[0].qrcode,
+                qrcode_url: simsData[0].qrcode_url,
+                direct_apple_installation_url: simsData[0].direct_apple_installation_url,
+                iccid: simsData[0].iccid,
+                lpa: simsData[0].lpa,
+                matching_id: simsData[0].matching_id
+              }
+            })
+          });
+
+          // Also save to user's esims subcollection if userId exists
+          if (userId) {
+            const userEsimRef = db.collection('users').doc(userId).collection('esims').doc(finalOrderId);
+            await userEsimRef.set({
+              orderId: finalOrderId,
+              planId: planId,
+              status: simsData.length > 0 ? 'active' : 'processing',
+              customerEmail: customerEmail,
+              airaloOrderId: airaloData.id,
+              esimData: simsData.length > 0 ? {
+                qrcode: simsData[0].qrcode,
+                qrcode_url: simsData[0].qrcode_url,
+                direct_apple_installation_url: simsData[0].direct_apple_installation_url,
+                iccid: simsData[0].iccid,
+                lpa: simsData[0].lpa,
+                matching_id: simsData[0].matching_id
+              } : null,
+              createdAt: FieldValue.serverTimestamp(),
+              updatedAt: FieldValue.serverTimestamp()
+            });
+          }
+
+          // Mark pending order as processed
+          await pendingOrderRef.update({
+            processed: true,
+            backendOrderId: finalOrderId,
+            airaloOrderId: airaloData.id,
+            processedAt: FieldValue.serverTimestamp()
+          });
+
+          console.log('✅ Order created and saved successfully!');
+          
+        } catch (apiError) {
+          console.error('❌ Error calling Airalo API:', apiError);
+          await pendingOrderRef.update({
+            processed: false,
+            error: apiError.message,
+            errorAt: FieldValue.serverTimestamp()
+          });
+          throw apiError;
         }
 
         // Also store in stripe_payments collection for tracking
