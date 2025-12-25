@@ -618,10 +618,6 @@ const PaymentSuccess = () => {
           // Backend will handle all eSIM creation and Firestore records
           console.log('📞 Calling backend create_order function with:', { planId, sessionId });
           
-          const { httpsCallable } = await import('firebase/functions');
-          const { functions } = await import('../firebase/config');
-          const createOrderFn = httpsCallable(functions, 'create_order');
-          
           // Get Airalo client ID from Firestore config
           const configRef = doc(db, 'config', 'airalo');
           const configDoc = await getDoc(configRef);
@@ -631,17 +627,30 @@ const PaymentSuccess = () => {
             airaloClientId = configData.api_key || configData.client_id;
           }
 
-          const orderResult = await createOrderFn({
-            planId: planId,
-            quantity: "1",
-            to_email: currentUser.email || email,
-            description: `eSIM order for ${currentUser.email || email}`,
-            airalo_client_id: airaloClientId
+          // Call as HTTP endpoint (supports CORS)
+          const response = await fetch('https://us-central1-esim-f0e3e.cloudfunctions.net/create_order', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              planId: planId,
+              quantity: "1",
+              to_email: currentUser.email || email,
+              description: `eSIM order for ${currentUser.email || email}`,
+              airalo_client_id: airaloClientId
+            })
           });
 
-          console.log('✅ Backend order created:', orderResult.data);
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+            throw new Error(errorData.error || `Server error: ${response.status}`);
+          }
+
+          const orderResult = await response.json();
+          console.log('✅ Backend order created:', orderResult);
           
-          const backendOrderId = orderResult.data.orderId;
+          const backendOrderId = orderResult.orderId;
           
           // Wait for order to be processed (poll order_status collection)
           console.log('⏳ Waiting for order to be processed...');
