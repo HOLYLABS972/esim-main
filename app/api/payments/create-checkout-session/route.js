@@ -50,39 +50,89 @@ async function getStripeKey() {
         const parameters = remoteConfig.parameters || {};
         
         console.log('📋 Firebase Remote Config fetched successfully');
+        console.log('📋 Remote Config structure:', JSON.stringify(remoteConfig, null, 2).substring(0, 500));
+        console.log('📋 Available parameter keys:', Object.keys(parameters).join(', ') || 'none');
         
-        // Try different parameter name formats (snake_case and camelCase)
-        // Remote Config parameters can have defaultValue.value or just value
-        if (isTest) {
-          key = parameters['stripe_test_secret_key']?.defaultValue?.value 
-            || parameters['stripe_test_secret_key']?.defaultValue
-            || parameters['stripe_test_secret_key']?.value
-            || parameters['stripeTestSecretKey']?.defaultValue?.value
-            || parameters['stripeTestSecretKey']?.defaultValue
-            || parameters['stripeTestSecretKey']?.value;
+        // Log all parameter names for debugging
+        if (Object.keys(parameters).length > 0) {
+          console.log('📋 All parameters:', Object.keys(parameters));
+          // Log first parameter structure to understand format
+          const firstParam = Object.keys(parameters)[0];
+          console.log(`📋 Sample parameter "${firstParam}" structure:`, JSON.stringify(parameters[firstParam], null, 2));
+        }
+        
+        // Use the same parameter names as Python functions and mobile app
+        // Python functions use: 'stripe_test_key' and 'stripe_server_key'
+        const paramName = isTest ? 'stripe_test_key' : 'stripe_server_key';
+        const param = parameters[paramName];
+        
+        if (param) {
+          console.log(`🔍 Found parameter "${paramName}", structure:`, Object.keys(param));
+          
+          // Try serverValue first (for server-side parameters) - like Python functions do
+          if (param.serverValue) {
+            const serverVal = param.serverValue;
+            if (typeof serverVal === 'object' && serverVal.value) {
+              key = serverVal.value;
+              console.log(`✅ Found ${isTest ? 'TEST' : 'LIVE'} secret key from serverValue (length: ${key.length})`);
+            } else if (typeof serverVal === 'string') {
+              key = serverVal;
+              console.log(`✅ Found ${isTest ? 'TEST' : 'LIVE'} secret key from serverValue (length: ${key.length})`);
+            }
+          }
+          
+          // Fallback to defaultValue (for client-side parameters) - like Python functions do
+          if (!key && param.defaultValue) {
+            const defaultVal = param.defaultValue;
+            if (typeof defaultVal === 'object' && defaultVal.value) {
+              key = defaultVal.value;
+              console.log(`✅ Found ${isTest ? 'TEST' : 'LIVE'} secret key from defaultValue (length: ${key.length})`);
+            } else if (typeof defaultVal === 'string') {
+              key = defaultVal;
+              console.log(`✅ Found ${isTest ? 'TEST' : 'LIVE'} secret key from defaultValue (length: ${key.length})`);
+            }
+          }
+          
           if (key) {
-            console.log('✅ Using TEST secret key from Firebase Remote Config');
+            console.log(`✅ Using ${isTest ? 'TEST' : 'LIVE'} secret key from Firebase Remote Config (parameter: "${paramName}")`);
             return key;
+          } else {
+            console.log(`⚠️ Parameter "${paramName}" exists but has no serverValue or defaultValue`);
+            console.log(`   Parameter structure:`, JSON.stringify(param, null, 2));
           }
         } else {
-          key = parameters['stripe_live_secret_key']?.defaultValue?.value 
-            || parameters['stripe_live_secret_key']?.defaultValue
-            || parameters['stripe_live_secret_key']?.value
-            || parameters['stripeLiveSecretKey']?.defaultValue?.value
-            || parameters['stripeLiveSecretKey']?.defaultValue
-            || parameters['stripeLiveSecretKey']?.value;
-          if (key) {
-            console.log('✅ Using LIVE secret key from Firebase Remote Config');
-            return key;
+          // Also try alternative names as fallback
+          const altParamNames = isTest 
+            ? ['stripe_test_secret_key', 'stripeTestSecretKey']
+            : ['stripe_live_secret_key', 'stripeLiveSecretKey', 'stripe_live_key'];
+          
+          for (const altName of altParamNames) {
+            const altParam = parameters[altName];
+            if (altParam) {
+              console.log(`🔍 Found alternative parameter "${altName}"`);
+              // Try same extraction logic
+              if (altParam.serverValue) {
+                const serverVal = altParam.serverValue;
+                key = (typeof serverVal === 'object' && serverVal.value) ? serverVal.value : (typeof serverVal === 'string' ? serverVal : null);
+              }
+              if (!key && altParam.defaultValue) {
+                const defaultVal = altParam.defaultValue;
+                key = (typeof defaultVal === 'object' && defaultVal.value) ? defaultVal.value : (typeof defaultVal === 'string' ? defaultVal : null);
+              }
+              if (key) {
+                console.log(`✅ Using ${isTest ? 'TEST' : 'LIVE'} secret key from alternative parameter "${altName}"`);
+                return key;
+              }
+            }
           }
         }
         
         console.log(`⚠️ No ${isTest ? 'test' : 'live'} secret key found in Remote Config`);
-        console.log('   Available parameters:', Object.keys(parameters).join(', ') || 'none');
-        console.log(`   Looking for: "${isTest ? 'stripe_test_secret_key' : 'stripe_live_secret_key'}" or "${isTest ? 'stripeTestSecretKey' : 'stripeLiveSecretKey'}"`);
+        console.log(`   Looking for: "${isTest ? 'stripe_test_key' : 'stripe_server_key'}" (same as Python functions)`);
       } else {
         const errorText = await response.text();
-        console.warn('⚠️ Could not fetch Remote Config:', response.status, errorText);
+        console.error('❌ Could not fetch Remote Config:', response.status, errorText);
+        console.error('❌ Response headers:', Object.fromEntries(response.headers.entries()));
       }
     }
   } catch (remoteConfigError) {
@@ -124,8 +174,9 @@ async function getStripeKey() {
       `Stripe ${isTest ? 'test' : 'live'} secret key not found.\n` +
       `Checked: Firebase Remote Config parameter "${isTest ? 'stripe_test_secret_key' : 'stripe_live_secret_key'}" (not found or not published).\n` +
       `Also checked environment variables: ${allStripeVars || 'none found'}.\n` +
-      `💡 Solution: Add parameter "${isTest ? 'stripe_test_secret_key' : 'stripe_live_secret_key'}" to Firebase Remote Config and PUBLISH it. ` +
-      `Go to Firebase Console → Remote Config → Add parameter → Name: "${isTest ? 'stripe_test_secret_key' : 'stripe_live_secret_key'}" → Value: "sk_${isTest ? 'test' : 'live'}_..." → Publish.`
+      `💡 Solution: Add parameter "${isTest ? 'stripe_test_key' : 'stripe_server_key'}" to Firebase Remote Config and PUBLISH it. ` +
+      `Go to Firebase Console → Remote Config → Add parameter → Name: "${isTest ? 'stripe_test_key' : 'stripe_server_key'}" → Value: "sk_${isTest ? 'test' : 'live'}_..." → Publish. ` +
+      `(Note: Use "stripe_test_key" and "stripe_server_key" - same names as Python functions)`
     );
   }
   
