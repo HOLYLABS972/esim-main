@@ -706,52 +706,31 @@ export const countryTranslations = {
 
 /**
  * Translate a country name based on country code and locale
+ * DISABLED: Always returns original country name (no translation)
  * @param {string} countryCode - ISO 2-letter country code (e.g., 'US', 'FR')
  * @param {string} countryName - Original country name (fallback if no translation found)
  * @param {string} locale - Current locale/language code (e.g., 'en', 'ar', 'de')
- * @returns {string} - Translated country name or original name as fallback
+ * @returns {string} - Original country name (translation disabled)
  */
 export const translateCountryName = (countryCode, countryName, locale = 'en') => {
-  // If no locale or English, return original name
-  if (!locale || locale === 'en') {
-    return countryName;
-  }
-
-  // If no country code, return original name
-  if (!countryCode) {
-    return countryName;
-  }
-
-  // Get translations for the locale
-  const localeTranslations = countryTranslations[locale];
-  
-  // If no translations for this locale, return original name
-  if (!localeTranslations) {
-    return countryName;
-  }
-
-  // Get translation for the country code (uppercase to be safe)
-  const translatedName = localeTranslations[countryCode.toUpperCase()];
-  
-  // Return translated name or original name as fallback
-  return translatedName || countryName;
+  // Translation disabled - always return original name
+  return countryName;
 };
 
 /**
  * Translate country objects in an array
+ * DISABLED: Always returns original country names (no translation)
  * @param {Array} countries - Array of country objects with 'code' and 'name' properties
  * @param {string} locale - Current locale/language code
- * @returns {Array} - Array of countries with translated names
+ * @returns {Array} - Array of countries with original names (translation disabled)
  */
 export const translateCountries = (countries, locale = 'en') => {
   if (!countries || !Array.isArray(countries)) {
     return countries;
   }
 
-  return countries.map(country => ({
-    ...country,
-    name: translateCountryName(country.code || country.id, country.name, locale),
-  }));
+  // Translation disabled - return countries as-is without translation
+  return countries;
 };
 
 export default {

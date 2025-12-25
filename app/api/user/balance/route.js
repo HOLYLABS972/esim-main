@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db } from '../../../src/firebase/config';
+import { db } from '../../../../src/firebase/config';
 import { doc, getDoc } from 'firebase/firestore';
 import { Airalo } from 'airalo-sdk';
 
@@ -112,7 +112,7 @@ async function getAiraloSdk() {
 /**
  * Handle OPTIONS request for CORS preflight
  */
-export async function OPTIONS(request) {
+export async function OPTIONS() {
   return new NextResponse(null, {
     status: 200,
     headers: {
