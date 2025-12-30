@@ -9,9 +9,9 @@ class ConfigService {
     this.listeners = new Map(); // Track active listeners
   }
 
-  // Get Stripe mode (test/live) from admin configuration
+  // Get Stripe mode (test/live) from Remote Config only
   async getStripeMode() {
-    // Check URL parameters first for mode override
+    // Check URL parameters first for mode override (for testing)
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
       const urlMode = urlParams.get('mode');
@@ -21,61 +21,75 @@ class ConfigService {
       }
     }
     
+    // Only use Remote Config - no fallbacks
+    if (typeof window === 'undefined') {
+      console.log('⚠️ Remote Config not available on server-side, defaulting to production');
+      return 'production';
+    }
+    
     try {
-      // First try to get from Remote Config (highest priority for production)
-      if (typeof window !== 'undefined') {
+      const { remoteConfig } = await import('../firebase/config');
+      const { fetchAndActivate, getValue } = await import('firebase/remote-config');
+      
+      if (!remoteConfig) {
+        console.error('❌ Remote Config not initialized');
+        throw new Error('Remote Config not initialized');
+      }
+      
+      console.log('🔍 Fetching Remote Config...');
+      
+      // Fetch and activate Remote Config
+      const activated = await fetchAndActivate(remoteConfig);
+      console.log('📡 Remote Config fetch result:', activated ? 'activated' : 'using cached');
+      
+      // Try different possible parameter names
+      const possibleKeys = ['stripe_mode', 'stripeMode', 'STRIPE_MODE', 'stripe-mode'];
+      let modeValue = null;
+      let usedKey = null;
+      
+      for (const key of possibleKeys) {
         try {
-          const { remoteConfig } = await import('../firebase/config');
-          const { fetchAndActivate, getValue } = await import('firebase/remote-config');
+          const value = getValue(remoteConfig, key);
+          console.log(`🔍 Checking Remote Config key "${key}":`, {
+            exists: !!value,
+            source: value?.getSource(),
+            value: value?.asString ? value.asString() : value?._value
+          });
           
-          // Fetch and activate Remote Config
-          await fetchAndActivate(remoteConfig);
-          
-          const modeValue = getValue(remoteConfig, 'stripe_mode');
-          if (modeValue && modeValue._value && modeValue._value !== '') {
-            const mode = modeValue._value;
-            if (['test', 'sandbox', 'live', 'production'].includes(mode)) {
-              console.log('✅ Stripe mode loaded from Remote Config:', mode);
-              return mode;
+          if (value) {
+            const stringValue = value.asString ? value.asString() : (value._value || '');
+            if (stringValue && stringValue.trim() !== '') {
+              modeValue = stringValue;
+              usedKey = key;
+              break;
             }
           }
-        } catch (remoteConfigError) {
-          console.log('⚠️ Remote Config not available, trying Firestore:', remoteConfigError.message);
+        } catch (keyError) {
+          console.log(`⚠️ Key "${key}" not found in Remote Config`);
         }
       }
       
-      // Fallback to Firestore (admin panel)
-      const configRef = doc(db, 'config', 'stripe');
-      const configDoc = await getDoc(configRef);
-      
-      if (configDoc.exists()) {
-        const configData = configDoc.data();
-        if (configData.mode) {
-          console.log('✅ Stripe mode loaded from Firestore:', configData.mode);
-          return configData.mode;
+      if (modeValue) {
+        const mode = modeValue.trim().toLowerCase();
+        console.log(`🔍 Raw Remote Config value from "${usedKey}":`, modeValue);
+        
+        // Normalize mode values
+        const normalizedMode = mode === 'live' ? 'production' : mode;
+        
+        if (['test', 'sandbox', 'live', 'production'].includes(normalizedMode)) {
+          console.log(`✅ Stripe mode loaded from Remote Config (${usedKey}):`, normalizedMode);
+          return normalizedMode;
+        } else {
+          console.error(`❌ Invalid mode value from Remote Config: "${modeValue}" (normalized: "${normalizedMode}")`);
+          throw new Error(`Invalid Stripe mode in Remote Config: ${modeValue}`);
         }
+      } else {
+        console.error('❌ No stripe_mode found in Remote Config');
+        throw new Error('stripe_mode parameter not found in Remote Config');
       }
-      
-      // Fallback to localStorage (admin panel fallback)
-      const savedMode = localStorage.getItem('esim_stripe_mode');
-      if (savedMode) {
-        console.log('✅ Stripe mode loaded from localStorage:', savedMode);
-        return savedMode;
-      }
-      
-      // Default to production mode
-      console.log('⚠️ No Stripe mode found, defaulting to production');
-      return 'production';
     } catch (error) {
-      console.error('❌ Error loading Stripe mode:', error);
-      // Fallback to localStorage
-      const savedMode = localStorage.getItem('esim_stripe_mode');
-      if (savedMode) {
-        console.log('✅ Stripe mode loaded from localStorage fallback:', savedMode);
-        return savedMode;
-      }
-      console.log('⚠️ No Stripe mode found in fallback, defaulting to production');
-      return 'production';
+      console.error('❌ Error loading Stripe mode from Remote Config:', error);
+      throw new Error(`Failed to load Stripe mode from Remote Config: ${error.message}`);
     }
   }
 
@@ -181,7 +195,7 @@ class ConfigService {
     }
   }
 
-  // Get Stripe publishable key based on mode
+  // Get Stripe publishable key based on mode - Remote Config only
   async getStripePublishableKey(mode = 'production') {
     console.log('🔍 Getting Stripe publishable key for mode:', mode);
     
@@ -192,50 +206,58 @@ class ConfigService {
       return testKey;
     }
     
-    try {
-      // First try Remote Config for production keys
-      if (typeof window !== 'undefined') {
-        try {
-          const { remoteConfig } = await import('../firebase/config');
-          const { fetchAndActivate, getValue } = await import('firebase/remote-config');
-          
-          await fetchAndActivate(remoteConfig);
-          
-          const publishableKey = getValue(remoteConfig, 'stripe_live_publishable_key');
-          if (publishableKey && publishableKey._value && publishableKey._value !== '') {
-            console.log('🔑 Using LIVE publishable key from Remote Config');
-            return publishableKey._value;
-          }
-        } catch (remoteConfigError) {
-          console.log('⚠️ Remote Config not available for publishable key, trying Firestore');
-        }
-      }
-      
-      // Fallback to Firestore
-      const configRef = doc(db, 'config', 'stripe');
-      const configDoc = await getDoc(configRef);
-      
-      if (configDoc.exists()) {
-        const configData = configDoc.data();
-        console.log('🔍 Stripe config from Firestore:', configData);
-        
-        const liveKey = configData.livePublishableKey || configData.live_publishable_key;
-        if (liveKey) {
-          console.log('🔑 Using LIVE publishable key from Firestore');
-          return liveKey;
-        }
-      }
-      
-      // Fallback to environment variables for live mode
+    // Only use Remote Config for production keys
+    if (typeof window === 'undefined') {
+      // Server-side: use environment variable as fallback
       const envKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY_LIVE || process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
       if (envKey) {
-        console.log('🔑 Using LIVE publishable key from environment');
+        console.log('🔑 Using LIVE publishable key from environment (server-side)');
+        return envKey;
+      }
+      throw new Error('Stripe publishable key not configured. Set NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY_LIVE in environment variables.');
+    }
+    
+    try {
+      const { remoteConfig } = await import('../firebase/config');
+      const { fetchAndActivate, getValue } = await import('firebase/remote-config');
+      
+      if (!remoteConfig) {
+        throw new Error('Remote Config not initialized');
+      }
+      
+      await fetchAndActivate(remoteConfig);
+      
+      // Try different possible parameter names
+      const possibleKeys = [
+        'stripe_live_publishable_key',
+        'stripeLivePublishableKey',
+        'STRIPE_LIVE_PUBLISHABLE_KEY',
+        'stripe_publishable_key',
+        'stripePublishableKey'
+      ];
+      
+      for (const key of possibleKeys) {
+        try {
+          const publishableKey = getValue(remoteConfig, key);
+          const keyValue = publishableKey?.asString ? publishableKey.asString() : (publishableKey?._value || '');
+          
+          if (keyValue && keyValue.trim() !== '') {
+            console.log(`🔑 Using LIVE publishable key from Remote Config (${key})`);
+            return keyValue.trim();
+          }
+        } catch (keyError) {
+          // Try next key
+        }
+      }
+      
+      // Fallback to environment variable if Remote Config doesn't have it
+      const envKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY_LIVE || process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+      if (envKey) {
+        console.log('🔑 Using LIVE publishable key from environment (Remote Config fallback)');
         return envKey;
       }
       
-      // No live keys found
-      console.error('❌ No Stripe LIVE publishable keys found in Remote Config, Firestore, or environment');
-      throw new Error('Stripe keys not configured. Please contact administrator.');
+      throw new Error('Stripe publishable key not found in Remote Config or environment variables');
     } catch (error) {
       console.error('❌ Error loading Stripe publishable key:', error);
       
@@ -244,7 +266,7 @@ class ConfigService {
         this.logExpiredStripeKey('publishable', error);
       }
       
-      throw new Error('Stripe keys not configured. Please contact administrator.');
+      throw new Error(`Stripe publishable key not configured: ${error.message}`);
     }
   }
 

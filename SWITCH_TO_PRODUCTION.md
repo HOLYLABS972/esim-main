@@ -1,6 +1,10 @@
 # Quick Guide: Switch from Sandbox to Production
 
-## ⚡ Easiest Method: Update Firestore Directly (Recommended)
+## ⚡ Easiest Method: Update Remote Config (If Using Remote Config)
+
+If you're using Firebase Remote Config (not Firestore), see **[SWITCH_TO_PRODUCTION_REMOTE_CONFIG.md](./SWITCH_TO_PRODUCTION_REMOTE_CONFIG.md)** for instructions.
+
+## Method 1: Update Firestore Directly
 
 1. Go to [Firebase Console](https://console.firebase.google.com)
 2. Select your project
