@@ -4,6 +4,7 @@ import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { getFunctions } from 'firebase/functions';
 import { getAnalytics, isSupported } from 'firebase/analytics';
+import { getRemoteConfig } from 'firebase/remote-config';
 
 // Your Firebase configuration
 const firebaseConfig = {
@@ -41,13 +42,29 @@ try {
 }
 
 // Initialize Firebase services with error handling
-export let auth, db, storage, functions;
+export let auth, db, storage, functions, remoteConfig;
 
 try {
   auth = getAuth(app);
   db = getFirestore(app);
   storage = getStorage(app);
   functions = getFunctions(app, 'us-central1');
+  
+  // Initialize Remote Config (client-side only)
+  if (typeof window !== 'undefined') {
+    remoteConfig = getRemoteConfig(app);
+    remoteConfig.settings = {
+      minimumFetchIntervalMillis: 3600000, // 1 hour
+    };
+    // Set default values
+    remoteConfig.defaultConfig = {
+      stripe_mode: 'production',
+      stripe_live_publishable_key: '',
+      stripe_live_secret_key: ''
+    };
+    console.log('✅ Firebase Remote Config initialized');
+  }
+  
   console.log('✅ Firebase services initialized successfully');
 } catch (error) {
   console.error('❌ Firebase services initialization error:', error);

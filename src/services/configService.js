@@ -22,7 +22,29 @@ class ConfigService {
     }
     
     try {
-      // First try to get from Firestore (admin panel)
+      // First try to get from Remote Config (highest priority for production)
+      if (typeof window !== 'undefined') {
+        try {
+          const { remoteConfig } = await import('../firebase/config');
+          const { fetchAndActivate, getValue } = await import('firebase/remote-config');
+          
+          // Fetch and activate Remote Config
+          await fetchAndActivate(remoteConfig);
+          
+          const modeValue = getValue(remoteConfig, 'stripe_mode');
+          if (modeValue && modeValue._value && modeValue._value !== '') {
+            const mode = modeValue._value;
+            if (['test', 'sandbox', 'live', 'production'].includes(mode)) {
+              console.log('✅ Stripe mode loaded from Remote Config:', mode);
+              return mode;
+            }
+          }
+        } catch (remoteConfigError) {
+          console.log('⚠️ Remote Config not available, trying Firestore:', remoteConfigError.message);
+        }
+      }
+      
+      // Fallback to Firestore (admin panel)
       const configRef = doc(db, 'config', 'stripe');
       const configDoc = await getDoc(configRef);
       
@@ -171,7 +193,25 @@ class ConfigService {
     }
     
     try {
-      // For live/production mode, get from Firestore
+      // First try Remote Config for production keys
+      if (typeof window !== 'undefined') {
+        try {
+          const { remoteConfig } = await import('../firebase/config');
+          const { fetchAndActivate, getValue } = await import('firebase/remote-config');
+          
+          await fetchAndActivate(remoteConfig);
+          
+          const publishableKey = getValue(remoteConfig, 'stripe_live_publishable_key');
+          if (publishableKey && publishableKey._value && publishableKey._value !== '') {
+            console.log('🔑 Using LIVE publishable key from Remote Config');
+            return publishableKey._value;
+          }
+        } catch (remoteConfigError) {
+          console.log('⚠️ Remote Config not available for publishable key, trying Firestore');
+        }
+      }
+      
+      // Fallback to Firestore
       const configRef = doc(db, 'config', 'stripe');
       const configDoc = await getDoc(configRef);
       
@@ -181,7 +221,7 @@ class ConfigService {
         
         const liveKey = configData.livePublishableKey || configData.live_publishable_key;
         if (liveKey) {
-          console.log('🔑 Using LIVE publishable key from Firebase');
+          console.log('🔑 Using LIVE publishable key from Firestore');
           return liveKey;
         }
       }
@@ -194,7 +234,7 @@ class ConfigService {
       }
       
       // No live keys found
-      console.error('❌ No Stripe LIVE publishable keys found in Firebase or environment');
+      console.error('❌ No Stripe LIVE publishable keys found in Remote Config, Firestore, or environment');
       throw new Error('Stripe keys not configured. Please contact administrator.');
     } catch (error) {
       console.error('❌ Error loading Stripe publishable key:', error);
