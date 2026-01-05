@@ -4,20 +4,26 @@ import Link from 'next/link';
 import { Home, ArrowLeft, Search, RefreshCw } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useI18n } from '../src/contexts/I18nContext';
-import { detectLanguageFromPath } from '../src/utils/languageUtils';
 
 export default function NotFound() {
   const router = useRouter();
   const pathname = usePathname();
   const { t } = useI18n();
-  
+
   // Get current language for localized URLs
   const getCurrentLanguage = () => {
     if (typeof window !== 'undefined') {
       const savedLanguage = localStorage.getItem('roamjet-language');
       if (savedLanguage) return savedLanguage;
     }
-    return detectLanguageFromPath(pathname) || 'en';
+    // Detect from pathname
+    const languageCodes = ['ar', 'he', 'ru', 'de', 'fr', 'es'];
+    for (const code of languageCodes) {
+      if (pathname.startsWith(`/${code}/`) || pathname === `/${code}`) {
+        return code;
+      }
+    }
+    return 'en';
   };
 
   const currentLanguage = getCurrentLanguage();
