@@ -45,13 +45,13 @@ export function AuthProvider({ children }) {
       // Generate and send verification OTP first (before creating account)
       const otpData = generateOTPWithTimestamp(10); // 10 minutes expiry
       const emailSent = await sendVerificationEmail(email, displayName, otpData.otp);
-      
+
       if (emailSent) {
         console.log(`✅ Verification OTP sent to ${email}: ${otpData.otp}`);
       } else {
         console.log(`📧 OTP Code for ${email}: ${otpData.otp}`);
       }
-      
+
       // Store pending signup data in localStorage (not in Firebase yet)
       const pendingSignup = {
         email,
@@ -61,9 +61,9 @@ export function AuthProvider({ children }) {
         expiresAt: otpData.expiresAt,
         timestamp: Date.now()
       };
-      
+
       localStorage.setItem('pendingSignup', JSON.stringify(pendingSignup));
-      
+
       return { pending: true, otp: otpData.otp };
     } catch (error) {
       throw error;
@@ -112,7 +112,7 @@ export function AuthProvider({ children }) {
     try {
       const provider = new GoogleAuthProvider();
       const { user } = await signInWithPopup(auth, provider);
-      
+
       // Check if user profile exists, if not create it
       const userDoc = await getDoc(doc(db, 'users', user.uid));
       if (!userDoc.exists()) {
@@ -140,8 +140,25 @@ export function AuthProvider({ children }) {
           });
         }
 
+        // Auto-subscribe to newsletter for new Google users
+        try {
+          await fetch('https://holylabs.net/api/newsletter/subscribe', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              email: user.email,
+              source: 'google_signup'
+            }),
+          });
+          console.log('✅ Google user auto-subscribed to newsletter');
+        } catch (newsletterError) {
+          console.warn('Failed to subscribe Google user to newsletter:', newsletterError);
+        }
+
       }
-      
+
       return user;
     } catch (error) {
       throw error;
@@ -155,9 +172,9 @@ export function AuthProvider({ children }) {
         throw new Error('No pending user data found');
       }
 
-  JSON.parse(pendingUserData);
+      JSON.parse(pendingUserData);
       const currentUser = auth.currentUser;
-      
+
       if (!currentUser) {
         throw new Error('No authenticated user found');
       }
@@ -187,7 +204,7 @@ export function AuthProvider({ children }) {
 
       // Clean up pending data
       localStorage.removeItem('pendingUserData');
-      
+
       return currentUser;
     } catch (error) {
       throw error;
@@ -203,7 +220,7 @@ export function AuthProvider({ children }) {
       }
 
       const pendingSignup = JSON.parse(pendingSignupData);
-      
+
       // Check if OTP has expired
       if (Date.now() > pendingSignup.expiresAt) {
         localStorage.removeItem('pendingSignup');
@@ -215,12 +232,12 @@ export function AuthProvider({ children }) {
         throw new Error('Invalid verification OTP');
       }
 
-  // Create Firebase account only after successful verification
-  const { user } = await createUserWithEmailAndPassword(auth, pendingSignup.email, pendingSignup.password);
-      
+      // Create Firebase account only after successful verification
+      const { user } = await createUserWithEmailAndPassword(auth, pendingSignup.email, pendingSignup.password);
+
       // Update profile with display name
       await updateProfile(user, { displayName: pendingSignup.displayName });
-      
+
       // Create user profile in Firestore and attempt to save IP
       try {
         const ip = await getUserIpAddress();
@@ -244,6 +261,24 @@ export function AuthProvider({ children }) {
         });
       }
 
+
+      // Auto-subscribe to newsletter
+      try {
+        await fetch('https://holylabs.net/api/newsletter/subscribe', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: user.email,
+            source: 'user_registration'
+          }),
+        });
+        console.log('✅ User auto-subscribed to newsletter');
+      } catch (newsletterError) {
+        // Don't fail registration if newsletter subscription fails
+        console.warn('Failed to subscribe user to newsletter:', newsletterError);
+      }
 
       // Clear pending signup data
       localStorage.removeItem('pendingSignup');
@@ -270,10 +305,10 @@ export function AuthProvider({ children }) {
       try {
         console.log('🔍 AuthContext: Loading user profile for:', currentUser.email);
         console.log('🆔 AuthContext: User UID:', currentUser.uid);
-        
+
         const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
         console.log('📄 AuthContext: Document exists:', userDoc.exists());
-        
+
         if (userDoc.exists()) {
           const profileData = userDoc.data();
           console.log('📋 AuthContext: User profile loaded:', profileData);
@@ -298,17 +333,17 @@ export function AuthProvider({ children }) {
 
     try {
       console.log('🔄 AuthContext: Checking for guest orders to migrate for:', user.email);
-      
+
       // Find all guest orders with this email
       const guestOrdersQuery = query(
         collection(db, 'orders'),
         where('customerEmail', '==', user.email),
         where('isGuest', '==', true)
       );
-      
+
       const guestOrdersSnapshot = await getDocs(guestOrdersQuery);
       console.log('📦 AuthContext: Found', guestOrdersSnapshot.size, 'guest orders to migrate');
-      
+
       if (guestOrdersSnapshot.empty) {
         console.log('✅ AuthContext: No guest orders to migrate');
         return;
@@ -322,11 +357,11 @@ export function AuthProvider({ children }) {
         try {
           const orderData = orderDoc.data();
           const orderId = orderData.orderId || orderDoc.id;
-          
+
           // Check if order already exists in user's collection
           const userOrderRef = doc(db, 'users', user.uid, 'esims', orderId);
           const userOrderDoc = await getDoc(userOrderRef);
-          
+
           if (userOrderDoc.exists()) {
             console.log('⏭️ AuthContext: Order already exists in user collection, skipping:', orderId);
             continue;
@@ -354,11 +389,11 @@ export function AuthProvider({ children }) {
             currency: orderData.currency || 'usd',
             status: orderData.status || 'active',
             customerEmail: orderData.customerEmail,
-            
+
             // Country info
             countryCode: countryInfo.code,
             countryName: countryInfo.name,
-            
+
             // QR code data
             qrCode: orderData.qrCode || orderResult.qrCode || firstSim.qr_code || firstSim.qrCode || '',
             qrCodeUrl: orderData.qrCodeUrl || firstSim.qr_code_url || firstSim.qrCodeUrl || '',
@@ -368,7 +403,7 @@ export function AuthProvider({ children }) {
             matchingId: orderData.matchingId || firstSim.matching_id || firstSim.matchingId || '',
             activationCode: orderData.activationCode || orderResult.activationCode || firstSim.activation_code || firstSim.activationCode || '',
             smdpAddress: orderData.smdpAddress || orderResult.smdpAddress || firstSim.smdp_address || firstSim.smdpAddress || '',
-            
+
             // Additional data
             airaloOrderId: orderData.airaloOrderId,
             airaloOrderData: airaloOrderData,
@@ -376,7 +411,7 @@ export function AuthProvider({ children }) {
             processingStatus: orderData.processingStatus || 'completed',
             isTestMode: orderData.isTestMode || false,
             stripeMode: orderData.stripeMode || 'live',
-            
+
             // Timestamps
             createdAt: orderData.createdAt || serverTimestamp(),
             purchaseDate: orderData.purchaseDate || orderData.createdAt || serverTimestamp(),
@@ -389,7 +424,7 @@ export function AuthProvider({ children }) {
           // Add to batch
           batch.set(userOrderRef, esimData);
           migratedCount++;
-          
+
           console.log('✅ AuthContext: Queued order for migration:', orderId);
         } catch (orderError) {
           console.error('❌ AuthContext: Error processing order for migration:', orderDoc.id, orderError);
@@ -418,7 +453,7 @@ export function AuthProvider({ children }) {
         try {
           await loadUserProfile();
           console.log('✅ AuthContext: loadUserProfile completed');
-          
+
           // Migrate guest orders to user's collection
           console.log('🔄 AuthContext: Starting guest order migration...');
           await migrateGuestOrders(user);
