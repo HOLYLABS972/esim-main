@@ -35,7 +35,7 @@ const LanguageWrapper = ({ children }) => {
                                 pathname.startsWith('/french/') || 
                                 pathname.startsWith('/spanish/');
   
-  if (!translatedPages.includes(pathname) && !isBlogPage && !isLanguageSpecificPage && !isSpecialPage) {
+  if (!translatedPages.includes(pathname) && !isLanguageSpecificPage && !isSpecialPage) {
     console.log('LanguageWrapper: No I18n context for pathname:', pathname);
     return children;
   }
