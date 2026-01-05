@@ -7,7 +7,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useI18n } from '../contexts/I18nContext';
 import { useAuth } from '../contexts/AuthContext';
 import LanguageSelector from './LanguageSelector';
-import { detectLanguageFromPath, getLocalizedBlogListUrl } from '../utils/languageUtils';
+import { detectLanguageFromPath } from '../utils/languageUtils';
 
 const Navbar = ({ hideLanguageSelector = false }) => {
   const { t, locale } = useI18n();
@@ -116,15 +116,15 @@ const Navbar = ({ hideLanguageSelector = false }) => {
         </div>
         
         <div className="hidden lg:flex lg:gap-x-12">
-          
+
           <button
             onClick={handleDownloadApp}
             className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors"
           >
             {t('navbar.downloadApp', 'Download')}
           </button>
-          <Link href={getLocalizedBlogListUrl(currentLanguage)} className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
-            {t('navbar.blog', 'Blog')}
+          <Link href="/affiliate" className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
+            {t('navbar.affiliate', 'Affiliate Program')}
           </Link>
           {currentUser && (
             <Link href={getLocalizedUrl("/dashboard")} className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
@@ -189,11 +189,11 @@ const Navbar = ({ hideLanguageSelector = false }) => {
                     {t('navbar.downloadApp', 'Download')}
                   </button>
                   <Link
-                    href={getLocalizedBlogListUrl(currentLanguage)}
+                    href="/affiliate"
                     className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    {t('navbar.blog', 'Blog')}
+                    {t('navbar.affiliate', 'Affiliate Program')}
                   </Link>
                   {currentUser && (
                     <Link

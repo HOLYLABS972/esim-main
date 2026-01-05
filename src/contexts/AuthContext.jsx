@@ -11,7 +11,7 @@ import {
   signInWithPopup,
   GoogleAuthProvider
 } from 'firebase/auth';
-import { doc, setDoc, getDoc, collection, query, where, getDocs, addDoc, serverTimestamp, writeBatch } from 'firebase/firestore';
+import { doc, setDoc, getDoc, collection, query, where, getDocs, serverTimestamp, writeBatch } from 'firebase/firestore';
 import { auth, db } from '../firebase/config';
 import { generateOTPWithTimestamp } from '../utils/otpUtils';
 import { sendVerificationEmail } from '../services/emailService';
@@ -140,14 +140,6 @@ export function AuthProvider({ children }) {
           });
         }
 
-        // Automatically add user to newsletter collection
-        try {
-          await addToNewsletter(user.email, user.displayName, 'web_dashboard');
-          console.log('✅ User automatically added to newsletter via Google Sign In');
-        } catch (newsletterError) {
-          console.error('❌ Error adding user to newsletter:', newsletterError);
-          // Don't fail the signup if newsletter addition fails
-        }
       }
       
       return user;
@@ -252,14 +244,6 @@ export function AuthProvider({ children }) {
         });
       }
 
-      // Automatically add user to newsletter collection
-      try {
-        await addToNewsletter(user.email, pendingSignup.displayName, 'web_dashboard');
-        console.log('✅ User automatically added to newsletter');
-      } catch (newsletterError) {
-        console.error('❌ Error adding user to newsletter:', newsletterError);
-        // Don't fail the signup if newsletter addition fails
-      }
 
       // Clear pending signup data
       localStorage.removeItem('pendingSignup');
@@ -467,31 +451,6 @@ export function AuthProvider({ children }) {
     loadUserProfile
   };
 
-  // Helper function to add user to newsletter collection
-  // Fixed: displayName and source parameters are used in the addDoc call below
-  async function addToNewsletter(email, displayName, source) {
-    try {
-      // Check if email already exists in newsletter collection
-      const existingQuery = query(
-        collection(db, 'newsletter'),
-        where('email', '==', email)
-      );
-      const existingSnapshot = await getDocs(existingQuery);
-      
-      if (existingSnapshot.empty) {
-        // Create new newsletter subscription with all provided data
-        await addDoc(collection(db, 'newsletter'), {
-          email: email,
-          displayName: displayName,
-          source: source,
-          timestamp: serverTimestamp()
-        });
-      }
-    } catch (error) {
-      console.error('Error adding user to newsletter:', error);
-      throw error;
-    }
-  }
 
   return (
     <AuthContext.Provider value={value}>

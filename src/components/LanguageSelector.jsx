@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useI18n } from '../contexts/I18nContext';
-import { getLanguageName, getLanguageFlag, getLocalizedBlogUrl, getLocalizedBlogListUrl } from '../utils/languageUtils';
+import { getLanguageName, getLanguageFlag } from '../utils/languageUtils';
 
 const LanguageSelector = () => {
   const pathname = usePathname();

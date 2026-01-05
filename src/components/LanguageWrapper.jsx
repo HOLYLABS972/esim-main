@@ -19,23 +19,6 @@ const LanguageWrapper = ({ children }) => {
 
   // Check for special pages that should always have i18n context
   const isSpecialPage = pathname === '/not-found' || pathname === '/404';
-  
-  // Check for blog pages (both old and new language routes)
-  const isBlogPage = pathname.startsWith('/blog') || 
-                    // New language-code blog routes
-                    pathname.startsWith('/he/blog') || 
-                    pathname.startsWith('/ar/blog') || 
-                    pathname.startsWith('/ru/blog') || 
-                    pathname.startsWith('/de/blog') || 
-                    pathname.startsWith('/fr/blog') || 
-                    pathname.startsWith('/es/blog') ||
-                    // Old language blog routes (for backward compatibility)
-                    pathname.startsWith('/hebrew/blog') || 
-                    pathname.startsWith('/arabic/blog') || 
-                    pathname.startsWith('/russian/blog') || 
-                    pathname.startsWith('/german/blog') || 
-                    pathname.startsWith('/french/blog') || 
-                    pathname.startsWith('/spanish/blog');
 
   // Check for language-specific routes (e.g., /he/contact, /ru/login, etc.)
   const isLanguageSpecificPage = pathname.startsWith('/he/') || 

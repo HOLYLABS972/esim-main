@@ -27,48 +27,32 @@ const Footer = () => {
   
   const loading = false;
 
-  // Check if we're on a language-specific page or blog page (which has i18n context)
+  // Check if we're on a language-specific page
   const isLanguagePage = [
     // New language-code routes
     '/he', '/ar', '/ru', '/de', '/fr', '/es',
     // Old language routes (for backward compatibility)
     '/hebrew', '/arabic', '/russian', '/german', '/french', '/spanish'
   ].includes(pathname);
-  
-  const isBlogPage = pathname.startsWith('/blog') || 
-                    // New language-code blog routes
-                    pathname.startsWith('/he/blog') || 
-                    pathname.startsWith('/ar/blog') || 
-                    pathname.startsWith('/ru/blog') || 
-                    pathname.startsWith('/de/blog') || 
-                    pathname.startsWith('/fr/blog') || 
-                    pathname.startsWith('/es/blog') ||
-                    // Old language blog routes (for backward compatibility)
-                    pathname.startsWith('/hebrew/blog') || 
-                    pathname.startsWith('/arabic/blog') || 
-                    pathname.startsWith('/russian/blog') || 
-                    pathname.startsWith('/german/blog') || 
-                    pathname.startsWith('/french/blog') || 
-                    pathname.startsWith('/spanish/blog');
 
   // Check for language-specific routes (e.g., /he/contact, /ru/login, etc.)
-  const isLanguageSpecificPage = pathname.startsWith('/he/') || 
-                                pathname.startsWith('/ar/') || 
-                                pathname.startsWith('/ru/') || 
-                                pathname.startsWith('/de/') || 
-                                pathname.startsWith('/fr/') || 
+  const isLanguageSpecificPage = pathname.startsWith('/he/') ||
+                                pathname.startsWith('/ar/') ||
+                                pathname.startsWith('/ru/') ||
+                                pathname.startsWith('/de/') ||
+                                pathname.startsWith('/fr/') ||
                                 pathname.startsWith('/es/') ||
                                 // Old language routes (for backward compatibility)
-                                pathname.startsWith('/hebrew/') || 
-                                pathname.startsWith('/arabic/') || 
-                                pathname.startsWith('/russian/') || 
-                                pathname.startsWith('/german/') || 
-                                pathname.startsWith('/french/') || 
+                                pathname.startsWith('/hebrew/') ||
+                                pathname.startsWith('/arabic/') ||
+                                pathname.startsWith('/russian/') ||
+                                pathname.startsWith('/german/') ||
+                                pathname.startsWith('/french/') ||
                                 pathname.startsWith('/spanish/');
-  
-  // Use translations on language-specific pages, blog pages, and language-specific routes
+
+  // Use translations on language-specific pages and language-specific routes
   const getText = (key, englishText) => {
-    return (isLanguagePage || isBlogPage || isLanguageSpecificPage) ? t(key, englishText) : englishText;
+    return (isLanguagePage || isLanguageSpecificPage) ? t(key, englishText) : englishText;
   };
 
   // Helper function to get language prefix from pathname
@@ -98,7 +82,7 @@ const Footer = () => {
 
   const quickLinks = [
     { name: 'FAQ', path: `${langPrefix}/faq` },
-    { name: getText('footer.blog', 'Blog'), path: '/blog' },
+    { name: getText('navbar.affiliate', 'Affiliate Program'), path: '/affiliate' },
     { name: getText('navbar.partnership', 'Partnership'), path: 'https://biz.roamjet.net', external: true },
     { name: getText('footer.contact', 'Contact'), path: 'https://www.holylabs.net/', external: true }
   ];
