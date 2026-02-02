@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { paymentService } from '../services/paymentService';
+import { createStoreCheckout, getStorePaymentMethods } from '../services/storePaymentService';
 import { coinbaseService } from '../services/coinbaseService';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -16,24 +16,34 @@ const Checkout = ({ plan }) => {
   const [isInIframe, setIsInIframe] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [availablePaymentMethods, setAvailablePaymentMethods] = useState(['stripe', 'coinbase']);
   const [coinbaseAvailable, setCoinbaseAvailable] = useState(false);
 
   useEffect(() => {
     // Detect if we're in an iframe
     setIsInIframe(window !== window.top);
-    
-    // Check if Coinbase is available
-    const checkCoinbaseAvailability = async () => {
+
+    // Load store payment methods and Coinbase availability
+    const initPaymentMethods = async () => {
       try {
+        const methods = await getStorePaymentMethods();
+        setAvailablePaymentMethods(methods);
+        const hasCoinbase = methods.includes('coinbase');
+        if (hasCoinbase) {
+          const available = await coinbaseService.initialize();
+          setCoinbaseAvailable(available);
+        } else {
+          setCoinbaseAvailable(false);
+        }
+      } catch (err) {
+        console.log('⚠️ Could not load payment methods, using defaults:', err);
+        setAvailablePaymentMethods(['stripe', 'coinbase']);
         const available = await coinbaseService.initialize();
         setCoinbaseAvailable(available);
-      } catch (err) {
-        console.log('⚠️ Coinbase not available:', err);
-        setCoinbaseAvailable(false);
       }
     };
 
-    checkCoinbaseAvailability();
+    initPaymentMethods();
   }, []);
 
   const handlePaymentMethodSelect = async (paymentMethod) => {
@@ -46,8 +56,8 @@ const Checkout = ({ plan }) => {
     try {
       // Generate unique order ID
       const uniqueOrderId = `${plan.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      
-      // Create eSIM order
+
+      // Create eSIM order data (store-aware)
       const orderData = {
         orderId: uniqueOrderId,
         planId: plan.id,
@@ -57,8 +67,8 @@ const Checkout = ({ plan }) => {
         currency: 'usd',
         userId: currentUser.uid
       };
-      
-      console.log('💳 Order data for payment:', orderData);
+
+      console.log('💳 Order data for payment (store-aware):', orderData);
 
       // Store order info in localStorage (order will be created after payment confirmation)
       localStorage.setItem('pendingEsimOrder', JSON.stringify({
@@ -70,14 +80,11 @@ const Checkout = ({ plan }) => {
         paymentMethod: paymentMethod
       }));
 
-      // Redirect to payment based on selected method
-      // The actual eSIM order will be created in PaymentSuccess.jsx after payment is confirmed
-      if (paymentMethod === 'coinbase') {
-        await coinbaseService.createCheckoutSession(orderData);
-      } else {
-        await paymentService.createCheckoutSession(orderData);
-      }
-      
+      // Use store-aware payment service (routes to Stripe or Coinbase based on store config)
+      await createStoreCheckout({
+        paymentMethod,
+        orderData
+      });
     } catch (err) {
       console.error('❌ Payment redirect failed:', err);
       setError(err.message || 'Failed to redirect to payment');
@@ -127,7 +134,8 @@ const Checkout = ({ plan }) => {
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Select Payment Method</h2>
           
           <div className="space-y-4">
-            {/* Stripe Payment Option */}
+            {/* Stripe Payment Option - shown if enabled for store */}
+            {availablePaymentMethods.includes('stripe') && (
             <button
               onClick={() => handlePaymentMethodSelect('stripe')}
               disabled={isProcessing}
@@ -154,9 +162,10 @@ const Checkout = ({ plan }) => {
                 <Loader2 className="w-5 h-5 text-tufts-blue animate-spin" />
               )}
             </button>
+            )}
 
-            {/* Coinbase Payment Option */}
-            {coinbaseAvailable && (
+            {/* Coinbase Payment Option - shown if enabled for store and configured */}
+            {availablePaymentMethods.includes('coinbase') && coinbaseAvailable && (
               <button
                 onClick={() => handlePaymentMethodSelect('coinbase')}
                 disabled={isProcessing}
@@ -175,8 +184,8 @@ const Checkout = ({ plan }) => {
                     }`} />
                   </div>
                   <div className="text-left">
-                    <h3 className="font-semibold text-gray-900">Cryptocurrency</h3>
-                    <p className="text-sm text-gray-500">Pay with Bitcoin, Ethereum, and more</p>
+                    <h3 className="font-semibold text-gray-900">Coinbase</h3>
+                    <p className="text-sm text-gray-500">Pay with Bitcoin, Ethereum, and more (crypto)</p>
                   </div>
                 </div>
                 {isProcessing && selectedPaymentMethod === 'coinbase' && (

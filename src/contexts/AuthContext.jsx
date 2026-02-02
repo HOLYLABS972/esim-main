@@ -15,6 +15,7 @@ import { doc, setDoc, getDoc, collection, query, where, getDocs, serverTimestamp
 import { auth, db } from '../firebase/config';
 import { generateOTPWithTimestamp } from '../utils/otpUtils';
 import { sendVerificationEmail } from '../services/emailService';
+import { hasAdminAccess, hasSuperAdminAccess, hasAdminPermission } from '../services/adminService';
 
 const AuthContext = createContext();
 
@@ -471,6 +472,11 @@ export function AuthProvider({ children }) {
     return unsubscribe;
   }, [loadUserProfile, migrateGuestOrders]);
 
+  const getUserType = () => {
+    if (!userProfile) return null;
+    return (userProfile.role === 'admin' || userProfile.role === 'super_admin') ? 'admin' : 'customer';
+  };
+
   const value = {
     currentUser,
     userProfile,
@@ -483,7 +489,11 @@ export function AuthProvider({ children }) {
     completeGoogleSignup,
     verifyEmailOTP,
     updateUserProfile,
-    loadUserProfile
+    loadUserProfile,
+    getUserType,
+    hasAdminAccess: () => hasAdminAccess(userProfile),
+    hasSuperAdminAccess: () => hasSuperAdminAccess(userProfile),
+    hasAdminPermission: (permission) => hasAdminPermission(userProfile, permission)
   };
 
 

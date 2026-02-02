@@ -1,14 +1,14 @@
-import { collection, addDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, query, where, getDocs, updateDoc, doc } from 'firebase/firestore';
 import { db } from '../firebase/config';
 
 /**
- * Submit affiliate program application
+ * Submit affiliate program application - Auto-approves and generates link immediately
  * @param {Object} applicationData - Affiliate application data
- * @returns {Promise<string>} - Application ID
+ * @returns {Promise<Object>} - Application ID and affiliate link
  */
 export async function submitAffiliateApplication(applicationData) {
   try {
-    // Check if email already has a pending or approved application
+    // Check if email already has an application
     const existingQuery = query(
       collection(db, 'affiliate_applications'),
       where('email', '==', applicationData.email)
@@ -16,29 +16,41 @@ export async function submitAffiliateApplication(applicationData) {
     const existingSnapshot = await getDocs(existingQuery);
 
     if (!existingSnapshot.empty) {
-      // Check if there's already a pending or approved application
-      const existingApp = existingSnapshot.docs.find(doc => {
-        const status = doc.data().status;
-        return status === 'pending' || status === 'approved';
-      });
-
-      if (existingApp) {
-        throw new Error('You already have an application in progress or approved.');
+      // Return existing application with its link
+      const existingApp = existingSnapshot.docs[0];
+      const existingData = existingApp.data();
+      
+      if (existingData.affiliateLink) {
+        return {
+          id: existingApp.id,
+          affiliateLink: existingData.affiliateLink,
+          isExisting: true
+        };
       }
     }
 
-    // Create new application
+    // Generate affiliate link with 25% discount
+    const encodedEmail = encodeURIComponent(applicationData.email);
+    const affiliateLink = `https://roamjet.onelink.me/Sc5I/1agbazop?utm_source=${encodedEmail}`;
+
+    // Create new application - auto-approved
     const docRef = await addDoc(collection(db, 'affiliate_applications'), {
       ...applicationData,
-      status: 'pending', // pending, approved, rejected
+      status: 'approved', // Auto-approve
       submittedAt: serverTimestamp(),
-      reviewedAt: null,
-      reviewedBy: null,
-      notes: '',
-      affiliateCode: null, // Will be generated upon approval
+      reviewedAt: serverTimestamp(),
+      reviewedBy: 'auto-approved',
+      notes: 'Auto-approved on submission',
+      affiliateCode: encodedEmail,
+      affiliateLink: affiliateLink,
+      discountPercent: 25,
     });
 
-    return docRef.id;
+    return {
+      id: docRef.id,
+      affiliateLink: affiliateLink,
+      isExisting: false
+    };
   } catch (error) {
     console.error('Error submitting affiliate application:', error);
     throw error;
@@ -69,6 +81,44 @@ export async function getAffiliateApplications(status = null) {
     }));
   } catch (error) {
     console.error('Error fetching affiliate applications:', error);
+    throw error;
+  }
+}
+
+/**
+ * Update application status
+ */
+export async function updateAffiliateApplicationStatus(applicationId, status, notes = '') {
+  try {
+    const appRef = doc(db, 'affiliate_applications', applicationId);
+    await updateDoc(appRef, {
+      status,
+      reviewedAt: serverTimestamp(),
+      notes
+    });
+    return true;
+  } catch (error) {
+    console.error('Error updating application status:', error);
+    throw error;
+  }
+}
+
+/**
+ * Approve application and create AppsFlyer link
+ */
+export async function approveAffiliateApplication(application) {
+  try {
+    const encodedEmail = encodeURIComponent(application.email);
+    const affiliateLink = `https://roamjet.onelink.me/Sc5I/1agbazop?utm_source=${encodedEmail}`;
+    const appRef = doc(db, 'affiliate_applications', application.id);
+    await updateDoc(appRef, {
+      status: 'approved',
+      reviewedAt: serverTimestamp(),
+      affiliateLink: affiliateLink
+    });
+    return { success: true, affiliateLink };
+  } catch (error) {
+    console.error('Error approving application:', error);
     throw error;
   }
 }

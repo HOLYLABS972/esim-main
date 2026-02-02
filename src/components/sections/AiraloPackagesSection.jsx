@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Globe, MapPin, Wifi, Calendar, Flag, Loader2, AlertCircle } from 'lucide-react';
 import { getCountriesWithPricing } from '../../services/plansService';
@@ -169,17 +170,30 @@ export default function AiraloPackagesSection() {
       const countriesWithPricing = await getCountriesWithPricing();
       
       // Filter to show only countries with plans (minPrice < 999 indicates real data)
-      const countriesWithRealPricing = countriesWithPricing.filter(country => 
+      let countriesWithRealPricing = countriesWithPricing.filter(country => 
         country.minPrice < 999 && country.plansCount > 0
       );
       
-      // Sort by minimum price (cheapest first)
-      countriesWithRealPricing.sort((a, b) => a.minPrice - b.minPrice);
+      // Only show countries with proper flags (exclude globe 🌍 and map 🗺️)
+      const genericIcons = ['🌍', '🗺️', '🌏', '🌎'];
+      countriesWithRealPricing = countriesWithRealPricing.filter(country => {
+        const flag = country.flagEmoji || '';
+        return flag && !genericIcons.includes(flag);
+      });
+      
+      // Sort by popularity: most plans first (popular destinations), then by min price
+      countriesWithRealPricing.sort((a, b) => {
+        if (b.plansCount !== a.plansCount) return b.plansCount - a.plansCount;
+        return a.minPrice - b.minPrice;
+      });
+      
+      // Show top 10 popular destinations on homepage
+      const popularDestinations = countriesWithRealPricing.slice(0, 10);
       
       // Translate countries based on current locale
-      const translatedCountries = translateCountries(countriesWithRealPricing, locale);
+      const translatedCountries = translateCountries(popularDestinations, locale);
       
-      console.log('✅ Countries loaded:', translatedCountries.length);
+      console.log('✅ Popular destinations loaded:', translatedCountries.length);
       setCountries(translatedCountries);
     } catch (err) {
       console.error('Error fetching countries:', err);
@@ -834,7 +848,7 @@ export default function AiraloPackagesSection() {
             }`}
           >
             <Flag className="w-3.5 h-3.5 mr-1" />
-            <span>Countries</span>
+            <span>Popular Destinations</span>
             <span className={`ml-1 px-1.5 py-0.5 rounded-full text-xs font-semibold ${
               activeTab === 'countries'
                 ? 'bg-tufts-blue-dark text-white'
@@ -970,6 +984,19 @@ export default function AiraloPackagesSection() {
               </div>
             ) : (
               <div>
+                {!searchTerm && (
+                  <div className="text-center mb-4">
+                    <p className="text-gray-600 text-sm mb-2">
+                      Top 10 popular travel destinations
+                    </p>
+                    <Link
+                      href={locale && locale !== 'en' ? `/${locale}/esim-plans` : '/esim-plans'}
+                      className="text-tufts-blue text-sm font-medium hover:underline"
+                    >
+                      View all destinations →
+                    </Link>
+                  </div>
+                )}
                 {searchTerm && (
                   <div className="mb-4 text-center text-gray-600 text-sm">
                     Found {filteredCountries.length} {filteredCountries.length === 1 ? 'country' : 'countries'} matching "{searchTerm}"

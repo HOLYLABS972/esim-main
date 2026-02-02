@@ -82,8 +82,8 @@ const Footer = () => {
 
   const quickLinks = [
     { name: 'FAQ', path: `${langPrefix}/faq` },
-    { name: getText('navbar.affiliate', 'Affiliate Program'), path: '/affiliate' },
-    { name: getText('navbar.partnership', 'Partnership'), path: 'https://admin.roamjet.net', external: true },
+    { name: getText('navbar.affiliate', 'Affiliate'), path: '/affiliate' },
+    { name: getText('navbar.login', 'Login'), path: `${langPrefix}/login` },
     { name: getText('navbar.blog', 'Blog'), path: 'https://www.holylabs.net/en/blog', external: true }
   ];
 

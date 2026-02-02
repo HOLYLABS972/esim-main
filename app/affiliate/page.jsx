@@ -6,17 +6,28 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-hot-toast';
 import { submitAffiliateApplication } from '../../src/services/affiliateService';
 import Navbar from '../../src/components/Navbar';
-import { TrendingUp, Users, DollarSign, CheckCircle, ArrowRight, ArrowLeft } from 'lucide-react';
+import { TrendingUp, Users, DollarSign, CheckCircle, ArrowRight, ArrowLeft, Copy, Gift, Headphones } from 'lucide-react';
 
 export default function AffiliatePage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [affiliateLink, setAffiliateLink] = useState('');
+  const [isExistingApplication, setIsExistingApplication] = useState(false);
   const { register, handleSubmit, formState: { errors }, trigger, getValues, reset } = useForm({
     mode: 'onChange'
   });
 
   const totalSteps = 3;
+
+  const copyToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(affiliateLink);
+      toast.success('Link copied to clipboard!');
+    } catch (err) {
+      toast.error('Failed to copy link');
+    }
+  };
 
   const nextStep = async () => {
     let fieldsToValidate = [];
@@ -43,17 +54,20 @@ export default function AffiliatePage() {
   const onSubmit = async (data) => {
     setIsSubmitting(true);
     try {
-      await submitAffiliateApplication(data);
+      const result = await submitAffiliateApplication(data);
+      setAffiliateLink(result.affiliateLink);
+      setIsExistingApplication(result.isExisting || false);
       setIsSubmitted(true);
-      toast.success('Application submitted successfully! We\'ll review it and get back to you soon.');
+      
+      if (result.isExisting) {
+        toast.success('Welcome back! Here\'s your affiliate link.');
+      } else {
+        toast.success('You\'re approved! Here\'s your affiliate link.');
+      }
       reset();
       setCurrentStep(1);
     } catch (error) {
-      if (error.message.includes('already have an application')) {
-        toast.error('You already have an application in progress or approved.');
-      } else {
-        toast.error('Failed to submit application. Please try again.');
-      }
+      toast.error('Failed to submit application. Please try again.');
       console.error('Error submitting application:', error);
     } finally {
       setIsSubmitting(false);
@@ -172,20 +186,84 @@ export default function AffiliatePage() {
             className="max-w-3xl mx-auto bg-white rounded-lg shadow-lg p-8"
           >
             {isSubmitted ? (
-              <div className="text-center py-12">
+              <div className="text-center py-8">
                 <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                  Application Submitted!
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                  {isExistingApplication ? 'Welcome Back!' : 'You\'re Approved!'}
                 </h2>
                 <p className="text-gray-600 mb-6">
-                  Thank you for applying to our affiliate program. We'll review your application
-                  and get back to you within 2-3 business days.
+                  {isExistingApplication 
+                    ? 'Here\'s your existing affiliate link.'
+                    : 'Your affiliate application has been approved. Here\'s your unique link.'}
                 </p>
+
+                {/* 25% Discount Badge */}
+                <div className="inline-flex items-center bg-green-100 text-green-800 px-4 py-2 rounded-full mb-6">
+                  <Gift className="w-5 h-5 mr-2" />
+                  <span className="font-semibold">Your link offers 25% discount to customers!</span>
+                </div>
+
+                {/* Affiliate Link Box */}
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
+                  <p className="text-sm text-gray-500 mb-2">Your Affiliate Link</p>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={affiliateLink}
+                      readOnly
+                      className="flex-1 px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-800 font-mono text-sm"
+                    />
+                    <button
+                      onClick={copyToClipboard}
+                      className="px-4 py-3 bg-tufts-blue text-white rounded-lg hover:bg-cobalt-blue transition-colors flex items-center gap-2"
+                    >
+                      <Copy className="w-4 h-4" />
+                      Copy
+                    </button>
+                  </div>
+                </div>
+
+                {/* Customer Support Notice */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                  <div className="flex items-start gap-3">
+                    <Headphones className="w-6 h-6 text-blue-600 flex-shrink-0 mt-0.5" />
+                    <div className="text-left">
+                      <p className="font-semibold text-blue-900">Customer Support Will Be in Touch</p>
+                      <p className="text-blue-700 text-sm mt-1">
+                        Our team will contact you with more information about marketing materials, 
+                        tracking your earnings, and tips to maximize your affiliate success.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* How it works */}
+                <div className="text-left bg-white border border-gray-200 rounded-lg p-4 mb-6">
+                  <h3 className="font-semibold text-gray-900 mb-3">How It Works</h3>
+                  <ul className="space-y-2 text-sm text-gray-600">
+                    <li className="flex items-start gap-2">
+                      <span className="bg-tufts-blue text-white rounded-full w-5 h-5 flex items-center justify-center text-xs flex-shrink-0">1</span>
+                      Share your unique link with your audience
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="bg-tufts-blue text-white rounded-full w-5 h-5 flex items-center justify-center text-xs flex-shrink-0">2</span>
+                      Customers get 25% off their eSIM purchase
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="bg-tufts-blue text-white rounded-full w-5 h-5 flex items-center justify-center text-xs flex-shrink-0">3</span>
+                      You earn commission on every sale
+                    </li>
+                  </ul>
+                </div>
+
                 <button
-                  onClick={() => setIsSubmitted(false)}
-                  className="px-6 py-3 bg-tufts-blue text-white rounded-lg hover:bg-cobalt-blue transition-colors"
+                  onClick={() => {
+                    setIsSubmitted(false);
+                    setAffiliateLink('');
+                  }}
+                  className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
                 >
-                  Submit Another Application
+                  Back to Form
                 </button>
               </div>
             ) : (

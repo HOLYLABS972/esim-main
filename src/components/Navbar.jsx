@@ -124,7 +124,7 @@ const Navbar = ({ hideLanguageSelector = false }) => {
             {t('navbar.downloadApp', 'Download')}
           </button>
           <Link href="/affiliate" className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
-            {t('navbar.affiliate', 'Affiliate Program')}
+            {t('navbar.affiliate', 'Affiliate')}
           </Link>
           <a href="https://www.holylabs.net/en/blog" target="_blank" rel="noopener noreferrer" className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
             {t('navbar.blog', 'Blog')}
@@ -134,9 +134,9 @@ const Navbar = ({ hideLanguageSelector = false }) => {
               {t('navbar.dashboard', 'Dashboard')}
             </Link>
           )}
-          <a href="https://admin.roamjet.net" target="_blank" rel="noopener noreferrer" className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
-            {t('navbar.partnership', 'Partnership')}
-          </a>
+          <Link href={getLocalizedUrl("/login")} className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
+            {t('navbar.login', 'Login')}
+          </Link>
         </div>
         
         {/* Right side with language selector */}
@@ -196,7 +196,7 @@ const Navbar = ({ hideLanguageSelector = false }) => {
                     className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    {t('navbar.affiliate', 'Affiliate Program')}
+                    {t('navbar.affiliate', 'Affiliate')}
                   </Link>
                   <a
                     href="https://www.holylabs.net/en/blog"
@@ -216,15 +216,13 @@ const Navbar = ({ hideLanguageSelector = false }) => {
                       {t('navbar.dashboard', 'Dashboard')}
                     </Link>
                   )}
-                  <a
-                    href="https://admin.roamjet.net"
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <Link
+                    href={getLocalizedUrl("/login")}
                     className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    {t('navbar.partnership', 'Partnership')}
-                  </a>
+                    {t('navbar.login', 'Login')}
+                  </Link>
                 </div>
               </div>
             </div>

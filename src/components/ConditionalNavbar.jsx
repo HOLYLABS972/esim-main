@@ -7,6 +7,11 @@ import Navbar from './Navbar';
 
 const ConditionalNavbar = () => {
   const pathname = usePathname();
+
+  // Hide navbar on admin pages
+  if (pathname?.startsWith('/admin')) {
+    return null;
+  }
   
   // Show full navbar on login and register pages (same as other pages)
   if (pathname === '/login' || pathname === '/register') {
