@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import fs from 'fs';
 import admin from 'firebase-admin';
 
 // Initialize Firebase Admin SDK
@@ -18,7 +19,6 @@ if (!admin.apps.length) {
     // Fallback to service account file (development only)
     else {
       try {
-        const fs = require('fs');
         if (fs.existsSync('./esim-service.json')) {
           credential = admin.credential.cert('./esim-service.json');
           console.log('✅ Firebase Admin SDK initialized with service account file');

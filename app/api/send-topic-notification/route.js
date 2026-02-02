@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
+import fs from 'fs';
 import admin from 'firebase-admin';
-import { collection, query, getDocs, where, doc, getDoc, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, getDoc, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../../src/firebase/config';
 
 // Initialize Firebase Admin SDK (same as send-notification)
@@ -17,7 +18,6 @@ if (!admin.apps.length) {
       console.log('✅ Firebase Admin SDK initialized');
     } else {
       try {
-        const fs = require('fs');
         if (fs.existsSync('./esim-service.json')) {
           credential = admin.credential.cert('./esim-service.json');
         }

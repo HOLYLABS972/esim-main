@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import fs from 'fs';
 import admin from 'firebase-admin';
 
 // Initialize Firebase Admin SDK if not already initialized
@@ -13,7 +14,6 @@ if (!admin.apps.length) {
         privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
       });
     } else {
-      const fs = require('fs');
       if (fs.existsSync('./esim-service.json')) {
         credential = admin.credential.cert('./esim-service.json');
       }
