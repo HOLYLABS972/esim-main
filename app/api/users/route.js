@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 import admin from 'firebase-admin';
-import { getFirestore, getAuth } from '../../../lib/firebaseAdmin';
+import { getFirestore, getAuth } from '../../lib/firebaseAdmin';
 
 /**
  * GET /api/users - Fetch users from Firebase with pagination and filters

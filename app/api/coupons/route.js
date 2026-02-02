@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 import admin from 'firebase-admin';
-import { getFirestore } from '../../../lib/firebaseAdmin';
+import { getFirestore } from '../../lib/firebaseAdmin';
 
 /**
  * GET /api/coupons - Fetch coupons from Firestore
