@@ -8,8 +8,8 @@ import Navbar from './Navbar';
 const ConditionalNavbar = () => {
   const pathname = usePathname();
 
-  // Hide navbar on admin pages
-  if (pathname?.startsWith('/admin')) {
+  // Hide navbar on admin and share-package pages
+  if (pathname?.startsWith('/admin') || pathname?.startsWith('/share-package')) {
     return null;
   }
   

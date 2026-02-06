@@ -7,7 +7,7 @@ import { db } from '../firebase/config';
 import { Search } from 'lucide-react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useAuth } from '../contexts/AuthContext';
-import PlanSelectionBottomSheet from './PlanSelectionBottomSheet';
+
 import { getCountriesWithPricing } from '../services/plansService';
 import { getRegularSettings } from '../services/settingsService';
 import { useI18n } from '../contexts/I18nContext';
@@ -16,6 +16,7 @@ import { getMobileCountries } from '../data/mobileCountries';
 import { getLanguageDirection, detectLanguageFromPath } from '../utils/languageUtils';
 import { translateCountries } from '../utils/countryTranslations';
 import { getFlagEmoji } from '../utils/countryFlags';
+import toast from 'react-hot-toast';
 
 // Country name aliases for better search
 const countryAliases = {
@@ -91,10 +92,6 @@ const EsimPlans = () => {
   const [filteredCountries, setFilteredCountries] = useState([]);
   const [platformInfo, setPlatformInfo] = useState(null);
   
-  // Plan selection and checkout state
-  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
-  const [availablePlans, setAvailablePlans] = useState([]);
-  const [loadingPlans, setLoadingPlans] = useState(false);
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   
@@ -352,187 +349,41 @@ const EsimPlans = () => {
   const handleCountrySelect = async (country) => {
     console.log('🔍 DEBUG: handleCountrySelect called');
     console.log('🛒 User selected country:', country.name);
-    
-    // Always open bottom sheet to show plans (users can browse even if not logged in)
-    setShowCheckoutModal(true);
-    setLoadingPlans(true);
-    await loadAvailablePlansForCountry(country.code);
-  };
 
-  // Load available plans for a specific country
-  const loadAvailablePlansForCountry = async (countryCode) => {
+    // Navigate directly to share-package page with 1GB auto-selected
     try {
-      // Query for plans that include this country directly
       const directPlansQuery = query(
         collection(db, 'dataplans'),
-        where('country_codes', 'array-contains', countryCode)
+        where('country_codes', 'array-contains', country.code)
       );
       const directPlansSnapshot = await getDocs(directPlansQuery);
-      
-      const directPlans = directPlansSnapshot.docs
-        .map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }))
-        // Filter out hidden and disabled plans
+      const plans = directPlansSnapshot.docs
+        .map(doc => ({ id: doc.id, ...doc.data() }))
         .filter(plan => plan.enabled !== false && plan.hidden !== true);
-      
-      // Also query for regional plans that might include this country
-      // Regional plans might have country codes that don't include this country
-      // but are still valid for this country (e.g., "americanmex" plans for Mexico)
-      const allPlansQuery = query(collection(db, 'dataplans'));
-      const allPlansSnapshot = await getDocs(allPlansQuery);
-      
-      // Filter regional plans that might be relevant
-      const regionalPlans = allPlansSnapshot.docs
-        .map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }))
-        // Filter out hidden and disabled plans first
-        .filter(plan => plan.enabled !== false && plan.hidden !== true)
-        .filter(plan => {
-          // Check if it's a regional plan
-          const isRegional = plan.is_regional === true || 
-                           plan.type === 'regional' ||
-                           (plan.country_codes && plan.country_codes.length >= 2 && plan.country_codes.length < 10);
-          
-          if (!isRegional) return false;
-          
-          // Check if plan name/slug suggests it includes this country
-          const planName = (plan.name || plan.slug || '').toLowerCase();
-          const countryCodeLower = countryCode.toLowerCase();
-          
-          // Check if plan name includes country code or common country name patterns
-          const countryPatterns = {
-            'mx': ['mexico', 'mex', 'americanmex'],
-            'us': ['usa', 'united states', 'america', 'americanmex'],
-            'ca': ['canada', 'can'],
-            'gb': ['uk', 'united kingdom', 'britain'],
-            'ae': ['uae', 'united arab emirates', 'emirates'],
-            'kr': ['korea', 'south korea'],
-            'au': ['australia'],
-            'nz': ['new zealand'],
-            'za': ['south africa'],
-            'jp': ['japan'],
-            'cn': ['china'],
-            'in': ['india'],
-            'br': ['brazil'],
-            'fr': ['france'],
-            'de': ['germany'],
-            'it': ['italy'],
-            'es': ['spain'],
-            'nl': ['netherlands', 'holland'],
-            'ch': ['switzerland', 'swiss'],
-            'at': ['austria'],
-            'be': ['belgium'],
-            'dk': ['denmark'],
-            'se': ['sweden'],
-            'no': ['norway'],
-            'fi': ['finland'],
-            'pl': ['poland'],
-            'pt': ['portugal'],
-            'gr': ['greece'],
-            'ie': ['ireland'],
-            'cz': ['czech', 'czechia'],
-            'hu': ['hungary'],
-            'ro': ['romania'],
-            'bg': ['bulgaria'],
-            'hr': ['croatia'],
-            'sk': ['slovakia'],
-            'si': ['slovenia'],
-            'ee': ['estonia'],
-            'lv': ['latvia'],
-            'lt': ['lithuania'],
-            'mt': ['malta'],
-            'cy': ['cyprus'],
-            'lu': ['luxembourg'],
-            'is': ['iceland'],
-            'li': ['liechtenstein'],
-            'mc': ['monaco'],
-            'ad': ['andorra'],
-            'sm': ['san marino'],
-            'va': ['vatican'],
-            'ru': ['russia'],
-            'ua': ['ukraine'],
-            'tr': ['turkey'],
-            'eg': ['egypt'],
-            'sa': ['saudi arabia'],
-            'il': ['israel'],
-            'jo': ['jordan'],
-            'lb': ['lebanon'],
-            'kw': ['kuwait'],
-            'qa': ['qatar'],
-            'bh': ['bahrain'],
-            'om': ['oman'],
-            'my': ['malaysia'],
-            'sg': ['singapore'],
-            'th': ['thailand'],
-            'id': ['indonesia'],
-            'ph': ['philippines'],
-            'vn': ['vietnam'],
-            'tw': ['taiwan'],
-            'hk': ['hong kong'],
-            'mo': ['macau'],
-            'ar': ['argentina', 'latamlink', 'latam'],
-            'cl': ['chile', 'latamlink', 'latam'],
-            'co': ['colombia', 'latamlink', 'latam'],
-            'pe': ['peru', 'latamlink', 'latam'],
-            'ec': ['ecuador', 'latamlink', 'latam'],
-            'uy': ['uruguay', 'latamlink', 'latam'],
-            'py': ['paraguay', 'latamlink', 'latam'],
-            'bo': ['bolivia', 'latamlink', 'latam'],
-            've': ['venezuela', 'latamlink', 'latam'],
-            'cr': ['costa rica', 'latamlink', 'latam'],
-            'pa': ['panama', 'latamlink', 'latam'],
-            'gt': ['guatemala', 'latamlink', 'latam'],
-            'hn': ['honduras', 'latamlink', 'latam'],
-            'ni': ['nicaragua', 'latamlink', 'latam'],
-            'sv': ['el salvador', 'latamlink', 'latam'],
-            'do': ['dominican republic', 'dr', 'latamlink', 'latam'],
-            'jm': ['jamaica', 'latamlink', 'latam'],
-            'tt': ['trinidad', 'latamlink', 'latam'],
-            'bb': ['barbados', 'latamlink', 'latam'],
-            'bs': ['bahamas', 'latamlink', 'latam'],
-            'bz': ['belize', 'latamlink', 'latam'],
-            'gy': ['guyana', 'latamlink', 'latam'],
-            'sr': ['suriname', 'latamlink', 'latam'],
-            'gf': ['french guiana', 'latamlink', 'latam'],
-            'br': ['brazil', 'latamlink', 'latam']
-          };
-          
-          const patterns = countryPatterns[countryCodeLower] || [];
-          const matchesPattern = patterns.some(pattern => planName.includes(pattern));
-          
-          // Also check if plan name includes the country code
-          const matchesCode = planName.includes(countryCodeLower);
-          
-          return matchesPattern || matchesCode;
-        });
-      
-      // Combine direct plans and relevant regional plans, removing duplicates
-      const allPlans = [...directPlans, ...regionalPlans];
-      const uniquePlans = allPlans.filter((plan, index, self) => 
-        index === self.findIndex(p => p.id === plan.id)
-      );
-      
-      // Filter out disabled and hidden plans
-      // enabled !== false means enabled by default
-      // hidden !== true means visible by default
-      const enabledPlans = uniquePlans.filter(plan => 
-        plan.enabled !== false && plan.hidden !== true
-      );
-      
-      console.log(`📦 Loaded ${enabledPlans.length} plans for ${countryCode} (${directPlans.length} direct, ${regionalPlans.length} regional)`);
-      
-      setAvailablePlans(enabledPlans);
+
+      // Find 1GB plan (cheapest), fallback to cheapest plan overall
+      const oneGBPlan = plans
+        .filter(p => parseFloat(p.data) === 1)
+        .sort((a, b) => parseFloat(a.price) - parseFloat(b.price))[0];
+      const fallbackPlan = plans.sort((a, b) => parseFloat(a.price) - parseFloat(b.price))[0];
+      const targetPlan = oneGBPlan || fallbackPlan;
+
+      if (targetPlan) {
+        const countryFlag = country.flagEmoji || '🌍';
+        let targetUrl = `/share-package/${targetPlan.id}?country=${country.code}&flag=${countryFlag}`;
+        if (locale && locale !== 'en') {
+          targetUrl = `/${locale}${targetUrl}`;
+        }
+        router.push(targetUrl);
+      } else {
+        toast.error('No plans available for this country');
+      }
     } catch (error) {
-      console.error('Error loading plans for country:', error);
-      setAvailablePlans([]);
-    } finally {
-      setLoadingPlans(false);
+      console.error('Error finding plans:', error);
+      toast.error('Failed to load plans');
     }
   };
+
 
 
   // No fallback timeout - only show real Firebase data
@@ -682,14 +533,6 @@ const EsimPlans = () => {
       </div>
     </section>
 
-    {/* Plan Selection Bottom Sheet */}
-    <PlanSelectionBottomSheet
-      isOpen={showCheckoutModal}
-      onClose={() => setShowCheckoutModal(false)}
-      availablePlans={availablePlans}
-      loadingPlans={loadingPlans}
-      filteredCountries={filteredCountries}
-    />
     </>
   );
 };

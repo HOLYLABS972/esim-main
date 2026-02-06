@@ -8,7 +8,40 @@ const nextConfig = {
   async headers() {
     return [
       {
-        source: '/(.*)',
+        // Allow iframe embedding for share-package pages
+        source: '/share-package/:path*',
+        headers: [
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'origin-when-cross-origin',
+          },
+          {
+            key: 'Content-Security-Policy',
+            value: 'frame-ancestors *',
+          },
+        ],
+      },
+      {
+        // Allow iframe embedding for payment API routes
+        source: '/api/payments/:path*',
+        headers: [
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'origin-when-cross-origin',
+          },
+        ],
+      },
+      {
+        // Keep all other pages protected from iframe embedding
+        source: '/((?!share-package|api/payments).*)',
         headers: [
           {
             key: 'X-Frame-Options',

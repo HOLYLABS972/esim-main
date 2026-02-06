@@ -3,11 +3,11 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Globe, MapPin, Wifi, Calendar, Flag, Loader2, AlertCircle } from 'lucide-react';
+import { Globe, Flag, Loader2, AlertCircle } from 'lucide-react';
 import { getCountriesWithPricing } from '../../services/plansService';
 import { translateCountries } from '../../utils/countryTranslations';
 import { useI18n } from '../../contexts/I18nContext';
-import PlanSelectionBottomSheet from '../PlanSelectionBottomSheet';
+
 import { collection, getDocs, query, where, orderBy } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 
@@ -19,17 +19,12 @@ export default function AiraloPackagesSection() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('countries'); // 'global', 'regional', or 'countries'
-  const [selectedRegion, setSelectedRegion] = useState(null);
   const [selectedCountry, setSelectedCountry] = useState(null);
   
   // Countries tab state
   const [countries, setCountries] = useState([]);
   const [filteredCountries, setFilteredCountries] = useState([]);
   const [loadingCountries, setLoadingCountries] = useState(false);
-  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
-  const [availablePlans, setAvailablePlans] = useState([]);
-  const [loadingPlans, setLoadingPlans] = useState(false);
-  
   // Search state
   const [searchTerm, setSearchTerm] = useState('');
   const [mounted, setMounted] = useState(false);
@@ -205,182 +200,35 @@ export default function AiraloPackagesSection() {
 
   const handleCountrySelect = async (country) => {
     console.log('🛒 User selected country:', country.name);
-    setShowCheckoutModal(true);
-    setLoadingPlans(true);
-    await loadAvailablePlansForCountry(country.code);
-  };
 
-  const loadAvailablePlansForCountry = async (countryCode) => {
+    // Navigate directly to share-package page with 1GB auto-selected
     try {
-      // Query for plans that include this country directly
       const directPlansQuery = query(
         collection(db, 'dataplans'),
-        where('country_codes', 'array-contains', countryCode)
+        where('country_codes', 'array-contains', country.code)
       );
       const directPlansSnapshot = await getDocs(directPlansQuery);
-      
-      const directPlans = directPlansSnapshot.docs
-        .map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }))
-        // Filter out hidden and disabled plans
+      const plans = directPlansSnapshot.docs
+        .map(doc => ({ id: doc.id, ...doc.data() }))
         .filter(plan => plan.enabled !== false && plan.hidden !== true);
-      
-      // Also query for regional plans that might include this country
-      // Regional plans might have country codes that don't include this country
-      // but are still valid for this country (e.g., "americanmex" plans for Mexico)
-      const allPlansQuery = query(collection(db, 'dataplans'));
-      const allPlansSnapshot = await getDocs(allPlansQuery);
-      
-      // Filter regional plans that might be relevant
-      const regionalPlans = allPlansSnapshot.docs
-        .map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }))
-        // Filter out hidden and disabled plans first
-        .filter(plan => plan.enabled !== false && plan.hidden !== true)
-        .filter(plan => {
-          // Check if it's a regional plan
-          const isRegional = plan.is_regional === true || 
-                           plan.type === 'regional' ||
-                           (plan.country_codes && plan.country_codes.length >= 2 && plan.country_codes.length < 10);
-          
-          if (!isRegional) return false;
-          
-          // Check if plan name/slug suggests it includes this country
-          const planName = (plan.name || plan.slug || '').toLowerCase();
-          const countryCodeLower = countryCode.toLowerCase();
-          
-          // Check if plan name includes country code or common country name patterns
-          const countryPatterns = {
-            'mx': ['mexico', 'mex', 'americanmex'],
-            'us': ['usa', 'united states', 'america', 'americanmex'],
-            'ca': ['canada', 'can'],
-            'gb': ['uk', 'united kingdom', 'britain'],
-            'ae': ['uae', 'united arab emirates', 'emirates'],
-            'kr': ['korea', 'south korea'],
-            'au': ['australia'],
-            'nz': ['new zealand'],
-            'za': ['south africa'],
-            'jp': ['japan'],
-            'cn': ['china'],
-            'in': ['india'],
-            'br': ['brazil'],
-            'fr': ['france'],
-            'de': ['germany'],
-            'it': ['italy'],
-            'es': ['spain'],
-            'nl': ['netherlands', 'holland'],
-            'ch': ['switzerland', 'swiss'],
-            'at': ['austria'],
-            'be': ['belgium'],
-            'dk': ['denmark'],
-            'se': ['sweden'],
-            'no': ['norway'],
-            'fi': ['finland'],
-            'pl': ['poland'],
-            'pt': ['portugal'],
-            'gr': ['greece'],
-            'ie': ['ireland'],
-            'cz': ['czech', 'czechia'],
-            'hu': ['hungary'],
-            'ro': ['romania'],
-            'bg': ['bulgaria'],
-            'hr': ['croatia'],
-            'sk': ['slovakia'],
-            'si': ['slovenia'],
-            'ee': ['estonia'],
-            'lv': ['latvia'],
-            'lt': ['lithuania'],
-            'mt': ['malta'],
-            'cy': ['cyprus'],
-            'lu': ['luxembourg'],
-            'is': ['iceland'],
-            'li': ['liechtenstein'],
-            'mc': ['monaco'],
-            'ad': ['andorra'],
-            'sm': ['san marino'],
-            'va': ['vatican'],
-            'ru': ['russia'],
-            'ua': ['ukraine'],
-            'tr': ['turkey'],
-            'eg': ['egypt'],
-            'sa': ['saudi arabia'],
-            'il': ['israel'],
-            'jo': ['jordan'],
-            'lb': ['lebanon'],
-            'kw': ['kuwait'],
-            'qa': ['qatar'],
-            'bh': ['bahrain'],
-            'om': ['oman'],
-            'my': ['malaysia'],
-            'sg': ['singapore'],
-            'th': ['thailand'],
-            'id': ['indonesia'],
-            'ph': ['philippines'],
-            'vn': ['vietnam'],
-            'tw': ['taiwan'],
-            'hk': ['hong kong'],
-            'mo': ['macau'],
-            'ar': ['argentina', 'latamlink', 'latam'],
-            'cl': ['chile', 'latamlink', 'latam'],
-            'co': ['colombia', 'latamlink', 'latam'],
-            'pe': ['peru', 'latamlink', 'latam'],
-            'ec': ['ecuador', 'latamlink', 'latam'],
-            'uy': ['uruguay', 'latamlink', 'latam'],
-            'py': ['paraguay', 'latamlink', 'latam'],
-            'bo': ['bolivia', 'latamlink', 'latam'],
-            've': ['venezuela', 'latamlink', 'latam'],
-            'cr': ['costa rica', 'latamlink', 'latam'],
-            'pa': ['panama', 'latamlink', 'latam'],
-            'gt': ['guatemala', 'latamlink', 'latam'],
-            'hn': ['honduras', 'latamlink', 'latam'],
-            'ni': ['nicaragua', 'latamlink', 'latam'],
-            'sv': ['el salvador', 'latamlink', 'latam'],
-            'do': ['dominican republic', 'dr', 'latamlink', 'latam'],
-            'jm': ['jamaica', 'latamlink', 'latam'],
-            'tt': ['trinidad', 'latamlink', 'latam'],
-            'bb': ['barbados', 'latamlink', 'latam'],
-            'bs': ['bahamas', 'latamlink', 'latam'],
-            'bz': ['belize', 'latamlink', 'latam'],
-            'gy': ['guyana', 'latamlink', 'latam'],
-            'sr': ['suriname', 'latamlink', 'latam'],
-            'gf': ['french guiana', 'latamlink', 'latam'],
-            'br': ['brazil', 'latamlink', 'latam']
-          };
-          
-          const patterns = countryPatterns[countryCodeLower] || [];
-          const matchesPattern = patterns.some(pattern => planName.includes(pattern));
-          
-          // Also check if plan name includes the country code
-          const matchesCode = planName.includes(countryCodeLower);
-          
-          return matchesPattern || matchesCode;
-        });
-      
-      // Combine direct plans and relevant regional plans, removing duplicates
-      const allPlans = [...directPlans, ...regionalPlans];
-      const uniquePlans = allPlans.filter((plan, index, self) => 
-        index === self.findIndex(p => p.id === plan.id)
-      );
-      
-      // Filter out disabled and hidden plans
-      // enabled !== false means enabled by default
-      // hidden !== true means visible by default
-      const enabledPlans = uniquePlans.filter(plan => 
-        plan.enabled !== false && plan.hidden !== true
-      );
-      
-      console.log(`📦 Loaded ${enabledPlans.length} plans for ${countryCode} (${directPlans.length} direct, ${regionalPlans.length} regional)`);
-      
-      setAvailablePlans(enabledPlans);
+
+      // Find 1GB plan (cheapest), fallback to cheapest plan overall
+      const oneGBPlan = plans
+        .filter(p => parseFloat(p.data) === 1)
+        .sort((a, b) => parseFloat(a.price) - parseFloat(b.price))[0];
+      const fallbackPlan = plans.sort((a, b) => parseFloat(a.price) - parseFloat(b.price))[0];
+      const targetPlan = oneGBPlan || fallbackPlan;
+
+      if (targetPlan) {
+        const countryFlag = country.flagEmoji || '🌍';
+        let targetUrl = `/share-package/${targetPlan.id}?country=${country.code}&flag=${countryFlag}`;
+        if (locale && locale !== 'en') {
+          targetUrl = `/${locale}${targetUrl}`;
+        }
+        router.push(targetUrl);
+      }
     } catch (error) {
-      console.error('Error loading plans for country:', error);
-      setAvailablePlans([]);
-    } finally {
-      setLoadingPlans(false);
+      console.error('Error finding plans:', error);
     }
   };
 
@@ -689,57 +537,6 @@ export default function AiraloPackagesSection() {
     router.push(targetUrl);
   };
 
-  const formatPrice = (price) => {
-    if (typeof price === 'number') {
-      return `$${price.toFixed(2)}`;
-    }
-    if (typeof price === 'string') {
-      return price.includes('$') ? price : `$${price}`;
-    }
-    if (price && typeof price === 'object' && price.amount) {
-      return `$${parseFloat(price.amount).toFixed(2)}`;
-    }
-    return '$0.00';
-  };
-
-  const formatData = (data) => {
-    if (typeof data === 'string') {
-      return data;
-    }
-    if (typeof data === 'number') {
-      return `${data}GB`;
-    }
-    if (data && typeof data === 'object' && data.amount) {
-      return `${data.amount}${data.unit || 'GB'}`;
-    }
-    return 'N/A';
-  };
-
-  const formatValidity = (validity) => {
-    if (typeof validity === 'string') {
-      return validity;
-    }
-    if (typeof validity === 'number') {
-      return `${validity} Days`;
-    }
-    if (validity && typeof validity === 'object' && validity.value) {
-      return `${validity.value} ${validity.unit || 'Days'}`;
-    }
-    return 'N/A';
-  };
-
-  const getPackagePrice = (pkg) => {
-    return pkg.price || pkg.amount || pkg.cost || 0;
-  };
-
-  const getPackageData = (pkg) => {
-    return pkg.data || pkg.data_amount || pkg.data_size || pkg.size;
-  };
-
-  const getPackageValidity = (pkg) => {
-    return pkg.validity || pkg.days || pkg.duration || pkg.period;
-  };
-
   if (loading) {
     return (
       <section className="py-16 bg-gray-50">
@@ -776,13 +573,7 @@ export default function AiraloPackagesSection() {
     return null;
   }
 
-  const regionalRegions = Object.keys(packages.regional).slice(0, 20);
-  
-  // Calculate total count of regional packages (not just region count)
-  const regionalPackagesCount = Object.values(packages.regional).reduce(
-    (total, regionPackages) => total + regionPackages.length, 
-    0
-  );
+
 
   return (
     <section className="bg-transparent">
@@ -791,54 +582,26 @@ export default function AiraloPackagesSection() {
         <div className="flex justify-center gap-2 mb-6">
           <button
             onClick={() => {
-              setActiveTab('global');
-              setSelectedRegion(null);
-              setSelectedCountry(null);
+              // Find 1GB global plan and navigate directly to purchase
+              const oneGBGlobal = packages.global
+                .filter(p => parseFloat(p.data || p.amount) === 1)
+                .sort((a, b) => parseFloat(a.price || a.net_price || 999) - parseFloat(b.price || b.net_price || 999))[0];
+              const fallback = packages.global[0];
+              const target = oneGBGlobal || fallback;
+              if (target) {
+                handlePackageClick(target.id);
+              }
             }}
-            className={`inline-flex items-center px-3 py-1.5 rounded-full font-medium text-xs transition-all duration-200 ${
-              activeTab === 'global'
-                ? 'bg-tufts-blue text-white shadow-md shadow-tufts-blue/30'
-                : 'bg-white text-gray-700 hover:bg-tufts-blue/10 hover:text-tufts-blue border border-gray-200 hover:border-tufts-blue/20'
-            }`}
+            className="inline-flex items-center px-3 py-1.5 rounded-full font-medium text-xs transition-all duration-200 bg-white text-gray-700 hover:bg-tufts-blue/10 hover:text-tufts-blue border border-gray-200 hover:border-tufts-blue/20"
           >
             <Globe className="w-3.5 h-3.5 mr-1" />
             <span>Global</span>
-            <span className={`ml-1 px-1.5 py-0.5 rounded-full text-xs font-semibold ${
-              activeTab === 'global'
-                ? 'bg-tufts-blue/100 text-white'
-                : 'bg-gray-100 text-gray-600'
-            }`}>
-              {packages.global.length}
-            </span>
-          </button>
-          
-          <button
-            onClick={() => {
-              setActiveTab('regional');
-              setSelectedRegion(null);
-              setSelectedCountry(null);
-            }}
-            className={`inline-flex items-center px-3 py-1.5 rounded-full font-medium text-xs transition-all duration-200 ${
-              activeTab === 'regional'
-                ? 'bg-tufts-blue text-white shadow-md shadow-tufts-blue/30'
-                : 'bg-white text-gray-700 hover:bg-tufts-blue/10 hover:text-tufts-blue border border-gray-200 hover:border-tufts-blue/20'
-            }`}
-          >
-            <MapPin className="w-3.5 h-3.5 mr-1" />
-            <span>Regional</span>
-            <span className={`ml-1 px-1.5 py-0.5 rounded-full text-xs font-semibold ${
-              activeTab === 'regional'
-                ? 'bg-tufts-blue-dark text-white'
-                : 'bg-gray-100 text-gray-600'
-            }`}>
-              {regionalPackagesCount}
-            </span>
           </button>
           
           <button
             onClick={() => {
               setActiveTab('countries');
-              setSelectedRegion(null);
+
               setSelectedCountry(null);
             }}
             className={`inline-flex items-center px-3 py-1.5 rounded-full font-medium text-xs transition-all duration-200 ${
@@ -858,117 +621,6 @@ export default function AiraloPackagesSection() {
             </span>
           </button>
         </div>
-
-        {/* Global Packages */}
-        {activeTab === 'global' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {packages.global.length > 0 ? (
-              packages.global.map((pkg, index) => (
-                <div
-                  key={pkg.id || index}
-                  onClick={() => handlePackageClick(pkg.id)}
-                  className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer p-6 border border-gray-200"
-                >
-                  <div className="flex items-center justify-between mb-4">
-                    <Globe className="w-8 h-8 text-tufts-blue" />
-                    <span className="text-2xl font-bold text-gray-900">
-                      {formatPrice(getPackagePrice(pkg))}
-                    </span>
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    {pkg.title || pkg.name || 'Global eSIM'}
-                  </h3>
-                  <div className="space-y-2 text-sm text-gray-600">
-                    <div className="flex items-center">
-                      <Wifi className="w-4 h-4 mr-2" />
-                      <span>{formatData(getPackageData(pkg))}</span>
-                    </div>
-                    <div className="flex items-center">
-                      <Calendar className="w-4 h-4 mr-2" />
-                      <span>{formatValidity(getPackageValidity(pkg))}</span>
-                    </div>
-                    {(pkg.coverage || pkg.countries) && (
-                      <div className="flex items-center">
-                        <MapPin className="w-4 h-4 mr-2" />
-                        <span>
-                          {(pkg.coverage?.length || pkg.countries?.length || 0)} Countries
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="col-span-full text-center text-gray-500 py-12">
-                No global packages available
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Regional Packages */}
-        {activeTab === 'regional' && (
-          <div>
-            {!selectedRegion ? (
-              // Show region list
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {regionalRegions.map((region) => (
-                  <button
-                    key={region}
-                    onClick={() => setSelectedRegion(region)}
-                    className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-6 border border-gray-200 text-left"
-                  >
-                    <MapPin className="w-6 h-6 text-tufts-blue mb-2" />
-                    <h3 className="font-semibold text-gray-900">{region}</h3>
-                    <p className="text-sm text-gray-600 mt-1">
-                      {packages.regional[region].length} packages
-                    </p>
-                  </button>
-                ))}
-              </div>
-            ) : (
-              // Show packages for selected region
-              <div>
-                <button
-                  onClick={() => setSelectedRegion(null)}
-                  className="mb-6 text-tufts-blue hover:text-tufts-blue-dark flex items-center"
-                >
-                  ← Back to Regions
-                </button>
-                <h3 className="text-2xl font-bold text-gray-900 mb-6">{selectedRegion}</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {packages.regional[selectedRegion].map((pkg, index) => (
-                    <div
-                      key={pkg.id || index}
-                      onClick={() => handlePackageClick(pkg.id)}
-                      className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer p-6 border border-gray-200"
-                    >
-                      <div className="flex items-center justify-between mb-4">
-                        <MapPin className="w-8 h-8 text-tufts-blue" />
-                        <span className="text-2xl font-bold text-gray-900">
-                          {formatPrice(getPackagePrice(pkg))}
-                        </span>
-                      </div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                        {pkg.title || pkg.name || selectedRegion}
-                      </h3>
-                      <div className="space-y-2 text-sm text-gray-600">
-                        <div className="flex items-center">
-                          <Wifi className="w-4 h-4 mr-2" />
-                          <span>{formatData(getPackageData(pkg))}</span>
-                        </div>
-                        <div className="flex items-center">
-                          <Calendar className="w-4 h-4 mr-2" />
-                          <span>{formatValidity(getPackageValidity(pkg))}</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
 
         {/* Countries */}
         {activeTab === 'countries' && (
@@ -1040,14 +692,6 @@ export default function AiraloPackagesSection() {
         )}
       </div>
       
-      {/* Plan Selection Bottom Sheet */}
-      <PlanSelectionBottomSheet
-        isOpen={showCheckoutModal}
-        onClose={() => setShowCheckoutModal(false)}
-        availablePlans={availablePlans}
-        loadingPlans={loadingPlans}
-        filteredCountries={countries}
-      />
     </section>
   );
 }

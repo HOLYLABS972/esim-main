@@ -82,7 +82,8 @@ export const paymentService = {
           currency: orderData.currency || 'usd',
           domain: window.location.origin,
           plan: orderData.planId,
-          isYearly: orderData.isYearly
+          isYearly: orderData.isYearly,
+          affiliateRef: orderData.affiliateRef || null
         })
       });
       

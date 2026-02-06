@@ -3,18 +3,19 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { 
-  ArrowLeft, 
-  Globe, 
-  Wifi, 
-  Clock, 
-  Shield, 
+import {
+  ArrowLeft,
+  Globe,
+  Wifi,
+  Clock,
+  Shield,
   Zap,
-  Smartphone,
   DollarSign,
   CreditCard,
   Coins,
-  Loader2
+  Loader2,
+  ChevronDown,
+  HelpCircle
 } from 'lucide-react';
 import { useAuth } from '../../../src/contexts/AuthContext';
 import { useI18n } from '../../../src/contexts/I18nContext';
@@ -45,15 +46,21 @@ const SharePackagePage = () => {
   // RTL support
   const isRTL = getLanguageDirection(locale) === 'rtl';
   
-  // Get country info from URL parameters
+  // Get country info and affiliate ref from URL parameters
   const [urlCountryCode, setUrlCountryCode] = useState(null);
   const [urlCountryFlag, setUrlCountryFlag] = useState(null);
-  
+  const [affiliateRef, setAffiliateRef] = useState(null);
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const searchParams = new URLSearchParams(window.location.search);
       setUrlCountryCode(searchParams.get('country'));
       setUrlCountryFlag(searchParams.get('flag'));
+      const ref = searchParams.get('ref');
+      if (ref) {
+        setAffiliateRef(ref);
+        console.log('🤝 Affiliate ref detected:', ref);
+      }
     }
   }, []);
   
@@ -66,6 +73,37 @@ const SharePackagePage = () => {
   const [coinbaseAvailable, setCoinbaseAvailable] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
+
+  // FAQ
+  const [openFaq, setOpenFaq] = useState(null);
+  const FAQ_ITEMS = [
+    {
+      q: t('sharePackage.faq.q1', 'What is an eSIM?'),
+      a: t('sharePackage.faq.a1', 'An eSIM is a digital SIM that allows you to activate a cellular plan without a physical SIM card. It\'s built into most modern smartphones and works instantly after purchase.')
+    },
+    {
+      q: t('sharePackage.faq.q2', 'How do I install my eSIM?'),
+      a: t('sharePackage.faq.a2', 'After purchase, you\'ll receive a QR code via email. Simply scan it with your phone\'s camera or go to Settings > Cellular > Add eSIM and follow the instructions.')
+    },
+    {
+      q: t('sharePackage.faq.q3', 'Is my device compatible?'),
+      a: t('sharePackage.faq.a3', 'Most smartphones released after 2018 support eSIM, including iPhone XS and newer, Samsung Galaxy S20 and newer, and Google Pixel 3 and newer. Check your device settings for eSIM support.')
+    },
+    {
+      q: t('sharePackage.faq.q4', 'When does the data plan start?'),
+      a: t('sharePackage.faq.a4', 'Your data plan starts when you first connect to a mobile network in your destination country, not when you install the eSIM. You can install it before your trip.')
+    },
+    {
+      q: t('sharePackage.faq.q5', 'Can I get a refund?'),
+      a: t('sharePackage.faq.a5', 'Yes, unused eSIMs are eligible for a refund within the policy terms. Once the eSIM has been activated and data has been used, it cannot be refunded. Please review our refund policy for details.')
+    }
+  ];
+
+  // Data variant selection
+  const DATA_VARIANTS = [1, 2, 5, 10, 20];
+  const [selectedDataGB, setSelectedDataGB] = useState(1);
+  const [allPlans, setAllPlans] = useState([]);
+  const [plansLoading, setPlansLoading] = useState(false);
 
   const loadFromAPI = useCallback(async () => {
     try {
@@ -83,26 +121,61 @@ const SharePackagePage = () => {
     try {
       setLoading(true);
       console.log('🔍 Loading package data for ID:', packageId);
-      
-      // Try to load from Firebase dataplans collection first
-      const { doc, getDoc } = await import('firebase/firestore');
+
+      const { doc, getDoc, collection, query, where, getDocs } = await import('firebase/firestore');
       const { db } = await import('../../../src/firebase/config');
-      
+
       const packageRef = doc(db, 'dataplans', packageId);
       const packageSnap = await getDoc(packageRef);
-      
+
       if (packageSnap.exists()) {
         const data = packageSnap.data();
         console.log('✅ Found package in Firebase dataplans:', data);
-        setPackageData({
-          id: packageSnap.id,
-          ...data
-        });
-        return; // Package found, exit early
+        const mainPkg = { id: packageSnap.id, ...data };
+        setPackageData(mainPkg);
+
+        // Load all related plans for the same country to populate data variants
+        const countryCode = data.country_code || (data.country_codes && data.country_codes[0]) || urlCountryCode;
+        if (countryCode) {
+          setPlansLoading(true);
+          try {
+            // Query both field formats: country_code (string) and country_codes (array)
+            const plansQuery1 = query(
+              collection(db, 'dataplans'),
+              where('country_code', '==', countryCode)
+            );
+            const plansQuery2 = query(
+              collection(db, 'dataplans'),
+              where('country_codes', 'array-contains', countryCode)
+            );
+            const [snap1, snap2] = await Promise.all([
+              getDocs(plansQuery1).catch(() => ({ forEach: () => {} })),
+              getDocs(plansQuery2).catch(() => ({ forEach: () => {} }))
+            ]);
+            // Merge results, dedup by doc ID
+            const plansMap = new Map();
+            snap1.forEach(doc => plansMap.set(doc.id, { id: doc.id, ...doc.data() }));
+            snap2.forEach(doc => plansMap.set(doc.id, { id: doc.id, ...doc.data() }));
+            const plans = Array.from(plansMap.values()).filter(p => p.enabled !== false && p.hidden !== true);
+            console.log(`✅ Found ${plans.length} plans for country ${countryCode}`, plans.map(p => ({ id: p.id, data: p.data, price: p.price })));
+            setAllPlans(plans);
+
+            // Auto-select 1GB if available, otherwise keep current package's data
+            const currentData = parseFloat(data.data);
+            if (DATA_VARIANTS.includes(currentData)) {
+              setSelectedDataGB(currentData);
+            } else {
+              setSelectedDataGB(1);
+            }
+          } catch (err) {
+            console.error('Error loading related plans:', err);
+          } finally {
+            setPlansLoading(false);
+          }
+        }
+        return;
       } else {
         console.log('❌ Package not found in Firebase dataplans');
-        console.log('Package ID:', packageId);
-        console.log('URL Country Code:', urlCountryCode);
       }
     } catch (error) {
       console.error('❌ Error loading package data:', error);
@@ -133,6 +206,36 @@ const SharePackagePage = () => {
   useEffect(() => {
     loadDiscountSettings();
   }, [loadDiscountSettings]);
+
+  // Derive the active plan based on selected data variant
+  const activePlan = React.useMemo(() => {
+    if (!packageData) return null;
+    if (allPlans.length === 0) return packageData;
+
+    // Find the cheapest plan matching selected GB
+    const matching = allPlans
+      .filter(p => parseFloat(p.data) === selectedDataGB)
+      .sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
+
+    return matching.length > 0 ? matching[0] : packageData;
+  }, [packageData, allPlans, selectedDataGB]);
+
+  // Check which data variants are actually available
+  const availableVariants = React.useMemo(() => {
+    if (allPlans.length === 0) return DATA_VARIANTS;
+    return DATA_VARIANTS.filter(gb =>
+      allPlans.some(p => parseFloat(p.data) === gb)
+    );
+  }, [allPlans]);
+
+  // Update browser URL when active plan changes
+  useEffect(() => {
+    if (activePlan && activePlan.id !== packageId) {
+      const params = new URLSearchParams(window.location.search);
+      const newUrl = `/share-package/${activePlan.id}${params.toString() ? '?' + params.toString() : ''}`;
+      window.history.replaceState(null, '', newUrl);
+    }
+  }, [activePlan, packageId]);
 
   // Check business balance and detect API key mode
   useEffect(() => {
@@ -225,10 +328,13 @@ const SharePackagePage = () => {
       return;
     }
     
-    if (!packageData) {
+    const planToUse = activePlan || packageData;
+    if (!planToUse) {
       toast.error('Package data not loaded yet');
       return;
     }
+
+    console.log('🛒 Purchase plan:', { planId: planToUse.id, planName: planToUse.name, data: planToUse.data, price: planToUse.price, selectedDataGB });
 
     if (isProcessing) {
       return;
@@ -256,17 +362,17 @@ const SharePackagePage = () => {
     setSelectedPaymentMethod(paymentMethod);
     setIsProcessing(true);
     
-    // Calculate discounted price - use EITHER basic OR referral discount (not both)
-    const originalPrice = parseFloat(packageData.price);
-    
+    // Calculate discounted price
+    const originalPrice = parseFloat(planToUse.price);
+
     // Apply regular discount
     const appliedDiscountPercent = regularSettings.discountPercentage || 10;
     let finalPrice = originalPrice * (100 - appliedDiscountPercent) / 100;
-    
+
     // Apply minimum price constraint
     const minimumPrice = regularSettings.minimumPrice || 0.5;
     finalPrice = Math.max(minimumPrice, finalPrice);
-    
+
     console.log('💰 Pricing calculation:', {
       originalPrice,
       appliedDiscountPercent,
@@ -274,49 +380,50 @@ const SharePackagePage = () => {
       minimumPrice,
       paymentMethod,
       customerEmail,
-      isAuthenticated: !!currentUser
+      isAuthenticated: !!currentUser,
+      selectedDataGB
     });
-    
-    // Store package data in localStorage for the checkout process (for iframe compatibility, also pass in URL)
+
+    // Store package data in localStorage for the checkout process
     const checkoutData = {
-      packageId: packageId,
-      packageName: packageData.name,
-      packageDescription: packageData.description,
-      price: finalPrice, // Use discounted price
-      originalPrice: originalPrice, // Keep original price for reference
-      currency: packageData.currency || 'USD',
-      data: packageData.data,
-      dataUnit: packageData.dataUnit || 'GB',
-      period: packageData.period || packageData.duration,
-      country_code: packageData.country_code,
-      benefits: packageData.benefits || [],
-      speed: packageData.speed
+      packageId: planToUse.id,
+      packageName: planToUse.name,
+      packageDescription: planToUse.description,
+      price: finalPrice,
+      originalPrice: originalPrice,
+      currency: planToUse.currency || 'USD',
+      data: planToUse.data,
+      dataUnit: planToUse.dataUnit || 'GB',
+      period: planToUse.period || planToUse.duration,
+      country_code: planToUse.country_code,
+      benefits: planToUse.benefits || [],
+      speed: planToUse.speed
     };
-    
+
     console.log('💾 Storing checkout data:', checkoutData);
-    
-    // Store in localStorage (may not work in iframe, so we'll also pass in URL)
+
     try {
       localStorage.setItem('selectedPackage', JSON.stringify(checkoutData));
     } catch (e) {
       console.warn('⚠️ Could not store in localStorage (likely in iframe):', e);
     }
-    
+
     try {
       // Generate unique order ID for each purchase
-      const uniqueOrderId = `${packageId}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      
+      const uniqueOrderId = `${planToUse.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
       // Create order data for payment service
       const orderData = {
-        orderId: uniqueOrderId, // Unique order ID for each purchase
-        planId: packageId,
-        planName: packageData.name,
+        orderId: uniqueOrderId,
+        planId: planToUse.id,
+        planName: planToUse.name,
         customerEmail: customerEmail,
         amount: finalPrice, // Use discounted price
         currency: 'usd',
         originalAmount: originalPrice, // Include original amount for reference
         userId: currentUser?.uid || null, // null for guest users
-        isGuest: !currentUser // Flag to indicate guest purchase
+        isGuest: !currentUser, // Flag to indicate guest purchase
+        affiliateRef: affiliateRef || null // Affiliate tracking
       };
       
       console.log('💳 Order data for payment:', orderData);
@@ -324,12 +431,13 @@ const SharePackagePage = () => {
       // Store order info (for iframe compatibility, also pass in URL)
       const pendingOrder = {
         orderId: uniqueOrderId,
-        planId: packageId,
+        planId: planToUse.id,
         customerEmail: customerEmail,
         amount: finalPrice,
         currency: 'usd',
         paymentMethod: paymentMethod,
-        isGuest: !currentUser
+        isGuest: !currentUser,
+        affiliateRef: affiliateRef || null
       };
       
       try {
@@ -524,366 +632,186 @@ const SharePackagePage = () => {
           animate={{ opacity: 1, y: 0 }}
           className="bg-white shadow-lg overflow-hidden"
         >
-          {/* Package Title */}
-          <div className="bg-white p-4">
+          {/* Package Title & Country */}
+          <div className="bg-white p-4 pb-2">
             <div className="text-center">
-              <h2 className="text-4xl font-bold text-black">{packageData.name}</h2>
-              <p className="text-gray-600 text-lg mt-2">{t('sharePackage.noPhoneNumber', 'This eSIM doesn\'t come with a number')}</p>
-            </div>
-          </div>
-          
-          {/* Package Stats */}
-          <div className="bg-white px-4 pb-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-gray-50 rounded-lg p-3">
-                <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-2' : 'space-x-2'}`}>
-                  <Wifi className="w-5 h-5 text-gray-600" />
-                  <div className={isRTL ? 'text-right' : 'text-left'}>
-                    <div className="text-sm text-gray-600">{t('sharePackage.data', 'Data')}</div>
-                    <div className="font-semibold text-black">{formatData(packageData.data, packageData.dataUnit)}</div>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="bg-gray-50 rounded-lg p-3">
-                <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-2' : 'space-x-2'}`}>
-                  <Clock className="w-5 h-5 text-gray-600" />
-                  <div className={isRTL ? 'text-right' : 'text-left'}>
-                    <div className="text-sm text-gray-600">{t('sharePackage.validity', 'Validity')}</div>
-                    <div className="font-semibold text-black">{packageData.period || packageData.duration || 'N/A'} days</div>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="bg-gray-50 rounded-lg p-3">
-                <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-2' : 'space-x-2'}`}>
-                  <DollarSign className="w-5 h-5 text-gray-600" />
-                  <div className={isRTL ? 'text-right' : 'text-left'}>
-                    <div className="text-sm text-gray-600">{t('sharePackage.price', 'Price')}</div>
-                    {(() => {
-                      const originalPrice = parseFloat(packageData.price);
-                      // Apply regular discount
-                      const discountPercent = regularSettings.discountPercentage || 10;
-                      let finalPrice = originalPrice * (100 - discountPercent) / 100;
-                      
-                      // Apply minimum price constraint
-                      const minimumPrice = regularSettings.minimumPrice || 0.5;
-                      finalPrice = Math.max(minimumPrice, finalPrice);
-                      
-                      return (
-                        <div>
-                          <div className="font-semibold text-red-600">
-                            {finalPrice.toFixed(2)}
-                          </div>
-                          <div className="text-xs text-gray-500 line-through">{formatPrice(packageData.price)}</div>
-                        </div>
-                      );
-                    })()}
-                  </div>
-                </div>
-              </div>
-              
-              <div className="bg-gray-50 rounded-lg p-3">
-                <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-2' : 'space-x-2'}`}>
-                  <span className="text-2xl">
-                    {(() => {
-                      // Get plan data for detection
-                      const planType = (packageData.type || '').toLowerCase();
-                      const planRegion = (packageData.region || packageData.region_slug || '').toLowerCase();
-                      const planName = (packageData.name || packageData.title || '').toLowerCase();
-                      const planSlug = (packageData.slug || '').toLowerCase();
-                      
-                      // Check if it's a global package (same logic as organizePackages)
-                      const isGlobal = 
-                        packageData.is_global === true ||
-                        planType === 'global' ||
-                        planRegion === 'global' ||
-                        planSlug === 'global' ||
-                        planName === 'global' ||
-                        planSlug.startsWith('discover') ||
-                        planName.startsWith('discover') ||
-                        planName.includes('worldwide') ||
-                        planName.includes('world');
-                      
-                      // Regional identifiers
-                      const regionalIdentifiers = [
-                        'asia', 'europe', 'africa', 'americas', 'middle-east', 'middle east',
-                        'oceania', 'caribbean', 'latin-america', 'latin america',
-                        'north-america', 'south-america', 'central-america',
-                        'eastern-europe', 'western-europe', 'scandinavia',
-                        'asean', 'gcc', 'european-union', 'eu', 'mena',
-                        'middle-east-and-north-africa', 'middle-east-north-africa',
-                        'americanmex', 'america-mexico', 'us-mx', 'usa-mexico',
-                        'oceanlink', 'ocean-link', 'pacific', 'pacific-islands',
-                        'latamlink', 'latam-link', 'latam', 'latin-america-link'
-                      ];
-                      
-                      // Check if plan name/slug contains any regional identifier (substring match)
-                      const containsRegionalIdentifier = regionalIdentifiers.some(identifier => 
-                        planSlug.includes(identifier) || planName.includes(identifier)
-                      );
-                      
-                      // Check if plan has multiple country codes (2-10) - indicates regional
-                      const countryCodes = packageData.country_codes || [];
-                      const hasMultipleCountries = countryCodes.length >= 2 && countryCodes.length < 10;
-                      
-                      const isRegional = 
-                        packageData.is_regional === true ||
-                        planType === 'regional' ||
-                        containsRegionalIdentifier ||
-                        (planRegion && planRegion !== '' && planRegion !== 'global' && regionalIdentifiers.some(id => planRegion.includes(id))) ||
-                        (hasMultipleCountries && !isGlobal);
-                      
-                      // Return appropriate emoji
-                      if (isGlobal) {
-                        return '🌍';
-                      }
-                      if (isRegional) {
-                        return '🗺️';
-                      }
-                      // For country-specific plans
-                      if (urlCountryFlag) {
-                        return urlCountryFlag;
-                      }
-                      if (packageData.country_code) {
-                        return getCountryFlag(packageData.country_code);
-                      }
-                      if (packageData.country_codes && packageData.country_codes.length > 0) {
-                        return getCountryFlag(packageData.country_codes[0]);
-                      }
-                      return '🌍';
-                    })()}
-                  </span>
-                  <div className={isRTL ? 'text-right' : 'text-left'}>
-                    <div className="text-sm text-gray-600">{t('sharePackage.coverage', 'Coverage')}</div>
-                    <div className="font-semibold text-black">
-                      {(() => {
-                        // Get plan data for detection
-                        const planType = (packageData.type || '').toLowerCase();
-                        const planRegion = (packageData.region || packageData.region_slug || '').toLowerCase();
-                        const planName = (packageData.name || packageData.title || '').toLowerCase();
-                        const planSlug = (packageData.slug || '').toLowerCase();
-                        
-                        // Check if it's a global package (same logic as organizePackages)
-                        const isGlobal = 
-                          packageData.is_global === true ||
-                          planType === 'global' ||
-                          planRegion === 'global' ||
-                          planSlug === 'global' ||
-                          planName === 'global' ||
-                          planSlug.startsWith('discover') ||
-                          planName.startsWith('discover') ||
-                          planName.includes('worldwide') ||
-                          planName.includes('world');
-                        
-                        // Regional identifiers
-                        const regionalIdentifiers = [
-                          'asia', 'europe', 'africa', 'americas', 'middle-east', 'middle east',
-                          'oceania', 'caribbean', 'latin-america', 'latin america',
-                          'north-america', 'south-america', 'central-america',
-                          'eastern-europe', 'western-europe', 'scandinavia',
-                          'asean', 'gcc', 'european-union', 'eu', 'mena',
-                          'middle-east-and-north-africa', 'middle-east-north-africa',
-                          'americanmex', 'america-mexico', 'us-mx', 'usa-mexico',
-                          'oceanlink', 'ocean-link', 'pacific', 'pacific-islands',
-                          'latamlink', 'latam-link', 'latam', 'latin-america-link'
-                        ];
-                        
-                        // Check if plan name/slug contains any regional identifier (substring match)
-                        const containsRegionalIdentifier = regionalIdentifiers.some(identifier => 
-                          planSlug.includes(identifier) || planName.includes(identifier)
-                        );
-                        
-                        // Check if plan has multiple country codes (2-10) - indicates regional
-                        const countryCodes = packageData.country_codes || [];
-                        const hasMultipleCountries = countryCodes.length >= 2 && countryCodes.length < 10;
-                        
-                        const isRegional = 
-                          packageData.is_regional === true ||
-                          planType === 'regional' ||
-                          containsRegionalIdentifier ||
-                          (planRegion && planRegion !== '' && planRegion !== 'global' && regionalIdentifiers.some(id => planRegion.includes(id))) ||
-                          (hasMultipleCountries && !isGlobal);
-                        
-                        // Helper function to get friendly region name
-                        const getFriendlyRegionName = (regionIdentifier) => {
-                          if (!regionIdentifier) return 'Regional';
-                          const lowerIdentifier = regionIdentifier.toLowerCase().trim();
-                          const regionMap = {
-                            'eu': 'Europe',
-                            'europe': 'Europe',
-                            'european-union': 'Europe',
-                            'eastern-europe': 'Eastern Europe',
-                            'western-europe': 'Western Europe',
-                            'scandinavia': 'Scandinavia',
-                            'asia': 'Asia',
-                            'asean': 'Southeast Asia',
-                            'mena': 'Middle East & North Africa',
-                            'middle-east': 'Middle East',
-                            'middle east': 'Middle East',
-                            'gcc': 'Gulf Countries',
-                            'americas': 'Americas',
-                            'north-america': 'North America',
-                            'south-america': 'South America',
-                            'central-america': 'Central America',
-                            'latin-america': 'Latin America',
-                            'latin america': 'Latin America',
-                            'caribbean': 'Caribbean',
-                            'africa': 'Africa',
-                            'oceania': 'Oceania & Pacific',
-                            'pacific': 'Oceania & Pacific',
-                            'oceanlink': 'Oceania & Pacific',
-                            'ocean-link': 'Oceania & Pacific',
-                            'latamlink': 'Latin America',
-                            'latam-link': 'Latin America',
-                            'latam': 'Latin America',
-                            'latin-america-link': 'Latin America',
-                            'americanmex': 'Americas',
-                            'america-mexico': 'Americas',
-                            'us-mx': 'Americas',
-                            'usa-mexico': 'Americas'
-                          };
-                          if (regionMap[lowerIdentifier]) return regionMap[lowerIdentifier];
-                          for (const [key, friendlyName] of Object.entries(regionMap)) {
-                            if (lowerIdentifier.includes(key) || key.includes(lowerIdentifier)) {
-                              return friendlyName;
-                            }
-                          }
-                          return regionIdentifier.split(/[-_\s]+/).map(word => 
-                            word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
-                          ).join(' ');
-                        };
-                        
-                        // Return appropriate text
-                        if (isGlobal) {
-                          return t('sharePackage.global', 'Global');
-                        }
-                        if (isRegional) {
-                          // Try to get friendly region name from plan data or slug
-                          let regionName = packageData.region || packageData.region_slug || '';
-                          if (!regionName) {
-                            // Try to extract from slug/name
-                            for (const identifier of regionalIdentifiers) {
-                              if (planSlug.includes(identifier) || planName.includes(identifier)) {
-                                regionName = identifier;
-                                break;
-                              }
-                            }
-                          }
-                          return getFriendlyRegionName(regionName) || 'Regional';
-                        }
-                        // For country-specific plans
-                        if (urlCountryCode) {
-                          return urlCountryCode;
-                        }
-                        if (packageData.country_code) {
-                          return packageData.country_code;
-                        }
-                        if (packageData.country_codes && packageData.country_codes.length > 0) {
-                          return packageData.country_codes[0];
-                        }
-                        if (packageData.country_name) {
-                          return packageData.country_name;
-                        }
-                        return 'N/A';
-                      })()}
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <span className="text-4xl mb-2 block">
+                {urlCountryFlag || ((activePlan || packageData).country_code ? getCountryFlag((activePlan || packageData).country_code) : '🌍')}
+              </span>
+              <h2 className="text-2xl font-bold text-black">
+                {(activePlan || packageData).country_name || (activePlan || packageData).name}
+              </h2>
             </div>
           </div>
 
-          {/* Package Actions */}
-          <div className="p-6">
+          {/* Data Variant Selector */}
+          <div className="px-4 py-4">
+            <p className={`text-sm font-medium text-gray-600 mb-3 ${isRTL ? 'text-right' : 'text-left'}`}>
+              {t('sharePackage.selectData', 'Select Data Plan')}
+            </p>
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {DATA_VARIANTS.map((gb) => {
+                const isAvailable = availableVariants.includes(gb);
+                const isSelected = selectedDataGB === gb;
+                return (
+                  <button
+                    key={gb}
+                    onClick={() => isAvailable && setSelectedDataGB(gb)}
+                    disabled={!isAvailable}
+                    className={`flex-1 min-w-[64px] py-3 px-2 rounded-xl text-center font-semibold text-sm transition-all duration-200 border-2 ${
+                      isSelected
+                        ? 'bg-blue-600 text-white border-blue-600 shadow-lg scale-105'
+                        : isAvailable
+                          ? 'bg-white text-gray-800 border-gray-200 hover:border-blue-300 hover:bg-blue-50'
+                          : 'bg-gray-100 text-gray-400 border-gray-100 cursor-not-allowed'
+                    }`}
+                  >
+                    {gb} GB
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Selected Plan Details */}
+          {activePlan && (
+            <div className="bg-white px-4 pb-4">
+              <div className="grid grid-cols-3 gap-3">
+                <div className="bg-gray-50 rounded-xl p-3 text-center">
+                  <Wifi className="w-5 h-5 text-blue-600 mx-auto mb-1" />
+                  <div className="text-xs text-gray-500">{t('sharePackage.data', 'Data')}</div>
+                  <div className="font-bold text-black">{formatData(activePlan.data, activePlan.dataUnit)}</div>
+                </div>
+                <div className="bg-gray-50 rounded-xl p-3 text-center">
+                  <Clock className="w-5 h-5 text-blue-600 mx-auto mb-1" />
+                  <div className="text-xs text-gray-500">{t('sharePackage.validity', 'Validity')}</div>
+                  <div className="font-bold text-black">{activePlan.period || activePlan.duration || 'N/A'} {t('sharePackage.days', 'days')}</div>
+                </div>
+                <div className="bg-gray-50 rounded-xl p-3 text-center">
+                  <DollarSign className="w-5 h-5 text-blue-600 mx-auto mb-1" />
+                  <div className="text-xs text-gray-500">{t('sharePackage.price', 'Price')}</div>
+                  {(() => {
+                    const originalPrice = parseFloat(activePlan.price);
+                    const discountPercent = regularSettings.discountPercentage || 10;
+                    let finalPrice = originalPrice * (100 - discountPercent) / 100;
+                    const minimumPrice = regularSettings.minimumPrice || 0.5;
+                    finalPrice = Math.max(minimumPrice, finalPrice);
+                    return (
+                      <div>
+                        <div className="font-bold text-green-600">${finalPrice.toFixed(2)}</div>
+                        <div className="text-xs text-gray-400 line-through">${formatPrice(activePlan.price)}</div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Purchase Section */}
+          <div className="p-4 pt-0">
             <div className="max-w-2xl mx-auto">
-              {/* Get Package Section */}
-              <div className="text-center mb-8">
-                <h3 className={`text-2xl font-semibold text-gray-900 mb-4 ${isRTL ? 'text-right' : 'text-center'}`}>{t('sharePackage.getThisPackage', 'Get This Package')}</h3>
-                <div className="max-w-md mx-auto mb-4 text-left">
-                  <label htmlFor="acceptRefund" className="flex items-start gap-3 text-sm text-gray-700">
-                    <input
-                      id="acceptRefund"
-                      type="checkbox"
-                      checked={acceptedRefund}
-                      onChange={(e) => setAcceptedRefund(e.target.checked)}
-                      className={"mt-1 h-4 w-4 rounded border-gray-300 focus:ring-blue-500 " + (acceptedRefund ? 'text-blue-600' : 'checkbox-red')}
-                    />
-                    <span>
-                      I accept the <a href="https://esim.roamjet.net/refund-policy" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">Refund Policy</a>
-                    </span>
-                  </label>
-                </div>
+              {/* Refund Policy */}
+              <div className="mb-4">
+                <label htmlFor="acceptRefund" className="flex items-start gap-3 text-sm text-gray-700">
+                  <input
+                    id="acceptRefund"
+                    type="checkbox"
+                    checked={acceptedRefund}
+                    onChange={(e) => setAcceptedRefund(e.target.checked)}
+                    className={"mt-1 h-4 w-4 rounded border-gray-300 focus:ring-blue-500 " + (acceptedRefund ? 'text-blue-600' : 'checkbox-red')}
+                  />
+                  <span>
+                    I accept the <a href="https://esim.roamjet.net/refund-policy" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">Refund Policy</a>
+                  </span>
+                </label>
+              </div>
 
-                {/* Payment Method Buttons */}
-                <div className="space-y-3 max-w-md mx-auto">
-                  {/* Stripe Payment Button */}
-                  <button
-                    onClick={() => handlePurchase('stripe')}
-                    disabled={!acceptedRefund || isProcessing}
-                    className={`w-full flex items-center justify-center space-x-3 py-4 px-6 rounded-xl transition-all duration-200 font-medium text-lg shadow-lg text-white ${
-                      selectedPaymentMethod === 'stripe' 
-                        ? 'bg-blue-700 ring-2 ring-blue-300' 
-                        : 'bg-blue-600 hover:bg-blue-700'
-                    } ${!acceptedRefund || isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  >
-                    {isProcessing && selectedPaymentMethod === 'stripe' ? (
-                      <Loader2 className="w-6 h-6 animate-spin" />
-                    ) : (
-                      <CreditCard className="w-6 h-6" />
-                    )}
-                    <span>
-                      {t('sharePackage.purchaseNow', 'Purchase Now')} - Credit/Debit Card
-                    </span>
-                  </button>
+              {/* Payment Buttons */}
+              <div className="space-y-3">
+                <button
+                  onClick={() => handlePurchase('stripe')}
+                  disabled={!acceptedRefund || isProcessing}
+                  className={`w-full flex items-center justify-center space-x-3 py-4 px-6 rounded-xl transition-all duration-200 font-medium text-lg shadow-lg text-white ${
+                    selectedPaymentMethod === 'stripe'
+                      ? 'bg-blue-700 ring-2 ring-blue-300'
+                      : 'bg-blue-600 hover:bg-blue-700'
+                  } ${!acceptedRefund || isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  {isProcessing && selectedPaymentMethod === 'stripe' ? (
+                    <Loader2 className="w-6 h-6 animate-spin" />
+                  ) : (
+                    <CreditCard className="w-6 h-6" />
+                  )}
+                  <span>{t('sharePackage.purchaseNow', 'Purchase Now')} - Credit/Debit Card</span>
+                </button>
 
-                  {/* Coinbase Payment Button - Always show */}
-                  <button
-                    onClick={() => handlePurchase('coinbase')}
-                    disabled={!acceptedRefund || isProcessing}
-                    className={`w-full flex items-center justify-center space-x-3 py-4 px-6 rounded-xl transition-all duration-200 font-medium text-lg shadow-lg text-white ${
-                      selectedPaymentMethod === 'coinbase' 
-                        ? 'bg-gray-900 ring-2 ring-gray-400' 
-                        : 'bg-black hover:bg-gray-900'
-                    } ${!acceptedRefund || isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  >
-                    {isProcessing && selectedPaymentMethod === 'coinbase' ? (
-                      <Loader2 className="w-6 h-6 animate-spin" />
-                    ) : (
-                      <Coins className="w-6 h-6" />
-                    )}
-                    <span>
-                      {t('sharePackage.purchaseNow', 'Purchase Now')} - Cryptocurrency
-                    </span>
-                  </button>
-                </div>
+                <button
+                  onClick={() => handlePurchase('coinbase')}
+                  disabled={!acceptedRefund || isProcessing}
+                  className={`w-full flex items-center justify-center space-x-3 py-4 px-6 rounded-xl transition-all duration-200 font-medium text-lg shadow-lg text-white ${
+                    selectedPaymentMethod === 'coinbase'
+                      ? 'bg-gray-900 ring-2 ring-gray-400'
+                      : 'bg-black hover:bg-gray-900'
+                  } ${!acceptedRefund || isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  {isProcessing && selectedPaymentMethod === 'coinbase' ? (
+                    <Loader2 className="w-6 h-6 animate-spin" />
+                  ) : (
+                    <Coins className="w-6 h-6" />
+                  )}
+                  <span>{t('sharePackage.purchaseNow', 'Purchase Now')} - Cryptocurrency</span>
+                </button>
               </div>
 
               {/* How to Use Section */}
-              <div className="text-center">
-                <h3 className={`text-2xl font-semibold text-gray-900 mb-6 ${isRTL ? 'text-right' : 'text-center'}`}>{t('sharePackage.howToUse', 'How to Use')}</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="flex flex-col items-center text-center p-4">
-                    <div className="bg-yellow-100 p-3 rounded-full mb-3">
-                      <Zap className="w-8 h-8 text-yellow-600" />
+              <div className="text-center mt-8">
+                <h3 className={`text-lg font-semibold text-gray-900 mb-4 ${isRTL ? 'text-right' : 'text-center'}`}>{t('sharePackage.howToUse', 'How to Use')}</h3>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="flex flex-col items-center text-center p-2">
+                    <div className="bg-yellow-100 p-2 rounded-full mb-2">
+                      <Zap className="w-5 h-5 text-yellow-600" />
                     </div>
-                    <h4 className={`font-semibold text-gray-900 mb-2 ${isRTL ? 'text-right' : 'text-center'}`}>{t('sharePackage.instantActivation', 'Instant Activation')}</h4>
-                    <p className={`text-sm text-gray-600 ${isRTL ? 'text-right' : 'text-center'}`}>{t('sharePackage.instantActivationDesc', 'Get connected immediately after purchase')}</p>
+                    <h4 className="font-medium text-gray-900 text-xs">{t('sharePackage.instantActivation', 'Instant Activation')}</h4>
                   </div>
-                  <div className="flex flex-col items-center text-center p-4">
-                    <div className="bg-green-100 p-3 rounded-full mb-3">
-                      <Shield className="w-8 h-8 text-green-600" />
+                  <div className="flex flex-col items-center text-center p-2">
+                    <div className="bg-green-100 p-2 rounded-full mb-2">
+                      <Shield className="w-5 h-5 text-green-600" />
                     </div>
-                    <h4 className={`font-semibold text-gray-900 mb-2 ${isRTL ? 'text-right' : 'text-center'}`}>{t('sharePackage.secureReliable', 'Secure & Reliable')}</h4>
-                    <p className={`text-sm text-gray-600 ${isRTL ? 'text-right' : 'text-center'}`}>{t('sharePackage.secureReliableDesc', 'Trusted by millions of travelers worldwide')}</p>
+                    <h4 className="font-medium text-gray-900 text-xs">{t('sharePackage.secureReliable', 'Secure & Reliable')}</h4>
                   </div>
-                  <div className="flex flex-col items-center text-center p-4">
-                    <div className="bg-blue-100 p-3 rounded-full mb-3">
-                      <Globe className="w-8 h-8 text-blue-600" />
+                  <div className="flex flex-col items-center text-center p-2">
+                    <div className="bg-blue-100 p-2 rounded-full mb-2">
+                      <Globe className="w-5 h-5 text-blue-600" />
                     </div>
-                    <h4 className={`font-semibold text-gray-900 mb-2 ${isRTL ? 'text-right' : 'text-center'}`}>{t('sharePackage.globalCoverage', 'Global Coverage')}</h4>
-                    <p className={`text-sm text-gray-600 ${isRTL ? 'text-right' : 'text-center'}`}>{t('sharePackage.globalCoverageDesc', 'Stay connected wherever you go')}</p>
+                    <h4 className="font-medium text-gray-900 text-xs">{t('sharePackage.globalCoverage', 'Global Coverage')}</h4>
                   </div>
+                </div>
+              </div>
+
+              {/* FAQ Section */}
+              <div className="mt-8">
+                <div className="flex items-center justify-center gap-2 mb-4">
+                  <HelpCircle className="w-5 h-5 text-blue-600" />
+                  <h3 className="text-lg font-semibold text-gray-900">{t('sharePackage.faq.title', 'Frequently Asked Questions')}</h3>
+                </div>
+                <div className="space-y-2">
+                  {FAQ_ITEMS.map((item, idx) => (
+                    <div key={idx} className="border border-gray-200 rounded-xl overflow-hidden">
+                      <button
+                        onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
+                        className="w-full flex items-center justify-between px-4 py-3 text-left bg-white hover:bg-gray-50 transition-colors"
+                      >
+                        <span className="font-medium text-sm text-gray-900">{item.q}</span>
+                        <ChevronDown className={`w-4 h-4 text-gray-500 flex-shrink-0 ml-2 transition-transform duration-200 ${openFaq === idx ? 'rotate-180' : ''}`} />
+                      </button>
+                      {openFaq === idx && (
+                        <div className="px-4 pb-3 text-sm text-gray-600 leading-relaxed">
+                          {item.a}
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>

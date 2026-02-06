@@ -181,7 +181,8 @@ const PaymentSuccess = () => {
         stripeMode: stripeMode,
         isGuest: isGuest,
         countryCode: countryInfo.code,
-        countryName: countryInfo.name
+        countryName: countryInfo.name,
+        affiliateRef: orderData.affiliateRef || null
       };
       
       // Only add fields that are not undefined
@@ -321,8 +322,31 @@ const PaymentSuccess = () => {
         console.log('⏳ QR code not ready yet:', qrError.message);
       }
 
-      return { 
-        success: true, 
+      // Record affiliate sale if applicable
+      if (orderData.affiliateRef) {
+        try {
+          console.log('🤝 Recording affiliate sale for:', orderData.affiliateRef);
+          const affiliateSaleRef = doc(collection(db, 'affiliate_sales'), orderData.orderId);
+          await setDoc(affiliateSaleRef, {
+            affiliateRef: orderData.affiliateRef,
+            orderId: orderData.orderId,
+            planId: orderData.planId,
+            planName: orderData.planName,
+            amount: orderData.amount,
+            currency: orderData.currency,
+            customerEmail: orderData.customerEmail,
+            countryCode: countryInfo.code,
+            countryName: countryInfo.name,
+            createdAt: serverTimestamp()
+          });
+          console.log('✅ Affiliate sale recorded');
+        } catch (affErr) {
+          console.error('⚠️ Failed to record affiliate sale:', affErr);
+        }
+      }
+
+      return {
+        success: true,
         orderId: orderData.orderId,
         qrCodeData: qrCodeData
       };
@@ -386,6 +410,17 @@ const PaymentSuccess = () => {
       const planId = searchParams.get('plan');
       const name = searchParams.get('name');
       const chargeId = searchParams.get('charge_id');
+      // Get affiliate ref from URL or fallback to localStorage
+      let affiliateRef = searchParams.get('ref');
+      if (!affiliateRef) {
+        try {
+          const pending = localStorage.getItem('pendingEsimOrder');
+          if (pending) {
+            const pendingData = JSON.parse(pending);
+            affiliateRef = pendingData.affiliateRef || null;
+          }
+        } catch (e) { /* ignore */ }
+      }
 
       console.log('📋 URL Parameters:', {
         orderParam,
@@ -517,7 +552,8 @@ const PaymentSuccess = () => {
           userId: currentUser?.uid || null,
           paymentMethod: paymentMethod,
           chargeId: chargeId || null,
-          isGuest: isGuest
+          isGuest: isGuest,
+          affiliateRef: affiliateRef || null
         };
         
         console.log('🎯 Order data prepared:', orderData);

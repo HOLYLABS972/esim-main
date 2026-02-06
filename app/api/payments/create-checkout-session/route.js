@@ -73,7 +73,7 @@ export async function POST(request) {
 
   try {
     const body = await request.json();
-    const { order, email, name, total, currency = 'usd', domain, plan, isYearly } = body;
+    const { order, email, name, total, currency = 'usd', domain, plan, isYearly, affiliateRef } = body;
     
     if (!domain) {
       return NextResponse.json(
@@ -225,21 +225,22 @@ export async function POST(request) {
           price_data: {
             currency: currencyLower,
             product_data: {
-              name: `Order ${order}`,
+              name: name || `Order ${order}`,
             },
             unit_amount: totalAmount,
           },
           quantity: 1,
         }],
         mode: 'payment',
-        success_url: `${domainClean}/payment-success?order=${order}&email=${encodeURIComponent(email)}&total=${total}&name=${encodeURIComponent(name || '')}&currency=${currency}&plan=${encodeURIComponent(plan || '')}`,
-        cancel_url: `${domainClean}/cart`,
+        success_url: `${domainClean}/payment-success?order=${order}&email=${encodeURIComponent(email)}&total=${total}&name=${encodeURIComponent(name || '')}&currency=${currency}&plan=${encodeURIComponent(plan || '')}${affiliateRef ? '&ref=' + encodeURIComponent(affiliateRef) : ''}`,
+        cancel_url: `${domainClean}/share-package/${encodeURIComponent(plan || '')}`,
         customer_email: email,
         metadata: {
           order_id: order,
           email: email,
           name: name,
-          plan_id: plan || ''
+          plan_id: plan || '',
+          affiliate_ref: affiliateRef || ''
         }
       });
     }

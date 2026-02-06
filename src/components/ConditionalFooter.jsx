@@ -6,7 +6,7 @@ import Footer from './Footer';
 const ConditionalFooter = () => {
   const pathname = usePathname();
 
-  if (pathname?.startsWith('/admin')) {
+  if (pathname?.startsWith('/admin') || pathname?.startsWith('/share-package')) {
     return null;
   }
   return <Footer />;

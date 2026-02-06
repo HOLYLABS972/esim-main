@@ -767,7 +767,9 @@ const AdminDashboard = ({ initialTab = 'esim' }) => {
             {[
               { id: 'countries', label: 'Countries', icon: Globe, permission: canManageCountries },
               { id: 'plans', label: 'Plans', icon: Smartphone, permission: canManagePlans },
-              { id: 'esim', label: 'User Management', icon: Activity, permission: canManagePlans },
+              { id: 'esim', label: 'Management', icon: Activity, permission: canManagePlans },
+              { id: 'admins', label: 'Admins', icon: Shield, permission: true },
+              { id: 'orders', label: 'Orders', icon: ShoppingCart, permission: true },
               { id: 'affiliate', label: 'Affiliate', icon: User, permission: true },
               { id: 'notifications', label: 'Notifications', icon: MessageSquare, permission: true },
             ].filter(tab => tab.permission).map((tab) => {
@@ -857,7 +859,9 @@ const AdminDashboard = ({ initialTab = 'esim' }) => {
               {[
                 { id: 'countries', label: 'Countries' },
                 { id: 'plans', label: 'Plans Management' },
-                { id: 'esim', label: 'User Management' },
+                { id: 'esim', label: 'Management' },
+                { id: 'admins', label: 'Admins' },
+                { id: 'orders', label: 'Orders' },
                 { id: 'affiliate', label: 'Affiliate' },
                 { id: 'notifications', label: 'Notifications' },
               ].find(tab => tab.id === activeTab)?.label || 'Dashboard'}
@@ -973,6 +977,14 @@ const AdminDashboard = ({ initialTab = 'esim' }) => {
                   {/* User Management Tab */}
                   {activeTab === 'esim' && canManagePlans && (
                     <AdminEsimManagement />
+                  )}
+
+                  {activeTab === 'admins' && (
+                    <AdminEsimManagement defaultTab="admins" />
+                  )}
+
+                  {activeTab === 'orders' && (
+                    <AdminEsimManagement defaultTab="orders" />
                   )}
 
                   {activeTab === 'affiliate' && (
