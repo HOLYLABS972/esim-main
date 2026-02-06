@@ -47,7 +47,7 @@ const AffiliateManagement = ({
     const [affiliates, setAffiliates] = useState([]);
     const [loadingAffiliates, setLoadingAffiliates] = useState(false);
     const [showCreateModal, setShowCreateModal] = useState(false);
-    const [newAffiliate, setNewAffiliate] = useState({ name: '', email: '', commission: 10, packageId: '', currency: '' });
+    const [newAffiliate, setNewAffiliate] = useState({ name: '', email: '', commission: 10, packageId: '', currency: '', country: '', flag: '' });
     const [selectedAffiliate, setSelectedAffiliate] = useState(null);
     const [showDetailsModal, setShowDetailsModal] = useState(false);
     const [packages, setPackages] = useState([]);
@@ -132,10 +132,16 @@ const AffiliateManagement = ({
             if (newAffiliate.currency.trim()) {
                 data.currency = newAffiliate.currency.trim().toUpperCase();
             }
+            if (newAffiliate.country.trim()) {
+                data.country = newAffiliate.country.trim().toUpperCase();
+            }
+            if (newAffiliate.flag.trim()) {
+                data.flag = newAffiliate.flag.trim();
+            }
             await setDoc(affiliateDoc, data);
             toast.success(`Affiliate "${refId}" created!`);
             setShowCreateModal(false);
-            setNewAffiliate({ name: '', email: '', commission: 10, packageId: '', currency: '' });
+            setNewAffiliate({ name: '', email: '', commission: 10, packageId: '', currency: '', country: '', flag: '' });
             setPackageSearch('');
             loadAffiliates();
         } catch (error) {
@@ -445,9 +451,11 @@ const AffiliateManagement = ({
                                     const hasSales = item.salesRecords.length > 0;
                                     const origin = typeof window !== 'undefined' ? window.location.origin : '';
                                     const currencyParam = item.raw?.currency ? `&currency=${item.raw.currency}` : '';
+                                    const countryParam = item.raw?.country ? `&country=${item.raw.country}` : '';
+                                    const flagParam = item.raw?.flag ? `&flag=${encodeURIComponent(item.raw.flag)}` : '';
                                     const shareLink = item.raw?.packageId
-                                        ? `${origin}/share-package/${item.raw.packageId}?ref=${item.refId}${currencyParam}`
-                                        : `${origin}/?ref=${item.refId}${currencyParam}`;
+                                        ? `${origin}/share-package/${item.raw.packageId}?ref=${item.refId}${currencyParam}${countryParam}${flagParam}`
+                                        : `${origin}/?ref=${item.refId}${currencyParam}${countryParam}${flagParam}`;
 
                                     return (
                                         <React.Fragment key={`${item.type}-${item.refId}`}>
@@ -675,6 +683,30 @@ const AffiliateManagement = ({
                                 <p className="text-xs text-gray-500 mt-1">Display currency passed in the link. Does not change Stripe price.</p>
                             </div>
                             <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Country (optional)</label>
+                                <input
+                                    type="text"
+                                    value={newAffiliate.country}
+                                    onChange={(e) => setNewAffiliate(prev => ({ ...prev, country: e.target.value.toUpperCase() }))}
+                                    placeholder="e.g. AU, US, GB"
+                                    maxLength={2}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase"
+                                />
+                                <p className="text-xs text-gray-500 mt-1">Country code passed as &country= in the link.</p>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Flag (optional)</label>
+                                <input
+                                    type="text"
+                                    value={newAffiliate.flag}
+                                    onChange={(e) => setNewAffiliate(prev => ({ ...prev, flag: e.target.value }))}
+                                    placeholder="e.g. 🇦🇺"
+                                    maxLength={4}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+                                <p className="text-xs text-gray-500 mt-1">Flag emoji passed as &flag= in the link.</p>
+                            </div>
+                            <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Affiliate Link</label>
                                 <div className="flex gap-2 mb-2">
                                     <button
@@ -719,7 +751,18 @@ const AffiliateManagement = ({
                                                     <button
                                                         key={pkg.id}
                                                         type="button"
-                                                        onClick={() => setNewAffiliate(prev => ({ ...prev, packageId: pkg.id }))}
+                                                        onClick={() => {
+                                                            const cc = (pkg.country_code || '').toUpperCase();
+                                                            const flag = cc.length === 2
+                                                                ? String.fromCodePoint(...[...cc].map(c => 0x1F1E6 + c.charCodeAt(0) - 65))
+                                                                : '';
+                                                            setNewAffiliate(prev => ({
+                                                                ...prev,
+                                                                packageId: pkg.id,
+                                                                country: prev.country || cc,
+                                                                flag: prev.flag || flag
+                                                            }));
+                                                        }}
                                                         className={`w-full text-left px-3 py-2 text-sm border-b border-gray-100 last:border-0 hover:bg-blue-50 transition-colors ${
                                                             newAffiliate.packageId === pkg.id ? 'bg-blue-50 font-medium text-blue-700' : ''
                                                         }`}
@@ -746,7 +789,7 @@ const AffiliateManagement = ({
                                 </p>
                             </div>
                         </div>
-                        <div className="p-6 border-t border-gray-200 flex gap-3">
+                        <div className="p-6 border-t border-gray-200 flex gap-3 flex-shrink-0">
                             <button
                                 onClick={() => setShowCreateModal(false)}
                                 className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium transition-colors"
@@ -769,9 +812,11 @@ const AffiliateManagement = ({
                 const refId = selectedAffiliate.refId;
                 const origin = typeof window !== 'undefined' ? window.location.origin : 'https://yourdomain.com';
                 const currencyParam = selectedAffiliate.currency ? `&currency=${selectedAffiliate.currency}` : '';
+                const countryParam = selectedAffiliate.country ? `&country=${selectedAffiliate.country}` : '';
+                const flagParam = selectedAffiliate.flag ? `&flag=${encodeURIComponent(selectedAffiliate.flag)}` : '';
                 const affiliateLink = selectedAffiliate.packageId
-                    ? `${origin}/share-package/${selectedAffiliate.packageId}?ref=${refId}${currencyParam}`
-                    : `${origin}/?ref=${refId}${currencyParam}`;
+                    ? `${origin}/share-package/${selectedAffiliate.packageId}?ref=${refId}${currencyParam}${countryParam}${flagParam}`
+                    : `${origin}/?ref=${refId}${currencyParam}${countryParam}${flagParam}`;
                 const appsFlyerLink = `https://app.appsflyer.com/redirect?pid=affiliate&c=${refId}&af_dp=${encodeURIComponent(affiliateLink)}&af_web_dp=${encodeURIComponent(affiliateLink)}`;
                 const iframeCode = `<iframe\n  src="${affiliateLink}"\n  width="100%"\n  height="700"\n  style="border: none; border-radius: 12px; max-width: 480px;"\n  allow="payment"\n  title="eSIM Purchase - ${selectedAffiliate.name}"\n></iframe>`;
                 const salesData = selectedAffiliate.salesData || { count: 0, totalAmount: 0 };

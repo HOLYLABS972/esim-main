@@ -50,6 +50,58 @@ const SharePackagePage = () => {
   const [urlCountryCode, setUrlCountryCode] = useState(null);
   const [urlCountryFlag, setUrlCountryFlag] = useState(null);
   const [affiliateRef, setAffiliateRef] = useState(null);
+  const [displayCurrency, setDisplayCurrency] = useState(null);
+
+  // Approximate exchange rates from USD (updated periodically)
+  const EXCHANGE_RATES = {
+    USD: { rate: 1, symbol: '$' },
+    EUR: { rate: 0.92, symbol: '€' },
+    GBP: { rate: 0.79, symbol: '£' },
+    AUD: { rate: 1.55, symbol: 'A$' },
+    CAD: { rate: 1.36, symbol: 'C$' },
+    NZD: { rate: 1.71, symbol: 'NZ$' },
+    JPY: { rate: 149, symbol: '¥' },
+    CHF: { rate: 0.88, symbol: 'CHF ' },
+    SGD: { rate: 1.34, symbol: 'S$' },
+    HKD: { rate: 7.82, symbol: 'HK$' },
+    KRW: { rate: 1320, symbol: '₩' },
+    INR: { rate: 83.5, symbol: '₹' },
+    MYR: { rate: 4.47, symbol: 'RM ' },
+    THB: { rate: 35.5, symbol: '฿' },
+    PHP: { rate: 56.5, symbol: '₱' },
+    IDR: { rate: 15700, symbol: 'Rp ' },
+    BRL: { rate: 4.95, symbol: 'R$' },
+    MXN: { rate: 17.2, symbol: 'MX$' },
+    ZAR: { rate: 18.8, symbol: 'R ' },
+    AED: { rate: 3.67, symbol: 'د.إ ' },
+    SAR: { rate: 3.75, symbol: 'ر.س ' },
+    TRY: { rate: 30.5, symbol: '₺' },
+    PLN: { rate: 4.02, symbol: 'zł ' },
+    SEK: { rate: 10.5, symbol: 'kr ' },
+    NOK: { rate: 10.7, symbol: 'kr ' },
+    DKK: { rate: 6.88, symbol: 'kr ' },
+    ILS: { rate: 3.65, symbol: '₪' },
+    TWD: { rate: 31.5, symbol: 'NT$' },
+    CNY: { rate: 7.24, symbol: '¥' },
+    RUB: { rate: 92, symbol: '₽' },
+  };
+
+  const convertPrice = (usdPrice) => {
+    if (!displayCurrency || !EXCHANGE_RATES[displayCurrency]) {
+      return { price: usdPrice, symbol: '$', code: 'USD' };
+    }
+    const { rate, symbol } = EXCHANGE_RATES[displayCurrency];
+    return { price: usdPrice * rate, symbol, code: displayCurrency };
+  };
+
+  const formatDisplayPrice = (usdPrice) => {
+    const { price, symbol, code } = convertPrice(usdPrice);
+    // For currencies with large values (JPY, KRW, IDR), no decimals
+    if (['JPY', 'KRW', 'IDR', 'RUB'].includes(code)) {
+      return `${symbol}${Math.round(price)}`;
+    }
+    return `${symbol}${price.toFixed(2)}`;
+  };
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -60,6 +112,12 @@ const SharePackagePage = () => {
       if (ref) {
         setAffiliateRef(ref);
         console.log('🤝 Affiliate ref detected:', ref);
+      }
+      const curr = searchParams.get('currency');
+      if (curr) {
+        const upper = curr.toUpperCase();
+        setDisplayCurrency(upper);
+        console.log('💱 Display currency:', upper);
       }
     }
   }, []);
@@ -698,8 +756,8 @@ const SharePackagePage = () => {
                     finalPrice = Math.max(minimumPrice, finalPrice);
                     return (
                       <div>
-                        <div className="font-bold text-green-600">${finalPrice.toFixed(2)}</div>
-                        <div className="text-xs text-gray-400 line-through">${formatPrice(activePlan.price)}</div>
+                        <div className="font-bold text-green-600">{formatDisplayPrice(finalPrice)}</div>
+                        <div className="text-xs text-gray-400 line-through">{formatDisplayPrice(parseFloat(activePlan.price))}</div>
                       </div>
                     );
                   })()}
