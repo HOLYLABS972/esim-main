@@ -47,7 +47,7 @@ const AffiliateManagement = ({
     const [affiliates, setAffiliates] = useState([]);
     const [loadingAffiliates, setLoadingAffiliates] = useState(false);
     const [showCreateModal, setShowCreateModal] = useState(false);
-    const [newAffiliate, setNewAffiliate] = useState({ name: '', email: '', commission: 10, packageId: '' });
+    const [newAffiliate, setNewAffiliate] = useState({ name: '', email: '', commission: 10, packageId: '', currency: '' });
     const [selectedAffiliate, setSelectedAffiliate] = useState(null);
     const [showDetailsModal, setShowDetailsModal] = useState(false);
     const [packages, setPackages] = useState([]);
@@ -129,10 +129,13 @@ const AffiliateManagement = ({
             if (newAffiliate.packageId && newAffiliate.packageId !== '_select') {
                 data.packageId = newAffiliate.packageId;
             }
+            if (newAffiliate.currency.trim()) {
+                data.currency = newAffiliate.currency.trim().toUpperCase();
+            }
             await setDoc(affiliateDoc, data);
             toast.success(`Affiliate "${refId}" created!`);
             setShowCreateModal(false);
-            setNewAffiliate({ name: '', email: '', commission: 10, packageId: '' });
+            setNewAffiliate({ name: '', email: '', commission: 10, packageId: '', currency: '' });
             setPackageSearch('');
             loadAffiliates();
         } catch (error) {
@@ -441,9 +444,10 @@ const AffiliateManagement = ({
                                     const isExpanded = expandedRows.has(item.refId);
                                     const hasSales = item.salesRecords.length > 0;
                                     const origin = typeof window !== 'undefined' ? window.location.origin : '';
+                                    const currencyParam = item.raw?.currency ? `&currency=${item.raw.currency}` : '';
                                     const shareLink = item.raw?.packageId
-                                        ? `${origin}/share-package/${item.raw.packageId}?ref=${item.refId}`
-                                        : `${origin}/?ref=${item.refId}`;
+                                        ? `${origin}/share-package/${item.raw.packageId}?ref=${item.refId}${currencyParam}`
+                                        : `${origin}/?ref=${item.refId}${currencyParam}`;
 
                                     return (
                                         <React.Fragment key={`${item.type}-${item.refId}`}>
@@ -616,12 +620,12 @@ const AffiliateManagement = ({
             {/* Create Affiliate Modal */}
             {showCreateModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-xl shadow-2xl max-w-md w-full">
-                        <div className="p-6 border-b border-gray-200 flex justify-between items-center">
+                    <div className="bg-white rounded-xl shadow-2xl max-w-md w-full max-h-[90vh] flex flex-col">
+                        <div className="p-6 border-b border-gray-200 flex justify-between items-center flex-shrink-0">
                             <h3 className="text-lg font-bold text-gray-900">Create Affiliate</h3>
                             <button onClick={() => setShowCreateModal(false)} className="text-gray-400 hover:text-gray-600">&#x2715;</button>
                         </div>
-                        <div className="p-6 space-y-4">
+                        <div className="p-6 space-y-4 overflow-y-auto flex-1">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
                                 <input
@@ -657,6 +661,18 @@ const AffiliateManagement = ({
                                     max="100"
                                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Currency (optional)</label>
+                                <input
+                                    type="text"
+                                    value={newAffiliate.currency}
+                                    onChange={(e) => setNewAffiliate(prev => ({ ...prev, currency: e.target.value.toUpperCase() }))}
+                                    placeholder="e.g. EUR, GBP, AUD"
+                                    maxLength={3}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase"
+                                />
+                                <p className="text-xs text-gray-500 mt-1">Display currency passed in the link. Does not change Stripe price.</p>
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Affiliate Link</label>
@@ -752,9 +768,10 @@ const AffiliateManagement = ({
             {showDetailsModal && selectedAffiliate && (() => {
                 const refId = selectedAffiliate.refId;
                 const origin = typeof window !== 'undefined' ? window.location.origin : 'https://yourdomain.com';
+                const currencyParam = selectedAffiliate.currency ? `&currency=${selectedAffiliate.currency}` : '';
                 const affiliateLink = selectedAffiliate.packageId
-                    ? `${origin}/share-package/${selectedAffiliate.packageId}?ref=${refId}`
-                    : `${origin}/?ref=${refId}`;
+                    ? `${origin}/share-package/${selectedAffiliate.packageId}?ref=${refId}${currencyParam}`
+                    : `${origin}/?ref=${refId}${currencyParam}`;
                 const appsFlyerLink = `https://app.appsflyer.com/redirect?pid=affiliate&c=${refId}&af_dp=${encodeURIComponent(affiliateLink)}&af_web_dp=${encodeURIComponent(affiliateLink)}`;
                 const iframeCode = `<iframe\n  src="${affiliateLink}"\n  width="100%"\n  height="700"\n  style="border: none; border-radius: 12px; max-width: 480px;"\n  allow="payment"\n  title="eSIM Purchase - ${selectedAffiliate.name}"\n></iframe>`;
                 const salesData = selectedAffiliate.salesData || { count: 0, totalAmount: 0 };
