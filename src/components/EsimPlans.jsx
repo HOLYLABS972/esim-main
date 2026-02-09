@@ -8,7 +8,7 @@ import { Search } from 'lucide-react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useAuth } from '../contexts/AuthContext';
 
-import { getCountriesWithPricing } from '../services/plansService';
+import { getCountriesWithPricing, getAllPlans } from '../services/plansService';
 import { getRegularSettings } from '../services/settingsService';
 import { useI18n } from '../contexts/I18nContext';
 import { detectPlatform, shouldRedirectToDownload, isMobileDevice } from '../utils/platformDetection';
@@ -142,22 +142,22 @@ const EsimPlans = () => {
       try {
         console.log('📊 Fetching REAL Firebase data for accurate pricing...');
         const countriesWithPricing = await getCountriesWithPricing();
-        
+
         // Filter to show only countries with plans (minPrice < 999 indicates real data)
-        const countriesWithRealPricing = countriesWithPricing.filter(country => 
+        const countriesWithRealPricing = countriesWithPricing.filter(country =>
           country.minPrice < 999 && country.plansCount > 0
         );
-        
+
         // Sort by minimum price (cheapest first)
         countriesWithRealPricing.sort((a, b) => a.minPrice - b.minPrice);
-        
+
         // Limit to 8 for home page, show all for plans page
         const limitedCountries = isPlansPage ? countriesWithRealPricing : countriesWithRealPricing.slice(0, 8);
-        
+
         console.log('✅ USING REAL FIREBASE DATA - NO MORE LIES!');
-        console.log('Real data sample prices:', limitedCountries.slice(0, 5).map(c => ({ 
-          name: c.name, 
-          minPrice: c.minPrice 
+        console.log('Real data sample prices:', limitedCountries.slice(0, 5).map(c => ({
+          name: c.name,
+          minPrice: c.minPrice
         })));
         return limitedCountries;
       } catch (error) {
@@ -172,27 +172,92 @@ const EsimPlans = () => {
     gcTime: 10 * 60 * 1000, // 10 minutes
   });
 
+  // Fetch global plans from Firebase
+  const { data: globalPlanEntry } = useQuery({
+    queryKey: ['global-plan-entry'],
+    queryFn: async () => {
+      try {
+        console.log('🌐 Fetching global plans...');
+        const allPlans = await getAllPlans();
+
+        const globalPlans = allPlans.filter(plan => {
+          const countryCodes = plan.country_codes || [];
+          const planType = (plan.type || '').toLowerCase();
+          const planRegion = (plan.region || plan.region_slug || '').toLowerCase();
+          const planName = (plan.name || plan.title || '').toLowerCase();
+
+          return (
+            planType === 'global' ||
+            planType === 'multi-country' ||
+            planRegion === 'global' ||
+            countryCodes.length > 10 ||
+            planName.includes('global') ||
+            planName.includes('worldwide') ||
+            planName.includes('world')
+          );
+        });
+
+        if (globalPlans.length === 0) return null;
+
+        const validPrices = globalPlans
+          .map(p => parseFloat(p.price))
+          .filter(price => !isNaN(price) && price > 0);
+        const minPrice = validPrices.length > 0 ? Math.min(...validPrices) : null;
+
+        // Find the cheapest global plan for navigation
+        const cheapestGlobal = globalPlans
+          .filter(p => parseFloat(p.price) > 0)
+          .sort((a, b) => parseFloat(a.price) - parseFloat(b.price))[0];
+
+        console.log(`✅ Found ${globalPlans.length} global plans, min price: $${minPrice}`);
+        return {
+          id: 'global-plans',
+          name: 'Global',
+          code: 'GLOBAL',
+          flagEmoji: '🌍',
+          minPrice,
+          plansCount: globalPlans.length,
+          isGlobal: true,
+          cheapestPlanId: cheapestGlobal?.id || null,
+        };
+      } catch (error) {
+        console.error('❌ Error fetching global plans:', error);
+        return null;
+      }
+    },
+    retry: 1,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
+
 
 
   useEffect(() => {
-    console.log('useEffect triggered:', { 
-      countriesData: countriesData?.length, 
-      countriesLoading, 
-      countriesError
+    console.log('useEffect triggered:', {
+      countriesData: countriesData?.length,
+      countriesLoading,
+      countriesError,
+      globalPlanEntry: !!globalPlanEntry
     });
-    
+
     if (countriesData) {
       console.log('Setting countries data:', countriesData);
       // Translate countries based on current locale
       const translatedCountries = translateCountries(countriesData, locale);
-      setCountries(translatedCountries);
-      setFilteredCountries(translatedCountries);
+
+      // Prepend global plan entry at the top if available
+      const withGlobal = globalPlanEntry
+        ? [globalPlanEntry, ...translatedCountries]
+        : translatedCountries;
+
+      setCountries(withGlobal);
+      setFilteredCountries(withGlobal);
     } else if (countriesError) {
       console.log('Firebase error, no data available:', countriesError);
       setCountries([]);
       setFilteredCountries([]);
     }
-  }, [countriesData, countriesError, countriesLoading, locale]);
+  }, [countriesData, countriesError, countriesLoading, locale, globalPlanEntry]);
 
   // Search function - uses hardcoded countries for landing, Firebase for plans page
   const searchCountries = async (term) => {
@@ -309,32 +374,37 @@ const EsimPlans = () => {
   const filterCountries = (countriesList) => {
     // Priority countries for plans page
     const priorityCountries = [
-      'United States', 'USA', 'South Korea', 'Korea', 'Japan', 
+      'United States', 'USA', 'South Korea', 'Korea', 'Japan',
       'Belgium', 'Spain', 'Canada', 'Portugal', 'Thailand'
     ];
-    
+
     if (isPlansPage && !searchTerm) {
-      // Separate priority countries and others
+      // Separate global, priority countries, and others
+      const global = [];
       const priority = [];
       const others = [];
-      
+
       countriesList.forEach(country => {
-        const isPriority = priorityCountries.some(pc => 
-          country.name.toLowerCase().includes(pc.toLowerCase()) ||
-          pc.toLowerCase().includes(country.name.toLowerCase())
-        );
-        
-        if (isPriority) {
-          priority.push(country);
+        if (country.isGlobal) {
+          global.push(country);
         } else {
-          others.push(country);
+          const isPriority = priorityCountries.some(pc =>
+            country.name.toLowerCase().includes(pc.toLowerCase()) ||
+            pc.toLowerCase().includes(country.name.toLowerCase())
+          );
+
+          if (isPriority) {
+            priority.push(country);
+          } else {
+            others.push(country);
+          }
         }
       });
-      
-      // Return priority countries first, then others
-      return [...priority, ...others];
+
+      // Return global first, then priority countries, then others
+      return [...global, ...priority, ...others];
     }
-    
+
     return [...countriesList]; // Return countries as-is for other cases
   };
 
@@ -349,6 +419,20 @@ const EsimPlans = () => {
   const handleCountrySelect = async (country) => {
     console.log('🔍 DEBUG: handleCountrySelect called');
     console.log('🛒 User selected country:', country.name);
+
+    // Handle global plan entry
+    if (country.isGlobal) {
+      if (country.cheapestPlanId) {
+        let targetUrl = `/share-package/${country.cheapestPlanId}?country=GLOBAL&flag=🌍`;
+        if (locale && locale !== 'en') {
+          targetUrl = `/${locale}${targetUrl}`;
+        }
+        router.push(targetUrl);
+      } else {
+        toast.error('No global plans available');
+      }
+      return;
+    }
 
     // Navigate directly to share-package page with 1GB auto-selected
     try {
@@ -446,7 +530,7 @@ const EsimPlans = () => {
                             </div>
                             <div className="text-left">
                               <h3 className="text-lg font-semibold text-gray-900">{country.name}</h3>
-                              <p className="text-sm text-gray-500">1GB • 7 Days</p>
+                              <p className="text-sm text-gray-500">{country.isGlobal ? `${country.plansCount} Plans • 200+ Countries` : '1GB • 7 Days'}</p>
                             </div>
                           </div>
                           <div className="text-right">
@@ -472,7 +556,7 @@ const EsimPlans = () => {
                       ))}
                     </div>
                   </div>
-                  
+
                   {/* Mobile Records Layout */}
                   <div className="sm:hidden">
                     <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
@@ -496,7 +580,7 @@ const EsimPlans = () => {
                             </div>
                             <div className="text-left">
                               <h3 className="text-sm font-semibold text-gray-900">{country.name}</h3>
-                              <p className="text-xs text-gray-500">1GB • 7 Days</p>
+                              <p className="text-xs text-gray-500">{country.isGlobal ? `${country.plansCount} Plans • 200+ Countries` : '1GB • 7 Days'}</p>
                             </div>
                           </div>
                           <div className="text-right">

@@ -69,7 +69,7 @@
     "plans": {
         "title": "Portable Pricing System",
         "subtitle": "Best eSIM Plans for Backpackers, Travelers & Digital Nomads",
-        "description": "Select from our wide range of data plans designed for every type of traveler. Perfect for backpackers exploring multiple countries, business travelers, and digital nomads working remotely. Compare our competitive rates with Airalo and eSIMo.",
+        "description": "Browse our complete selection of eSIM data plans for 200+ countries. Real-time pricing with instant activation.",
         "loadingPlans": "Loading plans...",
         "fromPrice": "From ${price}",
         "noPlansAvailable": "No plans available",

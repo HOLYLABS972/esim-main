@@ -58,66 +58,40 @@ const CountrySearchBar = ({ onSearch, showCountryCount = true }) => {
     const searchTerm = searchValue.trim();
     const langPrefix = getLanguagePrefix();
     
-    if (searchTerm) {
-      // If on esim-plans page, update URL query parameter
-      if (isOnEsimPlansPage) {
+    if (isOnEsimPlansPage) {
+      // On esim-plans page, update URL query parameter for search
+      if (searchTerm) {
         const params = new URLSearchParams(searchParams);
         params.set('search', searchTerm);
         router.push(`${pathname}?${params.toString()}`, { scroll: false });
       } else {
-        // If on landing page, scroll to plans section and update URL with search param
-        const plansSection = document.getElementById('esim-plans');
-        if (plansSection) {
-          plansSection.scrollIntoView({ behavior: 'smooth' });
-          // Update URL with search parameter without navigating
-          const newUrl = `${window.location.pathname}?search=${encodeURIComponent(searchTerm)}`;
-          window.history.pushState({}, '', newUrl);
-        } else {
-          // If plans section not found, navigate to home with search param
-          router.push(`${langPrefix}/?search=${encodeURIComponent(searchTerm)}`);
-        }
+        const params = new URLSearchParams(searchParams);
+        params.delete('search');
+        const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
+        router.push(newUrl, { scroll: false });
       }
-      
-      // Also call onSearch callback if provided
+
       if (onSearch) {
-        onSearch(searchTerm);
+        onSearch(searchTerm || '');
       }
     } else {
-      // Clear the search param from URL
-      const params = new URLSearchParams(searchParams);
-      params.delete('search');
-      const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
-      
-      if (isOnEsimPlansPage) {
-        router.push(newUrl, { scroll: false });
-      } else {
-        // On home page, update URL and scroll to plans section
-        router.push(newUrl, { scroll: false });
-        const plansSection = document.getElementById('esim-plans');
-        if (plansSection) {
-          plansSection.scrollIntoView({ behavior: 'smooth' });
-        }
-      }
-      
-      // Also call onSearch callback if provided
-      if (onSearch) {
-        onSearch('');
-      }
+      // On home/landing page, navigate to esim-plans with search term
+      const searchQuery = searchTerm ? `?search=${encodeURIComponent(searchTerm)}` : '';
+      router.push(`${langPrefix}/esim-plans${searchQuery}`);
     }
   };
 
   const handleInputChange = (e) => {
     const value = e.target.value;
     setSearchValue(value);
-    
-    // If input is cleared, also clear URL param immediately
-    if (!value.trim() && mounted) {
+
+    // Only update URL params on esim-plans page when input is cleared
+    if (!value.trim() && mounted && isOnEsimPlansPage) {
       const params = new URLSearchParams(searchParams);
       params.delete('search');
       const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
       router.replace(newUrl, { scroll: false });
-      
-      // Also call onSearch callback if provided
+
       if (onSearch) {
         onSearch('');
       }
@@ -157,7 +131,7 @@ const CountrySearchBar = ({ onSearch, showCountryCount = true }) => {
             value={searchValue}
             onChange={handleInputChange}
             onKeyPress={handleKeyPress}
-            placeholder={isRTL ? `${t('hero.countriesAvailable', 'Now available in 200+ countries')} 🌍` : `🌍 ${t('hero.countriesAvailable', 'Now available in 200+ countries')}`}
+            placeholder={t('hero.countriesAvailable', 'Now available in 200+ countries')}
             className={`w-full px-6 py-4 sm:py-5 ${isRTL ? 'pr-24 sm:pr-28 pl-6' : 'pl-6 pr-24 sm:pr-28'} text-base sm:text-lg border-2 border-gray-200 rounded-full focus:outline-none focus:border-cobalt-blue focus:ring-2 focus:ring-cobalt-blue/20 transition-all duration-300 shadow-lg hover:shadow-xl bg-white/90 backdrop-blur-md placeholder:text-gray-500 placeholder:font-medium ${isRTL ? 'text-right' : 'text-left'}`}
           />
           {searchValue && (
