@@ -84,7 +84,7 @@ const Footer = () => {
     { name: 'FAQ', path: `${langPrefix}/faq` },
     { name: getText('navbar.affiliate', 'Affiliate'), path: '/affiliate' },
     { name: getText('navbar.login', 'Login'), path: `${langPrefix}/login` },
-    { name: getText('navbar.blog', 'Blog'), path: 'https://www.holylabs.net/en/blog', external: true }
+    { name: getText('navbar.blog', 'Blog'), path: '/blog' }
   ];
 
   const usefulLinks = [
