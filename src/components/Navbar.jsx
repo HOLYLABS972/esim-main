@@ -126,9 +126,9 @@ const Navbar = ({ hideLanguageSelector = false }) => {
           <Link href="/affiliate" className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
             {t('navbar.affiliate', 'Affiliate')}
           </Link>
-          <a href="https://www.holylabs.net/en/blog" target="_blank" rel="noopener noreferrer" className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
+          <Link href="/blog" className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
             {t('navbar.blog', 'Blog')}
-          </a>
+          </Link>
           {currentUser && (
             <Link href={getLocalizedUrl("/dashboard")} className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
               {t('navbar.dashboard', 'Dashboard')}
@@ -198,15 +198,13 @@ const Navbar = ({ hideLanguageSelector = false }) => {
                   >
                     {t('navbar.affiliate', 'Affiliate')}
                   </Link>
-                  <a
-                    href="https://www.holylabs.net/en/blog"
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <Link
+                    href="/blog"
                     className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     {t('navbar.blog', 'Blog')}
-                  </a>
+                  </Link>
                   {currentUser && (
                     <Link
                       href={getLocalizedUrl("/dashboard")}

@@ -63,6 +63,7 @@ import PlansManagement from './PlansManagement';
 import AffiliateManagement from './AffiliateManagement';
 import NotificationsManagement from './NotificationsManagement';
 import RoamjetAdminDashboard from './RoamjetAdminDashboard';
+import BlogManagement from './BlogManagement';
 
 // Helper function to get flag emoji from country code
 const getFlagEmoji = (countryCode) => {
@@ -772,6 +773,7 @@ const AdminDashboard = ({ initialTab = 'esim' }) => {
               { id: 'orders', label: 'Orders', icon: ShoppingCart, permission: true },
               { id: 'affiliate', label: 'Affiliate', icon: User, permission: true },
               { id: 'notifications', label: 'Notifications', icon: MessageSquare, permission: true },
+              { id: 'blog', label: 'Blog', icon: FileText, permission: canManageBlog },
             ].filter(tab => tab.permission).map((tab) => {
               const Icon = tab.icon;
               return (
@@ -864,6 +866,7 @@ const AdminDashboard = ({ initialTab = 'esim' }) => {
                 { id: 'orders', label: 'Orders' },
                 { id: 'affiliate', label: 'Affiliate' },
                 { id: 'notifications', label: 'Notifications' },
+                { id: 'blog', label: 'Blog' },
               ].find(tab => tab.id === activeTab)?.label || 'Dashboard'}
             </h2>
           </div>
@@ -994,6 +997,11 @@ const AdminDashboard = ({ initialTab = 'esim' }) => {
                   {/* Notifications Management Tab */}
                   {activeTab === 'notifications' && (
                     <NotificationsManagement />
+                  )}
+
+                  {/* Blog Management Tab */}
+                  {activeTab === 'blog' && canManageBlog && (
+                    <BlogManagement />
                   )}
 
 

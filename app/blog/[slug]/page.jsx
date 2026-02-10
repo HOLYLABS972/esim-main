@@ -170,22 +170,6 @@ export default async function BlogPostPage({ params }) {
         </div>
       </div>
 
-      {/* Cover Image */}
-      {post.coverImage && (
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="mx-auto max-w-2xl lg:max-w-4xl">
-            <Image
-              src={post.coverImage}
-              alt={post.title}
-              width={1200}
-              height={600}
-              className="aspect-[2/1] w-full rounded-2xl bg-gray-100 object-cover"
-              priority
-            />
-          </div>
-        </div>
-      )}
-
       {/* Article Content */}
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-2xl lg:max-w-4xl">
