@@ -16,16 +16,17 @@ export const getBlogPosts = async () => {
   try {
     const blogQuery = query(
       collection(db, 'blog_posts'),
-      where('published', '==', true),
       orderBy('publishedAt', 'desc')
     );
     
     const postsSnapshot = await getDocs(blogQuery);
-    const posts = postsSnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      publishedAt: doc.data().publishedAt?.toDate() || new Date()
-    }));
+    const posts = postsSnapshot.docs
+      .map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        publishedAt: doc.data().publishedAt?.toDate() || new Date()
+      }))
+      .filter(post => post.published !== false);
     
     return posts;
   } catch (error) {
