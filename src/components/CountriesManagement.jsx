@@ -110,20 +110,26 @@ const CountriesManagement = () => {
     try {
       console.log('📦 Fetching topups from Firestore...');
       
-      const allPlans = [];
+      const allTopupsData = [];
+      
+      // 1. Load from dedicated topups collection
+      const topupsSnap = await getDocs(collection(db, 'topups'));
+      topupsSnap.docs.forEach(d => allTopupsData.push({ id: d.id, ...d.data(), _collection: 'topups' }));
+      
+      // 2. Also check dataplans collections for rechargeable items
       for (const coll of ['dataplans', 'dataplans-unlimited', 'dataplans-sms']) {
         const snap = await getDocs(collection(db, coll));
-        snap.docs.forEach(d => allPlans.push({ id: d.id, ...d.data(), _collection: coll }));
+        snap.docs.forEach(d => {
+          const data = d.data();
+          const isTopup = data.rechargeability === 'rechargeable' || data.rechargeability === 'topup' ||
+            (data.topups && Array.isArray(data.topups) && data.topups.length > 0) ||
+            (data.slug || '').toLowerCase().includes('topup') ||
+            (data.name || data.title || '').toLowerCase().includes('topup');
+          if (isTopup && !allTopupsData.some(t => t.id === d.id)) {
+            allTopupsData.push({ id: d.id, ...data, _collection: coll });
+          }
+        });
       }
-      
-      // Filter for topups (rechargeability === 'rechargeable' or has topup indicators)
-      const allTopupsData = allPlans.filter(plan => {
-        const isTopup = plan.rechargeability === 'rechargeable' || plan.rechargeability === 'topup' ||
-          (plan.topups && Array.isArray(plan.topups) && plan.topups.length > 0) ||
-          (plan.slug || '').toLowerCase().includes('topup') ||
-          (plan.name || plan.title || '').toLowerCase().includes('topup');
-        return isTopup;
-      });
       
       setTopups(allTopupsData);
       console.log(`📦 Loaded ${allTopupsData.length} topups from Firestore`);
