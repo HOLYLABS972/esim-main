@@ -287,8 +287,9 @@ const TopupPage = ({ iccid, countryCode: urlCountryCode }) => {
         let dataAmountValue = null;
         let dataUnit = 'GB';
         
-        if (data.capacity) {
-          dataAmountValue = typeof data.capacity === 'number' ? data.capacity : parseFloat(data.capacity);
+        if (data.capacity || data.data_amount_mb) {
+          const rawCapacity = data.capacity || data.data_amount_mb;
+          dataAmountValue = typeof rawCapacity === 'number' ? rawCapacity : parseFloat(rawCapacity);
           // If capacity is less than 1024, it's likely in GB already, otherwise it's in MB
           if (dataAmountValue && dataAmountValue < 1024) {
             // Likely already in GB
@@ -329,16 +330,11 @@ const TopupPage = ({ iccid, countryCode: urlCountryCode }) => {
         
         // Extract validity - handle different formats
         let validity = 'N/A';
-        if (data.period) {
-          validity = typeof data.period === 'number' 
-            ? `${data.period} days` 
-            : String(data.period);
-        } else if (data.days) {
-          validity = typeof data.days === 'number' 
-            ? `${data.days} days` 
-            : String(data.days);
-        } else if (data.validity) {
-          validity = String(data.validity);
+        const validityValue = data.period || data.validity_days || data.day || data.days || data.validity;
+        if (validityValue) {
+          validity = typeof validityValue === 'number' 
+            ? `${validityValue} days` 
+            : String(validityValue);
         }
         
         // Extract price
