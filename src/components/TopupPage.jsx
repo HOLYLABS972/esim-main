@@ -20,6 +20,7 @@ import {
 import { apiService } from '../services/apiService';
 import { paymentService } from '../services/paymentService';
 import { coinbaseService } from '../services/coinbaseService';
+import { getRegularSettings } from '../services/settingsService';
 import toast from 'react-hot-toast';
 
 const TopupPage = ({ iccid, countryCode: urlCountryCode }) => {
@@ -36,8 +37,23 @@ const TopupPage = ({ iccid, countryCode: urlCountryCode }) => {
   const [acceptedRefund, setAcceptedRefund] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
   const [coinbaseAvailable, setCoinbaseAvailable] = useState(false);
+  const [regularSettings, setRegularSettings] = useState({ discountPercentage: 10, minimumPrice: 0.5 });
   
   console.log('🚀 [DEBUG] Current user:', currentUser?.uid || 'Not authenticated');
+
+  // Load discount settings
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const settings = await getRegularSettings();
+        console.log('💰 Regular discount settings loaded:', settings);
+        setRegularSettings(settings);
+      } catch (error) {
+        console.error('Error fetching discount settings:', error);
+      }
+    };
+    loadSettings();
+  }, []);
 
   useEffect(() => {
     console.log('🚀 [DEBUG] useEffect triggered with ICCID:', iccid);
@@ -49,6 +65,14 @@ const TopupPage = ({ iccid, countryCode: urlCountryCode }) => {
       console.log('🚀 [DEBUG] No ICCID provided');
     }
   }, [iccid]);
+
+  // Calculate discounted price
+  const calculateDiscountedPrice = (originalPrice) => {
+    const discountPercentage = regularSettings.discountPercentage || 10;
+    const minimumPrice = regularSettings.minimumPrice || 0.5;
+    const discountedPrice = Math.max(minimumPrice, originalPrice * (100 - discountPercentage) / 100);
+    return discountedPrice;
+  };
 
   // Fetch packages after order info is loaded OR if country code is in URL
   useEffect(() => {
@@ -287,8 +311,9 @@ const TopupPage = ({ iccid, countryCode: urlCountryCode }) => {
         let dataAmountValue = null;
         let dataUnit = 'GB';
         
-        if (data.capacity) {
-          dataAmountValue = typeof data.capacity === 'number' ? data.capacity : parseFloat(data.capacity);
+        if (data.capacity || data.data_amount_mb) {
+          const rawCapacity = data.capacity || data.data_amount_mb;
+          dataAmountValue = typeof rawCapacity === 'number' ? rawCapacity : parseFloat(rawCapacity);
           // If capacity is less than 1024, it's likely in GB already, otherwise it's in MB
           if (dataAmountValue && dataAmountValue < 1024) {
             // Likely already in GB
@@ -329,16 +354,11 @@ const TopupPage = ({ iccid, countryCode: urlCountryCode }) => {
         
         // Extract validity - handle different formats
         let validity = 'N/A';
-        if (data.period) {
-          validity = typeof data.period === 'number' 
-            ? `${data.period} days` 
-            : String(data.period);
-        } else if (data.days) {
-          validity = typeof data.days === 'number' 
-            ? `${data.days} days` 
-            : String(data.days);
-        } else if (data.validity) {
-          validity = String(data.validity);
+        const validityValue = data.period || data.validity_days || data.day || data.days || data.validity;
+        if (validityValue) {
+          validity = typeof validityValue === 'number' 
+            ? `${validityValue} days` 
+            : String(validityValue);
         }
         
         // Extract price
@@ -499,12 +519,14 @@ const TopupPage = ({ iccid, countryCode: urlCountryCode }) => {
       // Create order data for payment - use the real Airalo slug
       const airaloPackageId = selectedPackage.airaloSlug || selectedPackage.id;
       
+      const finalPrice = calculateDiscountedPrice(selectedPackage.price);
+      
       const orderData = {
         orderId: topupOrderId,
         planId: airaloPackageId, // Use real Airalo package slug
         planName: selectedPackage.name,
         customerEmail: orderInfo?.customerEmail || currentUser?.email || 'customer@example.com',
-        amount: selectedPackage.price,
+        amount: finalPrice,
         currency: 'usd',
         type: 'topup', // Mark as topup
         iccid: iccid,
@@ -523,7 +545,7 @@ const TopupPage = ({ iccid, countryCode: urlCountryCode }) => {
       console.log('💳 Payment Method:', paymentMethod);
       console.log('🎯 Target ICCID:', iccid);
       console.log('📦 Package to topup:', airaloPackageId);
-      console.log('💰 Amount:', selectedPackage.price);
+      console.log('💰 Amount:', finalPrice, '(original:', selectedPackage.price, ')');
       console.log('📧 Customer Email:', orderData.customerEmail);
       console.log('🆔 Order ID:', topupOrderId);
 
@@ -533,7 +555,7 @@ const TopupPage = ({ iccid, countryCode: urlCountryCode }) => {
         iccid: iccid,
         packageId: airaloPackageId, // Use real Airalo package slug
         packageName: selectedPackage.name,
-        amount: selectedPackage.price,
+        amount: finalPrice,
         customerEmail: orderData.customerEmail,
         type: 'topup',
         paymentMethod: paymentMethod
@@ -708,9 +730,20 @@ const TopupPage = ({ iccid, countryCode: urlCountryCode }) => {
                       </div>
                     </div>
                     <div className="text-center">
-                      <div className="text-lg font-bold text-tufts-blue">
-                        ${pkg.price.toFixed(2)}
-                      </div>
+                      {(() => {
+                        const discountedPrice = calculateDiscountedPrice(pkg.price);
+                        const hasDiscount = discountedPrice < pkg.price;
+                        return (
+                          <>
+                            {hasDiscount && (
+                              <div className="text-sm text-gray-400 line-through">${pkg.price.toFixed(2)}</div>
+                            )}
+                            <div className="text-lg font-bold text-tufts-blue">
+                              ${hasDiscount ? discountedPrice.toFixed(2) : pkg.price.toFixed(2)}
+                            </div>
+                          </>
+                        );
+                      })()}
                     </div>
                   </div>
                   ))}

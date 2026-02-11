@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import AdminDashboard from '../../../src/components/AdminDashboard';
 import Loading from '../../../src/components/Loading';
 
-const VALID_TABS = ['countries', 'plans', 'esim', 'admins', 'orders', 'affiliate', 'notifications', 'blog', 'config', 'overview'];
+const VALID_TABS = ['countries', 'plans', 'topups', 'esim', 'admins', 'orders', 'affiliate', 'notifications', 'blog', 'config', 'overview'];
 
 export default function AdminPage() {
   const params = useParams();
