@@ -5,11 +5,11 @@ import { useRouter } from 'next/navigation';
 import {
   QrCode, Copy, Share2, Smartphone, ArrowLeft, Check, Camera,
   Settings, CheckCircle, Globe, Battery, BarChart3, Loader2,
-  Wifi, Clock, Shield, ChevronDown, ChevronUp, Radio, AlertCircle, Zap
+  Wifi, Clock, Shield, ChevronDown, ChevronUp, Radio, AlertCircle, Zap, Trash2
 } from 'lucide-react';
 import LPAQRCodeDisplay from './dashboard/LPAQRCodeDisplay';
 import { useAuth } from '../contexts/AuthContext';
-import { doc, getDoc, collection, getDocs } from 'firebase/firestore';
+import { doc, getDoc, collection, getDocs, deleteDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import toast from 'react-hot-toast';
 
@@ -198,6 +198,31 @@ const QRCodePage = ({ orderId, iccid }) => {
     if (!qrData?.iccid) { toast.error('No ICCID available'); return; }
     const q = orderId ? `?orderId=${orderId}` : '';
     router.push(`/data-usage/${qrData.iccid}${q}`);
+  };
+
+  const [isDeleting, setIsDeleting] = useState(false);
+  const handleDeleteEsim = async () => {
+    if (!currentUser) { toast.error('Please log in to delete'); return; }
+    if (!window.confirm('Are you sure you want to delete this eSIM? This cannot be undone.')) return;
+
+    setIsDeleting(true);
+    try {
+      const oid = orderInfo?.orderId;
+      if (!oid) { toast.error('Order ID not found'); return; }
+
+      // Delete from user's esims collection
+      try { await deleteDoc(doc(db, 'users', currentUser.uid, 'esims', oid)); } catch (e) { /* might not exist here */ }
+      // Delete from global orders
+      try { await deleteDoc(doc(db, 'orders', oid)); } catch (e) { /* might not exist here */ }
+
+      toast.success('eSIM deleted');
+      router.push('/dashboard');
+    } catch (error) {
+      console.error('Error deleting eSIM:', error);
+      toast.error('Failed to delete: ' + error.message);
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const toggleStep = (step) => {
@@ -398,6 +423,15 @@ const QRCodePage = ({ orderId, iccid }) => {
             </>
           )}
         </div>
+
+        {/* Delete eSIM */}
+        {currentUser && orderInfo?.orderId && (
+          <button onClick={handleDeleteEsim} disabled={isDeleting}
+            className="w-full flex items-center justify-center gap-2 py-3 text-sm text-red-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors disabled:opacity-50">
+            <Trash2 className="w-4 h-4" />
+            {isDeleting ? 'Deleting...' : 'Delete eSIM'}
+          </button>
+        )}
 
         {/* Installation Guide */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
