@@ -1017,7 +1017,7 @@ const Dashboard = () => {
 
 
   return (
-    <div className="min-h-screen bg-white py-8" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen bg-white" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Header Section */}
       <DashboardHeader 
         currentUser={currentUser}
@@ -1044,8 +1044,8 @@ const Dashboard = () => {
         onLoadUserProfile={loadUserProfile}
       />
 
-      {/* Spacing after dashboard */}
-      <div className="h-20"></div>
+      {/* Spacing */}
+      <div className="h-8"></div>
 
       {/* QR Code Modal */}
       <QRCodeModal 

@@ -1,114 +1,67 @@
 import React from 'react';
-import { Globe, QrCode } from 'lucide-react';
+import { Globe, QrCode, ChevronRight } from 'lucide-react';
 import { useI18n } from '../../contexts/I18nContext';
-import { getLanguageDirection, detectLanguageFromPath } from '../../utils/languageUtils';
-import { usePathname } from 'next/navigation';
 import { getOrderFlag, getOrderCountryName } from '../../utils/countryFlags';
 
 const RecentOrders = ({ orders, loading, onViewQRCode }) => {
-  const { t, locale } = useI18n();
-  const pathname = usePathname();
-  
-  // Get current language for RTL detection
-  const getCurrentLanguage = () => {
-    if (locale) return locale;
-    if (typeof window !== 'undefined') {
-      const savedLanguage = localStorage.getItem('roamjet-language');
-      if (savedLanguage) return savedLanguage;
-    }
-    return detectLanguageFromPath(pathname);
-  };
+  const { t } = useI18n();
 
-  const currentLanguage = getCurrentLanguage();
-  const isRTL = getLanguageDirection(currentLanguage) === 'rtl';
   return (
-    <section className="bg-white recent-orders" dir={isRTL ? 'rtl' : 'ltr'}>
-      <div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8">
-        <div className="relative">
-          <div className="absolute inset-px rounded-xl bg-white"></div>
-          <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
-            <div className="px-8 pt-8 pb-8">
-              <div className="mb-6">
-                <h2 className={`text-lg font-medium tracking-tight text-eerie-black ${isRTL ? 'text-right' : 'text-left'}`}>
-                  {t('dashboard.recentOrders', 'Recent Orders')}
-                </h2>
-              </div>
+    <section className="bg-white py-4">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6">
+        <h2 className="text-base font-semibold text-gray-900 mb-3">
+          {t('dashboard.recentOrders', 'My eSIMs')}
+        </h2>
 
-              {loading ? (
-                <div className="flex justify-center items-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-tufts-blue"></div>
-                </div>
-              ) : orders.length === 0 ? (
-                <div className="text-center py-8">
-                  <Globe className="w-12 h-12 text-cool-black/40 mx-auto mb-4" />
-                  <p className="text-cool-black">{t('dashboard.noOrders', 'No orders yet')}</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {orders.map((order) => (
-                    order && (
-                      <div
-                        key={order.id || order.orderId || Math.random()}
-                        className={`flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200 ${isRTL ? 'flex-row-reverse' : ''}`}
-                      >
-                        <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-3' : 'space-x-3'}`}>
-                          <div className="text-2xl">
-                            {order.flagEmoji || getOrderFlag(order)}
-                          </div>
-                          <div>
-                            <p className={`font-medium text-eerie-black ${isRTL ? 'text-right' : 'text-left'}`}>
-                              {order.planName || t('dashboard.unknownPlan', 'Unknown Plan')}
-                            </p>
-                            <p className={`hidden md:block text-sm text-cool-black ${isRTL ? 'text-right' : 'text-left'}`}>
-                              {t('dashboard.orderNumber', 'Order #{{number}}', { number: order.orderId || order.id || t('dashboard.unknown', 'Unknown') })}
-                            </p>
-                            <p className={`text-xs text-cool-black/60 ${isRTL ? 'text-right' : 'text-left'}`}>
-                              {(() => {
-                                // Debug: Log country data for Hallo Mobil orders
-                                if (order.planName?.includes('Hallo')) {
-                                  console.log('🔍 RecentOrders - Hallo Mobil order:', {
-                                    countryName: order.countryName,
-                                    countryCode: order.countryCode,
-                                    flagEmoji: order.flagEmoji,
-                                    extractedCountryName: getOrderCountryName(order),
-                                    packageId: order.package_id,
-                                    planName: order.planName,
-                                  });
-                                }
-                                return order.countryName || getOrderCountryName(order) || order.countryCode || t('dashboard.unknownCountry', 'Unknown Country');
-                              })()}
-                            </p>
-                          </div>
-                        </div>
-                        <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-4' : 'space-x-4'}`}>
-                          <div className={isRTL ? 'text-left' : 'text-right'}>
-                            <div className={`flex items-center ${isRTL ? 'justify-start space-x-reverse space-x-2' : 'justify-end space-x-2'}`}>
-                              <div className={`w-2 h-2 rounded-full ${
-                                order.status === 'active' ? 'bg-green-500' :
-                                order.status === 'pending' ? 'bg-yellow-500' : 'bg-gray-500'
-                              }`}></div>
-                              <p className="text-sm text-cool-black capitalize">
-                                {t(`dashboard.status.${order.status}`, order.status || t('dashboard.unknown', 'unknown'))}
-                              </p>
-                            </div>
-                          </div>
-                          <button
-                            onClick={() => onViewQRCode(order)}
-                            className={`flex items-center px-3 py-2 bg-tufts-blue/10 text-tufts-blue rounded-lg hover:bg-tufts-blue/20 transition-colors duration-200 ${isRTL ? 'space-x-reverse space-x-2' : 'space-x-2'}`}
-                          >
-                            <QrCode className="w-4 h-4" />
-                            <span className="text-sm">{t('dashboard.viewQR', 'View QR')}</span>
-                          </button>
-                        </div>
-                      </div>
-                    )
-                  ))}
-                </div>
-              )}
-            </div>
+        {loading ? (
+          <div className="flex justify-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-tufts-blue"></div>
           </div>
-          <div className="pointer-events-none absolute inset-px rounded-xl shadow-sm ring-1 ring-black/5"></div>
-        </div>
+        ) : orders.length === 0 ? (
+          <div className="text-center py-12 bg-gray-50 rounded-2xl">
+            <Globe className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+            <p className="text-gray-500 text-sm">{t('dashboard.noOrders', 'No eSIMs yet')}</p>
+            <p className="text-gray-400 text-xs mt-1">Your purchased eSIMs will appear here</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {orders.map((order) => {
+              if (!order) return null;
+              const countryName = order.countryName || getOrderCountryName(order) || order.countryCode || '';
+              const statusColor = order.status === 'active' ? 'bg-green-500' :
+                                  order.status === 'pending' ? 'bg-yellow-500' : 'bg-gray-400';
+
+              return (
+                <button
+                  key={order.id || order.orderId || Math.random()}
+                  onClick={() => onViewQRCode(order)}
+                  className="w-full flex items-center gap-3 p-3.5 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors active:scale-[0.98] text-left"
+                >
+                  {/* Flag */}
+                  <div className="text-2xl flex-shrink-0 w-10 h-10 flex items-center justify-center bg-white rounded-full shadow-sm">
+                    {order.flagEmoji || getOrderFlag(order)}
+                  </div>
+
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium text-gray-900 truncate">
+                        {order.planName || t('dashboard.unknownPlan', 'Unknown Plan')}
+                      </p>
+                      <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${statusColor}`}></div>
+                    </div>
+                    <p className="text-xs text-gray-500 truncate mt-0.5">
+                      {countryName}
+                    </p>
+                  </div>
+
+                  {/* Arrow */}
+                  <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
     </section>
   );
