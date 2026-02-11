@@ -54,7 +54,8 @@ import {
   CreditCard,
   Menu,
   X,
-  ShoppingCart
+  ShoppingCart,
+  Battery
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import AdminEsimManagement from './AdminEsimManagement';
@@ -65,6 +66,7 @@ import AffiliateManagement from './AffiliateManagement';
 import NotificationsManagement from './NotificationsManagement';
 import RoamjetAdminDashboard from './RoamjetAdminDashboard';
 import BlogManagement from './BlogManagement';
+import TopupsManagement from './TopupsManagement';
 
 // Helper function to get flag emoji from country code
 const getFlagEmoji = (countryCode) => {
@@ -777,6 +779,7 @@ const AdminDashboard = ({ initialTab = 'esim' }) => {
             {[
               { id: 'countries', label: 'Countries', icon: Globe, permission: canManageCountries },
               { id: 'plans', label: 'Plans', icon: Smartphone, permission: canManagePlans },
+              { id: 'topups', label: 'Topups', icon: Battery, permission: canManagePlans },
               { id: 'esim', label: 'Management', icon: Activity, permission: canManagePlans },
               { id: 'admins', label: 'Admins', icon: Shield, permission: true },
               { id: 'orders', label: 'Orders', icon: ShoppingCart, permission: true },
@@ -870,6 +873,7 @@ const AdminDashboard = ({ initialTab = 'esim' }) => {
               {[
                 { id: 'countries', label: 'Countries' },
                 { id: 'plans', label: 'Plans Management' },
+                { id: 'topups', label: 'Topups Management' },
                 { id: 'esim', label: 'Management' },
                 { id: 'admins', label: 'Admins' },
                 { id: 'orders', label: 'Orders' },
@@ -984,6 +988,11 @@ const AdminDashboard = ({ initialTab = 'esim' }) => {
                   {/* Plans Management Tab */}
                   {activeTab === 'plans' && canManagePlans && (
                     <PlansManagement />
+                  )}
+
+                  {/* Topups Management Tab */}
+                  {activeTab === 'topups' && canManagePlans && (
+                    <TopupsManagement />
                   )}
 
                   {/* User Management Tab */}
