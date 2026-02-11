@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '../contexts/AuthContext';
 import { useAdmin } from '../contexts/AdminContext';
 import { collection, query, where, getDocs, getDoc, doc, updateDoc, deleteDoc, writeBatch, addDoc, setDoc, serverTimestamp, orderBy } from 'firebase/firestore';
@@ -92,8 +93,16 @@ const AdminDashboard = ({ initialTab = 'esim' }) => {
   const { isAdmin, userRole, canManageCountries, canManagePlans, canManageConfig, canDeleteData, canManageBlog, canManageNewsletter, canManageContactRequests, loading: adminLoading } = useAdmin();
   const functions = getFunctions();
 
+  const router = useRouter();
+  const pathname = usePathname();
+
   // State Management - ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
-  const [activeTab, setActiveTab] = useState(initialTab);
+  const [activeTab, setActiveTabState] = useState(initialTab);
+
+  const setActiveTab = useCallback((tab) => {
+    setActiveTabState(tab);
+    router.push(`/admin/${tab}`, { scroll: false });
+  }, [router]);
   const [loading, setLoading] = useState(false);
   const [rawApiData, setRawApiData] = useState(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);

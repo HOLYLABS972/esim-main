@@ -110,20 +110,26 @@ const CountriesManagement = () => {
     try {
       console.log('📦 Fetching topups from Firestore...');
       
-      const allPlans = [];
+      const allTopupsData = [];
+      
+      // 1. Load from dedicated topups collection
+      const topupsSnap = await getDocs(collection(db, 'topups'));
+      topupsSnap.docs.forEach(d => allTopupsData.push({ id: d.id, ...d.data(), _collection: 'topups' }));
+      
+      // 2. Also check dataplans collections for rechargeable items
       for (const coll of ['dataplans', 'dataplans-unlimited', 'dataplans-sms']) {
         const snap = await getDocs(collection(db, coll));
-        snap.docs.forEach(d => allPlans.push({ id: d.id, ...d.data(), _collection: coll }));
+        snap.docs.forEach(d => {
+          const data = d.data();
+          const isTopup = data.rechargeability === 'rechargeable' || data.rechargeability === 'topup' ||
+            (data.topups && Array.isArray(data.topups) && data.topups.length > 0) ||
+            (data.slug || '').toLowerCase().includes('topup') ||
+            (data.name || data.title || '').toLowerCase().includes('topup');
+          if (isTopup && !allTopupsData.some(t => t.id === d.id)) {
+            allTopupsData.push({ id: d.id, ...data, _collection: coll });
+          }
+        });
       }
-      
-      // Filter for topups (rechargeability === 'rechargeable' or has topup indicators)
-      const allTopupsData = allPlans.filter(plan => {
-        const isTopup = plan.rechargeability === 'rechargeable' || plan.rechargeability === 'topup' ||
-          (plan.topups && Array.isArray(plan.topups) && plan.topups.length > 0) ||
-          (plan.slug || '').toLowerCase().includes('topup') ||
-          (plan.name || plan.title || '').toLowerCase().includes('topup');
-        return isTopup;
-      });
       
       setTopups(allTopupsData);
       console.log(`📦 Loaded ${allTopupsData.length} topups from Firestore`);
@@ -1158,51 +1164,6 @@ const CountriesManagement = () => {
             
             {/* Action Buttons */}
             <div className="flex gap-3 flex-wrap">
-              {/* Sync All Packages - Super Admin Only */}
-              {hasPermission('delete_data') && (
-                <button
-                  onClick={async () => {
-                    setSyncing(true);
-                    setSyncStatus('Syncing all packages...');
-                    try {
-                      const response = await fetch('/api/sync-airalo', {
-                        method: 'POST',
-                        headers: {
-                          'Content-Type': 'application/json',
-                        },
-                      });
-                      
-                      const data = await response.json();
-                      
-                      if (data.success) {
-                        setSyncStatus(`✅ Successfully synced ${data.details?.plans_synced || 0} plans, ${data.details?.topups_synced || 0} topups, and ${data.details?.countries_synced || 0} countries`);
-                        toast.success(`Successfully synced ${data.details?.plans_synced || 0} plans and ${data.details?.topups_synced || 0} topups`);
-                        // Reload countries and topups after sync
-                        await loadCountriesFromSupabase();
-                        await loadTopupsFromSupabase();
-                      } else {
-                        setSyncStatus(`❌ Error: ${data.error}`);
-                        toast.error(data.error || 'Failed to sync packages');
-                      }
-                    } catch (error) {
-                      setSyncStatus(`❌ Error: ${error.message}`);
-                      toast.error(`Error syncing packages: ${error.message}`);
-                    } finally {
-                      setSyncing(false);
-                    }
-                  }}
-                  disabled={syncing || loading}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  {syncing ? (
-                    <RefreshCw className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Download className="w-4 h-4" />
-                  )}
-                  {syncing ? 'Syncing All...' : 'Sync All Packages'}
-                </button>
-              )}
-              
               {/* Delete All Plans Button - Super Admin Only */}
               {hasPermission('delete_data') && (
                 <button
