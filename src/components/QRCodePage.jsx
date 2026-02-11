@@ -327,16 +327,29 @@ const QRCodePage = ({ orderId, iccid }) => {
               </div>
             </div>
 
-            {/* Direct Apple Install */}
-            {qrData?.directAppleInstallationUrl && (
-              <div className="mt-4">
+            {/* Install Buttons */}
+            <div className="mt-4 space-y-2">
+              {qrData?.directAppleInstallationUrl && (
                 <a href={qrData.directAppleInstallationUrl} target="_blank" rel="noopener noreferrer"
-                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-black text-white rounded-xl font-medium hover:bg-gray-900 transition-colors">
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3.5 bg-black text-white rounded-xl font-medium hover:bg-gray-900 transition-colors">
                   <Zap className="w-5 h-5" />
-                  Install Directly on iPhone
+                  Install on iPhone
                 </a>
-              </div>
-            )}
+              )}
+              {!qrData?.directAppleInstallationUrl && (
+                <button onClick={() => {
+                  if (qrData?.lpa) {
+                    navigator.clipboard.writeText(qrData.lpa).then(() => {
+                      toast.success('Activation code copied! Go to Settings → Cellular → Add eSIM → Enter Manually');
+                    });
+                  }
+                }}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3.5 bg-tufts-blue text-white rounded-xl font-medium hover:bg-tufts-blue-dark transition-colors">
+                  <Smartphone className="w-5 h-5" />
+                  Install eSIM
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Manual Install Toggle */}
