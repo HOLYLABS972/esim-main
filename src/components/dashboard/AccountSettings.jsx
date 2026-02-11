@@ -1,30 +1,14 @@
 import React, { useState } from 'react';
-import { Settings, Edit3, Key, Phone, User, Mail, Save, X } from 'lucide-react';
+import { Settings, Edit3, Key, Phone, User, Mail, Save, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { updateProfile, sendPasswordResetEmail } from 'firebase/auth';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import toast from 'react-hot-toast';
 import { useI18n } from '../../contexts/I18nContext';
-import { getLanguageDirection, detectLanguageFromPath } from '../../utils/languageUtils';
-import { usePathname } from 'next/navigation';
 
 const AccountSettings = ({ currentUser, userProfile, onLoadUserProfile }) => {
-  const { t, locale } = useI18n();
-  const pathname = usePathname();
-  
-  // Get current language for RTL detection
-  const getCurrentLanguage = () => {
-    if (locale) return locale;
-    if (typeof window !== 'undefined') {
-      const savedLanguage = localStorage.getItem('roamjet-language');
-      if (savedLanguage) return savedLanguage;
-    }
-    return detectLanguageFromPath(pathname);
-  };
-
-  const currentLanguage = getCurrentLanguage();
-  const isRTL = getLanguageDirection(currentLanguage) === 'rtl';
-  
+  const { t } = useI18n();
+  const [isExpanded, setIsExpanded] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [editingPhone, setEditingPhone] = useState(false);
   const [newName, setNewName] = useState(currentUser?.displayName || '');
@@ -33,277 +17,131 @@ const AccountSettings = ({ currentUser, userProfile, onLoadUserProfile }) => {
   const [isSendingReset, setIsSendingReset] = useState(false);
 
   const handleUpdateName = async () => {
-    if (!newName.trim()) {
-      toast.error(t('dashboard.nameCannotBeEmpty', 'Name cannot be empty'));
-      return;
-    }
-
+    if (!newName.trim()) { toast.error('Name cannot be empty'); return; }
     setIsUpdating(true);
     try {
-      // Update Firebase Auth profile
-      await updateProfile(currentUser, {
-        displayName: newName.trim()
-      });
-
-      // Update Firestore user document
+      await updateProfile(currentUser, { displayName: newName.trim() });
       if (userProfile) {
-        const userRef = doc(db, 'users', currentUser.uid);
-        await updateDoc(userRef, {
-          displayName: newName.trim(),
-          updatedAt: new Date()
-        });
+        await updateDoc(doc(db, 'users', currentUser.uid), { displayName: newName.trim(), updatedAt: new Date() });
       }
-
       await onLoadUserProfile();
       setEditingName(false);
-      toast.success(t('dashboard.nameUpdatedSuccessfully', 'Name updated successfully'));
-    } catch (error) {
-      console.error('Error updating name:', error);
-      toast.error(t('dashboard.failedToUpdateName', 'Failed to update name'));
-    } finally {
-      setIsUpdating(false);
-    }
+      toast.success('Name updated');
+    } catch (e) { toast.error('Failed to update name'); }
+    finally { setIsUpdating(false); }
   };
 
   const handleUpdatePhone = async () => {
     setIsUpdating(true);
     try {
-      // Update Firestore user document
-      const userRef = doc(db, 'users', currentUser.uid);
-      await updateDoc(userRef, {
-        phoneNumber: newPhone.trim(),
-        updatedAt: new Date()
-      });
-
+      await updateDoc(doc(db, 'users', currentUser.uid), { phoneNumber: newPhone.trim(), updatedAt: new Date() });
       await onLoadUserProfile();
       setEditingPhone(false);
-      toast.success('Phone number updated successfully');
-    } catch (error) {
-      console.error('Error updating phone:', error);
-      toast.error('Failed to update phone number');
-    } finally {
-      setIsUpdating(false);
-    }
+      toast.success('Phone updated');
+    } catch (e) { toast.error('Failed to update phone'); }
+    finally { setIsUpdating(false); }
   };
 
   const handlePasswordReset = async () => {
     setIsSendingReset(true);
     try {
       await sendPasswordResetEmail(currentUser.auth, currentUser.email);
-      toast.success('Password reset email sent! Check your inbox.');
-    } catch (error) {
-      console.error('Error sending password reset:', error);
-      toast.error('Failed to send password reset email');
-    } finally {
-      setIsSendingReset(false);
-    }
-  };
-
-  const cancelNameEdit = () => {
-    setNewName(currentUser?.displayName || '');
-    setEditingName(false);
-  };
-
-  const cancelPhoneEdit = () => {
-    setNewPhone(userProfile?.phoneNumber || '');
-    setEditingPhone(false);
+      toast.success('Reset email sent!');
+    } catch (e) { toast.error('Failed to send reset email'); }
+    finally { setIsSendingReset(false); }
   };
 
   return (
-    <section className="bg-white py-16 account-settings" dir={isRTL ? 'rtl' : 'ltr'}>
-      <div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8">
-        <div className="relative">
-          <div className="absolute inset-px rounded-xl bg-white"></div>
-          <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
-            <div className="px-8 pt-8 pb-8">
-              <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-3' : 'space-x-3'} mb-8`}>
-                <Settings className="w-6 h-6 text-tufts-blue" />
-                <h2 className={`text-2xl font-medium tracking-tight text-eerie-black ${isRTL ? 'text-right' : 'text-left'}`}>
-                  {t('dashboard.accountSettings', 'Account Settings')}
-                </h2>
+    <section className="bg-white py-4">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6">
+        {/* Collapsible Header */}
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="w-full flex items-center justify-between py-3"
+        >
+          <div className="flex items-center gap-2">
+            <Settings className="w-5 h-5 text-gray-400" />
+            <h2 className="text-base font-semibold text-gray-900">
+              {t('dashboard.accountSettings', 'Account Settings')}
+            </h2>
+          </div>
+          {isExpanded ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
+        </button>
+
+        {isExpanded && (
+          <div className="space-y-4 pb-4">
+            {/* Email */}
+            <div className="bg-gray-50 rounded-xl p-4">
+              <label className="text-xs text-gray-500 font-medium flex items-center gap-1.5 mb-2">
+                <Mail className="w-3.5 h-3.5" /> Email
+              </label>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-900">{currentUser.email}</span>
+                <span className="text-[10px] text-green-600 bg-green-50 px-2 py-0.5 rounded-full font-medium">Verified</span>
               </div>
-              
-              <div className="space-y-8">
-                {/* Personal Information */}
-                <div>
-                  <h3 className={`text-lg font-medium text-eerie-black mb-4 ${isRTL ? 'text-right' : 'text-left'}`}>
-                    {t('dashboard.personalInformation', 'Personal Information')}
-                  </h3>
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {/* Email */}
-                    <div className="space-y-2">
-                      <label className={`block text-sm font-medium text-cool-black ${isRTL ? 'text-right' : 'text-left'}`}>
-                        <Mail className={`w-4 h-4 inline ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                        {t('dashboard.emailAddress', 'Email Address')}
-                      </label>
-                      <div className={`flex items-center justify-between p-3 bg-gray-50 rounded-lg ${isRTL ? 'flex-row-reverse' : ''}`}>
-                        <span className="text-eerie-black">{currentUser.email}</span>
-                        <span className="text-xs text-cool-black bg-gray-200 px-2 py-1 rounded">
-                          {t('dashboard.verified', 'Verified')}
-                        </span>
-                      </div>
-                    </div>
+            </div>
 
-                    {/* Name */}
-                    <div className="space-y-2">
-                      <label className={`block text-sm font-medium text-cool-black ${isRTL ? 'text-right' : 'text-left'}`}>
-                        <User className={`w-4 h-4 inline ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                        {t('dashboard.displayName', 'Display Name')}
-                      </label>
-                      {editingName ? (
-                        <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-2' : 'space-x-2'}`}>
-                          <input
-                            type="text"
-                            value={newName}
-                            onChange={(e) => setNewName(e.target.value)}
-                            className={`flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-tufts-blue focus:border-transparent ${isRTL ? 'text-right' : 'text-left'}`}
-                            placeholder={t('dashboard.enterYourName', 'Enter your name')}
-                            style={{ direction: isRTL ? 'rtl' : 'ltr' }}
-                          />
-                          <button
-                            onClick={handleUpdateName}
-                            disabled={isUpdating}
-                            className="p-3 bg-tufts-blue text-white rounded-lg hover:bg-cobalt-blue transition-colors disabled:opacity-50"
-                          >
-                            <Save className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={cancelNameEdit}
-                            className="p-3 bg-gray-200 text-gray-600 rounded-lg hover:bg-gray-300 transition-colors"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        </div>
-                      ) : (
-                        <div className={`flex items-center justify-between p-3 bg-gray-50 rounded-lg ${isRTL ? 'flex-row-reverse' : ''}`}>
-                          <span className="text-eerie-black">{currentUser.displayName || t('dashboard.notSet', 'Not set')}</span>
-                          <button
-                            onClick={() => setEditingName(true)}
-                            className="text-tufts-blue hover:text-cobalt-blue transition-colors"
-                          >
-                            <Edit3 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Phone Number */}
-                    <div className="space-y-2">
-                      <label className={`block text-sm font-medium text-cool-black ${isRTL ? 'text-right' : 'text-left'}`}>
-                        <Phone className={`w-4 h-4 inline ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                        {t('dashboard.phoneNumber', 'Phone Number')}
-                      </label>
-                      {editingPhone ? (
-                        <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-2' : 'space-x-2'}`}>
-                          <input
-                            type="tel"
-                            value={newPhone}
-                            onChange={(e) => setNewPhone(e.target.value)}
-                            className={`flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-tufts-blue focus:border-transparent ${isRTL ? 'text-right' : 'text-left'}`}
-                            placeholder={t('dashboard.enterYourPhone', 'Enter your phone number')}
-                            style={{ direction: isRTL ? 'rtl' : 'ltr' }}
-                          />
-                          <button
-                            onClick={handleUpdatePhone}
-                            disabled={isUpdating}
-                            className="p-3 bg-tufts-blue text-white rounded-lg hover:bg-cobalt-blue transition-colors disabled:opacity-50"
-                          >
-                            <Save className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={cancelPhoneEdit}
-                            className="p-3 bg-gray-200 text-gray-600 rounded-lg hover:bg-gray-300 transition-colors"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        </div>
-                      ) : (
-                        <div className={`flex items-center justify-between p-3 bg-gray-50 rounded-lg ${isRTL ? 'flex-row-reverse' : ''}`}>
-                          <span className="text-eerie-black">{userProfile?.phoneNumber || t('dashboard.notSet', 'Not set')}</span>
-                          <button
-                            onClick={() => setEditingPhone(true)}
-                            className="text-tufts-blue hover:text-cobalt-blue transition-colors"
-                          >
-                            <Edit3 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Account Info */}
-                    <div className="space-y-2">
-                      <label className={`block text-sm font-medium text-cool-black ${isRTL ? 'text-right' : 'text-left'}`}>
-                        {t('dashboard.accountCreated', 'Account Created')}
-                      </label>
-                      <div className="p-3 bg-gray-50 rounded-lg">
-                        <span className="text-eerie-black">
-                          {userProfile?.createdAt ? 
-                            (userProfile.createdAt.toDate ? 
-                              new Date(userProfile.createdAt.toDate()).toLocaleDateString() :
-                              new Date(userProfile.createdAt).toLocaleDateString()
-                            ) : 
-                            t('dashboard.unknown', 'Unknown')
-                          }
-                        </span>
-                        {!userProfile?.createdAt && (
-                          <button 
-                            onClick={async () => {
-                              console.log('Manual refresh triggered');
-                              await onLoadUserProfile();
-                            }}
-                            className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-tufts-blue hover:text-cobalt-blue underline transition-colors`}
-                          >
-                            {t('dashboard.refresh', 'Refresh')}
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
+            {/* Name */}
+            <div className="bg-gray-50 rounded-xl p-4">
+              <label className="text-xs text-gray-500 font-medium flex items-center gap-1.5 mb-2">
+                <User className="w-3.5 h-3.5" /> Display Name
+              </label>
+              {editingName ? (
+                <div className="flex items-center gap-2">
+                  <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)}
+                    className="flex-1 p-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-tufts-blue focus:border-transparent"
+                    placeholder="Enter name" />
+                  <button onClick={handleUpdateName} disabled={isUpdating}
+                    className="p-2.5 bg-tufts-blue text-white rounded-lg disabled:opacity-50"><Save className="w-4 h-4" /></button>
+                  <button onClick={() => { setNewName(currentUser?.displayName || ''); setEditingName(false); }}
+                    className="p-2.5 bg-gray-200 text-gray-600 rounded-lg"><X className="w-4 h-4" /></button>
                 </div>
-
-                {/* Security */}
-                <div>
-                  <h3 className={`text-lg font-medium text-eerie-black mb-4 ${isRTL ? 'text-right' : 'text-left'}`}>
-                    {t('dashboard.security', 'Security')}
-                  </h3>
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <label className={`block text-sm font-medium text-cool-black ${isRTL ? 'text-right' : 'text-left'}`}>
-                        <Key className={`w-4 h-4 inline ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                        {t('dashboard.password', 'Password')}
-                      </label>
-                      <div className={`flex items-center justify-between p-3 bg-gray-50 rounded-lg ${isRTL ? 'flex-row-reverse' : ''}`}>
-                        <span className="text-eerie-black">••••••••</span>
-                        <button
-                          onClick={handlePasswordReset}
-                          disabled={isSendingReset}
-                          className="text-sm bg-tufts-blue text-white px-4 py-2 rounded-lg hover:bg-cobalt-blue transition-colors disabled:opacity-50"
-                        >
-                          {isSendingReset ? t('dashboard.sending', 'Sending...') : t('dashboard.resetPassword', 'Reset Password')}
-                        </button>
-                      </div>
-                      <p className={`text-xs text-cool-black ${isRTL ? 'text-right' : 'text-left'}`}>
-                        {t('dashboard.passwordResetInfo', "We'll send a password reset link to your email address")}
-                      </p>
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className={`block text-sm font-medium text-cool-black ${isRTL ? 'text-right' : 'text-left'}`}>
-                        {t('dashboard.accountRole', 'Account Role')}
-                      </label>
-                      <div className="p-3 bg-gray-50 rounded-lg">
-                        <span className="text-eerie-black capitalize">
-                          {t(`dashboard.roles.${userProfile?.role || 'customer'}`, userProfile?.role || 'customer')}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
+              ) : (
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-900">{currentUser.displayName || 'Not set'}</span>
+                  <button onClick={() => setEditingName(true)} className="text-tufts-blue"><Edit3 className="w-4 h-4" /></button>
                 </div>
+              )}
+            </div>
+
+            {/* Phone */}
+            <div className="bg-gray-50 rounded-xl p-4">
+              <label className="text-xs text-gray-500 font-medium flex items-center gap-1.5 mb-2">
+                <Phone className="w-3.5 h-3.5" /> Phone Number
+              </label>
+              {editingPhone ? (
+                <div className="flex items-center gap-2">
+                  <input type="tel" value={newPhone} onChange={(e) => setNewPhone(e.target.value)}
+                    className="flex-1 p-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-tufts-blue focus:border-transparent"
+                    placeholder="Enter phone" />
+                  <button onClick={handleUpdatePhone} disabled={isUpdating}
+                    className="p-2.5 bg-tufts-blue text-white rounded-lg disabled:opacity-50"><Save className="w-4 h-4" /></button>
+                  <button onClick={() => { setNewPhone(userProfile?.phoneNumber || ''); setEditingPhone(false); }}
+                    className="p-2.5 bg-gray-200 text-gray-600 rounded-lg"><X className="w-4 h-4" /></button>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-900">{userProfile?.phoneNumber || 'Not set'}</span>
+                  <button onClick={() => setEditingPhone(true)} className="text-tufts-blue"><Edit3 className="w-4 h-4" /></button>
+                </div>
+              )}
+            </div>
+
+            {/* Password Reset */}
+            <div className="bg-gray-50 rounded-xl p-4">
+              <label className="text-xs text-gray-500 font-medium flex items-center gap-1.5 mb-2">
+                <Key className="w-3.5 h-3.5" /> Password
+              </label>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-900">••••••••</span>
+                <button onClick={handlePasswordReset} disabled={isSendingReset}
+                  className="text-xs bg-tufts-blue text-white px-3 py-1.5 rounded-lg hover:bg-tufts-blue-dark transition-colors disabled:opacity-50">
+                  {isSendingReset ? 'Sending...' : 'Reset'}
+                </button>
               </div>
             </div>
           </div>
-          <div className="pointer-events-none absolute inset-px rounded-xl shadow-sm ring-1 ring-black/5"></div>
-        </div>
+        )}
       </div>
     </section>
   );

@@ -1,88 +1,34 @@
 import React from 'react';
 import { Globe, QrCode } from 'lucide-react';
-import { usePathname } from 'next/navigation';
 import { useI18n } from '../../contexts/I18nContext';
-import { getLanguageDirection, detectLanguageFromPath } from '../../utils/languageUtils';
 
 const StatsCards = ({ orders, activeOrders }) => {
-  const { t, locale } = useI18n();
-  const pathname = usePathname();
-  
-  // Get current language for RTL detection
-  const getCurrentLanguage = () => {
-    if (locale) return locale;
-    if (typeof window !== 'undefined') {
-      const savedLanguage = localStorage.getItem('roamjet-language');
-      if (savedLanguage) return savedLanguage;
-    }
-    return detectLanguageFromPath(pathname);
-  };
-
-  const currentLanguage = getCurrentLanguage();
-  const isRTL = getLanguageDirection(currentLanguage) === 'rtl';
+  const { t } = useI18n();
 
   return (
-    <section className="bg-white py-8 stats-card" dir={isRTL ? 'rtl' : 'ltr'}>
-      <div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Total Orders Card */}
-          <div className="relative">
-            <div className="absolute inset-px rounded-xl bg-white"></div>
-            <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
-              <div className="px-8 pt-8 pb-8">
-                <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <div>
-                    <p className={`text-lg font-medium text-cool-black ${isRTL ? 'text-right' : 'text-left'}`}>
-                      {t('dashboard.totalOrders', 'Total Orders')}
-                    </p>
-                    <p className={`text-2xl font-bold text-eerie-black mt-2 flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
-                      {isRTL ? (
-                        <>
-                          {orders.length}
-                          <Globe className="w-6 h-6 text-tufts-blue ml-2" />
-                        </>
-                      ) : (
-                        <>
-                          <Globe className="w-6 h-6 text-tufts-blue mr-2" />
-                          {orders.length}
-                        </>
-                      )}
-                    </p>
-                  </div>
-                </div>
-              </div>
+    <section className="bg-white pb-2">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6">
+        <div className="grid grid-cols-2 gap-3">
+          {/* Total Orders */}
+          <div className="bg-gray-50 rounded-2xl p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <Globe className="w-4 h-4 text-tufts-blue" />
+              <span className="text-xs text-gray-500 font-medium">
+                {t('dashboard.totalOrders', 'Total Orders')}
+              </span>
             </div>
-            <div className="pointer-events-none absolute inset-px rounded-xl shadow-sm ring-1 ring-black/5"></div>
+            <p className="text-2xl font-bold text-gray-900">{orders.length}</p>
           </div>
 
-          {/* Active eSIMs Card */}
-          <div className="relative">
-            <div className="absolute inset-px rounded-xl bg-white"></div>
-            <div className="relative flex h-full flex-col overflow-hidden rounded-xl">
-              <div className="px-8 pt-8 pb-8">
-                <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <div>
-                    <p className={`text-lg font-medium text-cool-black ${isRTL ? 'text-right' : 'text-left'}`}>
-                      {t('dashboard.activeEsims', 'Active eSIMs')}
-                    </p>
-                    <p className={`text-2xl font-bold text-cool-black mt-2 flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
-                      {isRTL ? (
-                        <>
-                          {activeOrders.length}
-                          <QrCode className="w-6 h-6 text-tufts-blue ml-2" />
-                        </>
-                      ) : (
-                        <>
-                          <QrCode className="w-6 h-6 text-tufts-blue mr-2" />
-                          {activeOrders.length}
-                        </>
-                      )}
-                    </p>
-                  </div>
-                </div>
-              </div>
+          {/* Active eSIMs */}
+          <div className="bg-gray-50 rounded-2xl p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <QrCode className="w-4 h-4 text-tufts-blue" />
+              <span className="text-xs text-gray-500 font-medium">
+                {t('dashboard.activeEsims', 'Active eSIMs')}
+              </span>
             </div>
-            <div className="pointer-events-none absolute inset-px rounded-xl shadow-sm ring-1 ring-black/5"></div>
+            <p className="text-2xl font-bold text-gray-900">{activeOrders.length}</p>
           </div>
         </div>
       </div>
