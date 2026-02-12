@@ -201,29 +201,54 @@ const SharePackagePage = () => {
         const mainPkg = { id: packageSnap.id, ...data };
         setPackageData(mainPkg);
 
-        // Load all related plans for the same country to populate data variants
+        // Load all related plans for the same country/operator to populate data variants
+        const isGlobalPlan = data.is_global === true || data.type === 'global' || data.region === 'global';
+        const isRegionalPlan = data.is_regional === true || data.type === 'regional';
         const countryCode = data.country_code || (data.country_codes && data.country_codes[0]) || urlCountryCode;
         if (countryCode) {
           setPlansLoading(true);
           try {
-            // Query both field formats: country_code (string) and country_codes (array)
-            const plansQuery1 = query(
-              collection(db, 'dataplans'),
-              where('country_code', '==', countryCode)
-            );
-            const plansQuery2 = query(
-              collection(db, 'dataplans'),
-              where('country_codes', 'array-contains', countryCode)
-            );
-            const [snap1, snap2] = await Promise.all([
-              getDocs(plansQuery1).catch(() => ({ forEach: () => {} })),
-              getDocs(plansQuery2).catch(() => ({ forEach: () => {} }))
-            ]);
-            // Merge results, dedup by doc ID
-            const plansMap = new Map();
-            snap1.forEach(doc => plansMap.set(doc.id, { id: doc.id, ...doc.data() }));
-            snap2.forEach(doc => plansMap.set(doc.id, { id: doc.id, ...doc.data() }));
-            const plans = Array.from(plansMap.values()).filter(p => p.enabled !== false && p.hidden !== true && !p.id.endsWith('-topup') && p.type !== 'topup');
+            let plans = [];
+
+            if (isGlobalPlan || isRegionalPlan || countryCode === 'REGIONAL') {
+              // For global/regional plans, find related plans by operator prefix
+              // e.g. "discover-1gb-7days-px" → operator "discover"
+              // e.g. "oceanlink-in-7days-1gb" → operator "oceanlink"
+              const operatorPrefix = (packageId || '').split('-')[0];
+              // Query all regional-type plans and filter by operator prefix client-side
+              const regionalQuery = query(
+                collection(db, 'dataplans'),
+                where('country_codes', 'array-contains', 'REGIONAL')
+              );
+              const snap = await getDocs(regionalQuery);
+              const plansMap = new Map();
+              snap.forEach(doc => {
+                const docData = { id: doc.id, ...doc.data() };
+                // Only include plans from the same operator
+                if (doc.id.startsWith(operatorPrefix + '-')) {
+                  plansMap.set(doc.id, docData);
+                }
+              });
+              plans = Array.from(plansMap.values()).filter(p => p.enabled !== false && p.hidden !== true && !p.id.endsWith('-topup') && p.type !== 'topup');
+            } else {
+              // For country-specific plans, query by country code
+              const plansQuery1 = query(
+                collection(db, 'dataplans'),
+                where('country_code', '==', countryCode)
+              );
+              const plansQuery2 = query(
+                collection(db, 'dataplans'),
+                where('country_codes', 'array-contains', countryCode)
+              );
+              const [snap1, snap2] = await Promise.all([
+                getDocs(plansQuery1).catch(() => ({ forEach: () => {} })),
+                getDocs(plansQuery2).catch(() => ({ forEach: () => {} }))
+              ]);
+              const plansMap = new Map();
+              snap1.forEach(doc => plansMap.set(doc.id, { id: doc.id, ...doc.data() }));
+              snap2.forEach(doc => plansMap.set(doc.id, { id: doc.id, ...doc.data() }));
+              plans = Array.from(plansMap.values()).filter(p => p.enabled !== false && p.hidden !== true && !p.id.endsWith('-topup') && p.type !== 'topup');
+            }
             console.log(`✅ Found ${plans.length} plans for country ${countryCode}`, plans.map(p => ({ id: p.id, data: p.data, price: p.price })));
             setAllPlans(plans);
 
