@@ -31,7 +31,16 @@ const SharePackagePage = () => {
   const searchParams = useSearchParams();
   const { currentUser } = useAuth();
   const { t, locale } = useI18n();
-  const packageId = params.packageId;
+  let packageId = params.packageId;
+  
+  // Redirect topup packages to base SIM package
+  if (packageId && packageId.endsWith('-topup')) {
+    const baseId = packageId.slice(0, -'-topup'.length);
+    if (typeof window !== 'undefined') {
+      window.location.replace(window.location.pathname.replace(packageId, baseId) + window.location.search);
+    }
+    packageId = baseId;
+  }
   
   console.log('🔐 Auth Debug:', {
     currentUser: currentUser,
@@ -214,7 +223,7 @@ const SharePackagePage = () => {
             const plansMap = new Map();
             snap1.forEach(doc => plansMap.set(doc.id, { id: doc.id, ...doc.data() }));
             snap2.forEach(doc => plansMap.set(doc.id, { id: doc.id, ...doc.data() }));
-            const plans = Array.from(plansMap.values()).filter(p => p.enabled !== false && p.hidden !== true);
+            const plans = Array.from(plansMap.values()).filter(p => p.enabled !== false && p.hidden !== true && !p.id.endsWith('-topup') && p.type !== 'topup');
             console.log(`✅ Found ${plans.length} plans for country ${countryCode}`, plans.map(p => ({ id: p.id, data: p.data, price: p.price })));
             setAllPlans(plans);
 
