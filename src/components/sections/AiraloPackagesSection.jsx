@@ -1,15 +1,98 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Globe, Flag, Loader2, AlertCircle } from 'lucide-react';
+import { Globe, Flag, Loader2, AlertCircle, MapPin } from 'lucide-react';
 import { getCountriesWithPricing } from '../../services/plansService';
 import { translateCountries } from '../../utils/countryTranslations';
 import { useI18n } from '../../contexts/I18nContext';
 
 import { collection, getDocs, query, where, orderBy } from 'firebase/firestore';
 import { db } from '../../firebase/config';
+
+// Tier definitions for grouping plans
+const DATA_TIERS = [
+  { label: '1 GB', min: 1, max: 1.9 },
+  { label: '2 GB', min: 2, max: 2.9 },
+  { label: '3 GB', min: 3, max: 4.9 },
+  { label: '5 GB', min: 5, max: 9.9 },
+  { label: '10 GB', min: 10, max: 19.9 },
+  { label: '20 GB', min: 20, max: 49.9 },
+  { label: '50 GB', min: 50, max: 999 },
+];
+
+const UNLIMITED_TIER = { label: 'Unlimited', min: Infinity, max: Infinity };
+
+// Sub-region definitions
+const SUB_REGIONS = [
+  { key: 'global', label: 'Global', labelRu: 'Глобальный' },
+  { key: 'europe', label: 'Europe', labelRu: 'Европа' },
+  { key: 'asia', label: 'Asia', labelRu: 'Азия' },
+  { key: 'north-america', label: 'North America', labelRu: 'Северная Америка' },
+  { key: 'latin-america', label: 'Latin America', labelRu: 'Латинская Америка' },
+  { key: 'middle-east', label: 'Middle East', labelRu: 'Ближний Восток' },
+  { key: 'africa', label: 'Africa', labelRu: 'Африка' },
+  { key: 'oceania', label: 'Oceania', labelRu: 'Океания' },
+];
+
+// Map various region identifiers to sub-region keys
+const regionToSubRegion = (plan) => {
+  if (plan.is_global === true || plan.type === 'global' || plan.region === 'global') {
+    return 'global';
+  }
+
+  const slug = (plan.slug || plan.name || plan.title || '').toLowerCase();
+  const region = (plan.region || '').toLowerCase();
+  const combined = `${slug} ${region}`;
+
+  if (combined.includes('europe') || combined.includes('eurolink') || combined.includes('euconnect') || combined.includes('eu-') || region === 'eu') return 'europe';
+  if (combined.includes('asia') || combined.includes('asean')) return 'asia';
+  if (combined.includes('latin') || combined.includes('latam') || combined.includes('south-america') || combined.includes('central-america') || combined.includes('caribbean')) return 'latin-america';
+  if (combined.includes('north-america') || combined.includes('americanmex') || combined.includes('america-mexico') || combined.includes('us-mx') || combined.includes('usa-mexico')) return 'north-america';
+  if (combined.includes('americas')) return 'north-america';
+  if (combined.includes('middle-east') || combined.includes('mena') || combined.includes('gcc')) return 'middle-east';
+  if (combined.includes('africa') || combined.includes('safarilink')) return 'africa';
+  if (combined.includes('oceania') || combined.includes('oceanlink') || combined.includes('pacific')) return 'oceania';
+
+  // Fallback: try to infer from country codes
+  const codes = plan.country_codes || [];
+  if (codes.length > 0) {
+    if (codes.some(c => ['US', 'CA', 'MX'].includes(c))) return 'north-america';
+    if (codes.some(c => ['AU', 'NZ', 'FJ'].includes(c))) return 'oceania';
+    if (codes.some(c => ['AE', 'SA', 'KW', 'QA'].includes(c))) return 'middle-east';
+  }
+
+  return 'europe'; // default fallback
+};
+
+// Parse data amount in GB from plan
+const getDataGB = (plan) => {
+  if (plan.is_unlimited) return Infinity;
+  const d = plan.data || plan.amount || '';
+  if (typeof d === 'number') return d >= 100 ? d / 1024 : d; // if MB convert
+  if (typeof d !== 'string') return 0;
+  const gb = d.match(/(\d+(?:\.\d+)?)\s*GB/i);
+  if (gb) return parseFloat(gb[1]);
+  const mb = d.match(/(\d+)\s*MB/i);
+  if (mb) return parseInt(mb[1], 10) / 1024;
+  // Try bare number
+  const num = parseFloat(d);
+  if (!isNaN(num) && num > 0) return num;
+  if (d.toLowerCase().includes('unlimited') || d.toLowerCase().includes('безлимит')) return Infinity;
+  return 0;
+};
+
+// Check if plan is a topup
+const isTopup = (plan) => {
+  const id = (plan.id || '').toLowerCase();
+  const slug = (plan.slug || '').toLowerCase();
+  const type = (plan.type || '').toLowerCase();
+  const name = (plan.name || plan.title || '').toLowerCase();
+  return type === 'topup' || id.includes('-topup') || id.includes('topup') ||
+    slug.includes('-topup') || slug.includes('topup') ||
+    name.includes('topup') || name.includes('top-up') || name.includes('top up');
+};
 
 export default function AiraloPackagesSection() {
   const router = useRouter();
@@ -18,137 +101,94 @@ export default function AiraloPackagesSection() {
   const [packages, setPackages] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState('countries'); // 'global', 'regional', or 'countries'
-  const [selectedCountry, setSelectedCountry] = useState(null);
-  
+  const [activeTab, setActiveTab] = useState('countries');
+  const [selectedSubRegion, setSelectedSubRegion] = useState('global');
+
   // Countries tab state
   const [countries, setCountries] = useState([]);
   const [filteredCountries, setFilteredCountries] = useState([]);
   const [loadingCountries, setLoadingCountries] = useState(false);
-  // Search state
   const [searchTerm, setSearchTerm] = useState('');
   const [mounted, setMounted] = useState(false);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  // All global+regional plans for Regions tab
+  const [allRegionPlans, setAllRegionPlans] = useState([]);
+
+  useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
     fetchPackages();
-    fetchCountries(); // Fetch countries on component load
-  }, [locale]); // Re-fetch when locale changes
-  
-  // Handle search from URL params - only after mount
+    fetchCountries();
+  }, [locale]);
+
   useEffect(() => {
     if (!mounted) return;
-    
     const urlSearchTerm = searchParams?.get('search') || '';
     setSearchTerm(urlSearchTerm);
-    
-    // If there's a search term, automatically switch to Countries tab
-    if (urlSearchTerm) {
-      setActiveTab('countries');
-    }
+    if (urlSearchTerm) setActiveTab('countries');
   }, [searchParams, mounted]);
-  
-  // Filter countries based on search term
+
   useEffect(() => {
     if (!searchTerm || searchTerm.trim() === '') {
       setFilteredCountries(countries);
     } else {
       const term = searchTerm.toLowerCase();
-      const filtered = countries.filter(country => 
-        country.name.toLowerCase().includes(term) ||
-        country.code.toLowerCase().includes(term)
-      );
-      setFilteredCountries(filtered);
+      setFilteredCountries(countries.filter(country =>
+        country.name.toLowerCase().includes(term) || country.code.toLowerCase().includes(term)
+      ));
     }
   }, [searchTerm, countries]);
 
-  // Fetch countries when Countries tab is active (fallback if not loaded yet)
   useEffect(() => {
-    if (activeTab === 'countries' && countries.length === 0) {
-      fetchCountries();
-    }
+    if (activeTab === 'countries' && countries.length === 0) fetchCountries();
   }, [activeTab]);
 
   const fetchPackages = async () => {
     try {
       setLoading(true);
       setError(null);
-      
-      console.log('📦 Fetching global and regional packages from Firestore dataplans collection...');
-      console.log('🌐 Current locale:', locale);
-      
-      // Query all active plans from dataplans collection
+
       const plansQuery = query(
         collection(db, 'dataplans'),
         where('status', '==', 'active'),
         orderBy('price', 'asc')
       );
-      
+
       const plansSnapshot = await getDocs(plansQuery);
       const allPlans = [];
-      
+
       plansSnapshot.forEach((doc) => {
         const planData = doc.data();
-        
-        // Only include enabled and visible plans
-        // Skip if explicitly disabled or hidden
-        if (planData.enabled === false || planData.hidden === true) {
-          return;
-        }
-        
-        // Filter by locale/language if not English (default)
-        // Language-specific pages should only show relevant global/regional packages
+        if (planData.enabled === false || planData.hidden === true) return;
+
+        const plan = { id: doc.id, ...planData };
+
+        // Filter by locale for non-English
         if (locale && locale !== 'en') {
           const supportedLanguages = planData.supported_languages || [];
-          const isGlobalPlan = planData.is_global === true || 
-                              planData.type === 'global' || 
-                              planData.region === 'global';
-          const isRegionalPlan = planData.is_regional === true || 
-                                planData.type === 'regional';
-          
-          // For language-specific pages, only include:
-          // 1. Global plans (available everywhere)
-          // 2. Regional plans that support the current language
-          // 3. Skip country-specific plans (they're handled separately in Countries tab)
-          if (isGlobalPlan) {
-            // Global plans are available for all languages
-            allPlans.push({
-              id: doc.id,
-              ...planData
-            });
-          } else if (isRegionalPlan && supportedLanguages.length > 0 && supportedLanguages.includes(locale)) {
-            // Regional plans must explicitly support the language
-            allPlans.push({
-              id: doc.id,
-              ...planData
-            });
-          } else if (isRegionalPlan && supportedLanguages.length === 0) {
-            // If no supported_languages specified, show for all locales (backward compatibility)
-            allPlans.push({
-              id: doc.id,
-              ...planData
-            });
+          const isGlobal = planData.is_global === true || planData.type === 'global' || planData.region === 'global';
+          const isRegional = planData.is_regional === true || planData.type === 'regional';
+
+          if (isGlobal) {
+            allPlans.push(plan);
+          } else if (isRegional && (supportedLanguages.length === 0 || supportedLanguages.includes(locale))) {
+            allPlans.push(plan);
+          } else if (!isGlobal && !isRegional) {
+            allPlans.push(plan);
           }
-          // Country-specific plans are filtered out for language pages
         } else {
-          // English or default - show all plans
-          allPlans.push({
-            id: doc.id,
-            ...planData
-          });
+          allPlans.push(plan);
         }
       });
-      
-      console.log(`✅ Found ${allPlans.length} active plans from dataplans collection (filtered by locale: ${locale})`);
-      
-      // Organize packages by type (global vs regional vs countries)
-      const organized = organizePackages(allPlans);
-      console.log('📦 Organized packages:', organized);
-      setPackages(organized);
-      
+
+      // Separate global+regional plans for the Regions tab
+      const regionPlans = allPlans.filter(p => {
+        if (isTopup(p)) return false;
+        return p.is_global === true || p.type === 'global' || p.region === 'global' ||
+          p.is_regional === true || p.type === 'regional';
+      });
+      setAllRegionPlans(regionPlans);
+      setPackages({ plans: allPlans });
     } catch (err) {
       console.error('Error fetching packages:', err);
       setError(err.message || 'Failed to load packages');
@@ -160,35 +200,21 @@ export default function AiraloPackagesSection() {
   const fetchCountries = async () => {
     try {
       setLoadingCountries(true);
-      console.log('🌍 Fetching countries from Firebase...');
-      
       const countriesWithPricing = await getCountriesWithPricing();
-      
-      // Filter to show only countries with plans (minPrice < 999 indicates real data)
-      let countriesWithRealPricing = countriesWithPricing.filter(country => 
+      let countriesWithRealPricing = countriesWithPricing.filter(country =>
         country.minPrice < 999 && country.plansCount > 0
       );
-      
-      // Only show countries with proper flags (exclude globe 🌍 and map 🗺️)
       const genericIcons = ['🌍', '🗺️', '🌏', '🌎'];
       countriesWithRealPricing = countriesWithRealPricing.filter(country => {
         const flag = country.flagEmoji || '';
         return flag && !genericIcons.includes(flag);
       });
-      
-      // Sort by popularity: most plans first (popular destinations), then by min price
       countriesWithRealPricing.sort((a, b) => {
         if (b.plansCount !== a.plansCount) return b.plansCount - a.plansCount;
         return a.minPrice - b.minPrice;
       });
-      
-      // Show top 10 popular destinations on homepage
       const popularDestinations = countriesWithRealPricing.slice(0, 10);
-      
-      // Translate countries based on current locale
       const translatedCountries = translateCountries(popularDestinations, locale);
-      
-      console.log('✅ Popular destinations loaded:', translatedCountries.length);
       setCountries(translatedCountries);
     } catch (err) {
       console.error('Error fetching countries:', err);
@@ -199,9 +225,6 @@ export default function AiraloPackagesSection() {
   };
 
   const handleCountrySelect = async (country) => {
-    console.log('🛒 User selected country:', country.name);
-
-    // Navigate directly to share-package page with 1GB auto-selected
     try {
       const directPlansQuery = query(
         collection(db, 'dataplans'),
@@ -212,7 +235,6 @@ export default function AiraloPackagesSection() {
         .map(doc => ({ id: doc.id, ...doc.data() }))
         .filter(plan => plan.enabled !== false && plan.hidden !== true);
 
-      // Find 1GB plan (cheapest), fallback to cheapest plan overall
       const oneGBPlan = plans
         .filter(p => parseFloat(p.data) === 1)
         .sort((a, b) => parseFloat(a.price) - parseFloat(b.price))[0];
@@ -222,9 +244,7 @@ export default function AiraloPackagesSection() {
       if (targetPlan) {
         const countryFlag = country.flagEmoji || '🌍';
         let targetUrl = `/share-package/${targetPlan.id}?country=${country.code}&flag=${countryFlag}`;
-        if (locale && locale !== 'en') {
-          targetUrl = `/${locale}${targetUrl}`;
-        }
+        if (locale && locale !== 'en') targetUrl = `/${locale}${targetUrl}`;
         router.push(targetUrl);
       }
     } catch (error) {
@@ -232,309 +252,96 @@ export default function AiraloPackagesSection() {
     }
   };
 
-  // Map technical region identifiers to human-friendly names
-  const getFriendlyRegionName = (regionIdentifier) => {
-    if (!regionIdentifier) return 'Regional Plans';
-    
-    const lowerIdentifier = regionIdentifier.toLowerCase().trim();
-    
-    // Mapping of technical identifiers to friendly names
-    const regionMap = {
-      'eu': 'Europe',
-      'europe': 'Europe',
-      'european-union': 'Europe',
-      'eastern-europe': 'Eastern Europe',
-      'western-europe': 'Western Europe',
-      'scandinavia': 'Scandinavia',
-      'asia': 'Asia',
-      'asean': 'Southeast Asia',
-      'mena': 'Middle East & North Africa',
-      'middle-east': 'Middle East',
-      'middle east': 'Middle East',
-      'middle-east-and-north-africa': 'Middle East & North Africa',
-      'middle-east-north-africa': 'Middle East & North Africa',
-      'gcc': 'Gulf Countries',
-      'americas': 'Americas',
-      'north-america': 'North America',
-      'south-america': 'South America',
-      'central-america': 'Central America',
-      'latin-america': 'Latin America',
-      'latin america': 'Latin America',
-      'caribbean': 'Caribbean',
-      'africa': 'Africa',
-      'oceania': 'Oceania & Pacific',
-      'pacific': 'Oceania & Pacific',
-      'americanmex': 'Americas',
-      'america-mexico': 'Americas',
-      'us-mx': 'Americas',
-      'usa-mexico': 'Americas',
-      'north-america-mexico': 'Americas',
-      'americas-mexico': 'Americas',
-      'oceanlink': 'Oceania & Pacific',
-      'ocean-link': 'Oceania & Pacific',
-      'latamlink': 'Latin America',
-      'latam-link': 'Latin America',
-      'latam': 'Latin America',
-      'latin-america-link': 'Latin America',
-      'regional plans': 'Regional Plans',
-      'regional': 'Regional Plans'
-    };
-    
-    // Check exact match first
-    if (regionMap[lowerIdentifier]) {
-      return regionMap[lowerIdentifier];
-    }
-    
-    // Check if identifier contains any mapped key
-    for (const [key, friendlyName] of Object.entries(regionMap)) {
-      if (lowerIdentifier.includes(key) || key.includes(lowerIdentifier)) {
-        return friendlyName;
-      }
-    }
-    
-    // If no match, capitalize words nicely
-    return regionIdentifier
-      .split(/[-_\s]+/)
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-      .join(' ');
+  const handlePackageClick = (packageId) => {
+    if (!packageId) return;
+    let targetUrl = '/share-package/' + packageId;
+    if (locale && locale !== 'en') targetUrl = `/${locale}${targetUrl}`;
+    router.push(targetUrl);
   };
 
-  const organizePackages = (packagesData) => {
-    const global = [];
-    const regional = {};
-    const countries = {};
-    
-    // Process packages - ensure it's an array
-    const packagesList = Array.isArray(packagesData) ? packagesData : [];
-    
-    console.log('📋 Processing packages list:', packagesList.length, 'items');
-    
-    packagesList.forEach((pkg) => {
-      // Skip parent containers (packages with is_parent flag that have no price)
-      if (pkg.is_parent === true) {
-        return; // Skip to next package
-      }
-      
-      // Extract package ID
-      const packageId = pkg.id || pkg.package_id || pkg.slug;
-      
-      // Get plan data fields
-      const countryCodes = pkg.country_codes || [];
-      const planType = pkg.type || '';
-      const planRegion = pkg.region || pkg.region_slug || '';
-      const planName = (pkg.name || pkg.title || '').toLowerCase();
-      const planSlug = (pkg.slug || '').toLowerCase();
-      
-      // Check if it's a global package (match admin-app logic)
-      // Check explicit backend flags first
-      if (pkg.is_global === true) {
-        global.push({
-          ...pkg,
-          id: packageId
-        });
-        return; // Skip to next package
-      }
-      
-      // Global packages typically have:
-      // 1. Has type === 'global'
-      // 2. Has region === 'global'
-      // 3. Name/slug includes 'global', 'discover', 'worldwide'
-      const isGlobal = 
-        planType === 'global' ||
-        planRegion === 'global' ||
-        planSlug === 'global' ||
-        planName === 'global' ||
-        planSlug.startsWith('discover') ||  // Discover/Discover+ are Airalo's global packages
-        planName.startsWith('discover') ||
-        planName.includes('worldwide') ||
-        planName.includes('world');
-      
-      // Check if it's a regional package (match admin-app logic exactly)
-      // Check explicit backend flags first
-      if (pkg.is_regional === true) {
-        // Determine region name for grouping
-        let region = planRegion;
-        
-          // If no region field set, try to infer from package slug or use a meaningful default
-          if (!region || region === '') {
-            // Try to extract region from slug (e.g., "europe-5gb" -> "europe", "americanmex" -> "Americas")
-            if (planSlug || planName) {
-              const regionalIdentifiers = [
-                'asia', 'europe', 'africa', 'americas', 'middle-east', 'middle east',
-                'oceania', 'caribbean', 'latin-america', 'latin america',
-                'north-america', 'south-america', 'central-america',
-                'eastern-europe', 'western-europe', 'scandinavia',
-                'asean', 'gcc', 'european-union', 'eu', 'mena',
-                'americanmex', 'america-mexico', 'us-mx', 'usa-mexico',
-                'oceanlink', 'ocean-link', 'pacific', 'pacific-islands',
-                'latamlink', 'latam-link', 'latam', 'latin-america-link'
-              ];
-              
-              // Check if slug or name contains any regional identifier
-              for (const identifier of regionalIdentifiers) {
-                if (planSlug.includes(identifier) || planName.includes(identifier)) {
-                  // Use friendly region name mapping
-                  region = getFriendlyRegionName(identifier);
-                  break;
-                }
-              }
-            }
-            
-            // If still no region found, use a generic name
-            if (!region || region === '') {
-              region = 'Regional Plans';
-            }
-          }
-          
-          // Apply friendly name transformation to the final region
-          region = getFriendlyRegionName(region);
-        
-        if (!regional[region]) {
-          regional[region] = [];
-        }
-        regional[region].push({
-          ...pkg,
-          id: packageId
-        });
-        return; // Skip to next package
-      }
-      
-      // Regional packages typically have:
-      // 1. Has type === 'regional'
-      // 2. Name/slug matches known regional identifiers
-      // 3. Has multiple country codes (2-10 countries)
-      // 4. Contains regional keywords in name/slug
-      const regionalIdentifiers = [
-        'asia', 'europe', 'africa', 'americas', 'middle-east', 'middle east',
-        'oceania', 'caribbean', 'latin-america', 'latin america',
-        'north-america', 'south-america', 'central-america',
-        'eastern-europe', 'western-europe', 'scandinavia',
-        'asean', 'gcc', 'european-union', 'eu', 'mena',
-        'middle-east-and-north-africa', 'middle-east-north-africa',
-        'americanmex', 'america-mexico', 'us-mx', 'usa-mexico',
-        'north-america-mexico', 'americas-mexico',
-        'oceanlink', 'ocean-link', 'pacific', 'pacific-islands',
-        'latamlink', 'latam-link', 'latam', 'latin-america-link'
-      ];
-      
-      // Check if plan name/slug contains any regional identifier (not just exact match)
-      const containsRegionalIdentifier = regionalIdentifiers.some(identifier => 
-        planSlug.includes(identifier) || planName.includes(identifier)
-      );
-      
-      // Check if plan has multiple country codes (2-10) - indicates regional
-      const hasMultipleCountries = countryCodes.length >= 2 && countryCodes.length < 10;
-      
-      const isRegional = 
-        planType === 'regional' ||
-        containsRegionalIdentifier ||
-        (planRegion && planRegion !== '' && planRegion !== 'global' && regionalIdentifiers.some(id => planRegion.includes(id))) ||
-        (hasMultipleCountries && !isGlobal); // Multiple countries but not global = regional
-      
-      // Categorize package (from dataplans collection, no nested packages)
-      if (isGlobal) {
-        global.push({
-          ...pkg,
-          id: packageId
-        });
-      } else if (isRegional) {
-        // Determine region name for grouping
-        let region = planRegion;
-        
-        // If no region set, try to extract from identifiers or use meaningful default
-        if (!region || region === '') {
-          // Try to find which regional identifier matched
-          for (const identifier of regionalIdentifiers) {
-            if (planSlug.includes(identifier) || planName.includes(identifier)) {
-              // Use friendly region name mapping
-              region = getFriendlyRegionName(identifier);
-              break;
-            }
-          }
-          
-          // If still no region but has multiple countries, try to infer from country codes
-          if ((!region || region === '') && hasMultipleCountries && countryCodes.length > 0) {
-            // Check if it's an Americas/Mexico regional plan
-            if (countryCodes.includes('MX') && countryCodes.includes('US')) {
-              region = 'Americas';
-            } else if (countryCodes.some(code => ['US', 'CA', 'MX'].includes(code))) {
-              region = 'Americas';
-            } else if (countryCodes.some(code => ['AU', 'NZ', 'FJ', 'PG', 'NC', 'PF'].includes(code))) {
-              // Oceania countries
-              region = 'Oceania & Pacific';
-            } else if (countryCodes.some(code => ['AE', 'SA', 'KW', 'QA', 'BH', 'OM'].includes(code))) {
-              // GCC countries
-              region = 'Gulf Countries';
-            } else if (countryCodes.some(code => ['SG', 'MY', 'TH', 'ID', 'PH', 'VN'].includes(code))) {
-              // ASEAN countries
-              region = 'Southeast Asia';
-            } else if (countryCodes.some(code => ['EG', 'MA', 'DZ', 'TN', 'LY'].includes(code))) {
-              // North Africa
-              region = 'Middle East & North Africa';
-            } else {
-              region = 'Regional Plans';
-            }
-          }
-          
-          // If still no region, use generic name
-          if (!region || region === '') {
-            region = 'Regional Plans';
-          }
-        }
-        
-        // Apply friendly name transformation to the final region
-        region = getFriendlyRegionName(region);
-        
-        if (!regional[region]) {
-          regional[region] = [];
-        }
-        regional[region].push({
-          ...pkg,
-          id: packageId
-        });
-      } else if (countryCodes.length === 1) {
-        // Single country package
-        const countryCode = countryCodes[0];
-        const countryName = pkg.country_name || pkg.title || pkg.name || countryCode;
-        if (!countries[countryCode]) {
-          countries[countryCode] = {
-            code: countryCode,
-            name: countryName,
-            packages: []
-          };
-        }
-        countries[countryCode].packages.push({
-          ...pkg,
-          id: packageId
-        });
-      }
-      // Skip packages that don't match any category
+  // Compute tiered plans per sub-region
+  const tieredPlansByRegion = useMemo(() => {
+    const result = {};
+
+    // Group plans by sub-region
+    const grouped = {};
+    allRegionPlans.forEach(plan => {
+      const sr = regionToSubRegion(plan);
+      if (!grouped[sr]) grouped[sr] = [];
+      grouped[sr].push(plan);
     });
 
-    return {
-      global: global.slice(0, 50), // Limit to 50 global packages
-      regional: regional,
-      countries: countries
-    };
+    // For each sub-region, compute tiers
+    for (const [sr, plans] of Object.entries(grouped)) {
+      const tiers = [];
+
+      // Regular data tiers
+      for (const tier of DATA_TIERS) {
+        const matching = plans.filter(p => {
+          const gb = getDataGB(p);
+          return gb >= tier.min && gb <= tier.max && gb !== Infinity;
+        });
+        if (matching.length === 0) continue;
+        // Pick cheapest: sort by validity ascending, then price ascending
+        matching.sort((a, b) => {
+          const va = parseFloat(a.validity || a.validity_days || 999);
+          const vb = parseFloat(b.validity || b.validity_days || 999);
+          if (va !== vb) return va - vb;
+          return parseFloat(a.price || 999) - parseFloat(b.price || 999);
+        });
+        tiers.push({ ...tier, plan: matching[0] });
+      }
+
+      // Unlimited tier
+      const unlimitedPlans = plans.filter(p => getDataGB(p) === Infinity);
+      if (unlimitedPlans.length > 0) {
+        unlimitedPlans.sort((a, b) => {
+          const va = parseFloat(a.validity || a.validity_days || 999);
+          const vb = parseFloat(b.validity || b.validity_days || 999);
+          if (va !== vb) return va - vb;
+          return parseFloat(a.price || 999) - parseFloat(b.price || 999);
+        });
+        tiers.push({ ...UNLIMITED_TIER, plan: unlimitedPlans[0] });
+      }
+
+      if (tiers.length > 0) {
+        result[sr] = tiers.slice(0, 8);
+      }
+    }
+
+    return result;
+  }, [allRegionPlans]);
+
+  // Available sub-regions (only those with plans)
+  const availableSubRegions = useMemo(() => {
+    return SUB_REGIONS.filter(sr => tieredPlansByRegion[sr.key]?.length > 0);
+  }, [tieredPlansByRegion]);
+
+  // Auto-select first available sub-region
+  useEffect(() => {
+    if (activeTab === 'regions' && availableSubRegions.length > 0) {
+      if (!tieredPlansByRegion[selectedSubRegion]) {
+        setSelectedSubRegion(availableSubRegions[0].key);
+      }
+    }
+  }, [activeTab, availableSubRegions, tieredPlansByRegion]);
+
+  const isRu = locale === 'ru';
+
+  const getSubRegionLabel = (sr) => isRu ? sr.labelRu : sr.label;
+
+  const formatData = (plan) => {
+    const gb = getDataGB(plan);
+    if (gb === Infinity) return isRu ? 'Безлимит' : 'Unlimited';
+    if (gb >= 1) return `${Math.round(gb)} GB`;
+    return `${Math.round(gb * 1024)} MB`;
   };
 
-  const handlePackageClick = (packageId) => {
-    if (!packageId) {
-      console.error('No package ID provided');
-      return;
-    }
-    
-    // Build the correct URL with language prefix if needed
-    let targetUrl = '/share-package/' + packageId;
-    
-    // Add language prefix if not English
-    if (locale && locale !== 'en') {
-      targetUrl = `/${locale}${targetUrl}`;
-    }
-    
-    console.log('📦 Navigating to package:', targetUrl);
-    // Navigate to share package page with proper language prefix
-    router.push(targetUrl);
+  const formatValidity = (plan) => {
+    const days = parseInt(plan.validity || plan.validity_days || 0, 10);
+    if (!days) return '';
+    if (isRu) return `${days} дн.`;
+    return `${days} day${days !== 1 ? 's' : ''}`;
   };
 
   if (loading) {
@@ -543,7 +350,7 @@ export default function AiraloPackagesSection() {
         <div className="container mx-auto px-4">
           <div className="text-center">
             <Loader2 className="w-8 h-8 animate-spin text-tufts-blue mx-auto mb-4" />
-            <p className="text-gray-600">Loading packages...</p>
+            <p className="text-gray-600">{isRu ? 'Загрузка...' : 'Loading packages...'}</p>
           </div>
         </div>
       </section>
@@ -557,11 +364,8 @@ export default function AiraloPackagesSection() {
           <div className="text-center">
             <AlertCircle className="w-8 h-8 text-red-600 mx-auto mb-4" />
             <p className="text-gray-600">{error}</p>
-            <button
-              onClick={fetchPackages}
-              className="mt-4 px-4 py-2 bg-tufts-blue text-white rounded-lg hover:bg-tufts-blue-dark"
-            >
-              Try Again
+            <button onClick={fetchPackages} className="mt-4 px-4 py-2 bg-tufts-blue text-white rounded-lg hover:bg-tufts-blue-dark">
+              {isRu ? 'Попробовать снова' : 'Try Again'}
             </button>
           </div>
         </div>
@@ -569,41 +373,15 @@ export default function AiraloPackagesSection() {
     );
   }
 
-  if (!packages) {
-    return null;
-  }
-
-
+  if (!packages) return null;
 
   return (
     <section className="bg-transparent">
       <div className="container mx-auto px-4">
-        {/* Compact Chip-style Tabs - Smaller and closer to search */}
+        {/* Tabs */}
         <div className="flex justify-center gap-2 mb-6">
           <button
-            onClick={() => {
-              // Find 1GB global plan and navigate directly to purchase
-              const oneGBGlobal = packages.global
-                .filter(p => parseFloat(p.data || p.amount) === 1)
-                .sort((a, b) => parseFloat(a.price || a.net_price || 999) - parseFloat(b.price || b.net_price || 999))[0];
-              const fallback = packages.global[0];
-              const target = oneGBGlobal || fallback;
-              if (target) {
-                handlePackageClick(target.id);
-              }
-            }}
-            className="inline-flex items-center px-3 py-1.5 rounded-full font-medium text-xs transition-all duration-200 bg-white text-gray-700 hover:bg-tufts-blue/10 hover:text-tufts-blue border border-gray-200 hover:border-tufts-blue/20"
-          >
-            <Globe className="w-3.5 h-3.5 mr-1" />
-            <span>Global</span>
-          </button>
-          
-          <button
-            onClick={() => {
-              setActiveTab('countries');
-
-              setSelectedCountry(null);
-            }}
+            onClick={() => { setActiveTab('countries'); }}
             className={`inline-flex items-center px-3 py-1.5 rounded-full font-medium text-xs transition-all duration-200 ${
               activeTab === 'countries'
                 ? 'bg-tufts-blue text-white shadow-md shadow-tufts-blue/30'
@@ -611,47 +389,64 @@ export default function AiraloPackagesSection() {
             }`}
           >
             <Flag className="w-3.5 h-3.5 mr-1" />
-            <span>Popular Destinations</span>
+            <span>{isRu ? 'Популярные направления' : 'Popular Destinations'}</span>
             <span className={`ml-1 px-1.5 py-0.5 rounded-full text-xs font-semibold ${
-              activeTab === 'countries'
-                ? 'bg-tufts-blue-dark text-white'
-                : 'bg-gray-100 text-gray-600'
+              activeTab === 'countries' ? 'bg-tufts-blue-dark text-white' : 'bg-gray-100 text-gray-600'
             }`}>
               {countries.length || 0}
             </span>
           </button>
+
+          <button
+            onClick={() => { setActiveTab('regions'); }}
+            className={`inline-flex items-center px-3 py-1.5 rounded-full font-medium text-xs transition-all duration-200 ${
+              activeTab === 'regions'
+                ? 'bg-tufts-blue text-white shadow-md shadow-tufts-blue/30'
+                : 'bg-white text-gray-700 hover:bg-tufts-blue/10 hover:text-tufts-blue border border-gray-200 hover:border-tufts-blue/20'
+            }`}
+          >
+            <Globe className="w-3.5 h-3.5 mr-1" />
+            <span>{isRu ? 'Регионы' : 'Regions'}</span>
+            {availableSubRegions.length > 0 && (
+              <span className={`ml-1 px-1.5 py-0.5 rounded-full text-xs font-semibold ${
+                activeTab === 'regions' ? 'bg-tufts-blue-dark text-white' : 'bg-gray-100 text-gray-600'
+              }`}>
+                {availableSubRegions.length}
+              </span>
+            )}
+          </button>
         </div>
 
-        {/* Countries */}
+        {/* Countries Tab */}
         {activeTab === 'countries' && (
           <div>
             {loadingCountries ? (
               <div className="flex justify-center items-center min-h-64">
                 <Loader2 className="w-8 h-8 animate-spin text-tufts-blue mr-4" />
-                <p className="text-gray-600">Loading countries...</p>
+                <p className="text-gray-600">{isRu ? 'Загрузка стран...' : 'Loading countries...'}</p>
               </div>
             ) : filteredCountries.length === 0 ? (
               <div className="text-center text-gray-500 py-12">
-                {searchTerm ? `No countries found matching "${searchTerm}"` : 'No countries available'}
+                {searchTerm ? `${isRu ? 'Страны не найдены по запросу' : 'No countries found matching'} "${searchTerm}"` : (isRu ? 'Нет доступных стран' : 'No countries available')}
               </div>
             ) : (
               <div>
                 {!searchTerm && (
                   <div className="text-center mb-4">
                     <p className="text-gray-600 text-sm mb-2">
-                      Top 10 popular travel destinations
+                      {isRu ? 'Топ 10 популярных направлений' : 'Top 10 popular travel destinations'}
                     </p>
                     <Link
                       href={locale && locale !== 'en' ? `/${locale}/esim-plans` : '/esim-plans'}
                       className="text-tufts-blue text-sm font-medium hover:underline"
                     >
-                      View all destinations →
+                      {isRu ? 'Все направления →' : 'View all destinations →'}
                     </Link>
                   </div>
                 )}
                 {searchTerm && (
                   <div className="mb-4 text-center text-gray-600 text-sm">
-                    Found {filteredCountries.length} {filteredCountries.length === 1 ? 'country' : 'countries'} matching "{searchTerm}"
+                    {isRu ? `Найдено ${filteredCountries.length} стран по запросу "${searchTerm}"` : `Found ${filteredCountries.length} ${filteredCountries.length === 1 ? 'country' : 'countries'} matching "${searchTerm}"`}
                   </div>
                 )}
                 <div className="space-y-2">
@@ -680,7 +475,7 @@ export default function AiraloPackagesSection() {
                             ${country.minPrice.toFixed(2)}
                           </div>
                         ) : (
-                          <div className="text-lg font-medium text-gray-500">No plans</div>
+                          <div className="text-lg font-medium text-gray-500">{isRu ? 'Нет планов' : 'No plans'}</div>
                         )}
                       </div>
                     </button>
@@ -690,8 +485,75 @@ export default function AiraloPackagesSection() {
             )}
           </div>
         )}
+
+        {/* Regions Tab */}
+        {activeTab === 'regions' && (
+          <div>
+            {/* Sub-region chips */}
+            <div className="flex flex-wrap justify-center gap-2 mb-6">
+              {availableSubRegions.map((sr) => (
+                <button
+                  key={sr.key}
+                  onClick={() => setSelectedSubRegion(sr.key)}
+                  className={`px-3 py-1.5 rounded-full font-medium text-xs transition-all duration-200 ${
+                    selectedSubRegion === sr.key
+                      ? 'bg-tufts-blue text-white shadow-md shadow-tufts-blue/30'
+                      : 'bg-white text-gray-700 hover:bg-tufts-blue/10 hover:text-tufts-blue border border-gray-200 hover:border-tufts-blue/20'
+                  }`}
+                >
+                  {sr.key === 'global' && <span className="mr-1">🌍</span>}
+                  {getSubRegionLabel(sr)}
+                </button>
+              ))}
+            </div>
+
+            {/* Tiered plans for selected sub-region */}
+            {tieredPlansByRegion[selectedSubRegion] ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {tieredPlansByRegion[selectedSubRegion].map((tier, idx) => {
+                  const plan = tier.plan;
+                  const price = parseFloat(plan.price || 0);
+                  return (
+                    <div
+                      key={idx}
+                      className="bg-white rounded-xl border border-gray-100 hover:border-tufts-blue/30 hover:shadow-md transition-all duration-200 p-4 flex flex-col justify-between"
+                    >
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-lg font-bold text-gray-900">
+                            {formatData(plan)}
+                          </span>
+                          <span className="text-xs text-gray-500 bg-gray-50 px-2 py-1 rounded-full">
+                            {formatValidity(plan)}
+                          </span>
+                        </div>
+                        {plan.name && (
+                          <p className="text-xs text-gray-400 mb-2 truncate">{plan.name}</p>
+                        )}
+                      </div>
+                      <div className="flex items-center justify-between mt-3">
+                        <span className="text-xl font-bold text-tufts-blue">
+                          ${price.toFixed(2)}
+                        </span>
+                        <button
+                          onClick={() => handlePackageClick(plan.id)}
+                          className="px-4 py-2 bg-tufts-blue text-white text-sm font-medium rounded-lg hover:bg-tufts-blue-dark transition-colors"
+                        >
+                          {isRu ? 'Купить' : 'Buy'}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-center text-gray-500 py-12">
+                {isRu ? 'Нет доступных планов для этого региона' : 'No plans available for this region'}
+              </div>
+            )}
+          </div>
+        )}
       </div>
-      
     </section>
   );
 }
