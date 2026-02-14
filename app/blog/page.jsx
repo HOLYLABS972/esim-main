@@ -106,7 +106,7 @@ export default async function BlogPage() {
             <p className="mt-1 text-sm text-gray-500">Get started by creating your first blog post.</p>
           </div>
         ) : (
-          <div className="mx-auto grid max-w-2xl grid-cols-1 gap-x-8 gap-y-20 lg:mx-0 lg:max-w-none lg:grid-cols-3">
+          <div className="mx-auto grid max-w-2xl grid-cols-1 gap-x-10 gap-y-16 lg:mx-0 lg:max-w-none lg:grid-cols-3">
             {posts.map((post) => (
               <article key={post.id} className="flex flex-col items-start">
                 <div className="relative w-full">

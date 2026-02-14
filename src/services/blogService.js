@@ -32,20 +32,16 @@ export const getBlogPosts = async () => {
   } catch (error) {
     console.error('Error getting blog posts:', error);
     
-    // If index doesn't exist yet, try without ordering
+    // If index doesn't exist yet, fetch all and sort in JS
     try {
-      const simpleQuery = query(
-        collection(db, 'blog_posts'),
-        where('published', '==', true)
-      );
-      
-      const postsSnapshot = await getDocs(simpleQuery);
+      const postsSnapshot = await getDocs(collection(db, 'blog_posts'));
       const posts = postsSnapshot.docs
         .map(doc => ({
           id: doc.id,
           ...doc.data(),
           publishedAt: doc.data().publishedAt?.toDate() || new Date()
         }))
+        .filter(post => post.published !== false)
         .sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
       
       return posts;
