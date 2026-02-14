@@ -84,7 +84,7 @@ export default async function BlogPage() {
       </div>
 
       {/* Blog Posts Grid */}
-      <div className="mx-auto max-w-7xl px-6 lg:px-8 py-24 sm:py-32">
+      <div className="mx-auto max-w-[1400px] px-4 lg:px-6 py-12 sm:py-16">
         {error ? (
           <div className="text-center py-12">
             <div className="rounded-md bg-red-50 p-4 max-w-lg mx-auto">
@@ -106,7 +106,7 @@ export default async function BlogPage() {
             <p className="mt-1 text-sm text-gray-500">Get started by creating your first blog post.</p>
           </div>
         ) : (
-          <div className="mx-auto grid max-w-2xl grid-cols-1 gap-8 lg:mx-0 lg:max-w-none lg:grid-cols-3 lg:gap-12">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {posts.map((post) => (
               <article key={post.id} className="flex flex-col items-start rounded-2xl bg-gray-50 p-4 ring-1 ring-gray-200">
                 <div className="relative w-full">
