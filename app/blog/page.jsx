@@ -71,8 +71,8 @@ export default async function BlogPage() {
           aria-hidden="true"
           className="absolute inset-y-0 right-1/2 -z-10 -mr-96 w-[200%] origin-top-right skew-x-[-30deg] bg-white shadow-xl shadow-indigo-600/10 ring-1 ring-indigo-50 sm:-mr-80 lg:-mr-96"
         />
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="mx-auto max-w-2xl lg:mx-0">
+        <div className="mx-auto max-w-[1600px] px-6 sm:px-8 lg:px-12">
+          <div className="max-w-2xl">
             <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
               Travel Tips & Guides
             </h1>
@@ -84,7 +84,7 @@ export default async function BlogPage() {
       </div>
 
       {/* Blog Posts Grid */}
-      <div className="mx-auto max-w-[1400px] px-4 lg:px-6 py-12 sm:py-16">
+      <div className="mx-auto max-w-[1600px] px-6 sm:px-8 lg:px-12 py-12 sm:py-16">
         {error ? (
           <div className="text-center py-12">
             <div className="rounded-md bg-red-50 p-4 max-w-lg mx-auto">
@@ -106,7 +106,7 @@ export default async function BlogPage() {
             <p className="mt-1 text-sm text-gray-500">Get started by creating your first blog post.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {posts.map((post) => (
               <article key={post.id} className="flex flex-col items-start rounded-2xl bg-gray-50 p-4 ring-1 ring-gray-200">
                 <div className="relative w-full">
