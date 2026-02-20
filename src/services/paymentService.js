@@ -95,9 +95,15 @@ export const paymentService = {
       const result = await response.json();
       console.log('✅ Checkout session created via Next.js API:', result);
       
-      // Redirect immediately to Stripe checkout
+      // Redirect to Stripe checkout
       if (result && result.sessionUrl) {
-        window.location.href = result.sessionUrl;
+        if (window !== window.top) {
+          // Inside an iframe — Stripe blocks iframe embedding, so open in a new tab
+          console.log('🔗 Detected iframe context - opening Stripe checkout in new tab');
+          window.open(result.sessionUrl, '_blank');
+        } else {
+          window.location.href = result.sessionUrl;
+        }
         return result;
       } else {
         console.error('❌ Response missing sessionUrl:', result);

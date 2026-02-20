@@ -538,16 +538,19 @@ const SharePackagePage = () => {
         console.warn('⚠️ Could not store in localStorage (likely in iframe):', e);
       }
       
-      // Redirect to payment based on selected method
-      // Pass email and order info in URL params for iframe compatibility
+      const isInIframe = window !== window.top;
+
       if (paymentMethod === 'coinbase') {
         const { coinbaseService } = await import('../../../src/services/coinbaseService');
-        // Modify createCheckoutSession to accept email in URL params
         await coinbaseService.createCheckoutSession(orderData);
       } else {
         const { paymentService } = await import('../../../src/services/paymentService');
-        // Modify createCheckoutSession to accept email in URL params
         await paymentService.createCheckoutSession(orderData);
+      }
+
+      // When inside an iframe, payment opens in a new tab so re-enable the button
+      if (isInIframe) {
+        setIsProcessing(false);
       }
       
     } catch (error) {

@@ -312,17 +312,11 @@ Length: ${this.apiKey?.length || 0} characters
         console.log('🔄 Redirecting to Coinbase checkout:', charge.hosted_url);
         console.log('💳 Charge ID:', charge.code || charge.id);
         
-        // Check if we're in an iframe
         if (window !== window.top) {
-          console.log('🔗 Detected iframe context - redirecting parent window');
-          try {
-            window.top.location.href = charge.hosted_url;
-          } catch (err) {
-            console.warn('⚠️ Cannot redirect parent window, trying alternative method', err);
-            window.open(charge.hosted_url, '_blank');
-          }
+          // Inside an iframe — Coinbase checkout won't load in an iframe, open in a new tab
+          console.log('🔗 Detected iframe context - opening Coinbase checkout in new tab');
+          window.open(charge.hosted_url, '_blank');
         } else {
-          console.log('🖥️ Normal window context - redirecting current window');
           window.location.href = charge.hosted_url;
         }
       } else {
