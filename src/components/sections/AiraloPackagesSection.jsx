@@ -177,7 +177,7 @@ export default function AiraloPackagesSection() {
         } else {
           allPlans.push(plan);
         }
-      });
+      }
 
       // Separate global+regional plans for the Regions tab
       const regionPlans = allPlans.filter(p => {

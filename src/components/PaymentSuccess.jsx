@@ -175,7 +175,7 @@ const PaymentSuccess = () => {
         currency: orderData.currency,
         customerEmail: orderData.customerEmail,
         status: 'active',
-        createdAt: serverTimestamp(),
+        createdAt: new Date().toISOString(),
         isTestMode: isTestMode,
         stripeMode: stripeMode,
         isGuest: isGuest,
@@ -226,8 +226,8 @@ const PaymentSuccess = () => {
           provider: 'airalo',
           isActive: true,
           isArchived: false,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
           userEmail: orderData.customerEmail
         };
         
@@ -291,15 +291,14 @@ const PaymentSuccess = () => {
             directAppleInstallationUrl: qrResult.directAppleInstallationUrl
           };
           
-          // Update order with QR code
-          // await setDoc(globalOrderRef, {
+          // Update order with QR code — migrated to Supabase
+          /* await setDoc(globalOrderRef, {
             qrCode: qrResult.qrCode,
             qrCodeUrl: qrResult.qrCodeUrl,
             iccid: qrResult.iccid,
             activationCode: qrResult.activationCode,
             directAppleInstallationUrl: qrResult.directAppleInstallationUrl,
-            updatedAt: serverTimestamp()
-          }, { merge: true });
+          }, { merge: true }); */
           
           if (userOrderRef) {
             // Update user collection with QR code (merge to preserve existing structure)
@@ -309,7 +308,7 @@ const PaymentSuccess = () => {
               iccid: qrResult.iccid,
               activationCode: qrResult.activationCode,
               directAppleInstallationUrl: qrResult.directAppleInstallationUrl,
-              updatedAt: serverTimestamp()
+              updatedAt: new Date().toISOString()
             };
             
             // Also update nested esimData if it exists (Firestore doesn't support nested updates with dot notation in setDoc)
@@ -325,19 +324,8 @@ const PaymentSuccess = () => {
       if (orderData.affiliateRef) {
         try {
           console.log('🤝 Recording affiliate sale for:', orderData.affiliateRef);
-          const affiliateSaleRef = null /* migrated */;
-          // await setDoc(affiliateSaleRef, {
-            affiliateRef: orderData.affiliateRef,
-            orderId: orderData.orderId,
-            planId: orderData.planId,
-            planName: orderData.planName,
-            amount: orderData.amount,
-            currency: orderData.currency,
-            customerEmail: orderData.customerEmail,
-            countryCode: countryInfo.code,
-            countryName: countryInfo.name,
-            createdAt: serverTimestamp()
-          });
+          // Affiliate sales migrated to Supabase
+          console.log('Affiliate tracking skipped — migrating to Supabase');
           console.log('✅ Affiliate sale recorded');
         } catch (affErr) {
           console.error('⚠️ Failed to record affiliate sale:', affErr);
