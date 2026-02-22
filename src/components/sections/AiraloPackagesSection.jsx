@@ -8,8 +8,7 @@ import { getCountriesWithPricing } from '../../services/plansService';
 import { translateCountries } from '../../utils/countryTranslations';
 import { useI18n } from '../../contexts/I18nContext';
 
-import { collection, getDocs, query, where, orderBy } from 'firebase/firestore';
-import { db } from '../../firebase/config';
+import { supabase } from '../../supabase/config';
 
 // Tier definitions for grouping plans
 const DATA_TIERS = [
@@ -148,20 +147,19 @@ export default function AiraloPackagesSection() {
       setLoading(true);
       setError(null);
 
-      const plansQuery = query(
-        collection(db, 'dataplans'),
-        where('status', '==', 'active'),
-        orderBy('price', 'asc')
-      );
+      const { data: plansData, error: plansErr } = await supabase
+        .from('dataplans')
+        .select('*')
+        .eq('status', 'active')
+        .eq('enabled', true)
+        .eq('hidden', false)
+        .order('price', { ascending: true });
 
-      const plansSnapshot = await getDocs(plansQuery);
+      if (plansErr) throw plansErr;
       const allPlans = [];
 
-      plansSnapshot.forEach((doc) => {
-        const planData = doc.data();
-        if (planData.enabled === false || planData.hidden === true) return;
-
-        const plan = { id: doc.id, ...planData };
+      for (const planData of (plansData || [])) {
+        const plan = { id: planData.id, ...planData };
 
         // Filter by locale for non-English
         if (locale && locale !== 'en') {
@@ -226,14 +224,13 @@ export default function AiraloPackagesSection() {
 
   const handleCountrySelect = async (country) => {
     try {
-      const directPlansQuery = query(
-        collection(db, 'dataplans'),
-        where('country_codes', 'array-contains', country.code)
-      );
-      const directPlansSnapshot = await getDocs(directPlansQuery);
-      const plans = directPlansSnapshot.docs
-        .map(doc => ({ id: doc.id, ...doc.data() }))
-        .filter(plan => plan.enabled !== false && plan.hidden !== true);
+      const { data: plansResult } = await supabase
+        .from('dataplans')
+        .select('*')
+        .contains('country_codes', [country.code])
+        .eq('enabled', true)
+        .eq('hidden', false);
+      const plans = plansResult || [];
 
       const oneGBPlan = plans
         .filter(p => parseFloat(p.data) === 1)

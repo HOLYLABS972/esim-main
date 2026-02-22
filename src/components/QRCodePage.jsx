@@ -9,8 +9,7 @@ import {
 } from 'lucide-react';
 import LPAQRCodeDisplay from './dashboard/LPAQRCodeDisplay';
 import { useAuth } from '../contexts/AuthContext';
-import { doc, getDoc, collection, getDocs, deleteDoc } from 'firebase/firestore';
-import { db } from '../firebase/config';
+import { supabase } from '../supabase/config';
 import toast from 'react-hot-toast';
 
 const QRCodePage = ({ orderId, iccid }) => {
@@ -58,26 +57,15 @@ const QRCodePage = ({ orderId, iccid }) => {
       const normalizedSearch = normalizeIccid(iccid);
       let orderData = null, foundId = null;
 
-      if (currentUser) {
-        try {
-          const snap = await getDocs(collection(db, 'users', currentUser.uid, 'esims'));
-          for (const d of snap.docs) {
-            if (extractIccidFromOrder(d.data()) === normalizedSearch) {
-              orderData = d.data(); foundId = d.id; break;
-            }
-          }
-        } catch (e) { /* ignore */ }
-      }
-
-      if (!orderData) {
-        try {
-          const snap = await getDocs(collection(db, 'orders'));
-          for (const d of snap.docs) {
-            if (extractIccidFromOrder(d.data()) === normalizedSearch) {
-              orderData = d.data(); foundId = d.id; break;
-            }
-          }
-        } catch (e) { /* ignore */ }
+      // Search orders by ICCID in Supabase
+      const { data: orders } = await supabase
+        .from('orders')
+        .select('*')
+        .or(`iccid.eq.${normalizedSearch},iccid.ilike.%${normalizedSearch}%`);
+      
+      if (orders && orders.length > 0) {
+        orderData = orders[0];
+        foundId = orders[0].id;
       }
 
       if (!orderData) {
@@ -98,18 +86,8 @@ const QRCodePage = ({ orderId, iccid }) => {
       setError(null);
       let orderData = null;
 
-      if (currentUser) {
-        try {
-          const d = await getDoc(doc(db, 'users', currentUser.uid, 'esims', orderId));
-          if (d.exists()) orderData = d.data();
-        } catch (e) { /* ignore */ }
-      }
-      if (!orderData) {
-        try {
-          const d = await getDoc(doc(db, 'orders', orderId));
-          if (d.exists()) orderData = d.data();
-        } catch (e) { /* ignore */ }
-      }
+      const { data: order } = await supabase.from('orders').select('*').eq('id', orderId).single();
+      if (order) orderData = order;
 
       if (!orderData) { setError('Order not found'); setLoading(false); return; }
       extractQRCodeData(orderData, orderId);
@@ -210,10 +188,8 @@ const QRCodePage = ({ orderId, iccid }) => {
       const oid = orderInfo?.orderId;
       if (!oid) { toast.error('Order ID not found'); return; }
 
-      // Delete from user's esims collection
-      try { await deleteDoc(doc(db, 'users', currentUser.uid, 'esims', oid)); } catch (e) { /* might not exist here */ }
-      // Delete from global orders
-      try { await deleteDoc(doc(db, 'orders', oid)); } catch (e) { /* might not exist here */ }
+      // Delete from Supabase
+      await supabase.from('orders').delete().eq('id', oid);
 
       toast.success('eSIM deleted');
       router.push('/dashboard');
