@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { Elements } from '@stripe/react-stripe-js'
-import { loadStripe } from '@stripe/stripe-js'
 import Checkout from '../../src/components/Checkout'
 import Loading from '../../src/components/Loading'
 
@@ -12,7 +10,6 @@ export default function CheckoutPageClient() {
   const [plan, setPlan] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [stripePromise, setStripePromise] = useState(null);
 
   useEffect(() => {
     const loadPlan = async () => {
@@ -20,14 +17,12 @@ export default function CheckoutPageClient() {
         const planId = searchParams.get('plan');
         const planType = searchParams.get('type');
         
-        // First, check if we have package data in localStorage (from share page)
+        // Check localStorage first (from share page)
         const selectedPackage = localStorage.getItem('selectedPackage');
         if (selectedPackage) {
           try {
             const packageData = JSON.parse(selectedPackage);
-            console.log('📦 Package data from localStorage:', packageData);
-            
-            const planData = {
+            setPlan({
               id: packageData.packageId,
               name: packageData.packageName,
               description: packageData.packageDescription,
@@ -41,38 +36,29 @@ export default function CheckoutPageClient() {
               benefits: packageData.benefits,
               speed: packageData.speed,
               type: 'package'
-            };
-            
-            console.log('🎯 Plan data for checkout:', planData);
-            setPlan(planData);
+            });
             setLoading(false);
             return;
           } catch (parseError) {
             console.error('Error parsing selected package:', parseError);
-            // Data removal removed - keeping selectedPackage in localStorage
           }
         }
         
-        // If no localStorage data, check URL parameters
         if (!planId) {
           setError('No plan selected');
           setLoading(false);
           return;
         }
 
-        // Load plan data from Firestore
-        const { doc, getDoc } = await import('firebase/firestore');
-        const { db } = await import('../../src/firebase/config');
-        
-        const planDoc = await getDoc(doc(db, 'plans', planId));
-        
-        if (planDoc.exists()) {
-          const planData = planDoc.data();
-          setPlan({
-            id: planDoc.id,
-            ...planData,
-            type: planType || 'country'
-          });
+        // Load plan from Supabase
+        const { createClient } = await import('@supabase/supabase-js');
+        const sb = createClient(
+          'https://uhpuqiptxcjluwsetoev.supabase.co',
+          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVocHVxaXB0eGNqbHV3c2V0b2V2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcwOTE4OTYsImV4cCI6MjA3MjY2Nzg5Nn0.D_t-dyA4Z192kAU97Oi79At_IDT_5putusXrR0bQ6z8'
+        );
+        const { data } = await sb.from('dataplans').select('*').eq('id', planId).single();
+        if (data) {
+          setPlan({ ...data, type: planType || 'country' });
         } else {
           setError('Plan not found');
         }
@@ -87,46 +73,17 @@ export default function CheckoutPageClient() {
     loadPlan();
   }, [searchParams]);
 
-  // Load Stripe configuration
-  useEffect(() => {
-    const loadStripeConfig = async () => {
-      try {
-        // Import configService dynamically
-        const { configService } = await import('../../src/services/configService');
-        const mode = await configService.getStripeMode();
-        const publishableKey = await configService.getStripePublishableKey(mode);
-        
-        if (publishableKey) {
-          const stripe = await loadStripe(publishableKey);
-          setStripePromise(stripe);
-        } else {
-          console.error('No Stripe publishable key found');
-        }
-      } catch (err) {
-        console.error('Error loading Stripe config:', err);
-      }
-    };
-
-    loadStripeConfig();
-  }, []);
-
-  if (loading) {
-    return <Loading />;
-  }
+  if (loading) return <Loading />;
 
   if (error || !plan) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="max-w-md mx-auto bg-white rounded-xl shadow-lg p-6 text-center">
           <div className="text-gray-400 text-6xl mb-4">📱</div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">
-            No Plan Selected
-          </h2>
-          <p className="text-gray-600 mb-4">
-            Please select a plan from the plans page to continue with checkout.
-          </p>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">No Plan Selected</h2>
+          <p className="text-gray-600 mb-4">Please select a plan from the plans page to continue.</p>
           <button
-            onClick={() => window.location.href = '/plans'}
+            onClick={() => window.location.href = '/'}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             Browse Plans
@@ -136,26 +93,5 @@ export default function CheckoutPageClient() {
     );
   }
 
-  if (!stripePromise) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="max-w-md mx-auto bg-white rounded-xl shadow-lg p-6 text-center">
-          <div className="text-blue-500 text-6xl mb-4">💳</div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">
-            Loading Payment System
-          </h2>
-          <p className="text-gray-600 mb-4">
-            Please wait while we set up your payment...
-          </p>
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <Elements stripe={stripePromise}>
-      <Checkout plan={plan} />
-    </Elements>
-  );
+  return <Checkout plan={plan} />;
 }
