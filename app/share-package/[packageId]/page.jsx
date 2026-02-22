@@ -189,19 +189,20 @@ const SharePackagePage = () => {
       setLoading(true);
       console.log('🔍 Loading package data for ID:', packageId);
 
-      const { doc, getDoc, collection, query, where, getDocs } = await import('firebase/firestore');
-      const { db } = await import('../../../src/firebase/config');
+      const { createClient } = await import('@supabase/supabase-js');
+      const sb = createClient(
+        'https://uhpuqiptxcjluwsetoev.supabase.co',
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVocHVxaXB0eGNqbHV3c2V0b2V2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcwOTE4OTYsImV4cCI6MjA3MjY2Nzg5Nn0.D_t-dyA4Z192kAU97Oi79At_IDT_5putusXrR0bQ6z8'
+      );
 
-      const packageRef = doc(db, 'dataplans', packageId);
-      const packageSnap = await getDoc(packageRef);
+      const { data: pkgRow } = await sb.from('dataplans').select('*').eq('id', packageId).single();
 
-      if (packageSnap.exists()) {
-        const data = packageSnap.data();
-        console.log('✅ Found package in Firebase dataplans:', data);
-        const mainPkg = { id: packageSnap.id, ...data };
+      if (pkgRow) {
+        const data = pkgRow;
+        console.log('✅ Found package in Supabase dataplans:', data);
+        const mainPkg = { id: data.id, ...data };
         setPackageData(mainPkg);
 
-        // Load all related plans for the same country/operator to populate data variants
         const isGlobalPlan = data.is_global === true || data.type === 'global' || data.region === 'global';
         const isRegionalPlan = data.is_regional === true || data.type === 'regional';
         const countryCode = data.country_code || (data.country_codes && data.country_codes[0]) || urlCountryCode;
@@ -211,42 +212,26 @@ const SharePackagePage = () => {
             let plans = [];
 
             if (isGlobalPlan || isRegionalPlan || countryCode === 'REGIONAL') {
-              // For global/regional plans, find related plans by operator prefix
-              // e.g. "discover-1gb-7days-px" → operator "discover"
-              // e.g. "oceanlink-in-7days-1gb" → operator "oceanlink"
               const operatorPrefix = (packageId || '').split('-')[0];
-              // Query all regional-type plans and filter by operator prefix client-side
-              const regionalQuery = query(
-                collection(db, 'dataplans'),
-                where('country_codes', 'array-contains', 'REGIONAL')
-              );
-              const snap = await getDocs(regionalQuery);
+              const { data: regionalData } = await sb
+                .from('dataplans')
+                .select('*')
+                .contains('country_codes', ['REGIONAL']);
               const plansMap = new Map();
-              snap.forEach(doc => {
-                const docData = { id: doc.id, ...doc.data() };
-                // Only include plans from the same operator
-                if (doc.id.startsWith(operatorPrefix + '-')) {
-                  plansMap.set(doc.id, docData);
+              (regionalData || []).forEach(row => {
+                if (row.id.startsWith(operatorPrefix + '-')) {
+                  plansMap.set(row.id, row);
                 }
               });
               plans = Array.from(plansMap.values()).filter(p => p.enabled !== false && p.hidden !== true && !p.id.endsWith('-topup') && p.type !== 'topup');
             } else {
-              // For country-specific plans, query by country code
-              const plansQuery1 = query(
-                collection(db, 'dataplans'),
-                where('country_code', '==', countryCode)
-              );
-              const plansQuery2 = query(
-                collection(db, 'dataplans'),
-                where('country_codes', 'array-contains', countryCode)
-              );
-              const [snap1, snap2] = await Promise.all([
-                getDocs(plansQuery1).catch(() => ({ forEach: () => {} })),
-                getDocs(plansQuery2).catch(() => ({ forEach: () => {} }))
+              const [{ data: d1 }, { data: d2 }] = await Promise.all([
+                sb.from('dataplans').select('*').eq('country_code', countryCode),
+                sb.from('dataplans').select('*').contains('country_codes', [countryCode])
               ]);
               const plansMap = new Map();
-              snap1.forEach(doc => plansMap.set(doc.id, { id: doc.id, ...doc.data() }));
-              snap2.forEach(doc => plansMap.set(doc.id, { id: doc.id, ...doc.data() }));
+              (d1 || []).forEach(row => plansMap.set(row.id, row));
+              (d2 || []).forEach(row => plansMap.set(row.id, row));
               plans = Array.from(plansMap.values()).filter(p => p.enabled !== false && p.hidden !== true && !p.id.endsWith('-topup') && p.type !== 'topup');
             }
             console.log(`✅ Found ${plans.length} plans for country ${countryCode}`, plans.map(p => ({ id: p.id, data: p.data, price: p.price })));
