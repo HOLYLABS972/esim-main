@@ -51,6 +51,11 @@ export const paddleService = {
     if (!transactionId) throw new Error('No transaction ID from Paddle');
 
     if (checkoutUrl) {
+      if (orderData.customerEmail && typeof sessionStorage !== 'undefined') {
+        try {
+          sessionStorage.setItem('paddle_customer_email', orderData.customerEmail);
+        } catch (_) {}
+      }
       if (window !== window.top) {
         window.open(checkoutUrl, '_blank');
       } else {
@@ -60,7 +65,11 @@ export const paddleService = {
     }
 
     const Paddle = await ensurePaddleInitialized();
-    Paddle.Checkout.open({ transactionId });
+    const openOptions = { transactionId };
+    if (orderData.customerEmail) {
+      openOptions.customer = { email: orderData.customerEmail };
+    }
+    Paddle.Checkout.open(openOptions);
     return { transactionId };
   },
 };

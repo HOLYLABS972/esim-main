@@ -5,10 +5,17 @@ import Link from 'next/link';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 
 export default function FAQ() {
-  const [openIndex, setOpenIndex] = useState(null);
+  const [openIndices, setOpenIndices] = useState(() =>
+    new Set(faqs.flatMap((cat, ci) => cat.questions.map((_, qi) => `${ci}-${qi}`)))
+  );
 
   const toggleFAQ = (index) => {
-    setOpenIndex(openIndex === index ? null : index);
+    setOpenIndices((prev) => {
+      const next = new Set(prev);
+      if (next.has(index)) next.delete(index);
+      else next.add(index);
+      return next;
+    });
   };
 
   const faqs = [
@@ -182,7 +189,7 @@ export default function FAQ() {
               <div className="space-y-4">
                 {category.questions.map((faq, faqIndex) => {
                   const index = `${categoryIndex}-${faqIndex}`;
-                  const isOpen = openIndex === index;
+                  const isOpen = openIndices.has(index);
                   
                   return (
                     <div

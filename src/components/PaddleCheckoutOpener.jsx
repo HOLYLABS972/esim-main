@@ -21,7 +21,14 @@ export default function PaddleCheckoutOpener() {
     const openCheckout = () => {
       if (typeof window === 'undefined' || !window.Paddle) return;
       openedRef.current = true;
-      window.Paddle.Checkout.open({ transactionId: txnId });
+      let customerEmail = null;
+      try {
+        customerEmail = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('paddle_customer_email') : null;
+        if (customerEmail) sessionStorage.removeItem('paddle_customer_email');
+      } catch (_) {}
+      const options = { transactionId: txnId };
+      if (customerEmail) options.customer = { email: customerEmail };
+      window.Paddle.Checkout.open(options);
     };
 
     if (window.Paddle) {
