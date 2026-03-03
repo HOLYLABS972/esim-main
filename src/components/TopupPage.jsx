@@ -491,6 +491,16 @@ const TopupPage = ({ iccid, countryCode: urlCountryCode }) => {
   };
 
   const handlePurchase = async (paymentMethod = 'stripe') => {
+    // Require auth: redirect to login instead of using guest email
+    if (!currentUser) {
+      const returnUrl = typeof window !== 'undefined'
+        ? encodeURIComponent(window.location.pathname + window.location.search)
+        : encodeURIComponent(`/topup/${iccid || ''}`);
+      router.push(`/login?returnUrl=${returnUrl}`);
+      toast.error('Please sign in to continue with your purchase');
+      return;
+    }
+
     if (!acceptedRefund) {
       toast.error('Please accept the refund policy to continue');
       return;
@@ -526,7 +536,7 @@ const TopupPage = ({ iccid, countryCode: urlCountryCode }) => {
         orderId: topupOrderId,
         planId: airaloPackageId, // Use real Airalo package slug
         planName: selectedPackage.name,
-        customerEmail: orderInfo?.customerEmail || currentUser?.email || 'customer@example.com',
+        customerEmail: orderInfo?.customerEmail || currentUser?.email,
         amount: finalPrice,
         currency: 'usd',
         type: 'topup', // Mark as topup

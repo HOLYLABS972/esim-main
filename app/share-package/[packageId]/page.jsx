@@ -398,7 +398,16 @@ const SharePackagePage = () => {
   }, []);
 
   const handlePurchase = async (paymentMethod = 'stripe') => {
-    // Allow non-authenticated users to purchase
+    // Require auth: redirect to login instead of asking for email
+    if (!currentUser) {
+      const returnUrl = typeof window !== 'undefined'
+        ? encodeURIComponent(window.location.pathname + window.location.search)
+        : encodeURIComponent(`/share-package/${packageId}`);
+      router.push(`/login?returnUrl=${returnUrl}`);
+      toast.error('Please sign in to continue with your purchase');
+      return;
+    }
+
     if (!acceptedRefund) {
       toast.error('Please accept the refund policy to continue');
       return;
@@ -416,26 +425,10 @@ const SharePackagePage = () => {
       return;
     }
 
-    // Get email from URL params, currentUser, or prompt
-    let customerEmail = searchParams.get('email') || currentUser?.email;
-    
-    // If no email, prompt user
-    if (!customerEmail) {
-      const emailInput = prompt('Please enter your email address to receive your eSIM:');
-      if (!emailInput) {
-        toast.error('Email is required to complete purchase');
-        return;
-      }
-      // Basic email validation
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(emailInput)) {
-        toast.error('Please enter a valid email address');
-        return;
-      }
-      customerEmail = emailInput;
-    }
+    const customerEmail = currentUser.email;
 
     setSelectedPaymentMethod(paymentMethod);
+    setIsProcessing(true);
     setIsProcessing(true);
     
     // Calculate discounted price
@@ -498,7 +491,7 @@ const SharePackagePage = () => {
         currency: 'usd',
         originalAmount: originalPrice, // Include original amount for reference
         userId: currentUser?.uid || null, // null for guest users
-        isGuest: !currentUser, // Flag to indicate guest purchase
+        isGuest: false, // Auth required
         affiliateRef: affiliateRef || null // Affiliate tracking
       };
       
@@ -512,7 +505,7 @@ const SharePackagePage = () => {
         amount: finalPrice,
         currency: 'usd',
         paymentMethod: paymentMethod,
-        isGuest: !currentUser,
+        isGuest: false,
         affiliateRef: affiliateRef || null
       };
       
