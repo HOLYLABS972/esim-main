@@ -427,14 +427,24 @@ const PaymentSuccess = () => {
       if (transactionId && !cancel) {
         console.log('💰 Processing Paddle payment success');
         try {
-          const res = await fetch(`/api/paddle/transaction?txn=${encodeURIComponent(transactionId)}`);
-          if (!res.ok) {
-            const err = await res.json().catch(() => ({}));
-            throw new Error(err.error || 'Failed to load transaction');
+          const fetchTransaction = () =>
+            fetch(`/api/paddle/transaction?txn=${encodeURIComponent(transactionId)}`).then((r) =>
+              r.ok ? r.json() : r.json().then((e) => Promise.reject(new Error(e.error || 'Failed to load transaction')))
+            );
+          let data = await fetchTransaction();
+          const maxAttempts = 5;
+          const delayMs = 2000;
+          for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+            if (data.status === 'completed' && data.customData?.orderId) break;
+            if (attempt < maxAttempts) {
+              console.log(`⏳ Transaction not completed yet (attempt ${attempt}/${maxAttempts}), retrying in ${delayMs / 1000}s...`);
+              await new Promise((r) => setTimeout(r, delayMs));
+              data = await fetchTransaction();
+            }
           }
-          const { status, customData, totalAmount, quantity: paddleQuantity } = await res.json();
+          const { status, customData, totalAmount, quantity: paddleQuantity } = data;
           if (status !== 'completed' || !customData?.orderId) {
-            setError('Payment not completed or order data missing.');
+            setError('Payment not completed or order data missing. If you were charged, please contact support with your transaction ID.');
             setProcessing(false);
             return;
           }
