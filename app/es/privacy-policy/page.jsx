@@ -80,7 +80,7 @@ export default function PrivacyPolicyEs() {
                 Mantenemos esta información y la usamos para operar el servicio, facturación y propósitos internos. <strong>Dicha información NO se transfiere a ningún tercero</strong> excepto para fines de procesamiento de pagos a través de pasarelas de pago seguras.
               </p>
               <p>
-                Si tiene alguna pregunta sobre la información que almacenamos o sobre cualquier problema de privacidad, no dude en contactar a nuestro equipo por correo electrónico: <a href="mailto:support@roamjet.net" className="text-blue-600 hover:underline">support@roamjet.net</a>
+                Si tiene alguna pregunta sobre la información que almacenamos o sobre cualquier problema de privacidad, no dude en contactar a nuestro equipo por correo electrónico: <a href="mailto:info@roamjet.net" className="text-blue-600 hover:underline">info@roamjet.net</a>
               </p>
             </div>
           </section>
@@ -99,7 +99,7 @@ export default function PrivacyPolicyEs() {
                 <li><strong>Derecho a restringir el procesamiento:</strong> Tiene derecho a solicitar que restrinjamos el procesamiento de sus datos personales, bajo ciertas condiciones.</li>
               </ul>
               <p>
-                Para ejercer cualquiera de estos derechos, contáctenos en <a href="mailto:support@roamjet.net" className="text-blue-600 hover:underline">support@roamjet.net</a>. Responderemos a su solicitud dentro de 30 días.
+                Para ejercer cualquiera de estos derechos, contáctenos en <a href="mailto:info@roamjet.net" className="text-blue-600 hover:underline">info@roamjet.net</a>. Responderemos a su solicitud dentro de 30 días.
               </p>
             </div>
           </section>
@@ -112,7 +112,7 @@ export default function PrivacyPolicyEs() {
                 Si tiene alguna pregunta sobre esta Política de Privacidad o nuestras prácticas, contáctenos:
               </p>
               <p>
-                Correo electrónico: <a href="mailto:support@roamjet.net" className="text-blue-600 hover:underline">support@roamjet.net</a>
+                Correo electrónico: <a href="mailto:info@roamjet.net" className="text-blue-600 hover:underline">info@roamjet.net</a>
               </p>
             </div>
           </section>

@@ -86,7 +86,7 @@ export default function PrivacyPolicy() {
                 We are keeping this information and use this information for operating the service, billing and internal purposes. <strong>Such information is NOT transferred to any 3rd party</strong> except for payment processing purposes through secure payment gateways.
               </p>
               <p>
-                Should you have any question regarding the information we stored or regarding any privacy issue, do not hesitate to contact our team by email: <a href="mailto:support@roamjet.net" className="text-blue-600 hover:underline">support@roamjet.net</a>
+                Should you have any question regarding the information we stored or regarding any privacy issue, do not hesitate to contact our team by email: <a href="mailto:info@roamjet.net" className="text-blue-600 hover:underline">info@roamjet.net</a>
               </p>
             </div>
           </section>
@@ -184,7 +184,7 @@ export default function PrivacyPolicy() {
                 You are able to delete certain Personal Information we have about you. The Personal Information you can delete may change as the Mobile Application, Website and Services change. When you delete Personal Information, however, we may maintain a copy of the unrevised Personal Information in our records for the duration necessary to comply with our obligations to our affiliates and partners, and for the purposes described below.
               </p>
               <p>
-                If you would like to delete your Personal Information or permanently delete your account, you can do so on the settings page of your account in the Mobile Application or Website, or simply by contacting us at <a href="mailto:support@roamjet.net" className="text-blue-600 hover:underline">support@roamjet.net</a>.
+                If you would like to delete your Personal Information or permanently delete your account, you can do so on the settings page of your account in the Mobile Application or Website, or simply by contacting us at <a href="mailto:info@roamjet.net" className="text-blue-600 hover:underline">info@roamjet.net</a>.
               </p>
             </div>
           </section>
@@ -330,7 +330,7 @@ export default function PrivacyPolicy() {
                 <li><strong>Right to data portability:</strong> You have the right to request that we transfer the data that we have collected to another organization, or directly to you, under certain conditions.</li>
               </ul>
               <p>
-                To exercise any of these rights, please contact us at <a href="mailto:support@roamjet.net" className="text-blue-600 hover:underline">support@roamjet.net</a>. We will respond to your request within 30 days.
+                To exercise any of these rights, please contact us at <a href="mailto:info@roamjet.net" className="text-blue-600 hover:underline">info@roamjet.net</a>. We will respond to your request within 30 days.
               </p>
             </div>
           </section>

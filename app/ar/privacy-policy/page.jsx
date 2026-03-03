@@ -83,7 +83,7 @@ export default function PrivacyPolicyAr() {
                 نحتفظ بهذه المعلومات ونستخدمها لتشغيل الخدمة والفواتير والأغراض الداخلية. <strong>لا يتم نقل هذه المعلومات إلى أي طرف ثالث</strong> باستثناء أغراض معالجة الدفع من خلال بوابات دفع آمنة.
               </p>
               <p>
-                إذا كان لديك أي سؤال بخصوص المعلومات التي قمنا بتخزينها أو بخصوص أي مسألة تتعلق بالخصوصية، لا تتردد في الاتصال بفريقنا عبر البريد الإلكتروني: <a href="mailto:support@roamjet.net" className="text-blue-600 hover:underline">support@roamjet.net</a>
+                إذا كان لديك أي سؤال بخصوص المعلومات التي قمنا بتخزينها أو بخصوص أي مسألة تتعلق بالخصوصية، لا تتردد في الاتصال بفريقنا عبر البريد الإلكتروني: <a href="mailto:info@roamjet.net" className="text-blue-600 hover:underline">info@roamjet.net</a>
               </p>
             </div>
           </section>
@@ -102,7 +102,7 @@ export default function PrivacyPolicyAr() {
                 <li><strong>الحق في تقييد المعالجة:</strong> لديك الحق في طلب تقييد معالجة بياناتك الشخصية، في ظل ظروف معينة.</li>
               </ul>
               <p>
-                لممارسة أي من هذه الحقوق، يرجى الاتصال بنا على <a href="mailto:support@roamjet.net" className="text-blue-600 hover:underline">support@roamjet.net</a>. سنرد على طلبك في غضون 30 يومًا.
+                لممارسة أي من هذه الحقوق، يرجى الاتصال بنا على <a href="mailto:info@roamjet.net" className="text-blue-600 hover:underline">info@roamjet.net</a>. سنرد على طلبك في غضون 30 يومًا.
               </p>
             </div>
           </section>
@@ -115,7 +115,7 @@ export default function PrivacyPolicyAr() {
                 إذا كانت لديك أي أسئلة حول سياسة الخصوصية هذه أو ممارساتنا، يرجى الاتصال بنا:
               </p>
               <p>
-                البريد الإلكتروني: <a href="mailto:support@roamjet.net" className="text-blue-600 hover:underline">support@roamjet.net</a>
+                البريد الإلكتروني: <a href="mailto:info@roamjet.net" className="text-blue-600 hover:underline">info@roamjet.net</a>
               </p>
             </div>
           </section>

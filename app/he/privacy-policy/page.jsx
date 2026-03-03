@@ -86,7 +86,7 @@ export default function PrivacyPolicyHe() {
                 אנו שומרים מידע זה ומשתמשים בו להפעלת השירות, חיוב ומטרות פנימיות. <strong>מידע כזה לא מועבר לצד שלישי</strong> למעט למטרות עיבוד תשלומים דרך שערי תשלום מאובטחים.
               </p>
               <p>
-                אם יש לך שאלה כלשהי לגבי המידע שאנו שמרנו או לגבי כל נושא פרטיות, אל תהסס ליצור קשר עם הצוות שלנו בדוא"ל: <a href="mailto:support@roamjet.net" className="text-blue-600 hover:underline">support@roamjet.net</a>
+                אם יש לך שאלה כלשהי לגבי המידע שאנו שמרנו או לגבי כל נושא פרטיות, אל תהסס ליצור קשר עם הצוות שלנו בדוא"ל: <a href="mailto:info@roamjet.net" className="text-blue-600 hover:underline">info@roamjet.net</a>
               </p>
             </div>
           </section>
@@ -184,7 +184,7 @@ export default function PrivacyPolicyHe() {
                 אתה מסוגל למחוק מידע אישי מסוים שיש לנו עליך. המידע האישי שאתה יכול למחוק עשוי להשתנות ככל שהאפליקציה הניידת, האתר והשירותים משתנים. כאשר אתה מוחק מידע אישי, עם זאת, אנו עשויים לשמור עותק של המידע האישי שלא תוקן ברשומות שלנו למשך הזמן הדרוש לעמידה בחובותינו כלפי השותפים והשותפים שלנו, ולמטרות המתוארות להלן.
               </p>
               <p>
-                אם תרצה למחוק את המידע האישי שלך או למחוק לצמיתות את חשבונך, תוכל לעשות זאת בדף ההגדרות של חשבונך באפליקציה הניידת או באתר, או פשוט על ידי יצירת קשר איתנו בכתובת <a href="mailto:support@roamjet.net" className="text-blue-600 hover:underline">support@roamjet.net</a>.
+                אם תרצה למחוק את המידע האישי שלך או למחוק לצמיתות את חשבונך, תוכל לעשות זאת בדף ההגדרות של חשבונך באפליקציה הניידת או באתר, או פשוט על ידי יצירת קשר איתנו בכתובת <a href="mailto:info@roamjet.net" className="text-blue-600 hover:underline">info@roamjet.net</a>.
               </p>
             </div>
           </section>
@@ -330,7 +330,7 @@ export default function PrivacyPolicyHe() {
                 <li><strong>זכות לניידות נתונים:</strong> יש לך את הזכות לבקש שנעביר את הנתונים שאספנו לארגון אחר, או ישירות אליך, בתנאים מסוימים.</li>
               </ul>
               <p>
-                כדי לממש כל אחת מזכויות אלה, אנא צור איתנו קשר בכתובת <a href="mailto:support@roamjet.net" className="text-blue-600 hover:underline">support@roamjet.net</a>. נגיב לבקשתך תוך 30 יום.
+                כדי לממש כל אחת מזכויות אלה, אנא צור איתנו קשר בכתובת <a href="mailto:info@roamjet.net" className="text-blue-600 hover:underline">info@roamjet.net</a>. נגיב לבקשתך תוך 30 יום.
               </p>
             </div>
           </section>

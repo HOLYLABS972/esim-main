@@ -80,7 +80,7 @@ export default function PrivacyPolicyDe() {
                 Wir bewahren diese Informationen auf und verwenden sie für den Betrieb des Dienstes, die Abrechnung und interne Zwecke. <strong>Solche Informationen werden NICHT an Dritte weitergegeben</strong>, außer für Zahlungsabwicklungszwecke über sichere Zahlungsgateways.
               </p>
               <p>
-                Sollten Sie Fragen zu den von uns gespeicherten Informationen oder zu Datenschutzfragen haben, zögern Sie nicht, unser Team per E-Mail zu kontaktieren: <a href="mailto:support@roamjet.net" className="text-blue-600 hover:underline">support@roamjet.net</a>
+                Sollten Sie Fragen zu den von uns gespeicherten Informationen oder zu Datenschutzfragen haben, zögern Sie nicht, unser Team per E-Mail zu kontaktieren: <a href="mailto:info@roamjet.net" className="text-blue-600 hover:underline">info@roamjet.net</a>
               </p>
             </div>
           </section>
@@ -99,7 +99,7 @@ export default function PrivacyPolicyDe() {
                 <li><strong>Recht auf Einschränkung der Verarbeitung:</strong> Sie haben das Recht zu verlangen, dass wir die Verarbeitung Ihrer persönlichen Daten einschränken, unter bestimmten Bedingungen.</li>
               </ul>
               <p>
-                Um eines dieser Rechte auszuüben, kontaktieren Sie uns bitte unter <a href="mailto:support@roamjet.net" className="text-blue-600 hover:underline">support@roamjet.net</a>. Wir werden innerhalb von 30 Tagen auf Ihre Anfrage antworten.
+                Um eines dieser Rechte auszuüben, kontaktieren Sie uns bitte unter <a href="mailto:info@roamjet.net" className="text-blue-600 hover:underline">info@roamjet.net</a>. Wir werden innerhalb von 30 Tagen auf Ihre Anfrage antworten.
               </p>
             </div>
           </section>
@@ -112,7 +112,7 @@ export default function PrivacyPolicyDe() {
                 Wenn Sie Fragen zu dieser Datenschutzrichtlinie oder unseren Praktiken haben, kontaktieren Sie uns bitte:
               </p>
               <p>
-                E-Mail: <a href="mailto:support@roamjet.net" className="text-blue-600 hover:underline">support@roamjet.net</a>
+                E-Mail: <a href="mailto:info@roamjet.net" className="text-blue-600 hover:underline">info@roamjet.net</a>
               </p>
             </div>
           </section>
