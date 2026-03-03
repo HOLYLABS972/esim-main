@@ -5,14 +5,25 @@ import { coinbaseService } from '../services/coinbaseService';
 import { useAuth } from '../contexts/AuthContext';
 import { AlertCircle, Coins, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 
 const Checkout = ({ plan }) => {
-  const { currentUser } = useAuth();
+  const { currentUser, loading } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [error, setError] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [coinbaseAvailable, setCoinbaseAvailable] = useState(false);
+
+  // Redirect to login with returnUrl so after login user comes back to checkout
+  useEffect(() => {
+    if (loading) return;
+    if (currentUser) return;
+    const query = searchParams.toString();
+    const returnPath = query ? `${pathname}?${query}` : pathname;
+    router.replace(`/login?returnUrl=${encodeURIComponent(returnPath)}`);
+  }, [currentUser, loading, router, pathname, searchParams]);
 
   useEffect(() => {
     const init = async () => {
@@ -71,6 +82,15 @@ const Checkout = ({ plan }) => {
       <div className="text-center py-8">
         <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
         <p className="text-gray-600">No plan selected for checkout</p>
+      </div>
+    );
+  }
+
+  if (!loading && !currentUser) {
+    return (
+      <div className="text-center py-8">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-4" />
+        <p className="text-gray-600">Redirecting to login...</p>
       </div>
     );
   }
