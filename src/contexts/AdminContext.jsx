@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { useAuth } from './AuthContext';
 import { adminService, ADMIN_ROLES, ADMIN_PERMISSIONS } from '../services/adminService';
 
@@ -20,17 +20,22 @@ export const AdminProvider = ({ children }) => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [permissions, setPermissions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const loadingForUidRef = useRef(null);
 
   useEffect(() => {
-    const loadUserRole = async () => {
-      if (!currentUser) {
-        setUserRole(ADMIN_ROLES.USER);
-        setIsAdmin(false);
-        setPermissions([]);
-        setLoading(false);
-        return;
-      }
+    const uid = currentUser?.uid ?? null;
+    if (!uid) {
+      loadingForUidRef.current = null;
+      setUserRole(ADMIN_ROLES.USER);
+      setIsAdmin(false);
+      setPermissions([]);
+      setLoading(false);
+      return;
+    }
+    if (loadingForUidRef.current === uid) return;
+    loadingForUidRef.current = uid;
 
+    const loadUserRole = async () => {
       try {
         setLoading(true);
         if (typeof adminService?.getUserRole !== 'function') {
@@ -38,20 +43,27 @@ export const AdminProvider = ({ children }) => {
           setIsAdmin(false);
           setPermissions([]);
           setLoading(false);
+          loadingForUidRef.current = null;
           return;
         }
-        const role = await adminService.getUserRole(currentUser.uid);
+        const role = await adminService.getUserRole(uid);
+        if (loadingForUidRef.current !== uid) return;
         setUserRole(role);
         setIsAdmin(role !== ADMIN_ROLES.USER);
         const userPermissions = ADMIN_PERMISSIONS[role] || [];
         setPermissions(userPermissions);
       } catch (error) {
         console.error('Error loading user role:', error);
-        setUserRole(ADMIN_ROLES.USER);
-        setIsAdmin(false);
-        setPermissions([]);
+        if (loadingForUidRef.current === uid) {
+          setUserRole(ADMIN_ROLES.USER);
+          setIsAdmin(false);
+          setPermissions([]);
+        }
       } finally {
-        setLoading(false);
+        if (loadingForUidRef.current === uid) {
+          setLoading(false);
+        }
+        loadingForUidRef.current = null;
       }
     };
 
@@ -73,6 +85,7 @@ export const AdminProvider = ({ children }) => {
     if (!currentUser) return;
     try {
       if (typeof adminService?.getUserRole !== 'function') return;
+      adminService.invalidateUserRoleCache?.(currentUser.uid);
       const role = await adminService.getUserRole(currentUser.uid);
       setUserRole(role);
       setIsAdmin(role !== ADMIN_ROLES.USER);

@@ -5,4 +5,7 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOi
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
+/** Client used only for public catalog (plans, countries). Never gets user session, so RLS that allows anon read keeps working when user is logged in. */
+export const catalogSupabase = createClient(supabaseUrl, supabaseAnonKey);
+
 export const SUPABASE_EDGE_FUNCTION_URL = `${supabaseUrl}/functions/v1`;

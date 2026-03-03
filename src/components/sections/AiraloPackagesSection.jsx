@@ -9,6 +9,7 @@ import { translateCountries } from '../../utils/countryTranslations';
 import { useI18n } from '../../contexts/I18nContext';
 
 import { supabase } from '../../supabase/config';
+import { catalogSupabase } from '../../supabase/config';
 
 // Tier definitions for grouping plans
 const DATA_TIERS = [
@@ -147,7 +148,7 @@ export default function AiraloPackagesSection() {
       setLoading(true);
       setError(null);
 
-      const { data: plansData, error: plansErr } = await supabase
+      const { data: plansData, error: plansErr } = await catalogSupabase
         .from('dataplans')
         .select('*')
         .eq('status', 'active')
@@ -224,7 +225,7 @@ export default function AiraloPackagesSection() {
 
   const handleCountrySelect = async (country) => {
     try {
-      const { data: plansResult } = await supabase
+      const { data: plansResult } = await catalogSupabase
         .from('dataplans')
         .select('*')
         .contains('country_codes', [country.code])
@@ -449,9 +450,10 @@ export default function AiraloPackagesSection() {
                 <div className="space-y-2">
                   {filteredCountries.map((country) => (
                     <button
+                      type="button"
                       key={country.id || country.code}
                       onClick={() => handleCountrySelect(country)}
-                      className="w-full px-6 py-4 bg-transparent rounded-lg shadow-sm hover:shadow-md border border-gray-100 hover:border-tufts-blue/20 transition-all duration-200 flex items-center justify-between"
+                      className="w-full px-6 py-4 bg-transparent rounded-lg shadow-sm hover:shadow-md border border-gray-100 hover:border-tufts-blue/20 transition-all duration-200 flex items-center justify-between cursor-pointer"
                     >
                       <div className="flex items-center space-x-4">
                         <div className="flex-shrink-0">

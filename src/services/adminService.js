@@ -13,29 +13,54 @@ export const ADMIN_PERMISSIONS = {
   [ADMIN_ROLES.SUPER_ADMIN]: ['manage_admins','manage_users','manage_plans','manage_countries','manage_orders','view_analytics','manage_settings','manage_blog','manage_newsletter','manage_contact_requests','manage_billing','manage_api_keys'],
 };
 
-/** Fetch user role from user_profiles. Returns ADMIN_ROLES.USER if not found or on error. */
+const ROLE_CACHE_MS = 5 * 60 * 1000; // 5 minutes
+const roleCache = new Map();
+const inFlight = new Map();
+
+/** Fetch user role from user_profiles. Returns ADMIN_ROLES.USER if not found or on error. Coalesces and caches to avoid duplicate requests. */
 export async function getUserRole(userId) {
   if (!userId) return ADMIN_ROLES.USER;
-  try {
-    const { data, error } = await supabase
-      .from('user_profiles')
-      .select('role')
-      .eq('id', userId)
-      .maybeSingle();
-    if (error) {
-      console.warn('adminService.getUserRole error:', error.message);
+
+  const cached = roleCache.get(userId);
+  if (cached && Date.now() - cached.ts < ROLE_CACHE_MS) return cached.role;
+
+  let promise = inFlight.get(userId);
+  if (promise) return promise;
+
+  promise = (async () => {
+    try {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('role')
+        .eq('id', userId)
+        .maybeSingle();
+      if (error) {
+        console.warn('adminService.getUserRole error:', error.message);
+        return ADMIN_ROLES.USER;
+      }
+      const role = data?.role === 'admin' || data?.role === 'super_admin' ? data.role : ADMIN_ROLES.USER;
+      roleCache.set(userId, { role, ts: Date.now() });
+      return role;
+    } catch (e) {
+      console.warn('adminService.getUserRole exception:', e);
       return ADMIN_ROLES.USER;
+    } finally {
+      inFlight.delete(userId);
     }
-    const role = data?.role;
-    if (role === 'admin' || role === 'super_admin') return role;
-    return ADMIN_ROLES.USER;
-  } catch (e) {
-    console.warn('adminService.getUserRole exception:', e);
-    return ADMIN_ROLES.USER;
+  })();
+
+  inFlight.set(userId, promise);
+  return promise;
+}
+
+export function invalidateUserRoleCache(userId) {
+  if (userId) {
+    roleCache.delete(userId);
+    inFlight.delete(userId);
   }
 }
 
-export const adminService = { getUserRole };
+export const adminService = { getUserRole, invalidateUserRoleCache };
 
 export function hasAdminAccess(userProfile) {
   if (!userProfile) return false;

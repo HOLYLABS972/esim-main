@@ -1,12 +1,12 @@
-import { supabase } from '../supabase/config';
+import { catalogSupabase } from '../supabase/config';
 import { getFlagEmoji } from '../utils/countryFlags';
 
-// Get all plans from Supabase (only enabled and visible plans)
+// Get all plans from Supabase (only enabled and visible plans). Uses catalog client so logged-in users can still see plans.
 export const getAllPlans = async () => {
   try {
-    if (!supabase) return [];
+    if (!catalogSupabase) return [];
 
-    const { data, error } = await supabase
+    const { data, error } = await catalogSupabase
       .from('dataplans')
       .select('*')
       .eq('enabled', true)
@@ -27,9 +27,9 @@ export const getAllPlans = async () => {
 // Get plans count
 export const getPlansCount = async () => {
   try {
-    if (!supabase) return 0;
+    if (!catalogSupabase) return 0;
 
-    const { count, error } = await supabase
+    const { count, error } = await catalogSupabase
       .from('dataplans')
       .select('*', { count: 'exact', head: true });
 
@@ -41,13 +41,13 @@ export const getPlansCount = async () => {
   }
 };
 
-// Get countries with real pricing from Supabase
+// Get countries with real pricing from Supabase. Uses catalog client so logged-in users can still see and select countries.
 export const getCountriesWithPricing = async () => {
   try {
-    if (!supabase) return [];
+    if (!catalogSupabase) return [];
 
     // Get all visible countries
-    const { data: countries, error: cErr } = await supabase
+    const { data: countries, error: cErr } = await catalogSupabase
       .from('countries')
       .select('*')
       .eq('hidden', false);
