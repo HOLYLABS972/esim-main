@@ -1,9 +1,13 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { supabase } from '../supabase/config';
 
 const AuthContext = createContext();
+
+const PROFILE_CACHE_MS = 2 * 60 * 1000; // 2 minutes
+const profileCache = new Map();
+const profileInFlight = new Map();
 
 export function useAuth() {
   return useContext(AuthContext);
@@ -91,6 +95,7 @@ export function AuthProvider({ children }) {
         .upsert({ id: currentUser.id, ...updates, updated_at: new Date().toISOString() });
       if (error) throw error;
       setUserProfile(prev => ({ ...prev, ...updates }));
+      profileCache.delete(currentUser.id);
     } catch (error) {
       throw error;
     }
@@ -98,50 +103,82 @@ export function AuthProvider({ children }) {
 
   const loadUserProfile = useCallback(async (user) => {
     const targetUser = user || currentUser;
-    if (!targetUser) return;
+    if (!targetUser?.id) return;
 
-    try {
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .select('*')
-        .eq('id', targetUser.id)
-        .single();
+    const userId = targetUser.id;
 
-      if (data) {
-        setUserProfile(data);
-      } else if (error?.code === 'PGRST116') {
-        // Profile doesn't exist yet — create it
-        const newProfile = {
-          id: targetUser.id,
-          email: targetUser.email,
-          display_name: targetUser.user_metadata?.display_name || targetUser.user_metadata?.full_name || '',
-          role: 'customer',
-          email_verified: !!targetUser.email_confirmed_at,
-          created_at: new Date().toISOString(),
-        };
-        await supabase.from('user_profiles').upsert(newProfile);
-        setUserProfile(newProfile);
-      }
-    } catch (error) {
-      console.error('Error loading user profile:', error);
+    const cached = profileCache.get(userId);
+    if (cached && Date.now() - cached.ts < PROFILE_CACHE_MS) {
+      setUserProfile(cached.profile);
+      return;
     }
+
+    let promise = profileInFlight.get(userId);
+    if (promise) {
+      const profile = await promise;
+      if (profile) setUserProfile(profile);
+      return;
+    }
+
+    promise = (async () => {
+      try {
+        const { data, error } = await supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('id', userId)
+          .maybeSingle();
+
+        if (data) {
+          profileCache.set(userId, { profile: data, ts: Date.now() });
+          return data;
+        }
+        if (error?.code === 'PGRST116') {
+          const newProfile = {
+            id: userId,
+            email: targetUser.email,
+            display_name: targetUser.user_metadata?.display_name || targetUser.user_metadata?.full_name || '',
+            role: 'customer',
+            email_verified: !!targetUser.email_confirmed_at,
+            created_at: new Date().toISOString(),
+          };
+          await supabase.from('user_profiles').upsert(newProfile);
+          profileCache.set(userId, { profile: newProfile, ts: Date.now() });
+          return newProfile;
+        }
+        return null;
+      } catch (err) {
+        console.error('Error loading user profile:', err);
+        return null;
+      } finally {
+        profileInFlight.delete(userId);
+      }
+    })();
+
+    profileInFlight.set(userId, promise);
+    const profile = await promise;
+    if (profile) setUserProfile(profile);
   }, [currentUser]);
 
+  const loadUserProfileRef = useRef(loadUserProfile);
+  loadUserProfileRef.current = loadUserProfile;
+
   useEffect(() => {
-    // Get initial session
+    let mounted = true;
+
     supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted) return;
       const user = session?.user || null;
       setCurrentUser(user ? {
         ...user,
         uid: user.id, // compatibility with Firebase-style uid
         displayName: user.user_metadata?.display_name || user.user_metadata?.full_name || user.email,
       } : null);
-      if (user) loadUserProfile(user);
+      if (user) loadUserProfileRef.current(user);
       setLoading(false);
     });
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!mounted) return;
       const user = session?.user || null;
       setCurrentUser(user ? {
         ...user,
@@ -149,15 +186,18 @@ export function AuthProvider({ children }) {
         displayName: user.user_metadata?.display_name || user.user_metadata?.full_name || user.email,
       } : null);
       if (user) {
-        loadUserProfile(user);
+        loadUserProfileRef.current(user);
       } else {
         setUserProfile(null);
       }
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
-  }, [loadUserProfile]);
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, []); // Single subscription; loadUserProfile called via ref to avoid re-running effect
 
   const getUserType = () => {
     if (!userProfile) return null;

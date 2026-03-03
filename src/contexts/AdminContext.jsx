@@ -15,7 +15,7 @@ export const useAdmin = () => {
 };
 
 export const AdminProvider = ({ children }) => {
-  const { currentUser } = useAuth();
+  const { currentUser, userProfile: authUserProfile } = useAuth();
   const [userRole, setUserRole] = useState(ADMIN_ROLES.USER);
   const [isAdmin, setIsAdmin] = useState(false);
   const [permissions, setPermissions] = useState([]);
@@ -32,6 +32,18 @@ export const AdminProvider = ({ children }) => {
       setLoading(false);
       return;
     }
+
+    const roleFromAuth = authUserProfile?.role;
+    if (roleFromAuth === 'admin' || roleFromAuth === 'super_admin' || roleFromAuth === 'customer') {
+      loadingForUidRef.current = uid;
+      const role = roleFromAuth === 'admin' || roleFromAuth === 'super_admin' ? roleFromAuth : ADMIN_ROLES.USER;
+      setUserRole(role);
+      setIsAdmin(role !== ADMIN_ROLES.USER);
+      setPermissions(ADMIN_PERMISSIONS[role] || []);
+      setLoading(false);
+      return;
+    }
+
     if (loadingForUidRef.current === uid) return;
     loadingForUidRef.current = uid;
 
@@ -68,7 +80,7 @@ export const AdminProvider = ({ children }) => {
     };
 
     loadUserRole();
-  }, [currentUser?.uid]);
+  }, [currentUser?.uid, authUserProfile?.role]);
 
   const hasPermission = (permission) => permissions.includes(permission);
   const canManageAdmins = () => hasPermission('manage_admins');
