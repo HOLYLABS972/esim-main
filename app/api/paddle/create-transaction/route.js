@@ -89,7 +89,7 @@ export async function POST(request) {
             error: 'Paddle checkout is not fully configured. Please set a Default Payment Link in your Paddle Dashboard: Checkout → Checkout settings → Default payment link.',
             code: 'transaction_default_checkout_url_not_set',
           },
-          { status: 502 }
+          { status: 503 }
         );
       }
       console.error('Paddle create transaction error:', res.status, errText);
