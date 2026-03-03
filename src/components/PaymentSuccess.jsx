@@ -431,15 +431,24 @@ const PaymentSuccess = () => {
             fetch(`/api/paddle/transaction?txn=${encodeURIComponent(transactionId)}`).then((r) =>
               r.ok ? r.json() : r.json().then((e) => Promise.reject(new Error(e.error || 'Failed to load transaction')))
             );
-          let data = await fetchTransaction();
+          let data;
           const maxAttempts = 5;
           const delayMs = 2000;
           for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+            try {
+              data = await fetchTransaction();
+            } catch (fetchErr) {
+              if (attempt < maxAttempts) {
+                console.log(`⏳ Could not load transaction yet (attempt ${attempt}/${maxAttempts}), retrying in ${delayMs / 1000}s...`, fetchErr.message);
+                await new Promise((r) => setTimeout(r, delayMs));
+                continue;
+              }
+              throw fetchErr;
+            }
             if (data.status === 'completed' && data.customData?.orderId) break;
             if (attempt < maxAttempts) {
               console.log(`⏳ Transaction not completed yet (attempt ${attempt}/${maxAttempts}), retrying in ${delayMs / 1000}s...`);
               await new Promise((r) => setTimeout(r, delayMs));
-              data = await fetchTransaction();
             }
           }
           const { status, customData, totalAmount, quantity: paddleQuantity } = data;
