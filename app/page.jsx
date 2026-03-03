@@ -1,16 +1,23 @@
 'use client';
 
 import Script from 'next/script';
+import { Suspense } from 'react';
 import { 
   HeroSection,
   FeaturesSection,
   PlansSection,
   ActivationSection
 } from '../src/components/sections';
+import PaddleCheckoutOpener from '../src/components/PaddleCheckoutOpener';
 
 export default function HomePage() {
   return (
     <>
+      {/* Open Paddle checkout when default payment link is root (e.g. roamjet.net?_ptxn=...) */}
+      <Suspense fallback={null}>
+        <PaddleCheckoutOpener />
+      </Suspense>
+
       <div dir="ltr" lang="en">
         <main className="min-h-screen bg-white">
           {/* Hero Section */}
