@@ -11,7 +11,7 @@ import { detectLanguageFromPath } from '../utils/languageUtils';
 
 const Navbar = ({ hideLanguageSelector = false }) => {
   const { t, locale } = useI18n();
-  const { currentUser } = useAuth();
+  const { currentUser, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -129,14 +129,24 @@ const Navbar = ({ hideLanguageSelector = false }) => {
           <Link href="/blog" className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
             {t('navbar.blog', 'Blog')}
           </Link>
-          {currentUser && (
-            <Link href={getLocalizedUrl("/dashboard")} className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
-              {t('navbar.dashboard', 'Dashboard')}
+          {currentUser ? (
+            <>
+              <Link href={getLocalizedUrl("/dashboard")} className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
+                {t('navbar.dashboard', 'Dashboard')}
+              </Link>
+              <button
+                type="button"
+                onClick={() => logout()}
+                className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors bg-transparent border-none cursor-pointer"
+              >
+                {t('navbar.logout', 'Logout')}
+              </button>
+            </>
+          ) : (
+            <Link href={getLocalizedUrl("/login")} className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
+              {t('navbar.login', 'Login')}
             </Link>
           )}
-          <Link href={getLocalizedUrl("/login")} className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
-            {t('navbar.login', 'Login')}
-          </Link>
         </div>
         
         {/* Right side with language selector */}
@@ -205,22 +215,32 @@ const Navbar = ({ hideLanguageSelector = false }) => {
                   >
                     {t('navbar.blog', 'Blog')}
                   </Link>
-                  {currentUser && (
+                  {currentUser ? (
+                    <>
+                      <Link
+                        href={getLocalizedUrl("/dashboard")}
+                        className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        {t('navbar.dashboard', 'Dashboard')}
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => { logout(); setIsMenuOpen(false); }}
+                        className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2 w-full bg-transparent border-none cursor-pointer"
+                      >
+                        {t('navbar.logout', 'Logout')}
+                      </button>
+                    </>
+                  ) : (
                     <Link
-                      href={getLocalizedUrl("/dashboard")}
+                      href={getLocalizedUrl("/login")}
                       className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2"
                       onClick={() => setIsMenuOpen(false)}
                     >
-                      {t('navbar.dashboard', 'Dashboard')}
+                      {t('navbar.login', 'Login')}
                     </Link>
                   )}
-                  <Link
-                    href={getLocalizedUrl("/login")}
-                    className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    {t('navbar.login', 'Login')}
-                  </Link>
                 </div>
               </div>
             </div>

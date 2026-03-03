@@ -7,10 +7,12 @@ import { motion } from 'framer-motion';
 import { Mail, Facebook, Twitter, Instagram, Youtube } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { useI18n } from '../contexts/I18nContext';
+import { useAuth } from '../contexts/AuthContext';
 
 const Footer = () => {
   const pathname = usePathname();
   const { t } = useI18n();
+  const { currentUser } = useAuth();
   const currentYear = new Date().getFullYear();
   // Hardcoded contact information
   const contactInfo = {
@@ -83,6 +85,7 @@ const Footer = () => {
   const quickLinks = [
     { name: 'FAQ', path: `${langPrefix}/faq` },
     { name: getText('navbar.affiliate', 'Affiliate'), path: '/affiliate' },
+    ...(currentUser ? [{ name: getText('navbar.dashboard', 'Dashboard'), path: `${langPrefix}/dashboard` }] : []),
     { name: getText('navbar.login', 'Login'), path: `${langPrefix}/login` },
     { name: getText('navbar.blog', 'Blog'), path: '/blog' }
   ];
