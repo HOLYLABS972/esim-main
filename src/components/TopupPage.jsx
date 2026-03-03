@@ -20,6 +20,7 @@ import {
 import { apiService } from '../services/apiService';
 import { paymentService } from '../services/paymentService';
 import { coinbaseService } from '../services/coinbaseService';
+import { paddleService } from '../services/paddleService';
 import { getRegularSettings } from '../services/settingsService';
 import toast from 'react-hot-toast';
 
@@ -574,6 +575,8 @@ const TopupPage = ({ iccid, countryCode: urlCountryCode }) => {
       // Create payment link based on selected method - immediate redirect, no delays
       if (paymentMethod === 'coinbase') {
         await coinbaseService.createCheckoutSession(orderData);
+      } else if (paymentMethod === 'paddle') {
+        await paddleService.createCheckoutSession(orderData);
       } else {
         await paymentService.createCheckoutSession(orderData);
       }
@@ -775,13 +778,13 @@ const TopupPage = ({ iccid, countryCode: urlCountryCode }) => {
 
             {/* Payment Method Buttons */}
                   <div className="space-y-3 max-w-md mx-auto">
-                {/* Stripe Payment Button */}
+                {/* Paddle (Card) Payment Button */}
                 <button
-                      onClick={() => handlePurchase('stripe')}
+                      onClick={() => handlePurchase('paddle')}
                       disabled={!acceptedRefund || isProcessing}
                       className="w-full flex items-center justify-center space-x-3 py-4 px-6 rounded-xl transition-all duration-200 font-medium text-lg shadow-lg text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                      {isProcessing && selectedPaymentMethod === 'stripe' ? (
+                      {isProcessing && selectedPaymentMethod === 'paddle' ? (
                     <Loader2 className="w-6 h-6 animate-spin" />
                   ) : (
                     <CreditCard className="w-6 h-6" />

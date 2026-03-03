@@ -524,8 +524,13 @@ const SharePackagePage = () => {
       
       const isInIframe = window !== window.top;
 
-      const { coinbaseService } = await import('../../../src/services/coinbaseService');
-      await coinbaseService.createCheckoutSession(orderData);
+      if (paymentMethod === 'paddle') {
+        const { paddleService } = await import('../../../src/services/paddleService');
+        await paddleService.createCheckoutSession(orderData);
+      } else {
+        const { coinbaseService } = await import('../../../src/services/coinbaseService');
+        await coinbaseService.createCheckoutSession(orderData);
+      }
 
       // When inside an iframe, payment opens in a new tab so re-enable the button
       if (isInIframe) {
@@ -801,15 +806,31 @@ const SharePackagePage = () => {
                 </label>
               </div>
 
-              {/* Payment Button - Coinbase Only */}
+              {/* Payment Buttons - Paddle (Card) and Coinbase */}
               <div className="space-y-3">
                 <button
-                  onClick={() => handlePurchase('coinbase')}
+                  onClick={() => handlePurchase('paddle')}
                   disabled={!acceptedRefund || isProcessing}
                   className={`w-full flex items-center justify-center space-x-3 py-4 px-6 rounded-xl transition-all duration-200 font-medium text-lg shadow-lg text-white ${
                     isProcessing
                       ? 'bg-blue-700 ring-2 ring-blue-300'
                       : 'bg-blue-600 hover:bg-blue-700'
+                  } ${!acceptedRefund || isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  {isProcessing ? (
+                    <Loader2 className="w-6 h-6 animate-spin" />
+                  ) : (
+                    <DollarSign className="w-6 h-6" />
+                  )}
+                  <span>{t('sharePackage.purchaseNow', 'Purchase Now')} - Credit/Debit Card</span>
+                </button>
+                <button
+                  onClick={() => handlePurchase('coinbase')}
+                  disabled={!acceptedRefund || isProcessing}
+                  className={`w-full flex items-center justify-center space-x-3 py-4 px-6 rounded-xl transition-all duration-200 font-medium text-lg shadow-lg text-white ${
+                    isProcessing
+                      ? 'bg-gray-700 ring-2 ring-gray-300'
+                      : 'bg-black hover:bg-gray-900'
                   } ${!acceptedRefund || isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   {isProcessing ? (

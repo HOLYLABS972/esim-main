@@ -115,6 +115,25 @@ class ConfigService {
   async getStripePublishableKey() { return null; }
   async getStripeSecretKey() { return null; }
 
+  // Paddle configuration (uses NEXT_PUBLIC_PDL_API_KEY for client token / API key)
+  async getPaddleConfig() {
+    const config = await this.getConfig('paddle');
+    if (config?.client_token) {
+      return {
+        clientToken: config.client_token,
+        environment: config.environment || 'production',
+      };
+    }
+    const clientToken = process.env.NEXT_PUBLIC_PDL_API_KEY;
+    if (clientToken) {
+      return {
+        clientToken,
+        environment: process.env.NEXT_PUBLIC_PADDLE_ENV || 'production',
+      };
+    }
+    return { clientToken: null, environment: 'production' };
+  }
+
   // DataPlans environment
   async getDataPlansEnvironment() { return 'production'; }
 

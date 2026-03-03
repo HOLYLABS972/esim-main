@@ -3,6 +3,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider } from '../contexts/AuthContext'
 import { AdminProvider } from '../contexts/AdminContext'
+import PaddleProvider from './PaddleProvider'
 import { Toaster } from 'react-hot-toast'
 import { useState } from 'react'
 
@@ -21,8 +22,9 @@ export default function Providers({ children }) {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <AdminProvider>
-          {children}
-        <Toaster
+          <PaddleProvider>
+            {children}
+          <Toaster
           position="top-right"
           toastOptions={{
             duration: 4000,
@@ -32,6 +34,7 @@ export default function Providers({ children }) {
             },
           }}
         />
+          </PaddleProvider>
         </AdminProvider>
       </AuthProvider>
     </QueryClientProvider>

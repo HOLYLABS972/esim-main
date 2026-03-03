@@ -397,6 +397,8 @@ const PaymentSuccess = () => {
       const planId = searchParams.get('plan');
       const name = searchParams.get('name');
       const chargeId = searchParams.get('charge_id');
+      const transactionId = searchParams.get('transaction_id') || searchParams.get('_ptxn');
+      const cancel = searchParams.get('cancel');
       // Get affiliate ref from URL or fallback to localStorage
       let affiliateRef = searchParams.get('ref');
       if (!affiliateRef) {
@@ -416,8 +418,90 @@ const PaymentSuccess = () => {
         currency,
         paymentMethod,
         sessionId,
-        planId
+        planId,
+        transactionId,
+        cancel
       });
+
+      // Handle Paddle payment (transaction_id or _ptxn from redirect)
+      if (transactionId && !cancel) {
+        console.log('💰 Processing Paddle payment success');
+        try {
+          const res = await fetch(`/api/paddle/transaction?txn=${encodeURIComponent(transactionId)}`);
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.error || 'Failed to load transaction');
+          }
+          const { status, customData, totalAmount } = await res.json();
+          if (status !== 'completed' || !customData?.orderId) {
+            setError('Payment not completed or order data missing.');
+            setProcessing(false);
+            return;
+          }
+          const orderParam = customData.orderId;
+          const isTopup = customData.type === 'topup' || orderParam.startsWith('topup-');
+          const amountNum = totalAmount ? parseInt(totalAmount, 10) / 100 : 0;
+          const orderData = {
+            planId: customData.planId,
+            planName: customData.planName || 'eSIM Plan',
+            amount: amountNum,
+            currency: 'usd',
+            customerEmail: customData.customerEmail,
+            orderId: customData.orderId,
+            userId: customData.userId || currentUser?.uid || null,
+            paymentMethod: 'paddle',
+            isGuest: customData.isGuest ?? !currentUser,
+            affiliateRef: customData.affiliateRef || null,
+          };
+          if (isTopup) {
+            const orderParts = orderParam.split('-');
+            const iccid = orderParts.length >= 2 ? orderParts[1] : null;
+            if (!iccid) {
+              setError('Invalid topup order: No ICCID found');
+              setProcessing(false);
+              return;
+            }
+            let packageIdForTopup = customData.planId;
+            const pendingTopup = localStorage.getItem('pendingTopupOrder');
+            if (pendingTopup) {
+              try {
+                const topupDataFromStorage = JSON.parse(pendingTopup);
+                if (topupDataFromStorage.packageId && !topupDataFromStorage.packageId.startsWith('topup-')) {
+                  packageIdForTopup = topupDataFromStorage.packageId;
+                }
+              } catch (e) { /* ignore */ }
+            }
+            const topupData = {
+              orderId: orderParam,
+              iccid,
+              packageId: packageIdForTopup,
+              packageName: customData.planName || 'Topup Package',
+              amount: 0,
+              customerEmail: customData.customerEmail,
+              type: 'topup',
+            };
+            const topupResult = await createTopupRecord(topupData);
+            if (topupResult.success) {
+              localStorage.removeItem('pendingTopupOrder');
+              toast.success('Topup completed successfully!');
+              router.push(iccid ? `/qr/${iccid}` : '/dashboard');
+              return;
+            }
+          } else {
+            const orderResult = await createOrderRecord(orderData);
+            if (orderResult.success) {
+              setOrderInfo(orderData);
+              if (orderResult.qrCodeData) setQrCodeData(orderResult.qrCodeData);
+              setOrderComplete(true);
+            }
+          }
+        } catch (paddleErr) {
+          console.error('❌ Paddle payment processing failed:', paddleErr);
+          setError(paddleErr.message || 'Failed to process Paddle payment');
+        }
+        setProcessing(false);
+        return;
+      }
 
       // Handle Coinbase payment (has order_id, email, total)
       if (orderParam && email && total) {
