@@ -48,7 +48,7 @@ export const metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://www.roamjet.net'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://roamjet.net'),
   alternates: {
     canonical: '/',
   },
@@ -150,8 +150,8 @@ export default function RootLayout({ children }) {
               "@context": "https://schema.org",
               "@type": "Organization",
               "name": "RoamJet",
-              "url": "https://www.roamjet.net",
-              "logo": "https://www.roamjet.net/images/logo_icon/logo2.png",
+              "url": "https://roamjet.net",
+              "logo": "https://roamjet.net/images/logo_icon/logo2.png",
               "description": "Global eSIM plans for travelers, backpackers, and digital nomads. Instant activation in 200+ countries.",
               "sameAs": [
                 "https://twitter.com/roamjet",

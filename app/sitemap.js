@@ -1,5 +1,5 @@
 export default function sitemap() {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.roamjet.net'
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://roamjet.net'
   
   return [
     {
