@@ -44,10 +44,16 @@ export async function GET(request) {
     const customData = txn.custom_data || {};
     const details = txn.details;
     const totalAmount = details?.totals?.total ? String(details.totals.total) : null;
+    const items = txn.items || [];
+    const quantity = items.length > 0
+      ? items.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0)
+      : 1;
+
     return NextResponse.json({
       transactionId: txn.id,
       status: txn.status,
       totalAmount: totalAmount,
+      quantity: Math.max(1, quantity),
       customData: {
         orderId: customData.orderId,
         planId: customData.planId,

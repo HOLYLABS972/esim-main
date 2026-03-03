@@ -128,7 +128,7 @@ const PaymentSuccess = () => {
       
       const airaloOrderResult = await apiService.createOrder({
         package_id: orderData.planId,
-        quantity: "1",
+        quantity: orderData.quantity != null ? String(orderData.quantity) : '1',
         to_email: orderData.customerEmail,
         description: `eSIM order for ${orderData.customerEmail}`,
         mode: stripeMode,
@@ -432,7 +432,7 @@ const PaymentSuccess = () => {
             const err = await res.json().catch(() => ({}));
             throw new Error(err.error || 'Failed to load transaction');
           }
-          const { status, customData, totalAmount } = await res.json();
+          const { status, customData, totalAmount, quantity: paddleQuantity } = await res.json();
           if (status !== 'completed' || !customData?.orderId) {
             setError('Payment not completed or order data missing.');
             setProcessing(false);
@@ -441,6 +441,7 @@ const PaymentSuccess = () => {
           const orderParam = customData.orderId;
           const isTopup = customData.type === 'topup' || orderParam.startsWith('topup-');
           const amountNum = totalAmount ? parseInt(totalAmount, 10) / 100 : 0;
+          const quantity = paddleQuantity != null && paddleQuantity >= 1 ? String(paddleQuantity) : '1';
           const orderData = {
             planId: customData.planId,
             planName: customData.planName || 'eSIM Plan',
@@ -452,6 +453,7 @@ const PaymentSuccess = () => {
             paymentMethod: 'paddle',
             isGuest: customData.isGuest ?? !currentUser,
             affiliateRef: customData.affiliateRef || null,
+            quantity,
           };
           if (isTopup) {
             const orderParts = orderParam.split('-');
