@@ -30,20 +30,23 @@ export async function POST(request) {
     const currency = (orderData.currency || 'usd').toUpperCase();
     const amountCents = Math.round(parseFloat(orderData.amount) * 100);
     const amountStr = String(amountCents);
+    const planName = orderData.planName || 'eSIM Plan';
+    const countryLabel = orderData.countryName || (orderData.countryCode ? `(${orderData.countryCode})` : null);
+    const itemTitle = countryLabel ? `${planName} · ${countryLabel}` : planName;
 
     const payload = {
       items: [
         {
           quantity: 1,
           price: {
-            description: orderData.planName || 'eSIM data plan',
-            name: orderData.planName || 'eSIM Plan',
+            description: planName,
+            name: itemTitle,
             unit_price: {
               amount: amountStr,
               currency_code: currency,
             },
             product: {
-              name: orderData.planName || 'eSIM Plan',
+              name: itemTitle,
               tax_category: 'standard',
             },
           },

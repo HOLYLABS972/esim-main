@@ -494,6 +494,7 @@ const SharePackagePage = () => {
         isGuest: false, // Auth required
         affiliateRef: affiliateRef || null, // Affiliate tracking
         countryCode: planToUse.country_code || (planToUse.country_codes && planToUse.country_codes[0]) || null,
+        countryName: planToUse.country_name || null,
       };
       
       console.log('💳 Order data for payment:', orderData);
