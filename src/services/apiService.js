@@ -222,84 +222,57 @@ export const apiService = {
    * @param {string} orderData.mode - Mode (test/live) - tells backend whether to use mock or real data
    * @returns {Promise<Object>} Order result with orderId and airaloOrderId
    */
-  async createOrder({ package_id, planId, quantity = "1", to_email, description, mode, isGuest = false }) {
-    // Support both package_id and planId for compatibility
+  async createOrder({ package_id, planId, quantity = "1", to_email, description, mode, isGuest = false, orderId, userId, planName, amount, currency, paymentMethod, affiliateRef }) {
     const plan_id = package_id || planId;
     
-    console.log('📦 Creating order via Firebase Cloud Function:', { plan_id, quantity, to_email, mode, isGuest });
+    console.log('📦 Creating order via API route:', { plan_id, quantity, to_email, mode, isGuest });
     
     if (!plan_id) {
       throw new Error('package_id or planId is required');
     }
 
-    // Validate plan_id format (should not be empty and should be a string)
     if (typeof plan_id !== 'string' || plan_id.trim() === '') {
       throw new Error(`Invalid package_id format: ${plan_id}`);
     }
     
     try {
-      // Check if user is authenticated
-      const user = auth.currentUser;
-      const isAuthenticated = !!user && !isGuest;
-      
-      if (!isAuthenticated) {
-        throw new Error('User must be authenticated to create an order');
-      }
-      
-      console.log(`📦 Order request: Authenticated user ${user.uid}`);
-      
-      // Use Firebase Cloud Function instead of SDK server
-      const { httpsCallable } = await import('firebase/functions');
-      const { functions } = await import('../firebase/config');
-      
-      const createOrderFn = httpsCallable(functions, 'create_order');
-      
-      // Get Airalo client ID from Firestore config
-      const { doc, getDoc } = await import('firebase/firestore');
-      const { db } = await import('../firebase/config');
-      const configRef = doc(db, 'config', 'airalo');
-      const configDoc = await getDoc(configRef);
-      let airaloClientId = null;
-      if (configDoc.exists()) {
-        const configData = configDoc.data();
-        airaloClientId = configData.api_key || configData.client_id;
-      }
-      
-      const result = await createOrderFn({
-        planId: plan_id.trim(), // Cloud Function expects 'planId'
-        quantity: quantity,
-        to_email: to_email,
-        description: description || `eSIM order for ${to_email}`,
-        airalo_client_id: airaloClientId, // Get client_id from config
+      const res = await fetch('/api/orders/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          package_id: plan_id.trim(),
+          quantity: quantity,
+          to_email: to_email,
+          orderId: orderId,
+          userId: userId,
+          planName: planName || plan_id,
+          amount: amount,
+          currency: currency || 'usd',
+          paymentMethod: paymentMethod || 'paddle',
+          isGuest: isGuest,
+          affiliateRef: affiliateRef,
+        }),
       });
 
-      console.log('✅ Order created via Cloud Function:', result.data);
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || `Order API error ${res.status}`);
+      }
+
+      const result = await res.json();
+      console.log('✅ Order created via API:', result);
       
-      // Transform response to match expected format
       return {
-        orderId: result.data.orderId,
-        airaloOrderId: result.data.airaloOrderId,
-        orderData: result.data.orderData,
-        esimData: result.data.esimData,
-        qrCode: result.data.qrCode,
-        iccid: result.data.iccid,
+        orderId: result.orderId,
+        airaloOrderId: result.airaloOrderId,
+        orderData: result.orderData,
+        esimData: result.esimData,
+        qrCode: result.qrCode,
+        iccid: result.iccid,
         success: true
       };
     } catch (error) {
       console.error('❌ Error creating order:', error);
-      
-      // Enhanced error handling for validation errors
-      if (error.code === 'invalid-argument' || (error.message && error.message.includes('required'))) {
-        const errorMsg = error.message || 'Invalid order data';
-        throw new Error(`Invalid order: ${errorMsg}`);
-      }
-      
-      // Enhanced error handling for 422 errors (if passed through)
-      if (error.details || (error.message && error.message.includes('422'))) {
-        const airaloError = error.details || error.message;
-        throw new Error(`Invalid package ID: "${plan_id}". Airalo error: ${airaloError}`);
-      }
-      
       throw error;
     }
   },
