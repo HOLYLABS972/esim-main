@@ -4,21 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 
-export default function FAQ() {
-  const [openIndices, setOpenIndices] = useState(() =>
-    new Set(faqs.flatMap((cat, ci) => cat.questions.map((_, qi) => `${ci}-${qi}`)))
-  );
-
-  const toggleFAQ = (index) => {
-    setOpenIndices((prev) => {
-      const next = new Set(prev);
-      if (next.has(index)) next.delete(index);
-      else next.add(index);
-      return next;
-    });
-  };
-
-  const faqs = [
+const FAQ_LIST = [
     {
       category: "Getting Started",
       questions: [
@@ -146,6 +132,22 @@ export default function FAQ() {
       ]
     }
   ];
+
+export default function FAQ() {
+  const [openIndices, setOpenIndices] = useState(() =>
+    new Set(FAQ_LIST.flatMap((cat, ci) => cat.questions.map((_, qi) => `${ci}-${qi}`)))
+  );
+
+  const toggleFAQ = (index) => {
+    setOpenIndices((prev) => {
+      const next = new Set(prev);
+      if (next.has(index)) next.delete(index);
+      else next.add(index);
+      return next;
+    });
+  };
+
+  const faqs = FAQ_LIST;
 
   return (
     <div className="min-h-screen bg-gray-50">
