@@ -75,9 +75,26 @@ export async function POST(request) {
 
     if (!res.ok) {
       const errText = await res.text();
+      let errJson;
+      try {
+        errJson = JSON.parse(errText);
+      } catch (_) {
+        errJson = {};
+      }
+      const errDetail = errJson?.error?.detail || errJson?.error?.code || errText;
+      if (errJson?.error?.code === 'transaction_default_checkout_url_not_set') {
+        console.error('Paddle: Default Payment Link not set. Set it in Paddle Dashboard → Checkout → Checkout settings → Default payment link.');
+        return NextResponse.json(
+          {
+            error: 'Paddle checkout is not fully configured. Please set a Default Payment Link in your Paddle Dashboard: Checkout → Checkout settings → Default payment link.',
+            code: 'transaction_default_checkout_url_not_set',
+          },
+          { status: 502 }
+        );
+      }
       console.error('Paddle create transaction error:', res.status, errText);
       return NextResponse.json(
-        { error: errText || 'Paddle API error' },
+        { error: errDetail || 'Paddle API error' },
         { status: res.status }
       );
     }
