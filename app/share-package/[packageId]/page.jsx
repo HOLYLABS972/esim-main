@@ -162,7 +162,7 @@ const SharePackagePage = () => {
     },
     {
       q: t('sharePackage.faq.q5', 'Can I get a refund?'),
-      a: t('sharePackage.faq.a5', 'Yes, unused eSIMs are eligible for a refund within the policy terms. Once the eSIM has been activated and data has been used, it cannot be refunded. Please review our refund policy for details.')
+      a: t('sharePackage.faq.a5', 'Yes, unused eSIMs are eligible for a full refund within 14 days of purchase. Once the eSIM has been activated and data has been used, it cannot be refunded. Please review our refund policy for details.')
     }
   ];
 

@@ -289,7 +289,7 @@
             "paymentMethods": "What payment methods do you accept?",
             "paymentMethodsAnswer": "We accept all major credit cards (Visa, Mastercard, American Express), PayPal, Apple Pay, Google Pay, and various local payment methods depending on your region.",
             "refundPolicy": "Can I get a refund if I'm not satisfied?",
-            "refundPolicyAnswer": "Yes, we offer a 7-day money-back guarantee for unused data plans. If you haven't activated your eSIM or used any data, you can request a full refund within 7 days of purchase.",
+            "refundPolicyAnswer": "Yes, we offer a 14-day money-back guarantee for unused data plans. If you haven't activated your eSIM or used any data, you can request a full refund within 14 days of purchase.",
             "unlimitedData": "Do your plans include unlimited data?",
             "unlimitedDataAnswer": "We offer both limited and unlimited data plans. Unlimited plans may have fair usage policies or speed throttling after certain thresholds, which are clearly stated in the plan details.",
             "notConnecting": "My eSIM isn't connecting to the network. What should I do?",

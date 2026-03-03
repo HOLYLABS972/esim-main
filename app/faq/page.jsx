@@ -42,7 +42,7 @@ export default function FAQ() {
         },
         {
           question: "Can I get a refund if I'm not satisfied?",
-          answer: "Yes, we offer a 7-day money-back guarantee for unused data plans. If you haven't activated your eSIM or used any data, you can request a full refund within 7 days of purchase."
+          answer: "Yes, we offer a 14-day money-back guarantee for unused data plans. If you haven't activated your eSIM or used any data, you can request a full refund within 14 days of purchase."
         },
         {
           question: "Do your plans include unlimited data?",

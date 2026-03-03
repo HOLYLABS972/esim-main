@@ -18,35 +18,32 @@ export default function RefundPolicy() {
           <section>
             <h2 className="text-2xl font-semibold text-gray-900 mb-4">Overview</h2>
             <p className="text-gray-700 leading-relaxed">
-              Our goal is to ensure you are satisfied with your purchase. This Refund Policy explains when refunds are available and when purchases are non-refundable.
+              Our goal is to ensure you are satisfied with your purchase. You may request a full refund within <strong>14 days</strong> of your purchase date. This Refund Policy states the refund window and how to request a refund.
             </p>
           </section>
 
           <section>
-            <h3 className="text-xl font-semibold text-gray-900 mb-3">General Refund Eligibility</h3>
+            <h3 className="text-xl font-semibold text-gray-900 mb-3">Refund Window</h3>
+            <p className="text-gray-700 leading-relaxed">
+              The refund window is <strong>14 days</strong> from the date of purchase. You must submit your refund request within these 14 days to be eligible.
+            </p>
+          </section>
+
+          <section>
+            <h3 className="text-xl font-semibold text-gray-900 mb-3">Eligibility Within the 14-Day Window</h3>
             <ul className="list-disc pl-6 space-y-2 text-gray-700">
-              <li>We offer a 7-day refund for unused data plans if the eSIM has not been activated and no data has been consumed.</li>
+              <li>Refunds are available for unused data plans when the eSIM has not been activated and no data has been consumed.</li>
               <li>To request a refund, contact support@roamjet.net with your order number and reason for the request. Approved refunds are processed to the original payment method within 7 business days.</li>
             </ul>
           </section>
 
           <section>
-            <h3 className="text-xl font-semibold text-gray-900 mb-3">Strict No-Refunds for Used or Expired eSIMs</h3>
+            <h3 className="text-xl font-semibold text-gray-900 mb-3">Non-Refundable After Use or After the 14-Day Window</h3>
             <p className="text-gray-700 leading-relaxed">
-              Except as otherwise required by applicable consumer protection law, eSIM plans that have been activated, used (including any amount of data consumption), or expired are strictly non-refundable. Activation is determined by the first byte of data consumed or explicit activation recorded in our systems.
+              eSIM plans that have been activated, used (including any amount of data consumption), or expired are non-refundable. Activation is determined by the first byte of data consumed or explicit activation recorded in our systems. Refunds are not available after the 14-day window from the purchase date.
             </p>
             <p className="text-gray-700 leading-relaxed">
-              This means that if you have scanned the QR code, installed the eSIM profile on your device, consumed any data, or if the plan's validity period has ended, we will not issue a refund or credit for that purchase.
-            </p>
-            <p className="text-gray-700 leading-relaxed">
-              Please ensure your device is compatible and that you follow the activation instructions carefully before purchasing. If you are unsure, contact support at support@roamjet.net prior to purchase.
-            </p>
-          </section>
-
-          <section>
-            <h3 className="text-xl font-semibold text-gray-900 mb-3">Exceptions and Consumer Rights</h3>
-            <p className="text-gray-700 leading-relaxed">
-              Nothing in this policy affects your statutory rights under applicable consumer protection laws. Where required by law, we will process refunds in accordance with those laws.
+              If you have scanned the QR code, installed the eSIM profile on your device, consumed any data, or if the plan&apos;s validity period has ended, we will not issue a refund for that purchase. Please ensure your device is compatible and that you follow the activation instructions carefully before purchasing. If you are unsure, contact support at support@roamjet.net prior to purchase.
             </p>
           </section>
 

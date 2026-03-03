@@ -288,7 +288,7 @@
       "paymentMethods": "Quels modes de paiement acceptez-vous ?",
       "paymentMethodsAnswer": "Nous acceptons toutes les principales cartes de crédit (Visa, Mastercard, American Express), PayPal, Apple Pay, Google Pay, et divers modes de paiement locaux selon votre région.",
       "refundPolicy": "Puis-je obtenir un remboursement si je ne suis pas satisfait ?",
-      "refundPolicyAnswer": "Oui, nous offrons une garantie de remboursement de 7 jours pour les forfaits de données non utilisés. Si vous n'avez pas activé votre eSIM ou utilisé de données, vous pouvez demander un remboursement complet dans les 7 jours suivant l'achat.",
+      "refundPolicyAnswer": "Oui, nous offrons une garantie de remboursement de 14 jours pour les forfaits de données non utilisés. Si vous n'avez pas activé votre eSIM ou utilisé de données, vous pouvez demander un remboursement complet dans les 14 jours suivant l'achat.",
       "unlimitedData": "Vos forfaits incluent-ils des données illimitées ?",
       "unlimitedDataAnswer": "Nous proposons des forfaits de données limités et illimités. Les forfaits illimités peuvent avoir des politiques d'utilisation équitable ou une limitation de vitesse après certains seuils, qui sont clairement indiqués dans les détails du forfait.",
       "notConnecting": "Mon eSIM ne se connecte pas au réseau. Que dois-je faire ?",
