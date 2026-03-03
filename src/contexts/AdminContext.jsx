@@ -33,6 +33,13 @@ export const AdminProvider = ({ children }) => {
 
       try {
         setLoading(true);
+        if (typeof adminService?.getUserRole !== 'function') {
+          setUserRole(ADMIN_ROLES.USER);
+          setIsAdmin(false);
+          setPermissions([]);
+          setLoading(false);
+          return;
+        }
         const role = await adminService.getUserRole(currentUser.uid);
         setUserRole(role);
         setIsAdmin(role !== ADMIN_ROLES.USER);
@@ -49,7 +56,7 @@ export const AdminProvider = ({ children }) => {
     };
 
     loadUserRole();
-  }, [currentUser]);
+  }, [currentUser?.uid]);
 
   const hasPermission = (permission) => permissions.includes(permission);
   const canManageAdmins = () => hasPermission('manage_admins');
@@ -65,6 +72,7 @@ export const AdminProvider = ({ children }) => {
   const refreshRole = async () => {
     if (!currentUser) return;
     try {
+      if (typeof adminService?.getUserRole !== 'function') return;
       const role = await adminService.getUserRole(currentUser.uid);
       setUserRole(role);
       setIsAdmin(role !== ADMIN_ROLES.USER);
