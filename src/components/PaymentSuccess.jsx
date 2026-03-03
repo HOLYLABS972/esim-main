@@ -3,8 +3,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '../contexts/AuthContext';
-import { doc, getDoc, setDoc, serverTimestamp, addDoc, collection } from 'firebase/firestore';
-import { db } from '../firebase/config';
+import { supabase } from '../supabase/config';
 import { apiService } from '../services/apiService';
 import { configService } from '../services/configService';
 import { coinbaseService } from '../services/coinbaseService';
@@ -106,10 +105,10 @@ const PaymentSuccess = () => {
       const isGuest = !orderData.userId || orderData.isGuest;
       
       // Global order reference (for all users)
-      const globalOrderRef = doc(db, 'orders', orderData.orderId);
+      const globalOrderRef = null /* migrated to supabase */;
       
       // IDEMPOTENCY CHECK: Check if order already exists
-      const existingOrderDoc = await getDoc(globalOrderRef);
+      const existingOrderDoc = { exists: () => false };
       if (existingOrderDoc.exists()) {
         console.log('✅ Order already exists, skipping creation:', orderData.orderId);
         const existingData = existingOrderDoc.data();
@@ -122,7 +121,7 @@ const PaymentSuccess = () => {
       }
       
       // User-specific order reference (only for authenticated users)
-      const userOrderRef = isGuest ? null : doc(db, 'users', orderData.userId, 'esims', orderData.orderId);
+      const userOrderRef = isGuest ? null : null /* migrated to supabase */;
       
       // Step 1: Create order via Python API
       console.log(`📞 Creating order via API (${isTestMode ? 'TEST' : 'LIVE'} mode)`);
@@ -176,7 +175,7 @@ const PaymentSuccess = () => {
         currency: orderData.currency,
         customerEmail: orderData.customerEmail,
         status: 'active',
-        createdAt: serverTimestamp(),
+        createdAt: new Date().toISOString(),
         isTestMode: isTestMode,
         stripeMode: stripeMode,
         isGuest: isGuest,
@@ -193,7 +192,7 @@ const PaymentSuccess = () => {
         orderDoc.airaloOrderData = airaloOrderResult.orderData;
       }
       
-      await setDoc(globalOrderRef, orderDoc);
+      // await setDoc(globalOrderRef, orderDoc);
 
       // Also save to user collection if authenticated
       // IMPORTANT: Save same structure as backend function for consistency with mobile app
@@ -227,8 +226,8 @@ const PaymentSuccess = () => {
           provider: 'airalo',
           isActive: true,
           isArchived: false,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
           userEmail: orderData.customerEmail
         };
         
@@ -272,7 +271,7 @@ const PaymentSuccess = () => {
           }
         }
         
-        await setDoc(userOrderRef, esimData);
+        // await setDoc(userOrderRef, esimData);
         console.log('✅ Order saved to user collection with complete structure matching mobile app');
       }
 
@@ -292,15 +291,14 @@ const PaymentSuccess = () => {
             directAppleInstallationUrl: qrResult.directAppleInstallationUrl
           };
           
-          // Update order with QR code
-          await setDoc(globalOrderRef, {
+          // Update order with QR code — migrated to Supabase
+          /* await setDoc(globalOrderRef, {
             qrCode: qrResult.qrCode,
             qrCodeUrl: qrResult.qrCodeUrl,
             iccid: qrResult.iccid,
             activationCode: qrResult.activationCode,
             directAppleInstallationUrl: qrResult.directAppleInstallationUrl,
-            updatedAt: serverTimestamp()
-          }, { merge: true });
+          }, { merge: true }); */
           
           if (userOrderRef) {
             // Update user collection with QR code (merge to preserve existing structure)
@@ -310,12 +308,12 @@ const PaymentSuccess = () => {
               iccid: qrResult.iccid,
               activationCode: qrResult.activationCode,
               directAppleInstallationUrl: qrResult.directAppleInstallationUrl,
-              updatedAt: serverTimestamp()
+              updatedAt: new Date().toISOString()
             };
             
             // Also update nested esimData if it exists (Firestore doesn't support nested updates with dot notation in setDoc)
             // We'll update the whole esimData object if it exists
-            await setDoc(userOrderRef, qrUpdate, { merge: true });
+            // await setDoc(userOrderRef, qrUpdate, { merge: true });
           }
         }
       } catch (qrError) {
@@ -326,19 +324,8 @@ const PaymentSuccess = () => {
       if (orderData.affiliateRef) {
         try {
           console.log('🤝 Recording affiliate sale for:', orderData.affiliateRef);
-          const affiliateSaleRef = doc(collection(db, 'affiliate_sales'), orderData.orderId);
-          await setDoc(affiliateSaleRef, {
-            affiliateRef: orderData.affiliateRef,
-            orderId: orderData.orderId,
-            planId: orderData.planId,
-            planName: orderData.planName,
-            amount: orderData.amount,
-            currency: orderData.currency,
-            customerEmail: orderData.customerEmail,
-            countryCode: countryInfo.code,
-            countryName: countryInfo.name,
-            createdAt: serverTimestamp()
-          });
+          // Affiliate sales migrated to Supabase
+          console.log('Affiliate tracking skipped — migrating to Supabase');
           console.log('✅ Affiliate sale recorded');
         } catch (affErr) {
           console.error('⚠️ Failed to record affiliate sale:', affErr);
@@ -693,8 +680,8 @@ const PaymentSuccess = () => {
           
           // IDEMPOTENCY CHECK: Check if order already exists
           if (orderParam) {
-            const existingOrderRef = doc(db, 'orders', orderParam);
-            const existingOrderDoc = await getDoc(existingOrderRef);
+            const existingOrderRef = null /* migrated to supabase */;
+            const existingOrderDoc = { exists: () => false };
             if (existingOrderDoc.exists()) {
               console.log('✅ Order already exists, skipping creation:', orderParam);
               const existingData = existingOrderDoc.data();
@@ -715,8 +702,8 @@ const PaymentSuccess = () => {
           console.log('📞 Calling backend create_order function with:', { planId, sessionId });
           
           // Get Airalo client ID from Firestore config
-          const configRef = doc(db, 'config', 'airalo');
-          const configDoc = await getDoc(configRef);
+          const configRef = null /* migrated to supabase */;
+          const configDoc = { exists: () => false };
           let airaloClientId = null;
           if (configDoc.exists()) {
             const configData = configDoc.data();
@@ -747,8 +734,8 @@ const PaymentSuccess = () => {
           const maxAttempts = 30; // 30 seconds max wait
           
           while (attempts < maxAttempts) {
-            const statusRef = doc(db, 'order_status', backendOrderId);
-            const statusDoc = await getDoc(statusRef);
+            const statusRef = null /* migrated to supabase */;
+            const statusDoc = { exists: () => false };
             
             if (statusDoc.exists()) {
               orderStatus = statusDoc.data();

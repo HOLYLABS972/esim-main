@@ -3,8 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useI18n } from '../contexts/I18nContext';
-import { collection, query, getDocs, doc, setDoc, getDoc, deleteDoc, serverTimestamp, updateDoc, where } from 'firebase/firestore';
-import { db } from '../firebase/config';
+import { supabase } from '../supabase/config';
 import { useRouter, usePathname } from 'next/navigation';
 import { esimService } from '../services/esimService';
 import { apiService } from '../services/apiService';
@@ -78,63 +77,23 @@ const Dashboard = () => {
 
       try {
         console.log('🔍 Current user:', currentUser.email);
-        console.log('🔍 Firebase db:', db);
+        console.log('🔍 Supabase: loading orders for user:', currentUser.uid);
         
-        // Fetch eSIMs from user's collection AND global orders collection
-        // Some orders might only be in global orders collection (especially older orders)
-        console.log('📱 Fetching eSIMs from user collection and global orders...');
+        // Fetch orders from Supabase
+        const { data: allOrders, error: ordersError } = await supabase
+          .from('orders')
+          .select('*')
+          .eq('user_id', currentUser.uid)
+          .order('created_at', { ascending: false });
         
-        // First, get orders from user's esims subcollection
-        const esimsQuery = query(
-          collection(db, 'users', currentUser.uid, 'esims')
-        );
-        const esimsSnapshot = await getDocs(esimsQuery);
-        console.log('📝 User esims collection:', esimsSnapshot.size, 'documents');
+        if (ordersError) console.error('Orders fetch error:', ordersError);
         
-        // Also get orders from global orders collection where userId matches
-        const globalOrdersQuery = query(
-          collection(db, 'orders'),
-          where('userId', '==', currentUser.uid)
-        );
-        const globalOrdersSnapshot = await getDocs(globalOrdersQuery);
-        console.log('📝 Global orders collection:', globalOrdersSnapshot.size, 'documents');
-        
-        // Combine both collections, using user esims as primary (more complete data)
-        const userEsimsMap = new Map();
-        esimsSnapshot.docs.forEach(doc => {
-          userEsimsMap.set(doc.id, doc);
-        });
-        
-        // Add global orders that aren't in user esims collection
-        // Also copy them to user collection for consistency
-        for (const globalDoc of globalOrdersSnapshot.docs) {
-          if (!userEsimsMap.has(globalDoc.id)) {
-            userEsimsMap.set(globalDoc.id, globalDoc);
-            console.log('➕ Adding order from global collection:', globalDoc.id);
-            
-            // Copy to user collection for consistency (async, don't wait)
-            const globalData = globalDoc.data();
-            const userOrderRef = doc(db, 'users', currentUser.uid, 'esims', globalDoc.id);
-            setDoc(userOrderRef, {
-              ...globalData,
-              // Ensure we have the required fields
-              id: globalDoc.id,
-              orderId: globalData.orderId || globalDoc.id,
-              userId: currentUser.uid,
-              updatedAt: serverTimestamp()
-            }, { merge: true }).catch(err => {
-              console.log('⚠️ Could not copy order to user collection:', err);
-            });
-          }
-        }
-        
-        // Convert map to array for processing
-        const allEsimsDocs = Array.from(userEsimsMap.values());
-        console.log('📝 Total unique eSIMs:', allEsimsDocs.length, 'documents');
+        const allEsimsDocs = allOrders || [];
+        console.log('📝 Total eSIMs:', allEsimsDocs.length);
         
         const ordersData = allEsimsDocs.map(esimDoc => {
           try {
-            const data = esimDoc.data();
+            const data = esimDoc;
 
             // EXACT COPY FROM MOBILE APP - Use same extraction logic
             // Mobile app uses: data.planName, data.countryCode, data.countryName directly
@@ -282,19 +241,11 @@ const Dashboard = () => {
             // If we extracted country info but it's not saved in Firebase, update it
             if (countryCode && (!data.countryCode || data.countryCode === 'US' || data.countryCode === 'Unknown')) {
               // Update the document in Firebase with extracted country info (async, don't wait)
-              const orderRef = doc(db, 'users', currentUser.uid, 'esims', esimDoc.id);
-              updateDoc(orderRef, {
-                countryCode: countryCode,
-                countryName: countryName,
-                package_id: packageId || data.packageId || data.package_id, // Ensure package_id is saved
-                updatedAt: serverTimestamp()
-              }).catch(err => {
-                console.log('⚠️ Could not update country info in Firebase:', err);
-              });
+              supabase.from('orders').update({ country_code: countryCode, country_name: countryName, updated_at: new Date().toISOString() }).eq('id', data.id).then(() => {}).catch(err => console.log('⚠️ Could not update country info:', err));
             }
 
             return {
-                id: esimDoc.id,
+                id: data.id,
                 ...data,
                 // EXACT COPY FROM MOBILE APP - Use same field names and extraction
                 orderId: data.orderId || data.id,
@@ -340,7 +291,7 @@ const Dashboard = () => {
                 airaloOrderData: data.airaloOrderData
               };
           } catch (docError) {
-            console.error('❌ Error processing document:', esimDoc.id, docError);
+            console.error('❌ Error processing document:', data.id, docError);
             return null;
           }
         }).filter(Boolean); // Remove null entries
@@ -386,23 +337,21 @@ const Dashboard = () => {
       try {
         console.log('Checking user profile for:', currentUser.uid);
         // Check if user profile exists
-        const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+        const { data: profile } = await supabase.from('user_profiles').select('*').eq('id', currentUser.uid).single();
         
-        if (!userDoc.exists()) {
+        if (!profile) {
           console.log('User profile does not exist, creating...');
-          // Create user profile if it doesn't exist
-          await setDoc(doc(db, 'users', currentUser.uid), {
+          await supabase.from('user_profiles').upsert({
+            id: currentUser.uid,
             email: currentUser.email,
-            displayName: currentUser.displayName || 'Unknown User',
-            createdAt: new Date(),
-            role: 'customer'
+            display_name: currentUser.displayName || 'Unknown User',
+            role: 'customer',
+            created_at: new Date().toISOString(),
           });
           console.log('✅ Created missing user profile');
-          // Reload user profile after creating it
           await loadUserProfile();
         } else {
-          console.log('✅ User profile exists:', userDoc.data());
-          // Force reload profile in case it wasn't loaded
+          console.log('✅ User profile exists');
           await loadUserProfile();
         }
       } catch (error) {
@@ -798,15 +747,12 @@ const Dashboard = () => {
         to: { code: countryInfo.code, name: countryInfo.name }
       });
       
-      // Update the order in Firebase
-      const orderRef = doc(db, 'users', currentUser.uid, 'esims', order.id);
-      await updateDoc(orderRef, {
-        countryCode: countryInfo.code,
-        countryName: countryInfo.name,
-        updatedAt: serverTimestamp(),
-        countryUpdatedAt: serverTimestamp(),
-        countryUpdateReason: 'Corrected from eSIM details check'
-      });
+      // Update the order in Supabase
+      await supabase.from('orders').update({
+        country_code: countryInfo.code,
+        country_name: countryInfo.name,
+        updated_at: new Date().toISOString(),
+      }).eq('id', order.id);
       
       // Update local state
       setOrders(prevOrders => 
@@ -966,34 +912,9 @@ const Dashboard = () => {
       console.log('🗑️ Order details:', { iccid, packageId, orderId });
       
       // Delete the order from Firestore (users/{userId}/esims collection)
-      const orderRef = doc(db, 'users', currentUser.uid, 'esims', orderId);
-      console.log('🗑️ Deleting document at path:', `users/${currentUser.uid}/esims/${orderId}`);
-      await deleteDoc(orderRef);
-      console.log('✅ Order deleted from Firestore');
-      
-      // SIM tracking (optional - don't fail if this doesn't work)
-      if (iccid && packageId) {
-        try {
-          console.log('🔄 Marking SIM as available again:', { iccid, packageId });
-          
-          // Create or update available SIMs collection
-          const availableSimRef = doc(db, 'available_sims', iccid);
-          await setDoc(availableSimRef, {
-            iccid: iccid,
-            package_id: packageId,
-            status: 'available',
-            released_at: serverTimestamp(),
-            released_from_order: selectedOrder.orderId || selectedOrder.id
-          }, { merge: true });
-          
-          console.log('✅ SIM marked as available again');
-        } catch (simError) {
-          console.error('⚠️ Failed to mark SIM as available:', simError);
-          // Don't fail the delete operation if SIM tracking fails
-        }
-      } else {
-        console.log('⚠️ No ICCID or packageId found, skipping SIM tracking');
-      }
+      console.log('🗑️ Deleting order:', orderId);
+      await supabase.from('orders').delete().eq('id', orderId);
+      console.log('✅ Order deleted from Supabase');
       
       // Remove from local state
       setOrders(prev => prev.filter(order => order.id !== selectedOrder.id));

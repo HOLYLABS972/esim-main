@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { Settings, Edit3, Key, Phone, User, Mail, Save, X, ChevronDown, ChevronUp } from 'lucide-react';
-import { updateProfile, sendPasswordResetEmail } from 'firebase/auth';
-import { doc, updateDoc } from 'firebase/firestore';
-import { db } from '../../firebase/config';
+import { supabase } from '../../supabase/config';
 import toast from 'react-hot-toast';
 import { useI18n } from '../../contexts/I18nContext';
 
@@ -20,10 +18,7 @@ const AccountSettings = ({ currentUser, userProfile, onLoadUserProfile }) => {
     if (!newName.trim()) { toast.error('Name cannot be empty'); return; }
     setIsUpdating(true);
     try {
-      await updateProfile(currentUser, { displayName: newName.trim() });
-      if (userProfile) {
-        await updateDoc(doc(db, 'users', currentUser.uid), { displayName: newName.trim(), updatedAt: new Date() });
-      }
+      await supabase.from('user_profiles').update({ display_name: newName.trim(), updated_at: new Date().toISOString() }).eq('id', currentUser.uid);
       await onLoadUserProfile();
       setEditingName(false);
       toast.success('Name updated');
@@ -34,7 +29,7 @@ const AccountSettings = ({ currentUser, userProfile, onLoadUserProfile }) => {
   const handleUpdatePhone = async () => {
     setIsUpdating(true);
     try {
-      await updateDoc(doc(db, 'users', currentUser.uid), { phoneNumber: newPhone.trim(), updatedAt: new Date() });
+      await supabase.from('user_profiles').update({ phone_number: newPhone.trim(), updated_at: new Date().toISOString() }).eq('id', currentUser.uid);
       await onLoadUserProfile();
       setEditingPhone(false);
       toast.success('Phone updated');
@@ -45,7 +40,7 @@ const AccountSettings = ({ currentUser, userProfile, onLoadUserProfile }) => {
   const handlePasswordReset = async () => {
     setIsSendingReset(true);
     try {
-      await sendPasswordResetEmail(currentUser.auth, currentUser.email);
+      await supabase.auth.resetPasswordForEmail(currentUser.email);
       toast.success('Reset email sent!');
     } catch (e) { toast.error('Failed to send reset email'); }
     finally { setIsSendingReset(false); }

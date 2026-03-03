@@ -2,8 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { collection, getDocs, query, where } from 'firebase/firestore';
-import { db } from '../firebase/config';
+import { supabase } from '../supabase/config';
 import { Search } from 'lucide-react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useAuth } from '../contexts/AuthContext';
@@ -283,48 +282,34 @@ const EsimPlans = () => {
         return;
       }
       
-      console.log('📊 Plans page search - Using Firebase:', term);
+      console.log('📊 Plans page search - Using Supabase:', term);
       
-      // Plans page: Search in Firebase
-      const querySnapshot = await getDocs(collection(db, 'countries'));
-      const firebaseResults = [];
+      // Plans page: Search in Supabase
+      const { data: countriesData } = await supabase
+        .from('countries')
+        .select('*')
+        .eq('hidden', false);
       
-      for (const doc of querySnapshot.docs) {
-        const countryData = { id: doc.id, ...doc.data() };
-        
-        // Skip hidden countries
-        if (countryData.hidden === true) {
-          continue;
-        }
-        
-        // Check if country name matches search term (including aliases)
+      const supabaseResults = [];
+      
+      for (const countryData of (countriesData || [])) {
         if (matchesCountrySearch(countryData.name, term)) {
-          // Get plans for this country using country_codes array
-          const plansQuery = query(collection(db, 'dataplans'), where('country_codes', 'array-contains', countryData.code));
-          const plansSnapshot = await getDocs(plansQuery);
-          const plans = plansSnapshot.docs
-            .map(planDoc => planDoc.data())
-            // Filter out hidden and disabled plans
-            .filter(plan => plan.enabled !== false && plan.hidden !== true);
+          const { data: plans } = await supabase
+            .from('dataplans')
+            .select('*')
+            .contains('country_codes', [countryData.code])
+            .eq('enabled', true)
+            .eq('hidden', false);
           
-          // Filter out plans with invalid prices and calculate minimum
-          const validPrices = plans
+          const validPrices = (plans || [])
             .map(plan => parseFloat(plan.price))
             .filter(price => !isNaN(price) && price > 0);
           
           const minPrice = validPrices.length > 0 
             ? Math.min(...validPrices)
-            : null; // Use null instead of 999 fallback
+            : null;
           
-          // Debug logging
-          console.log(`🔍 Search result for ${countryData.name}:`, {
-            plansFound: plans.length,
-            validPrices: validPrices.length,
-            minPrice: minPrice,
-            allPrices: plans.map(p => p.price)
-          });
-          
-          firebaseResults.push({
+          supabaseResults.push({
             ...countryData,
             minPrice: minPrice,
             flagEmoji: getFlagEmoji(countryData.code)
@@ -332,9 +317,8 @@ const EsimPlans = () => {
         }
       }
       
-      console.log('Firebase search results:', firebaseResults.length);
-      // Translate Firebase search results based on current locale
-      const translatedResults = translateCountries(firebaseResults, locale);
+      console.log('Supabase search results:', supabaseResults.length);
+      const translatedResults = translateCountries(supabaseResults, locale);
       setSearchResults(translatedResults);
       
     } catch (error) {
@@ -436,14 +420,13 @@ const EsimPlans = () => {
 
     // Navigate directly to share-package page with 1GB auto-selected
     try {
-      const directPlansQuery = query(
-        collection(db, 'dataplans'),
-        where('country_codes', 'array-contains', country.code)
-      );
-      const directPlansSnapshot = await getDocs(directPlansQuery);
-      const plans = directPlansSnapshot.docs
-        .map(doc => ({ id: doc.id, ...doc.data() }))
-        .filter(plan => plan.enabled !== false && plan.hidden !== true);
+      const { data: plansData } = await supabase
+        .from('dataplans')
+        .select('*')
+        .contains('country_codes', [country.code])
+        .eq('enabled', true)
+        .eq('hidden', false);
+      const plans = (plansData || []).map(p => ({ id: p.id, ...p }));
 
       // Find 1GB plan (cheapest), fallback to cheapest plan overall
       const oneGBPlan = plans

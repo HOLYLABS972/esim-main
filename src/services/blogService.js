@@ -1,79 +1,73 @@
-import { 
-  collection, 
-  getDocs, 
-  doc, 
-  getDoc, 
-  addDoc, 
-  query, 
-  where, 
-  orderBy, 
-  serverTimestamp 
-} from 'firebase/firestore';
-import { db } from '../firebase/config';
+import { supabase } from '../supabase/config';
+
+const BRAND = 'esim';
 
 // Get all blog posts (public posts only, ordered by date)
 export const getBlogPosts = async () => {
   try {
-    const blogQuery = query(
-      collection(db, 'blog_posts'),
-      orderBy('publishedAt', 'desc')
-    );
-    
-    const postsSnapshot = await getDocs(blogQuery);
-    const posts = postsSnapshot.docs
-      .map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        publishedAt: doc.data().publishedAt?.toDate() || new Date()
-      }))
-      .filter(post => post.published !== false);
-    
-    return posts;
-  } catch (error) {
-    console.error('Error getting blog posts:', error);
-    
-    // If index doesn't exist yet, fetch all and sort in JS
-    try {
-      const postsSnapshot = await getDocs(collection(db, 'blog_posts'));
-      const posts = postsSnapshot.docs
-        .map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-          publishedAt: doc.data().publishedAt?.toDate() || new Date()
-        }))
-        .filter(post => post.published !== false)
-        .sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
-      
-      return posts;
-    } catch (fallbackError) {
-      console.error('Fallback query failed:', fallbackError);
+    if (!supabase) {
+      console.error('Supabase client not initialized');
       return [];
     }
+
+    const { data, error } = await supabase
+      .from('blog_posts')
+      .select('*')
+      .eq('brand', BRAND)
+      .eq('status', 'published')
+      .order('published_at', { ascending: false });
+
+    if (error) {
+      console.error('Error getting blog posts:', error);
+      return [];
+    }
+
+    return (data || []).map(post => ({
+      id: post.id,
+      slug: post.slug,
+      title: post.title,
+      excerpt: post.excerpt,
+      content: post.content,
+      coverImage: post.featured_image,
+      author: post.author || 'Roamjet Team',
+      tags: post.tags || [],
+      published: post.status === 'published',
+      publishedAt: post.published_at ? new Date(post.published_at) : new Date(),
+      metaDescription: post.seo_description || post.excerpt,
+    }));
+  } catch (error) {
+    console.error('Error getting blog posts:', error);
+    return [];
   }
 };
 
 // Get single blog post by slug
 export const getBlogPost = async (slug) => {
   try {
-    const postQuery = query(
-      collection(db, 'blog_posts'),
-      where('slug', '==', slug),
-      where('published', '==', true)
-    );
-    
-    const postsSnapshot = await getDocs(postQuery);
-    
-    if (postsSnapshot.empty) {
-      return null;
-    }
-    
-    const postDoc = postsSnapshot.docs[0];
-    const postData = postDoc.data();
-    
+    if (!supabase) return null;
+
+    const { data, error } = await supabase
+      .from('blog_posts')
+      .select('*')
+      .eq('slug', slug)
+      .eq('brand', BRAND)
+      .eq('status', 'published')
+      .single();
+
+    if (error || !data) return null;
+
     return {
-      id: postDoc.id,
-      ...postData,
-      publishedAt: postData.publishedAt?.toDate() || new Date()
+      id: data.id,
+      slug: data.slug,
+      title: data.title,
+      excerpt: data.excerpt,
+      content: data.content,
+      coverImage: data.featured_image,
+      author: data.author || 'Roamjet Team',
+      tags: data.tags || [],
+      published: true,
+      publishedAt: data.published_at ? new Date(data.published_at) : new Date(),
+      metaDescription: data.seo_description || data.excerpt,
     };
   } catch (error) {
     console.error('Error getting blog post:', error);
@@ -81,23 +75,38 @@ export const getBlogPost = async (slug) => {
   }
 };
 
-// Create new blog post (for API and admin use)
+// Create new blog post
 export const createBlogPost = async (postData) => {
   try {
+    if (!supabase) throw new Error('Supabase not initialized');
+
     const blogPost = {
-      ...postData,
-      publishedAt: serverTimestamp(),
-      published: postData.published !== false, // Default to true unless explicitly false
-      images: postData.images || [], // Array of additional images for gallery/content
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
+      slug: postData.slug,
+      title: postData.title,
+      excerpt: postData.excerpt,
+      content: postData.content,
+      featured_image: postData.coverImage || null,
+      author: postData.author || 'Roamjet Team',
+      tags: postData.tags || [],
+      status: postData.published !== false ? 'published' : 'draft',
+      published_at: new Date().toISOString(),
+      seo_description: postData.metaDescription || postData.excerpt,
+      brand: BRAND,
+      language: 'en',
     };
-    
-    const docRef = await addDoc(collection(db, 'blog_posts'), blogPost);
-    
+
+    const { data, error } = await supabase
+      .from('blog_posts')
+      .insert(blogPost)
+      .select()
+      .single();
+
+    if (error) throw error;
+
     return {
-      id: docRef.id,
-      ...blogPost
+      id: data.id,
+      ...postData,
+      publishedAt: new Date(data.published_at),
     };
   } catch (error) {
     console.error('Error creating blog post:', error);
@@ -105,7 +114,7 @@ export const createBlogPost = async (postData) => {
   }
 };
 
-// Get featured blog posts (for home page, etc.)
+// Get featured blog posts
 export const getFeaturedBlogPosts = async (limit = 3) => {
   try {
     const posts = await getBlogPosts();
@@ -116,16 +125,13 @@ export const getFeaturedBlogPosts = async (limit = 3) => {
   }
 };
 
-// Search blog posts by tags or title
+// Search blog posts
 export const searchBlogPosts = async (searchTerm) => {
   try {
     const posts = await getBlogPosts();
-    
     if (!searchTerm) return posts;
-    
     const searchLower = searchTerm.toLowerCase();
-    
-    return posts.filter(post => 
+    return posts.filter(post =>
       post.title?.toLowerCase().includes(searchLower) ||
       post.excerpt?.toLowerCase().includes(searchLower) ||
       post.tags?.some(tag => tag.toLowerCase().includes(searchLower))
