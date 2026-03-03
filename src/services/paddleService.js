@@ -52,13 +52,17 @@ export const paddleService = {
 
     if (checkoutUrl) {
       let finalUrl = checkoutUrl;
-      if (orderData.customerEmail) {
+      if (orderData.customerEmail || orderData.countryCode || orderData.country) {
         try {
           if (typeof sessionStorage !== 'undefined') {
-            sessionStorage.setItem('paddle_customer_email', orderData.customerEmail);
+            if (orderData.customerEmail) sessionStorage.setItem('paddle_customer_email', orderData.customerEmail);
+            const country = orderData.countryCode || orderData.country;
+            if (country) sessionStorage.setItem('paddle_customer_country', country);
           }
           const url = new URL(checkoutUrl);
-          url.searchParams.set('email', orderData.customerEmail);
+          if (orderData.customerEmail) url.searchParams.set('email', orderData.customerEmail);
+          const country = orderData.countryCode || orderData.country;
+          if (country) url.searchParams.set('country', country);
           finalUrl = url.toString();
         } catch (_) {}
       }
@@ -77,8 +81,12 @@ export const paddleService = {
       } catch (_) {}
     }
     const openOptions = { transactionId };
-    if (orderData.customerEmail) {
-      openOptions.customer = { email: orderData.customerEmail };
+    const country = orderData.countryCode || orderData.country;
+    if (orderData.customerEmail || country) {
+      openOptions.customer = {
+        ...(orderData.customerEmail && { email: orderData.customerEmail }),
+        ...(country && { address: { countryCode: String(country).toUpperCase().slice(0, 2) } }),
+      };
     }
     Paddle.Checkout.open(openOptions);
     return { transactionId };

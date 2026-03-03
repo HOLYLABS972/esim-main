@@ -31,13 +31,25 @@ export default function CheckoutPageClient() {
           if (customerEmail) sessionStorage.removeItem('paddle_customer_email');
         } catch (_) {}
       }
+      let country = searchParams.get('country') || null;
+      if (!country && typeof sessionStorage !== 'undefined') {
+        try {
+          country = sessionStorage.getItem('paddle_customer_country');
+          if (country) sessionStorage.removeItem('paddle_customer_country');
+        } catch (_) {}
+      }
       if (customerEmail) {
         try {
           window.Paddle.Update({ pwCustomer: { email: customerEmail } });
         } catch (_) {}
       }
       const options = { transactionId: txnId };
-      if (customerEmail) options.customer = { email: customerEmail };
+      if (customerEmail || country) {
+        options.customer = {
+          ...(customerEmail && { email: customerEmail }),
+          ...(country && { address: { countryCode: String(country).toUpperCase().slice(0, 2) } }),
+        };
+      }
       window.Paddle.Checkout.open(options);
       setPaddleOpening(false);
     };

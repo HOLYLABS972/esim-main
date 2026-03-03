@@ -492,7 +492,8 @@ const SharePackagePage = () => {
         originalAmount: originalPrice, // Include original amount for reference
         userId: currentUser?.uid || null, // null for guest users
         isGuest: false, // Auth required
-        affiliateRef: affiliateRef || null // Affiliate tracking
+        affiliateRef: affiliateRef || null, // Affiliate tracking
+        countryCode: planToUse.country_code || (planToUse.country_codes && planToUse.country_codes[0]) || null,
       };
       
       console.log('💳 Order data for payment:', orderData);

@@ -541,7 +541,8 @@ const TopupPage = ({ iccid, countryCode: urlCountryCode }) => {
         currency: 'usd',
         type: 'topup', // Mark as topup
         iccid: iccid,
-        packageId: airaloPackageId // Use real Airalo package slug
+        packageId: airaloPackageId, // Use real Airalo package slug
+        countryCode: orderInfo?.countryCode || (selectedPackage.country_codes && selectedPackage.country_codes[0]) || selectedPackage.country_code || null,
       };
 
       console.log('💳 [SERVER] Topup order data for payment:', orderData);

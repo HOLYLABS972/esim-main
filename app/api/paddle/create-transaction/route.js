@@ -53,6 +53,7 @@ export async function POST(request) {
       collection_mode: 'automatic',
       custom_data: {
         orderId: orderData.orderId,
+        orderID: orderData.orderId,
         planId: orderData.planId,
         planName: orderData.planName,
         customerEmail: orderData.customerEmail,
@@ -61,6 +62,8 @@ export async function POST(request) {
         isGuest: orderData.isGuest ?? !orderData.userId,
         affiliateRef: orderData.affiliateRef || null,
         iccid: orderData.iccid || null,
+        country: orderData.country || orderData.countryCode || null,
+        countryCode: orderData.countryCode || orderData.country || null,
       },
     };
 
