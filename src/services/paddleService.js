@@ -51,20 +51,31 @@ export const paddleService = {
     if (!transactionId) throw new Error('No transaction ID from Paddle');
 
     if (checkoutUrl) {
-      if (orderData.customerEmail && typeof sessionStorage !== 'undefined') {
+      let finalUrl = checkoutUrl;
+      if (orderData.customerEmail) {
         try {
-          sessionStorage.setItem('paddle_customer_email', orderData.customerEmail);
+          if (typeof sessionStorage !== 'undefined') {
+            sessionStorage.setItem('paddle_customer_email', orderData.customerEmail);
+          }
+          const url = new URL(checkoutUrl);
+          url.searchParams.set('email', orderData.customerEmail);
+          finalUrl = url.toString();
         } catch (_) {}
       }
       if (window !== window.top) {
-        window.open(checkoutUrl, '_blank');
+        window.open(finalUrl, '_blank');
       } else {
-        window.location.href = checkoutUrl;
+        window.location.href = finalUrl;
       }
       return { transactionId };
     }
 
     const Paddle = await ensurePaddleInitialized();
+    if (orderData.customerEmail) {
+      try {
+        Paddle.Update({ pwCustomer: { email: orderData.customerEmail } });
+      } catch (_) {}
+    }
     const openOptions = { transactionId };
     if (orderData.customerEmail) {
       openOptions.customer = { email: orderData.customerEmail };

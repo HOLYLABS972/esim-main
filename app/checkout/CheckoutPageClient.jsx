@@ -24,11 +24,18 @@ export default function CheckoutPageClient() {
 
     const openPaddleCheckout = () => {
       if (typeof window === 'undefined' || !window.Paddle) return;
-      let customerEmail = null;
-      try {
-        customerEmail = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('paddle_customer_email') : null;
-        if (customerEmail) sessionStorage.removeItem('paddle_customer_email');
-      } catch (_) {}
+      let customerEmail = searchParams.get('email') || null;
+      if (!customerEmail && typeof sessionStorage !== 'undefined') {
+        try {
+          customerEmail = sessionStorage.getItem('paddle_customer_email');
+          if (customerEmail) sessionStorage.removeItem('paddle_customer_email');
+        } catch (_) {}
+      }
+      if (customerEmail) {
+        try {
+          window.Paddle.Update({ pwCustomer: { email: customerEmail } });
+        } catch (_) {}
+      }
       const options = { transactionId: txnId };
       if (customerEmail) options.customer = { email: customerEmail };
       window.Paddle.Checkout.open(options);
