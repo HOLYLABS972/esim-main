@@ -16,10 +16,8 @@ export default function PaddleProvider({ children }) {
     script.async = true;
     script.onload = () => {
       if (typeof window !== 'undefined' && window.Paddle) {
-        const env = process.env.NEXT_PUBLIC_PADDLE_ENV === 'sandbox' ? 'sandbox' : 'production';
         window.Paddle.Initialize({
           token,
-          environment: env,
         });
         loadedRef.current = true;
       }

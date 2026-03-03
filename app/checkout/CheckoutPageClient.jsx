@@ -38,9 +38,8 @@ export default function CheckoutPageClient() {
     script.async = true;
     script.onload = () => {
       const token = process.env.NEXT_PUBLIC_PDL_API_KEY;
-      const env = process.env.NEXT_PUBLIC_PADDLE_ENV === 'sandbox' ? 'sandbox' : 'production';
       if (token && window.Paddle) {
-        window.Paddle.Initialize({ token, environment: env });
+        window.Paddle.Initialize({ token });
         openPaddleCheckout();
       }
       setPaddleOpening(false);

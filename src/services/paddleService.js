@@ -23,8 +23,7 @@ async function ensurePaddleInitialized() {
   const token = process.env.NEXT_PUBLIC_PDL_API_KEY;
   if (!token) throw new Error('Paddle API key not configured (NEXT_PUBLIC_PDL_API_KEY)');
   if (!window.__paddleInitialized) {
-    const env = process.env.NEXT_PUBLIC_PADDLE_ENV === 'sandbox' ? 'sandbox' : 'production';
-    Paddle.Initialize({ token, environment: env });
+    Paddle.Initialize({ token });
     window.__paddleInitialized = true;
   }
   return Paddle;

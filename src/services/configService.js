@@ -137,6 +137,12 @@ class ConfigService {
   // DataPlans environment
   async getDataPlansEnvironment() { return 'production'; }
 
+  // API key mode (sandbox vs production) for balance/checkout - used by share-package and others
+  async getApiKeyMode() {
+    const airalo = await this.getAiraloConfig();
+    return airalo?.environment === 'sandbox' ? 'sandbox' : 'production';
+  }
+
   clearCache() { this.cache.clear(); }
   listenToConfigChanges() {}
   stopListening() {}
