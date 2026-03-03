@@ -480,11 +480,13 @@ const SharePackagePage = () => {
     try {
       // Generate unique order ID for each purchase
       const uniqueOrderId = `${planToUse.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      // Use Airalo package slug for order/API; fallback to id if no slug
+      const airaloPackageSlug = planToUse.slug || planToUse.airalo_slug || planToUse.id;
 
       // Create order data for payment service
       const orderData = {
         orderId: uniqueOrderId,
-        planId: planToUse.id,
+        planId: airaloPackageSlug,
         planName: planToUse.name,
         customerEmail: customerEmail,
         amount: finalPrice, // Use discounted price
@@ -502,7 +504,7 @@ const SharePackagePage = () => {
       // Store order info (for iframe compatibility, also pass in URL)
       const pendingOrder = {
         orderId: uniqueOrderId,
-        planId: planToUse.id,
+        planId: airaloPackageSlug,
         customerEmail: customerEmail,
         amount: finalPrice,
         currency: 'usd',

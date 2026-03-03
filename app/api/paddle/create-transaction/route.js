@@ -27,6 +27,12 @@ export async function POST(request) {
 
     const origin = request.headers.get('origin') || request.headers.get('referer')?.replace(/\/$/, '') || '';
     const baseSuccess = successUrl || `${origin}/payment-success`;
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || origin || 'https://roamjet.net';
+    // Paddle docs: pass checkout.url to override the domain for the payment link.
+    // After payment (including Apple Pay), Paddle redirects to this URL + ?_ptxn=txn_xxx.
+    // https://developer.paddle.com/api-reference/transactions/create-transaction (checkout.url)
+    const successCallbackUrl = `${baseUrl.replace(/\/$/, '')}/payment-success`;
+
     const currency = (orderData.currency || 'usd').toUpperCase();
     const amountCents = Math.round(parseFloat(orderData.amount) * 100);
     const amountStr = String(amountCents);
@@ -54,6 +60,9 @@ export async function POST(request) {
       ],
       currency_code: currency,
       collection_mode: 'automatic',
+      checkout: {
+        url: successCallbackUrl,
+      },
       custom_data: {
         orderId: orderData.orderId,
         orderID: orderData.orderId,
