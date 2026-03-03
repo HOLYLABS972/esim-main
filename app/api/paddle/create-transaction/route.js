@@ -40,7 +40,7 @@ export async function POST(request) {
           quantity: 1,
           price: {
             description: planName,
-            name: itemTitle,
+            name: 'eSIM',
             unit_price: {
               amount: amountStr,
               currency_code: currency,

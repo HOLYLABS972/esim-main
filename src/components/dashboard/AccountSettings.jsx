@@ -6,7 +6,7 @@ import { useI18n } from '../../contexts/I18nContext';
 
 const AccountSettings = ({ currentUser, userProfile, onLoadUserProfile }) => {
   const { t } = useI18n();
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
   const [editingName, setEditingName] = useState(false);
   const [editingPhone, setEditingPhone] = useState(false);
   const [newName, setNewName] = useState(currentUser?.displayName || '');
