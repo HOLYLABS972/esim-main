@@ -43,58 +43,41 @@ const PaymentSuccess = () => {
     }
   }, []);
 
-  // Poll Paddle transaction → get orderId from custom_data → poll Supabase
+  // Get orderId from Paddle transaction, then poll Supabase
   async function pollPaddleOrder(txnId) {
     try {
-      // Get the order ID from Paddle transaction
-      const res = await fetch(`/api/paddle/transaction?txn=${encodeURIComponent(txnId)}`);
-      if (!res.ok) {
-        if (pollCount.current < 15) {
-          pollCount.current++;
-          setTimeout(() => pollPaddleOrder(txnId), 2000);
-          return;
-        }
-        throw new Error('Could not load transaction');
-      }
-      const data = await res.json();
+      // Try to get orderId from Paddle (may take a few attempts)
+      let oid = null;
+      let customerEmail = null;
+      let planName = null;
 
-      const oid = data.customData?.orderId;
-
-      if (data.status !== 'completed') {
-        // Transaction not complete yet, retry up to 15 times (30s)
-        if (pollCount.current < 15) {
-          pollCount.current++;
-          setTimeout(() => pollPaddleOrder(txnId), 2000);
-          return;
-        }
-        // After 30s, if we have an orderId, try polling Supabase directly
-        // (webhook may have already fulfilled it)
-        if (oid) {
-          pollCount.current = 0;
-          pollOrderById(oid);
-          return;
-        }
-        // Show timeout, not error — payment likely went through
-        setStatus('timeout');
-        setOrder({ email: data.customData?.customerEmail, plan_name: data.customData?.planName });
-        return;
+      for (let i = 0; i < 10; i++) {
+        try {
+          const res = await fetch(`/api/paddle/transaction?txn=${encodeURIComponent(txnId)}`);
+          if (res.ok) {
+            const data = await res.json();
+            oid = data.customData?.orderId;
+            customerEmail = data.customData?.customerEmail;
+            planName = data.customData?.planName;
+            if (oid) break;
+          }
+        } catch {}
+        await new Promise(r => setTimeout(r, 2000));
       }
 
       if (oid) {
+        // Got orderId — now poll Supabase for the fulfilled order (webhook fills it)
         pollCount.current = 0;
         pollOrderById(oid);
       } else {
-        // No orderId — webhook will handle, show generic success
-        setStatus('ready');
-        setOrder({
-          plan_name: data.customData?.planName || 'eSIM Plan',
-          email: data.customData?.customerEmail,
-        });
+        // Could not get orderId from Paddle — show "almost there" (webhook will handle)
+        setStatus('timeout');
+        setOrder({ customer_email: customerEmail, plan_name: planName });
       }
     } catch (e) {
       console.error('Paddle poll error:', e);
-      setStatus('error');
-      setError(e.message);
+      // Never show error for paid transactions — webhook will deliver
+      setStatus('timeout');
     }
   }
 
