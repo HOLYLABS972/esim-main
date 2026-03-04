@@ -91,7 +91,10 @@ const PaymentSuccess = () => {
           setTimeout(() => pollOrderById(oid), 2000);
           return;
         }
-        throw new Error('Order not found');
+        // Order not found after many retries — webhook may still be processing; show friendly message
+        setStatus('timeout');
+        setOrder({ order_id: oid });
+        return;
       }
 
       const data = await res.json();
@@ -114,8 +117,9 @@ const PaymentSuccess = () => {
         pollCount.current++;
         setTimeout(() => pollOrderById(oid), 2000);
       } else {
-        setStatus('error');
-        setError('Could not verify order. If you were charged, your eSIM will be emailed to you shortly.');
+        // Network/other error — don't show "Something went wrong"; payment likely succeeded
+        setStatus('timeout');
+        setOrder({ order_id: oid });
       }
     }
   }
@@ -194,13 +198,16 @@ const PaymentSuccess = () => {
           </>
         )}
 
-        {/* Timeout — webhook slow */}
+        {/* Timeout — webhook slow or order not found yet */}
         {status === 'timeout' && (
           <>
             <Loader2 className="w-16 h-16 text-yellow-400 mx-auto mb-4" />
             <h1 className="text-2xl font-bold text-white mb-2">Almost there...</h1>
             <p className="text-white/50 mb-4">
               Your payment was received. Your eSIM is being provisioned and will be ready shortly.
+            </p>
+            <p className="text-white/40 text-sm mb-4">
+              If you already received your eSIM, you can find it in your dashboard.
             </p>
             {order?.customer_email && (
               <p className="text-white/50 mb-4">
