@@ -52,7 +52,11 @@ async function createAiraloOrder(token, packageId, quantity = 1, email = null) {
     body: formData,
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data?.message || `Airalo error ${res.status}`);
+  if (!res.ok) {
+    const msg = data?.message || data?.meta?.message || data?.errors?.[0]?.detail || `Airalo error ${res.status}`;
+    console.error('❌ Airalo order failed:', res.status, JSON.stringify(data));
+    throw new Error(msg);
+  }
   return data.data;
 }
 
@@ -116,6 +120,19 @@ export async function POST(request) {
       return NextResponse.json({ error: 'No planId in custom_data' }, { status: 400 });
     }
 
+    const supabase = SUPABASE_SERVICE_KEY ? createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY) : null;
+
+    // Resolve planId to Airalo package slug (custom_data may contain internal id from Checkout)
+    let airaloPackageId = planId;
+    if (supabase) {
+      const byId = await supabase.from('dataplans').select('slug').eq('id', planId).limit(1).maybeSingle();
+      const planRow = byId.data ?? (await supabase.from('dataplans').select('slug').eq('slug', planId).limit(1).maybeSingle()).data;
+      if (planRow?.slug) {
+        airaloPackageId = planRow.slug;
+        if (airaloPackageId !== planId) console.log(`📌 Resolved planId ${planId} → Airalo slug ${airaloPackageId}`);
+      }
+    }
+
     // Calculate amount
     const totalAmount = txn.details?.totals?.total;
     const amount = totalAmount ? parseInt(totalAmount, 10) / 100 : 0;
@@ -125,9 +142,7 @@ export async function POST(request) {
       txn.items?.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0)
     ) || 1);
 
-    console.log(`📦 Processing order: ${orderId} | Plan: ${planId} | Email: ${customerEmail} | Qty: ${quantity} | Amount: $${amount}`);
-
-    const supabase = SUPABASE_SERVICE_KEY ? createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY) : null;
+    console.log(`📦 Processing order: ${orderId} | Plan: ${planId} | Airalo slug: ${airaloPackageId} | Email: ${customerEmail} | Qty: ${quantity} | Amount: $${amount}`);
 
     // Idempotency: check if order already fulfilled
     if (supabase && orderId) {
@@ -156,7 +171,7 @@ export async function POST(request) {
 
     // Provision eSIM via Airalo
     const token = await getAiraloToken();
-    const airaloOrder = await createAiraloOrder(token, planId, quantity, customerEmail);
+    const airaloOrder = await createAiraloOrder(token, airaloPackageId, quantity, customerEmail);
 
     const sims = airaloOrder?.sims || [];
     const firstSim = sims[0] || {};
