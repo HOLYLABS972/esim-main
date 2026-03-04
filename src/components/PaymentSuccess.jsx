@@ -1,1063 +1,226 @@
 'use client';
 
-import { useEffect, useState, useRef, useCallback } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useAuth } from '../contexts/AuthContext';
-import { supabase } from '../supabase/config';
-import { apiService } from '../services/apiService';
-import { configService } from '../services/configService';
-import { coinbaseService } from '../services/coinbaseService';
-import Image from 'next/image';
-import { QrCode, Download, CheckCircle, AlertCircle } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { useEffect, useState, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { CheckCircle, Loader2, AlertCircle, QrCode } from 'lucide-react';
 
+/**
+ * PaymentSuccess — Display-only page.
+ * All business logic (Airalo provisioning, DB writes) handled by webhooks.
+ * This page just polls the order status and shows the QR code when ready.
+ */
 const PaymentSuccess = () => {
-  console.log('🚀 PaymentSuccess component mounting...');
-  
-  const router = useRouter();
   const searchParams = useSearchParams();
-  const { currentUser, loading: authLoading } = useAuth();
+  const [status, setStatus] = useState('processing'); // processing | ready | error | timeout
+  const [order, setOrder] = useState(null);
   const [error, setError] = useState(null);
-  const [processing, setProcessing] = useState(true);
-  const [orderComplete, setOrderComplete] = useState(false);
-  const [qrCodeData, setQrCodeData] = useState(null);
-  const [orderInfo, setOrderInfo] = useState(null);
-  const hasProcessed = useRef(false);
-  const isInIframe = typeof window !== 'undefined' && window !== window.top;
+  const pollCount = useRef(0);
+  const maxPolls = 30; // 30 × 2s = 60s max wait
+  const hasStarted = useRef(false);
 
-  console.log('🔐 PaymentSuccess - Auth State:', {
-    authLoading,
-    hasCurrentUser: !!currentUser,
-    userEmail: currentUser?.email,
-    urlParams: {
-      order: searchParams.get('order_id') || searchParams.get('order'),
-      email: searchParams.get('email'),
-      session_id: searchParams.get('session_id')
-    }
-  });
-
-  // Create topup record
-  const createTopupRecord = async (topupData) => {
-    try {
-      console.log('📦 Creating topup after payment...');
-      console.log('📦 Topup data:', topupData);
-      console.log('📦 Package ID being sent:', topupData.packageId);
-      console.log('📦 ICCID being sent:', topupData.iccid);
-      
-      // Validate package ID before sending
-      if (!topupData.packageId || topupData.packageId === 'topup' || topupData.packageId.startsWith('topup-')) {
-        const errorMsg = `Invalid package ID: ${topupData.packageId}. Expected a real Airalo package slug.`;
-        console.error('❌', errorMsg);
-        throw new Error(errorMsg);
-      }
-      
-      // Validate that package ID looks like a valid Airalo slug (should contain hyphens, not spaces)
-      if (!topupData.packageId.includes('-') || topupData.packageId.includes(' ')) {
-        console.warn('⚠️ Package ID format looks suspicious:', topupData.packageId);
-      }
-      
-      // Use the dedicated topup API endpoint
-      const result = await apiService.createTopup({
-        iccid: topupData.iccid,
-        package_id: topupData.packageId.trim() // Ensure no whitespace
-      });
-
-      if (result.success) {
-        console.log('✅ Topup created successfully:', result);
-        toast.success('Topup created successfully! Your data has been added to your eSIM.');
-        return { success: true, topupId: result.topupId };
-      } else {
-        const errorMsg = result.error || 'Failed to create topup';
-        console.error('❌ Topup API returned error:', errorMsg);
-        console.error('❌ Package ID that failed:', topupData.packageId);
-        
-        // Provide more helpful error message
-        if (errorMsg.includes('Package not found') || errorMsg.includes('422')) {
-          throw new Error(`Topup package "${topupData.packageId}" is not compatible with your eSIM. Please select a different topup package that matches your eSIM's carrier.`);
-        }
-        
-        throw new Error(errorMsg);
-      }
-    } catch (error) {
-      console.error('❌ Error creating topup:', error);
-      console.error('❌ Topup data that caused error:', topupData);
-      
-      // Enhance error message for better user experience
-      if (error.message && error.message.includes('422')) {
-        error.message = `The selected topup package is not compatible with your eSIM. Please try selecting a different topup package.`;
-      }
-      
-      throw error;
-    }
-  };
-
-  // Create order record in Firebase and process with RoamJet API
-  const createOrderRecord = async (orderData) => {
-    try {
-      // Check if we're in test mode
-      const stripeMode = await configService.getStripeMode();
-      const isTestMode = stripeMode === 'test' || stripeMode === 'sandbox';
-      
-      console.log('🛒 Creating RoamJet order...');
-      console.log('🔍 Stripe Mode:', stripeMode, '| Test Mode:', isTestMode);
-      
-      // For guest users, store in global orders collection
-      const isGuest = !orderData.userId || orderData.isGuest;
-      
-      // Global order reference (for all users)
-      const globalOrderRef = null /* migrated to supabase */;
-      
-      // IDEMPOTENCY CHECK: Check if order already exists
-      const existingOrderDoc = { exists: () => false };
-      if (existingOrderDoc.exists()) {
-        console.log('✅ Order already exists, skipping creation:', orderData.orderId);
-        const existingData = existingOrderDoc.data();
-        return {
-          success: true,
-          orderId: orderData.orderId,
-          qrCodeData: existingData.esimData?.qrcode ? { qrCode: existingData.esimData.qrcode } : null,
-          alreadyExists: true
-        };
-      }
-      
-      // User-specific order reference (only for authenticated users)
-      const userOrderRef = isGuest ? null : null /* migrated to supabase */;
-      
-      // Step 1: Create order via Python API
-      console.log(`📞 Creating order via API (${isTestMode ? 'TEST' : 'LIVE'} mode)`);
-      
-      const airaloOrderResult = await apiService.createOrder({
-        package_id: orderData.planId,
-        quantity: orderData.quantity != null ? String(orderData.quantity) : '1',
-        to_email: orderData.customerEmail,
-        description: `eSIM order for ${orderData.customerEmail}`,
-        mode: stripeMode,
-        isGuest: isGuest
-      });
-      
-      console.log('✅ Order created by backend:', airaloOrderResult);
-
-      // Extract country info from Airalo response or fallback to plan-based lookup
-      let countryInfo = { code: "US", name: "United States" }; // Default
-      
-      if (airaloOrderResult.orderData?.country_code) {
-        // Use country data from Airalo API response
-        countryInfo = {
-          code: airaloOrderResult.orderData.country_code,
-          name: airaloOrderResult.orderData.country_name || airaloOrderResult.orderData.country_code
-        };
-        console.log('🌍 Using country from Airalo API:', countryInfo);
-      } else {
-        // Fallback: Extract from plan ID
-        const getCountryFromPlan = (planId) => {
-          if (!planId) return { code: "US", name: "United States" };
-          const countryMap = {
-            'change': { code: "US", name: "United States" },
-            'kargi': { code: "GE", name: "Georgia" },
-            'giza-mobile': { code: "EG", name: "Egypt" },
-            'nile-mobile': { code: "EG", name: "Egypt" },
-          };
-          const countryKey = Object.keys(countryMap).find(key => planId.includes(key));
-          return countryMap[countryKey] || { code: "US", name: "United States" };
-        };
-        countryInfo = getCountryFromPlan(orderData.planId);
-        console.log('🌍 Using country from plan ID fallback:', countryInfo);
-      }
-
-      // Step 2: Save order to Firebase global orders collection
-      // Filter out undefined values (Firestore doesn't accept undefined)
-      const orderDoc = {
-        orderId: orderData.orderId,
-        userId: orderData.userId || null,
-        planId: orderData.planId,
-        planName: orderData.planName,
-        amount: orderData.amount,
-        currency: orderData.currency,
-        customerEmail: orderData.customerEmail,
-        status: 'active',
-        createdAt: new Date().toISOString(),
-        isTestMode: isTestMode,
-        stripeMode: stripeMode,
-        isGuest: isGuest,
-        countryCode: countryInfo.code,
-        countryName: countryInfo.name,
-        affiliateRef: orderData.affiliateRef || null
-      };
-      
-      // Only add fields that are not undefined
-      if (airaloOrderResult.airaloOrderId) {
-        orderDoc.airaloOrderId = airaloOrderResult.airaloOrderId;
-      }
-      if (airaloOrderResult.orderData) {
-        orderDoc.airaloOrderData = airaloOrderResult.orderData;
-      }
-      
-      // await setDoc(globalOrderRef, orderDoc);
-
-      // Also save to user collection if authenticated
-      // IMPORTANT: Save same structure as backend function for consistency with mobile app
-      if (userOrderRef) {
-        const airaloData = airaloOrderResult.orderData || {};
-        const packageName = airaloData.package || orderData.planName || 'eSIM Plan';
-        const dataAmount = airaloData.data || '';
-        const validityDays = airaloData.validity || 0;
-        const airaloPrice = airaloData.price || airaloData.net_price || orderData.amount || 0;
-        
-        const esimData = {
-          id: orderData.orderId,
-          orderId: orderData.orderId,
-          planId: orderData.planId,
-          packageId: orderData.planId,  // Save as packageId for mobile compatibility
-          package_id: orderData.planId,  // Save as package_id for web compatibility
-          planName: packageName,
-          dataAmount: dataAmount,  // Save as dataAmount for mobile compatibility
-          capacity: dataAmount,  // Also save as capacity for EsimModel compatibility
-          validity: validityDays,  // Save as validity for mobile compatibility
-          period: validityDays,  // Also save as period for EsimModel compatibility
-          periodDays: validityDays,  // Also save as periodDays for compatibility
-          amount: airaloPrice,  // Save as amount (backend convention)
-          price: airaloPrice,  // Also save as price for EsimModel compatibility
-          currency: orderData.currency || 'USD',
-          status: 'active',
-          customerEmail: orderData.customerEmail,
-          countryCode: countryInfo.code,
-          countryName: countryInfo.name,
-          country: countryInfo.name,  // Also save as country for mobile compatibility
-          provider: 'airalo',
-          isActive: true,
-          isArchived: false,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          userEmail: orderData.customerEmail
-        };
-        
-        // Only add fields that are not undefined
-        if (airaloOrderResult.airaloOrderId) {
-          esimData.airaloOrderId = airaloOrderResult.airaloOrderId;
-        }
-        if (airaloOrderResult.orderData) {
-          esimData.airaloOrderData = airaloOrderResult.orderData;
-          
-          // Extract and save esimData structure (same as backend function)
-          const simsData = airaloOrderResult.orderData.sims || [];
-          if (simsData && simsData.length > 0) {
-            const simData = simsData[0];
-            esimData.esimData = {
-              package_id: orderData.planId,  // Save package_id inside esimData
-              package: packageName,
-              price: airaloPrice,
-              net_price: airaloData.net_price || airaloPrice,
-              qrcode: simData.qrcode,
-              qrcode_url: simData.qrcode_url,
-              direct_apple_installation_url: simData.direct_apple_installation_url,
-              iccid: simData.iccid,
-              lpa: simData.lpa,
-              matching_id: simData.matching_id,
-              manual_installation: airaloOrderResult.orderData.manual_installation,
-              qrcode_installation: airaloOrderResult.orderData.qrcode_installation,
-              installation_guides: airaloOrderResult.orderData.installation_guides
-            };
-            
-            // Also save QR code fields at top level for easy access
-            esimData.qrCode = simData.qrcode;
-            esimData.qrCodeUrl = simData.qrcode_url;
-            esimData.directAppleInstallationUrl = simData.direct_apple_installation_url;
-            esimData.iccid = simData.iccid;
-            esimData.lpa = simData.lpa;
-            esimData.matchingId = simData.matching_id;
-            esimData.manualInstallation = airaloOrderResult.orderData.manual_installation;
-            esimData.qrcodeInstallation = airaloOrderResult.orderData.qrcode_installation;
-            esimData.installationGuides = airaloOrderResult.orderData.installation_guides;
-          }
-        }
-        
-        // await setDoc(userOrderRef, esimData);
-        console.log('✅ Order saved to user collection with complete structure matching mobile app');
-      }
-
-      // Step 3: Try to get QR code immediately
-      let qrCodeData = null;
-      try {
-        console.log('🔄 Attempting to retrieve QR code for order:', orderData.orderId);
-        const qrResult = await apiService.getQrCode(orderData.orderId, isGuest);
-        
-        if (qrResult.success && qrResult.qrCode) {
-          console.log('✅ QR code retrieved:', qrResult);
-          qrCodeData = {
-            qrCode: qrResult.qrCode,
-            qrCodeUrl: qrResult.qrCodeUrl,
-            activationCode: qrResult.activationCode,
-            iccid: qrResult.iccid,
-            directAppleInstallationUrl: qrResult.directAppleInstallationUrl
-          };
-          
-          // Update order with QR code — migrated to Supabase
-          /* await setDoc(globalOrderRef, {
-            qrCode: qrResult.qrCode,
-            qrCodeUrl: qrResult.qrCodeUrl,
-            iccid: qrResult.iccid,
-            activationCode: qrResult.activationCode,
-            directAppleInstallationUrl: qrResult.directAppleInstallationUrl,
-          }, { merge: true }); */
-          
-          if (userOrderRef) {
-            // Update user collection with QR code (merge to preserve existing structure)
-            const qrUpdate = {
-              qrCode: qrResult.qrCode,
-              qrCodeUrl: qrResult.qrCodeUrl,
-              iccid: qrResult.iccid,
-              activationCode: qrResult.activationCode,
-              directAppleInstallationUrl: qrResult.directAppleInstallationUrl,
-              updatedAt: new Date().toISOString()
-            };
-            
-            // Also update nested esimData if it exists (Firestore doesn't support nested updates with dot notation in setDoc)
-            // We'll update the whole esimData object if it exists
-            // await setDoc(userOrderRef, qrUpdate, { merge: true });
-          }
-        }
-      } catch (qrError) {
-        console.log('⏳ QR code not ready yet:', qrError.message);
-      }
-
-      // Record affiliate sale if applicable
-      if (orderData.affiliateRef) {
-        try {
-          console.log('🤝 Recording affiliate sale for:', orderData.affiliateRef);
-          // Affiliate sales migrated to Supabase
-          console.log('Affiliate tracking skipped — migrating to Supabase');
-          console.log('✅ Affiliate sale recorded');
-        } catch (affErr) {
-          console.error('⚠️ Failed to record affiliate sale:', affErr);
-        }
-      }
-
-      return {
-        success: true,
-        orderId: orderData.orderId,
-        qrCodeData: qrCodeData
-      };
-    } catch (error) {
-      console.error('❌ Error creating order record:', error);
-      throw error;
-    }
-  };
-
-  const handlePaymentSuccess = useCallback(async () => {
-    try {
-      console.log('🎉 Processing payment success...');
-      
-      // Check for pending topup order first
-      const pendingTopupOrder = localStorage.getItem('pendingTopupOrder');
-      if (pendingTopupOrder) {
-        try {
-          const topupData = JSON.parse(pendingTopupOrder);
-          console.log('📦 Processing topup order:', topupData);
-          console.log('📦 Topup packageId:', topupData.packageId);
-          console.log('📦 Topup ICCID:', topupData.iccid);
-          
-          if (topupData.type === 'topup' && topupData.iccid && topupData.packageId) {
-            // Validate package ID is not "topup"
-            if (topupData.packageId === 'topup' || topupData.packageId.startsWith('topup-')) {
-              console.error('❌ Invalid package ID in localStorage:', topupData.packageId);
-              console.log('💡 This is likely old cached data. Clearing and continuing with regular order flow...');
-              localStorage.removeItem('pendingTopupOrder');
-              // Don't return, fall through to regular order handling
-            } else {
-              // Valid topup package ID, create topup order
-              const topupResult = await createTopupRecord(topupData);
-              
-              if (topupResult.success) {
-                // Clear pending topup order
-                localStorage.removeItem('pendingTopupOrder');
-                
-                // Redirect to QR code page or dashboard
-                if (topupData.iccid) {
-                  router.push(`/qr/${topupData.iccid}`);
-                } else {
-                  router.push('/dashboard');
-                }
-                return;
-              }
-            }
-          }
-        } catch (topupError) {
-          console.error('❌ Error processing topup order:', topupError);
-          localStorage.removeItem('pendingTopupOrder');
-        }
-      }
-      
-      // Get parameters from URL
-      const orderParam = searchParams.get('order_id') || searchParams.get('order');
-      const email = searchParams.get('email');
-      const total = searchParams.get('total');
-      const currency = searchParams.get('currency') || 'usd';
-      const paymentMethod = searchParams.get('payment_method') || 'stripe';
-      const sessionId = searchParams.get('session_id');
-      const planId = searchParams.get('plan');
-      const name = searchParams.get('name');
-      const chargeId = searchParams.get('charge_id');
-      const transactionId = searchParams.get('transaction_id') || searchParams.get('_ptxn');
-      const cancel = searchParams.get('cancel');
-      // Get affiliate ref from URL or fallback to localStorage
-      let affiliateRef = searchParams.get('ref');
-      if (!affiliateRef) {
-        try {
-          const pending = localStorage.getItem('pendingEsimOrder');
-          if (pending) {
-            const pendingData = JSON.parse(pending);
-            affiliateRef = pendingData.affiliateRef || null;
-          }
-        } catch (e) { /* ignore */ }
-      }
-
-      console.log('📋 URL Parameters:', {
-        orderParam,
-        email,
-        total,
-        currency,
-        paymentMethod,
-        sessionId,
-        planId,
-        transactionId,
-        cancel
-      });
-
-      // Handle Paddle payment (transaction_id or _ptxn from redirect)
-      if (transactionId && !cancel) {
-        console.log('💰 Processing Paddle payment success');
-        try {
-          const fetchTransaction = () =>
-            fetch(`/api/paddle/transaction?txn=${encodeURIComponent(transactionId)}`).then((r) =>
-              r.ok ? r.json() : r.json().then((e) => Promise.reject(new Error(e.error || 'Failed to load transaction')))
-            );
-          let data;
-          const maxAttempts = 5;
-          const delayMs = 2000;
-          for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-            try {
-              data = await fetchTransaction();
-            } catch (fetchErr) {
-              if (attempt < maxAttempts) {
-                console.log(`⏳ Could not load transaction yet (attempt ${attempt}/${maxAttempts}), retrying in ${delayMs / 1000}s...`, fetchErr.message);
-                await new Promise((r) => setTimeout(r, delayMs));
-                continue;
-              }
-              throw fetchErr;
-            }
-            if (data.status === 'completed' && data.customData?.orderId) break;
-            if (attempt < maxAttempts) {
-              console.log(`⏳ Transaction not completed yet (attempt ${attempt}/${maxAttempts}), retrying in ${delayMs / 1000}s...`);
-              await new Promise((r) => setTimeout(r, delayMs));
-            }
-          }
-          const { status, customData, totalAmount, quantity: paddleQuantity } = data;
-          if (status !== 'completed' || !customData?.orderId) {
-            setError('Payment not completed or order data missing. If you were charged, please contact support with your transaction ID.');
-            setProcessing(false);
-            return;
-          }
-          const orderParam = customData.orderId;
-          const isTopup = customData.type === 'topup' || orderParam.startsWith('topup-');
-          const amountNum = totalAmount ? parseInt(totalAmount, 10) / 100 : 0;
-          const quantity = paddleQuantity != null && paddleQuantity >= 1 ? String(paddleQuantity) : '1';
-          const orderData = {
-            planId: customData.planId,
-            planName: customData.planName || 'eSIM Plan',
-            amount: amountNum,
-            currency: 'usd',
-            customerEmail: customData.customerEmail,
-            orderId: customData.orderId,
-            userId: customData.userId || currentUser?.uid || null,
-            paymentMethod: 'paddle',
-            isGuest: customData.isGuest ?? !currentUser,
-            affiliateRef: customData.affiliateRef || null,
-            quantity,
-          };
-          if (isTopup) {
-            const orderParts = orderParam.split('-');
-            const iccid = orderParts.length >= 2 ? orderParts[1] : null;
-            if (!iccid) {
-              setError('Invalid topup order: No ICCID found');
-              setProcessing(false);
-              return;
-            }
-            let packageIdForTopup = customData.planId;
-            const pendingTopup = localStorage.getItem('pendingTopupOrder');
-            if (pendingTopup) {
-              try {
-                const topupDataFromStorage = JSON.parse(pendingTopup);
-                if (topupDataFromStorage.packageId && !topupDataFromStorage.packageId.startsWith('topup-')) {
-                  packageIdForTopup = topupDataFromStorage.packageId;
-                }
-              } catch (e) { /* ignore */ }
-            }
-            const topupData = {
-              orderId: orderParam,
-              iccid,
-              packageId: packageIdForTopup,
-              packageName: customData.planName || 'Topup Package',
-              amount: 0,
-              customerEmail: customData.customerEmail,
-              type: 'topup',
-            };
-            const topupResult = await createTopupRecord(topupData);
-            if (topupResult.success) {
-              localStorage.removeItem('pendingTopupOrder');
-              toast.success('Topup completed successfully!');
-              router.push(iccid ? `/qr/${iccid}` : '/dashboard');
-              return;
-            }
-          } else {
-            const orderResult = await createOrderRecord(orderData);
-            if (orderResult.success) {
-              setOrderInfo(orderData);
-              if (orderResult.qrCodeData) setQrCodeData(orderResult.qrCodeData);
-              setOrderComplete(true);
-            }
-          }
-        } catch (paddleErr) {
-          console.error('❌ Paddle payment processing failed:', paddleErr);
-          setError(paddleErr.message || 'Failed to process Paddle payment');
-        }
-        setProcessing(false);
-        return;
-      }
-
-      // Handle Coinbase payment (has order_id, email, total)
-      if (orderParam && email && total) {
-        console.log('💰 Processing Coinbase payment success');
-        
-        // Verify Coinbase charge if chargeId is provided
-        if (chargeId && paymentMethod === 'coinbase') {
-          try {
-            const verified = await coinbaseService.verifyCharge(chargeId);
-            if (!verified) {
-              console.warn('⚠️ Coinbase charge verification failed, but continuing...');
-            }
-          } catch (coinbaseError) {
-            console.error('⚠️ Error verifying Coinbase payment:', coinbaseError);
-          }
-        }
-
-        // Extract plan ID from order ID (format: planId-timestamp-random)
-        const extractPlanId = (orderId) => {
-          if (!orderId) return null;
-          
-          // For topup orders, the format is: topup-{iccid}-{timestamp}-{random}
-          // We need to get the real package ID from other sources
-          if (orderId.startsWith('topup-')) {
-            console.log('📦 Detected topup order, extracting package ID from other sources');
-            
-              // First try localStorage (should have the real package slug)
-              const pendingTopup = localStorage.getItem('pendingTopupOrder');
-              if (pendingTopup) {
-                try {
-                  const topupData = JSON.parse(pendingTopup);
-                if (topupData.packageId && topupData.packageId !== 'topup' && !topupData.packageId.startsWith('topup-')) {
-                    console.log('📦 Using package ID from localStorage:', topupData.packageId);
-                    return topupData.packageId;
-                  }
-                } catch (e) {
-                  console.error('Error parsing pendingTopupOrder:', e);
-                }
-              }
-              
-              // Fallback 1: Try to extract from the name parameter (format: "Name [slug]")
-              if (name) {
-                const slugMatch = name.match(/\[([^\]]+)\]$/);
-              if (slugMatch && slugMatch[1] && slugMatch[1] !== 'topup' && !slugMatch[1].startsWith('topup-')) {
-                  console.log('📦 Extracted package slug from name parameter:', slugMatch[1]);
-                  return slugMatch[1];
-                }
-              }
-              
-              // Fallback 2: URL parameter
-              const planFromUrl = planId;
-            if (planFromUrl && planFromUrl !== 'topup' && !planFromUrl.startsWith('topup-')) {
-                console.log('📦 Using plan from URL instead of "topup":', planFromUrl);
-                return planFromUrl;
-              }
-              
-            // Fallback 3: Try to map common topup names to package IDs
-            if (name) {
-              const nameToPackageMap = {
-                '1GB Topup': '17miles-7days-1gb',
-                '3GB Topup': '17miles-30days-3gb', 
-                '5GB Topup': '17miles-30days-5gb',
-                '10GB Topup': '17miles-30days-10gb',
-                '20GB Topup': '17miles-30days-20gb'
-              };
-              
-              const decodedName = decodeURIComponent(name);
-              if (nameToPackageMap[decodedName]) {
-                console.log('📦 Mapped topup name to package ID:', { name: decodedName, packageId: nameToPackageMap[decodedName] });
-                return nameToPackageMap[decodedName];
-              }
-            }
-            
-            // If still no valid package ID found, return null to trigger error
-            console.error('❌ Cannot find valid package ID for topup order. Need real Airalo slug.');
-            console.log('💡 Tried: localStorage, name parameter, URL parameter, name mapping - all failed');
-              return null;
-            }
-            
-          // For regular orders, extract from order ID
-          const parts = orderId.split('-');
-          const timestampIndex = parts.findIndex(part => /^\d{10,}$/.test(part)); // Look for timestamp (10+ digits)
-          if (timestampIndex > 0) {
-            const extracted = parts.slice(0, timestampIndex).join('-');
-            console.log('📦 Extracted plan ID from order ID:', { orderId, extracted });
-            return extracted;
-          }
-          
-          // If no timestamp found, return the original orderId
-          console.log('⚠️ No timestamp found in order ID, using as-is:', orderId);
-          return orderId;
-        };
-
-        const actualPlanId = extractPlanId(orderParam);
-        console.log('📦 Final plan ID to use:', { 
-          orderParam, 
-          planIdFromUrl: planId, 
-          extractedFromOrderId: extractPlanId(orderParam),
-          actualPlanId 
-        });
-
-        if (!actualPlanId) {
-          console.error('❌ No valid plan ID found!', { orderParam, planId });
-          setError('Invalid order: No plan ID found');
-          setProcessing(false);
-          return;
-        }
-
-        // Support both authenticated and guest users
-        const isGuest = !currentUser;
-        const orderData = {
-          planId: actualPlanId,
-          planName: decodeURIComponent(name || 'eSIM Plan'),
-          amount: Math.round(parseFloat(total || 0)),
-          currency: currency || 'usd',
-          customerEmail: email,
-          customerId: currentUser?.uid || null,
-          orderId: orderParam,
-          userId: currentUser?.uid || null,
-          paymentMethod: paymentMethod,
-          chargeId: chargeId || null,
-          isGuest: isGuest,
-          affiliateRef: affiliateRef || null
-        };
-        
-        console.log('🎯 Order data prepared:', orderData);
-
-        // Check if this is a topup order
-        if (orderParam.startsWith('topup-')) {
-          console.log('📦 Processing as topup order');
-          
-          // Extract ICCID from topup order ID (format: topup-{iccid}-{timestamp}-{random})
-          const orderParts = orderParam.split('-');
-          let iccid = null;
-          
-          // Find the ICCID (should be the second part after 'topup')
-          if (orderParts.length >= 2) {
-            iccid = orderParts[1];
-            console.log('📦 Extracted ICCID from order ID:', iccid);
-          }
-          
-          if (!iccid) {
-            console.error('❌ No ICCID found in topup order ID:', orderParam);
-            setError('Invalid topup order: No ICCID found');
-            setProcessing(false);
-            return;
-          }
-          
-          // Try to get package ID from multiple sources
-          let packageIdForTopup = actualPlanId;
-          
-          // Priority 1: Check localStorage for pending topup order
-          const pendingTopup = localStorage.getItem('pendingTopupOrder');
-          if (pendingTopup) {
-            try {
-              const topupDataFromStorage = JSON.parse(pendingTopup);
-              if (topupDataFromStorage.packageId && 
-                  topupDataFromStorage.packageId !== 'topup' && 
-                  !topupDataFromStorage.packageId.startsWith('topup-')) {
-                packageIdForTopup = topupDataFromStorage.packageId;
-                console.log('✅ Using package ID from localStorage:', packageIdForTopup);
-              }
-            } catch (e) {
-              console.error('Error parsing pendingTopupOrder:', e);
-            }
-          }
-          
-          // Priority 2: Use plan parameter from URL if available
-          if (!packageIdForTopup && planId && planId !== 'topup' && !planId.startsWith('topup-')) {
-            packageIdForTopup = planId;
-            console.log('✅ Using package ID from URL plan parameter:', packageIdForTopup);
-          }
-          
-          // Priority 3: Use actualPlanId from extractPlanId
-          if (!packageIdForTopup) {
-            packageIdForTopup = actualPlanId;
-            console.log('⚠️ Using package ID from extractPlanId:', packageIdForTopup);
-          }
-          
-          if (!packageIdForTopup) {
-            console.error('❌ No valid package ID found for topup order');
-            console.log('💡 Checked: localStorage, URL plan parameter, extractPlanId - all failed');
-            setError('Invalid topup order: Package ID not found. Please contact support.');
-            setProcessing(false);
-            return;
-          }
-          
-          // Create topup data
-          const topupData = {
-            orderId: orderParam,
-            iccid: iccid,
-            packageId: packageIdForTopup, // Use the package ID we found
-            packageName: decodeURIComponent(name || 'Topup Package'),
-            amount: Math.round(parseFloat(total || 0)),
-            customerEmail: email,
-            type: 'topup'
-          };
-          
-          console.log('📦 Topup data prepared:', topupData);
-          console.log('📦 Package ID being used:', packageIdForTopup);
-          
-          // Create topup record
-          const topupResult = await createTopupRecord(topupData);
-          
-          if (topupResult.success) {
-            console.log('✅ Topup created successfully');
-            toast.success('Topup completed successfully!');
-            
-            // Clear localStorage after successful topup
-            localStorage.removeItem('pendingTopupOrder');
-            
-            // Redirect to QR code page or dashboard
-            if (iccid) {
-              router.push(`/qr/${iccid}`);
-            } else {
-              router.push('/dashboard');
-            }
-            return;
-          }
-        } else {
-          // Regular order flow
-          console.log('📦 Processing as regular order');
-
-        // Create order record
-        const orderResult = await createOrderRecord(orderData);
-        
-        if (orderResult.success) {
-          console.log('✅ Order created successfully');
-          setOrderInfo(orderData);
-          if (orderResult.qrCodeData) {
-            setQrCodeData(orderResult.qrCodeData);
-          }
-          setOrderComplete(true);
-          }
-        }
-      } 
-      // Handle Stripe payment (has session_id, plan)
-      else if (sessionId) {
-        console.log('💳 Processing Stripe payment success');
-        
-        if (!planId) {
-          console.error('❌ No plan ID found in Stripe payment success');
-          setError('Missing plan information. Please contact support.');
-          setProcessing(false);
-          return;
-        }
-
-        // Check if user is authenticated (required for backend order creation)
-        if (!currentUser) {
-          console.error('❌ User not authenticated for Stripe order');
-          setError('Please log in to complete your order.');
-          setProcessing(false);
-          return;
-        }
-
-        try {
-          // Extract order ID from session metadata or generate one
-          // Use order ID from URL if available (from checkout session metadata)
-          const orderParam = searchParams.get('order_id') || searchParams.get('order');
-          
-          // IDEMPOTENCY CHECK: Check if order already exists
-          if (orderParam) {
-            const existingOrderRef = null /* migrated to supabase */;
-            const existingOrderDoc = { exists: () => false };
-            if (existingOrderDoc.exists()) {
-              console.log('✅ Order already exists, skipping creation:', orderParam);
-              const existingData = existingOrderDoc.data();
-              setOrderInfo({
-                orderId: orderParam,
-                planId: planId,
-                planName: decodeURIComponent(name || 'eSIM Plan'),
-                customerEmail: currentUser.email || email
-              });
-              setOrderComplete(true);
-              toast.success('Payment successful! Your eSIM order already exists.');
-              return;
-            }
-          }
-          
-          // Call backend Firebase function to create order
-          // Backend will handle all eSIM creation and Firestore records
-          console.log('📞 Calling backend create_order function with:', { planId, sessionId });
-          
-          // Get Airalo client ID from Firestore config
-          const configRef = null /* migrated to supabase */;
-          const configDoc = { exists: () => false };
-          let airaloClientId = null;
-          if (configDoc.exists()) {
-            const configData = configDoc.data();
-            airaloClientId = configData.api_key || configData.client_id;
-          }
-
-          // Call Firebase callable function (handles CORS automatically)
-          const { httpsCallable } = await import('firebase/functions');
-          const { functions } = await import('../firebase/config');
-          const createOrderFn = httpsCallable(functions, 'create_order');
-
-          const orderResult = await createOrderFn({
-            planId: planId,
-            quantity: "1",
-            to_email: currentUser.email || email,
-            description: `eSIM order for ${currentUser.email || email}`,
-            airalo_client_id: airaloClientId
-          });
-
-          console.log('✅ Backend order created:', orderResult.data);
-          
-          const backendOrderId = orderResult.data.orderId;
-          
-          // Wait for order to be processed (poll order_status collection)
-          console.log('⏳ Waiting for order to be processed...');
-          let orderStatus = null;
-          let attempts = 0;
-          const maxAttempts = 30; // 30 seconds max wait
-          
-          while (attempts < maxAttempts) {
-            const statusRef = null /* migrated to supabase */;
-            const statusDoc = { exists: () => false };
-            
-            if (statusDoc.exists()) {
-              orderStatus = statusDoc.data();
-              console.log(`📊 Order status (attempt ${attempts + 1}):`, orderStatus.status);
-              
-              if (orderStatus.status === 'completed' || orderStatus.status === 'success') {
-                console.log('✅ Order completed successfully');
-                break;
-              } else if (orderStatus.status === 'failed') {
-                throw new Error(orderStatus.error || 'Order processing failed');
-              }
-            }
-            
-            // Wait 1 second before next check
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            attempts++;
-          }
-          
-          if (!orderStatus || orderStatus.status !== 'completed') {
-            console.warn('⚠️ Order still processing, but showing success page');
-          }
-
-          // Set order info for display
-          setOrderInfo({
-            orderId: backendOrderId,
-            planId: planId,
-            planName: decodeURIComponent(name || 'eSIM Plan'),
-            customerEmail: currentUser.email || email
-          });
-          
-          setOrderComplete(true);
-          toast.success('Payment successful! Your eSIM order is being processed.');
-          
-        } catch (orderError) {
-          console.error('❌ Error creating order via backend:', orderError);
-          setError(`Failed to create order: ${orderError.message || 'Unknown error'}. Please contact support.`);
-        }
-      }
-      else {
-        throw new Error('Missing required payment parameters');
-      }
-      
-    } catch (err) {
-      console.error('❌ Payment processing failed:', err);
-      setError(`Error processing payment: ${err.message || 'Unknown error'}. Please contact support.`);
-    } finally {
-      setProcessing(false);
-    }
-  }, [currentUser, searchParams, router]);
+  // Get transaction/order info from URL params
+  const transactionId = searchParams.get('_ptxn') || searchParams.get('transaction_id');
+  const orderId = searchParams.get('order_id') || searchParams.get('order');
+  const isCancel = searchParams.get('cancel') === 'true';
 
   useEffect(() => {
-    // Wait for auth to finish loading
-    if (authLoading) {
-      console.log('⏳ Waiting for auth to load...');
+    if (hasStarted.current) return;
+    hasStarted.current = true;
+
+    if (isCancel) {
+      setStatus('error');
+      setError('Payment was cancelled.');
       return;
     }
 
-    // Process payment regardless of authentication status
-    // Guest users can complete orders too
-    if (!hasProcessed.current) {
-      console.log('✅ Processing payment (authenticated:', !!currentUser, ')');
-      hasProcessed.current = true;
-      handlePaymentSuccess();
+    if (transactionId) {
+      pollPaddleOrder(transactionId);
+    } else if (orderId) {
+      pollOrderById(orderId);
+    } else {
+      setStatus('error');
+      setError('No transaction or order ID found.');
     }
-  }, [authLoading, currentUser, handlePaymentSuccess]);
+  }, []);
 
-  // Show loading while auth is loading
-  if (authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-tufts-blue mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading authentication...</p>
-        </div>
-      </div>
-    );
+  // Poll Paddle transaction → get orderId from custom_data → poll Supabase
+  async function pollPaddleOrder(txnId) {
+    try {
+      // First get the order ID from Paddle transaction
+      const res = await fetch(`/api/paddle/transaction?txn=${encodeURIComponent(txnId)}`);
+      if (!res.ok) throw new Error('Could not load transaction');
+      const data = await res.json();
+
+      if (data.status !== 'completed') {
+        // Transaction not complete yet, retry
+        if (pollCount.current < 5) {
+          pollCount.current++;
+          setTimeout(() => pollPaddleOrder(txnId), 3000);
+          return;
+        }
+        throw new Error('Transaction not completed. If you were charged, your eSIM will be delivered shortly.');
+      }
+
+      const oid = data.customData?.orderId;
+      if (oid) {
+        pollOrderById(oid);
+      } else {
+        // No orderId — webhook will handle, show generic success
+        setStatus('ready');
+        setOrder({
+          planName: data.customData?.planName || 'eSIM Plan',
+          email: data.customData?.customerEmail,
+        });
+      }
+    } catch (e) {
+      console.error('Paddle poll error:', e);
+      setStatus('error');
+      setError(e.message);
+    }
   }
 
-  if (processing) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-tufts-blue mx-auto mb-4"></div>
-          <p className="text-gray-600">Processing payment and activating eSIM...</p>
-        </div>
-      </div>
-    );
+  // Poll Supabase for order with QR code (webhook fills this in)
+  async function pollOrderById(oid) {
+    try {
+      const res = await fetch(`/api/orders/status?id=${encodeURIComponent(oid)}`);
+      if (!res.ok) {
+        if (pollCount.current < maxPolls) {
+          pollCount.current++;
+          setTimeout(() => pollOrderById(oid), 2000);
+          return;
+        }
+        throw new Error('Order not found');
+      }
+
+      const data = await res.json();
+
+      if (data.airalo_order_id && data.qr_code) {
+        // Order fulfilled by webhook
+        setOrder(data);
+        setStatus('ready');
+      } else if (pollCount.current < maxPolls) {
+        // Not ready yet, keep polling
+        pollCount.current++;
+        setTimeout(() => pollOrderById(oid), 2000);
+      } else {
+        // Timeout — webhook might be slow
+        setStatus('timeout');
+        setOrder(data);
+      }
+    } catch (e) {
+      if (pollCount.current < maxPolls) {
+        pollCount.current++;
+        setTimeout(() => pollOrderById(oid), 2000);
+      } else {
+        setStatus('error');
+        setError('Could not verify order. If you were charged, your eSIM will be emailed to you shortly.');
+      }
+    }
   }
 
-  if (error) {
+  if (isCancel) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="max-w-md mx-auto bg-white rounded-xl shadow-lg p-6 text-center">
-          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Payment Error</h2>
-          <p className="text-gray-600 mb-4">{error}</p>
-          <button
-            onClick={() => router.push('/')}
-            className="px-4 py-2 bg-tufts-blue text-white rounded-lg hover:bg-tufts-blue-dark transition-colors"
-          >
-            Go to Home
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (!orderComplete || !orderInfo) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="max-w-md mx-auto bg-white rounded-xl shadow-lg p-6 text-center">
-          <AlertCircle className="w-12 h-12 text-yellow-500 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Processing Order</h2>
-          <p className="text-gray-600">Your order is being processed. Please check your email or dashboard.</p>
+      <div className="min-h-screen bg-gray-950 flex items-center justify-center p-6">
+        <div className="max-w-md w-full text-center">
+          <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
+          <h1 className="text-2xl font-bold text-white mb-2">Payment Cancelled</h1>
+          <p className="text-white/50 mb-6">Your payment was cancelled. No charges were made.</p>
+          <a href="/" className="inline-block px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition">
+            Back to Home
+          </a>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-alice-blue py-12 px-4">
-      <div className="max-w-4xl mx-auto">
-        {/* Success Header */}
-        <div className="text-center mb-12">
-          <CheckCircle className="w-20 h-20 text-green-500 mx-auto mb-6" />
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Payment Successful! 🎉</h1>
-          <p className="text-xl text-gray-600">Your eSIM is now active and ready to use</p>
-        </div>
+    <div className="min-h-screen bg-gray-950 flex items-center justify-center p-6">
+      <div className="max-w-md w-full text-center">
 
-        {/* Order Details */}
-        <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-6">Order Details</h2>
-          <div className="grid md:grid-cols-2 gap-6">
-            <div>
-              <h3 className="font-medium text-gray-700 mb-2">Plan</h3>
-              <p className="text-gray-900">{orderInfo.planName}</p>
-            </div>
-            <div>
-              <h3 className="font-medium text-gray-700 mb-2">Order ID</h3>
-              <p className="text-gray-900 font-mono text-sm">{orderInfo.orderId}</p>
-            </div>
-            <div>
-              <h3 className="font-medium text-gray-700 mb-2">Amount</h3>
-              <p className="text-gray-900">${orderInfo.amount}</p>
-            </div>
-            <div>
-              <h3 className="font-medium text-gray-700 mb-2">Status</h3>
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                Active
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* QR Code Section */}
-        {qrCodeData && qrCodeData.qrCode && (
-          <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
-            <div className="text-center">
-              <QrCode className="w-12 h-12 text-tufts-blue mx-auto mb-4" />
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">Your eSIM QR Code</h2>
-              <p className="text-gray-600 mb-6">Scan this QR code with your device to activate your eSIM</p>
-              
-              {qrCodeData.qrCodeUrl && (
-                <div className="flex justify-center mb-6">
-                  <Image 
-                    src={qrCodeData.qrCodeUrl} 
-                    alt="eSIM QR Code" 
-                    width={256}
-                    height={256}
-                    className="w-64 h-64 border-4 border-gray-200 rounded-lg"
-                  />
-                </div>
-              )}
-              
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                {qrCodeData.qrCodeUrl && (
-                  <button
-                    onClick={() => {
-                      const link = document.createElement('a');
-                      link.href = qrCodeData.qrCodeUrl;
-                      link.download = `esim-qr-${orderInfo.orderId}.png`;
-                      link.click();
-                    }}
-                    className="inline-flex items-center px-6 py-3 bg-tufts-blue text-white rounded-lg hover:bg-tufts-blue-dark transition-colors"
-                  >
-                    <Download className="w-5 h-5 mr-2" />
-                    Download QR Code
-                  </button>
-                )}
-                
-                {currentUser && (
-                  <button
-                    onClick={() => router.push('/dashboard')}
-                    className="inline-flex items-center px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-                  >
-                    Go to Dashboard
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
+        {/* Processing */}
+        {status === 'processing' && (
+          <>
+            <Loader2 className="w-16 h-16 text-blue-400 mx-auto mb-4 animate-spin" />
+            <h1 className="text-2xl font-bold text-white mb-2">Setting up your eSIM...</h1>
+            <p className="text-white/50 mb-2">This usually takes 10-30 seconds.</p>
+            <p className="text-white/30 text-sm">Do not close this page.</p>
+          </>
         )}
 
-        {!qrCodeData && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
-            <p className="text-yellow-800">
-              Your eSIM QR code is being generated. You will receive it via email shortly.
-            </p>
-            {currentUser && (
-              <button
-                onClick={() => router.push('/dashboard')}
-                className="mt-4 px-6 py-2 bg-tufts-blue text-white rounded-lg hover:bg-tufts-blue-dark transition-colors"
-              >
-                Go to Dashboard
-              </button>
+        {/* Ready — QR code */}
+        {status === 'ready' && (
+          <>
+            <CheckCircle className="w-16 h-16 text-green-400 mx-auto mb-4" />
+            <h1 className="text-2xl font-bold text-white mb-2">Your eSIM is ready!</h1>
+            {order?.plan_name && (
+              <p className="text-white/50 mb-4">{order.plan_name}</p>
             )}
-          </div>
+
+            {order?.qr_code && (
+              <div className="bg-white p-4 rounded-2xl inline-block mb-6">
+                <img src={order.qr_code} alt="eSIM QR Code" className="w-56 h-56" />
+              </div>
+            )}
+
+            {order?.direct_apple_installation_url && (
+              <a
+                href={order.direct_apple_installation_url}
+                className="block w-full px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition mb-3"
+              >
+                Install on iPhone
+              </a>
+            )}
+
+            {!order?.qr_code && order?.email && (
+              <p className="text-white/50 mb-4">
+                Your eSIM details have been sent to <strong className="text-white">{order.email}</strong>
+              </p>
+            )}
+
+            {order?.iccid && (
+              <p className="text-white/30 text-xs mt-2">ICCID: {order.iccid}</p>
+            )}
+
+            <div className="mt-6 space-y-3">
+              <a href="/dashboard" className="block w-full px-6 py-3 bg-white/10 text-white rounded-xl hover:bg-white/20 transition">
+                Go to Dashboard
+              </a>
+              <a href="/" className="block text-white/40 text-sm hover:text-white/60 transition">
+                Back to Home
+              </a>
+            </div>
+          </>
+        )}
+
+        {/* Timeout — webhook slow */}
+        {status === 'timeout' && (
+          <>
+            <Loader2 className="w-16 h-16 text-yellow-400 mx-auto mb-4" />
+            <h1 className="text-2xl font-bold text-white mb-2">Almost there...</h1>
+            <p className="text-white/50 mb-4">
+              Your payment was received. Your eSIM is being provisioned and will be ready shortly.
+            </p>
+            {order?.customer_email && (
+              <p className="text-white/50 mb-4">
+                We'll send your eSIM details to <strong className="text-white">{order.customer_email}</strong>
+              </p>
+            )}
+            <a href="/dashboard" className="inline-block px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition">
+              Check Dashboard
+            </a>
+          </>
+        )}
+
+        {/* Error */}
+        {status === 'error' && (
+          <>
+            <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
+            <h1 className="text-2xl font-bold text-white mb-2">Something went wrong</h1>
+            <p className="text-white/50 mb-6">{error || 'An unexpected error occurred.'}</p>
+            <a href="/" className="inline-block px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition">
+              Back to Home
+            </a>
+          </>
         )}
       </div>
     </div>
