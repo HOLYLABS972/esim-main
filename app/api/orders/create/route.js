@@ -37,7 +37,12 @@ async function getAiraloToken() {
   return airaloToken;
 }
 
-async function createAiraloOrder(token, packageId, quantity = 1) {
+async function createAiraloOrder(token, packageId, quantity = 1, email = null) {
+  const body = { package_id: packageId, quantity };
+  if (email) {
+    body.description = `eSIM order for ${email}`;
+    body.to_email = email;
+  }
   const res = await fetch(`${AIRALO_BASE}/orders`, {
     method: 'POST',
     headers: {
@@ -45,10 +50,7 @@ async function createAiraloOrder(token, packageId, quantity = 1) {
       'Content-Type': 'application/json',
       Accept: 'application/json',
     },
-    body: JSON.stringify({
-      package_id: packageId,
-      quantity: quantity,
-    }),
+    body: JSON.stringify(body),
   });
 
   const data = await res.json();
@@ -81,7 +83,7 @@ export async function POST(request) {
 
     // 2. Create Airalo order
     console.log(`📦 Creating Airalo order: ${pkgId} x${qty}`);
-    const airaloOrder = await createAiraloOrder(token, pkgId, qty);
+    const airaloOrder = await createAiraloOrder(token, pkgId, qty, to_email);
 
     const sims = airaloOrder?.sims || [];
     const firstSim = sims[0] || {};
