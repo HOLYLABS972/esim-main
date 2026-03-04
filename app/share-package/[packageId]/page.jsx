@@ -804,11 +804,7 @@ const SharePackagePage = () => {
                       : 'bg-blue-600 hover:bg-blue-700'
                   } ${!acceptedRefund || isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
-                  {isProcessing ? (
-                    <Loader2 className="w-6 h-6 animate-spin" />
-                  ) : (
-                    <DollarSign className="w-6 h-6" />
-                  )}
+                  <DollarSign className="w-6 h-6" />
                   <span>{t('sharePackage.purchaseNow', 'Purchase Now')} - Credit/Debit Card</span>
                 </button>
                 <button
