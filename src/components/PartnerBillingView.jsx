@@ -1,8 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
-import { db } from '../firebase/config';
+import { supabase } from '../supabase/config';
 import {
   Wallet,
   TrendingUp,
@@ -29,33 +28,22 @@ const PartnerBillingView = ({ partnerId, partnerData }) => {
       const commission = partnerData?.commissionPercentage || 50;
       setCommissionPercentage(commission);
 
-      const transactionsQuery = query(
-        collection(db, 'billing_transactions'),
-        where('userId', '==', partnerId),
-        orderBy('createdAt', 'desc'),
-        limit(100)
-      );
-      const transactionsSnapshot = await getDocs(transactionsQuery);
-      const transactionsData = transactionsSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate()
-      }));
+      const { data: transactionsData } = await supabase
+        .from('billing_transactions')
+        .select('*')
+        .eq('user_id', partnerId)
+        .order('created_at', { ascending: false })
+        .limit(100);
 
       let ordersData = [];
       try {
-        const ordersQuery = query(
-          collection(db, 'api_usage'),
-          where('userId', '==', partnerId),
-          limit(100)
-        );
-        const ordersSnapshot = await getDocs(ordersQuery);
-        ordersData = ordersSnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-          createdAt: doc.data().createdAt?.toDate()
-        }));
-        ordersData.sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0));
+        const { data } = await supabase
+          .from('api_usage')
+          .select('*')
+          .eq('user_id', partnerId)
+          .order('created_at', { ascending: false })
+          .limit(100);
+        ordersData = (data || []).map(d => ({ ...d, createdAt: d.created_at ? new Date(d.created_at) : null }));
       } catch (error) {
         console.error('Error loading partner orders:', error);
       }

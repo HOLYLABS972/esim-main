@@ -2,8 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { collection, query, getDocs, doc, getDoc, where, updateDoc } from 'firebase/firestore';
-import { db } from '../../../../src/firebase/config';
+import { supabase } from '../../../../src/supabase/config';
 import { useAuth } from '../../../../src/contexts/AuthContext';
 import {
   ArrowLeft,
@@ -44,11 +43,8 @@ const UserDashboardPage = () => {
     const checkAdmin = async () => {
       if (!currentUser) return;
       try {
-        const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
-        if (userDoc.exists()) {
-          const data = userDoc.data();
-          setIsAdmin(data.role === 'admin' || data.isAdmin === true);
-        }
+        const { data } = await supabase.from('user_profiles').select('role').eq('id', currentUser.id || currentUser.uid).single();
+        if (data) setIsAdmin(data.role === 'admin' || data.role === 'super_admin');
       } catch (err) {
         console.error('Error checking admin:', err);
       }
@@ -65,40 +61,21 @@ const UserDashboardPage = () => {
         setLoading(true);
 
         // Fetch user profile
-        const userDoc = await getDoc(doc(db, 'users', userId));
-        if (userDoc.exists()) {
-          setUserData({ id: userDoc.id, ...userDoc.data() });
+        const { data: userProfile } = await supabase.from('user_profiles').select('*').eq('id', userId).single();
+        if (userProfile) {
+          setUserData({ id: userId, ...userProfile });
         } else {
           setUserData({ id: userId, email: 'Unknown', createdAt: null });
         }
 
-        // Fetch eSIMs from user subcollection
-        const esimsSnap = await getDocs(
-          query(collection(db, 'users', userId, 'esims'))
-        );
+        // Fetch orders
+        const { data: ordersData } = await supabase
+          .from('orders')
+          .select('*')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false });
 
-        // Fetch from global orders collection
-        const globalOrdersSnap = await getDocs(
-          query(collection(db, 'orders'), where('userId', '==', userId))
-        );
-
-        // Merge and dedup
-        const ordersMap = new Map();
-        esimsSnap.docs.forEach(d => ordersMap.set(d.id, { id: d.id, ...d.data() }));
-        globalOrdersSnap.docs.forEach(d => {
-          if (!ordersMap.has(d.id)) {
-            ordersMap.set(d.id, { id: d.id, ...d.data() });
-          }
-        });
-
-        const allOrders = Array.from(ordersMap.values());
-
-        // Sort by date desc
-        allOrders.sort((a, b) => {
-          const aTime = a.createdAt?.toMillis?.() || a.createdAt?.seconds * 1000 || 0;
-          const bTime = b.createdAt?.toMillis?.() || b.createdAt?.seconds * 1000 || 0;
-          return bTime - aTime;
-        });
+        const allOrders = ordersData || [];
 
         setOrders(allOrders);
       } catch (error) {
@@ -119,7 +96,7 @@ const UserDashboardPage = () => {
       return;
     }
     try {
-      await updateDoc(doc(db, 'users', userId), { displayName: trimmed });
+      await supabase.from('user_profiles').update({ display_name: trimmed }).eq('id', userId);
       setUserData(prev => ({ ...prev, displayName: trimmed }));
       toast.success('Name updated');
     } catch (err) {
@@ -135,7 +112,7 @@ const UserDashboardPage = () => {
       return;
     }
     try {
-      await updateDoc(doc(db, 'users', userId), { role: newRole });
+      await supabase.from('user_profiles').update({ role: newRole }).eq('id', userId);
       setUserData(prev => ({ ...prev, role: newRole }));
       toast.success(`Role updated to ${newRole}`);
     } catch (err) {

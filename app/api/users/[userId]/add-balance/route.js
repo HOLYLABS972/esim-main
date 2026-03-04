@@ -1,96 +1,38 @@
 import { NextResponse } from 'next/server';
-import admin from 'firebase-admin';
-import { getFirestore } from '../../../../lib/firebaseAdmin';
+import { supabaseAdmin } from '../../../../lib/supabaseAdmin';
 
 export const dynamic = 'force-dynamic';
 
-/**
- * POST /api/users/[userId]/add-balance - Add balance to a user account
- */
 export async function POST(request, { params }) {
-  const db = getFirestore();
-  if (!db) {
-    return NextResponse.json({ success: false, error: 'Firebase Admin not configured' }, { status: 503 });
-  }
   try {
     const { userId } = params;
-    const body = await request.json();
-    const { amount, description } = body;
+    const { amount, description } = await request.json();
 
-    if (!userId) {
-      return NextResponse.json({
-        success: false,
-        error: 'User ID is required'
-      }, { status: 400 });
-    }
+    if (!userId) return NextResponse.json({ success: false, error: 'User ID is required' }, { status: 400 });
+    if (!amount || amount <= 0) return NextResponse.json({ success: false, error: 'Valid amount is required' }, { status: 400 });
 
-    if (!amount || amount <= 0) {
-      return NextResponse.json({
-        success: false,
-        error: 'Valid amount is required'
-      }, { status: 400 });
-    }
+    const { data: user, error: userError } = await supabaseAdmin.from('user_profiles').select('*').eq('id', userId).single();
+    if (userError || !user) return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
 
-    console.log(`💰 Adding balance ${amount} to user ${userId}...`);
-
-    // Get current user to get current balance
-    const userRef = db.collection('users').doc(userId);
-    const userDoc = await userRef.get();
-
-    if (!userDoc.exists) {
-      return NextResponse.json({
-        success: false,
-        error: 'User not found'
-      }, { status: 404 });
-    }
-
-    const userData = userDoc.data();
-    const currentBalance = parseFloat(userData.balance || userData.balance_rub || 0);
+    const currentBalance = parseFloat(user.balance || 0);
     const newBalance = currentBalance + parseFloat(amount);
 
-    // Update user balance
-    await userRef.update({
-      balance: newBalance,
-      balance_rub: newBalance,
-      updatedAt: admin.firestore.FieldValue.serverTimestamp()
-    });
+    await supabaseAdmin.from('user_profiles').update({ balance: newBalance, updated_at: new Date().toISOString() }).eq('id', userId);
 
     // Create transaction record
     try {
-      await db.collection('transactions').add({
-        userId: userId,
-        type: 'deposit',
-        amount: parseFloat(amount),
-        amount_rub: parseFloat(amount),
-        balanceBefore: currentBalance,
-        balanceAfter: newBalance,
+      await supabaseAdmin.from('transactions').insert({
+        user_id: userId, type: 'deposit', amount: parseFloat(amount),
+        balance_before: currentBalance, balance_after: newBalance,
         description: description || 'Admin balance addition',
-        referenceType: 'admin_balance_addition',
-        createdAt: admin.firestore.FieldValue.serverTimestamp()
       });
-    } catch (transactionError) {
-      console.error('Error creating transaction:', transactionError);
-      // Don't fail if transaction creation fails, balance was updated
-    }
+    } catch (e) { console.error('Error creating transaction:', e); }
 
-    // Get updated user
-    const updatedUserDoc = await userRef.get();
-    const updatedUserData = updatedUserDoc.exists ? { id: updatedUserDoc.id, ...updatedUserDoc.data() } : null;
+    const { data: updatedUser } = await supabaseAdmin.from('user_profiles').select('*').eq('id', userId).single();
 
-    console.log(`✅ Balance added for user ${userId}. New balance: ${newBalance}`);
-
-    return NextResponse.json({
-      success: true,
-      user: updatedUserData,
-      newBalance: newBalance,
-      message: `Balance added successfully. New balance: $${newBalance.toFixed(2)}`
-    });
-
+    return NextResponse.json({ success: true, user: updatedUser, newBalance, message: `Balance added. New balance: $${newBalance.toFixed(2)}` });
   } catch (error) {
-    console.error('Error in add-balance API:', error);
-    return NextResponse.json({
-      success: false,
-      error: error.message
-    }, { status: 500 });
+    console.error('Error in add-balance:', error);
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }

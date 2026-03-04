@@ -1,107 +1,69 @@
 export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
-import { getFirestore } from '../../../lib/firebaseAdmin';
+import { supabaseAdmin } from '../../../lib/supabaseAdmin';
 
 export async function DELETE(request) {
-  const db = getFirestore();
-  if (!db) {
-    return NextResponse.json({
-      success: false,
-      error: 'Firebase Admin not configured. Set FIREBASE_SERVICE_ACCOUNT_KEY or FIREBASE_PROJECT_ID/FIREBASE_CLIENT_EMAIL/FIREBASE_PRIVATE_KEY in .env.local'
-    }, { status: 503 });
-  }
   try {
-    console.log('🗑️ Deleting all countries and plans from Firestore...');
+    console.log('🗑️ Deleting all countries and plans from Supabase...');
 
-    // Get counts before deletion
-    const countriesSnapshot = await db.collection('countries').get();
-    const plansSnapshot = await db.collection('dataplans').get();
-    const unlimitedSnapshot = await db.collection('dataplans-unlimited').get();
-    const smsSnapshot = await db.collection('dataplans-sms').get();
+    const { count: countriesCount } = await supabaseAdmin.from('countries').select('*', { count: 'exact', head: true });
+    const { count: plansCount } = await supabaseAdmin.from('dataplans').select('*', { count: 'exact', head: true });
 
-    const countriesCount = countriesSnapshot.size;
-    const plansCount = plansSnapshot.size + unlimitedSnapshot.size + smsSnapshot.size;
+    await supabaseAdmin.from('dataplans').delete().neq('id', '');
+    await supabaseAdmin.from('countries').delete().neq('id', '');
 
-    console.log(`📊 Found ${countriesCount} countries and ${plansCount} plans to delete`);
-
-    // Delete all plans using batch
-    const batch = db.batch();
-    plansSnapshot.docs.forEach(doc => batch.delete(doc.ref));
-    unlimitedSnapshot.docs.forEach(doc => batch.delete(doc.ref));
-    smsSnapshot.docs.forEach(doc => batch.delete(doc.ref));
-    countriesSnapshot.docs.forEach(doc => batch.delete(doc.ref));
-
-    await batch.commit();
-
-    console.log(`✅ Deleted ${countriesCount} countries and ${plansCount} plans`);
+    console.log(`✅ Deleted ${countriesCount || 0} countries and ${plansCount || 0} plans`);
 
     return NextResponse.json({
       success: true,
-      message: 'All countries and plans deleted successfully from Firestore',
-      deleted: {
-        countries: countriesCount,
-        packages: plansCount
-      }
+      message: 'All countries and plans deleted successfully',
+      deleted: { countries: countriesCount || 0, packages: plansCount || 0 }
     });
-
   } catch (error) {
     console.error('❌ Error deleting countries and plans:', error);
-    return NextResponse.json({
-      success: false,
-      error: error.message
-    }, { status: 500 });
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
 
 export async function GET(request) {
-  const db = getFirestore();
-  if (!db) {
-    return NextResponse.json({
-      success: false,
-      error: 'Firebase Admin not configured. Set FIREBASE_SERVICE_ACCOUNT_KEY or FIREBASE_PROJECT_ID/FIREBASE_CLIENT_EMAIL/FIREBASE_PRIVATE_KEY in .env.local'
-    }, { status: 503 });
-  }
   try {
     const { searchParams } = new URL(request.url);
     const limitParam = parseInt(searchParams.get('limit')) || 500;
 
-    console.log('🌍 Fetching countries from Firestore...');
+    console.log('🌍 Fetching countries from Supabase...');
 
-    const countriesSnapshot = await db.collection('countries').get();
-    const countries = countriesSnapshot.docs.map(doc => {
-      const data = doc.data();
-      return {
-        id: doc.id,
-        code: doc.id,
-        name: data.name || data.country_name || doc.id,
-        flag: data.flag || data.flag_url || '',
-        flag_url: data.flag || data.flag_url || '',
-        is_visible: data.hidden !== true,
-        status: data.hidden !== true ? 'active' : 'inactive',
-        country_name: data.name || data.country_name || doc.id,
-        airalo_country_code: doc.id
-      };
-    });
+    const { data: countries, error } = await supabaseAdmin
+      .from('countries')
+      .select('*')
+      .limit(limitParam);
 
-    // Filter visible and apply limit
-    const visibleCountries = countries.filter(c => c.is_visible);
-    const limitedCountries = limitParam > 0 ? visibleCountries.slice(0, limitParam) : visibleCountries;
+    if (error) throw error;
 
-    console.log(`✅ Found ${limitedCountries.length} countries from Firestore`);
+    const formatted = (countries || [])
+      .filter(c => c.hidden !== true)
+      .map(c => ({
+        id: c.id || c.code,
+        code: c.code || c.id,
+        name: c.name || c.country_name || c.id,
+        flag: c.flag || c.flag_url || '',
+        flag_url: c.flag || c.flag_url || '',
+        is_visible: c.hidden !== true,
+        status: c.hidden !== true ? 'active' : 'inactive',
+        country_name: c.name || c.country_name || c.id,
+        airalo_country_code: c.code || c.id
+      }));
+
+    console.log(`✅ Found ${formatted.length} countries`);
 
     return NextResponse.json({
       success: true,
-      countries: limitedCountries,
-      total: limitedCountries.length,
-      message: 'Countries retrieved successfully from Firestore'
+      countries: formatted,
+      total: formatted.length,
+      message: 'Countries retrieved successfully'
     });
-
   } catch (error) {
-    console.error('❌ Error fetching countries from Firestore:', error);
-    return NextResponse.json({
-      success: false,
-      error: error.message
-    }, { status: 500 });
+    console.error('❌ Error fetching countries:', error);
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }

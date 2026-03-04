@@ -1,69 +1,37 @@
 export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
-import { getFirestore } from '../../../lib/firebaseAdmin';
+import { supabaseAdmin } from '../../../lib/supabaseAdmin';
 
 export async function GET(request) {
-  const db = getFirestore();
-  if (!db) {
-    return NextResponse.json({
-      success: false,
-      error: 'Firebase Admin not configured. Set FIREBASE_SERVICE_ACCOUNT_KEY or FIREBASE_PROJECT_ID/FIREBASE_CLIENT_EMAIL/FIREBASE_PRIVATE_KEY in .env.local'
-    }, { status: 503 });
-  }
   try {
     const { searchParams } = new URL(request.url);
     const countryCode = searchParams.get('country');
     const limitParam = parseInt(searchParams.get('limit')) || 5000;
     const activeOnly = searchParams.get('active_only') !== 'false';
 
-    console.log('📱 Fetching plans from Firestore...', { countryCode, limit: limitParam, activeOnly });
+    console.log('📱 Fetching plans from Supabase...', { countryCode, limit: limitParam, activeOnly });
 
-    // Fetch all plans from dataplans collection
-    const plansRef = db.collection('dataplans');
-    let plansSnapshot = await plansRef.get();
+    let query = supabaseAdmin.from('dataplans').select('*');
 
-    let allPlans = plansSnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
+    if (activeOnly) {
+      query = query.eq('enabled', true).not('hidden', 'eq', true);
+    }
 
-    // Also fetch from dataplans-unlimited and dataplans-sms
-    const unlimitedSnapshot = await db.collection('dataplans-unlimited').get();
-    const smsSnapshot = await db.collection('dataplans-sms').get();
-    
-    allPlans = allPlans.concat(unlimitedSnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      _collection: 'dataplans-unlimited'
-    })));
-    
-    allPlans = allPlans.concat(smsSnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      _collection: 'dataplans-sms'
-    })));
+    const { data: allPlans, error } = await query.limit(limitParam);
+    if (error) throw error;
+
+    let plans = allPlans || [];
 
     // Filter by country if specified
     if (countryCode) {
-      allPlans = allPlans.filter(plan => {
+      plans = plans.filter(plan => {
         const countryCodes = plan.country_codes || [];
         return countryCodes.includes(countryCode.toUpperCase());
       });
     }
 
-    // Filter by active status if specified
-    if (activeOnly) {
-      allPlans = allPlans.filter(plan => plan.enabled !== false && plan.hidden !== true);
-    }
-
-    // Apply limit
-    if (limitParam > 0) {
-      allPlans = allPlans.slice(0, limitParam);
-    }
-
-    // Transform to match expected format
-    const formattedPlans = allPlans.map(plan => ({
+    const formattedPlans = plans.map(plan => ({
       id: plan.id,
       slug: plan.slug || plan.id,
       name: plan.name || plan.title || '',
@@ -87,23 +55,18 @@ export async function GET(request) {
       rechargeability: plan.is_topup ? 'rechargeable' : null,
       is_topup: plan.is_topup || false,
       topups: plan.topups || null,
-      _collection: plan._collection || 'dataplans'
     }));
 
-    console.log(`✅ Found ${formattedPlans.length} plans from Firestore`);
+    console.log(`✅ Found ${formattedPlans.length} plans`);
 
     return NextResponse.json({
       success: true,
       plans: formattedPlans,
       total: formattedPlans.length,
-      message: 'Plans retrieved successfully from Firestore'
+      message: 'Plans retrieved successfully'
     });
-
   } catch (error) {
-    console.error('❌ Error fetching plans from Firestore:', error);
-    return NextResponse.json({
-      success: false,
-      error: error.message
-    }, { status: 500 });
+    console.error('❌ Error fetching plans:', error);
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }

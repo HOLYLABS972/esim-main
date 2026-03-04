@@ -169,8 +169,7 @@ const TopupPage = ({ iccid, countryCode: urlCountryCode }) => {
         return;
       }
       
-      const { collection, getDocs, query, where, arrayContains } = await import('firebase/firestore');
-      const { db } = await import('../firebase/config');
+      const { supabase } = await import('../supabase/config');
       
       // Get country codes - prioritize URL search param, then prop, then order info
       let esimCountryCodes = [];
@@ -201,32 +200,29 @@ const TopupPage = ({ iccid, countryCode: urlCountryCode }) => {
       
       console.log('🔍 FILTERING: Will filter packages by country codes:', esimCountryCodes);
       
-      // Query from topups collection (dedicated collection for topup packages)
-      // Fetch ALL packages first, then filter by country codes if needed
-      // This ensures we don't miss any packages due to query limitations
-      const topupQuery = query(collection(db, 'topups'));
+      // Query from dataplans table via Supabase
+      const { data: topupRows, error: topupError } = await supabase
+        .from('dataplans')
+        .select('*');
       
-      const snapshot = await getDocs(topupQuery);
-      console.log('🔍 Firebase query returned', snapshot.size, 'documents from topups collection');
+      if (topupError) {
+        console.error('❌ Supabase query error:', topupError);
+        throw topupError;
+      }
       
-      if (snapshot.size === 0) {
-        console.warn('⚠️ No documents found in topups collection. Make sure topup packages have been synced.');
-        // Try to fetch without any filters as fallback
-        const fallbackQuery = query(collection(db, 'topups'));
-        const fallbackSnapshot = await getDocs(fallbackQuery);
-        console.log('🔍 Fallback query returned', fallbackSnapshot.size, 'documents');
-        if (fallbackSnapshot.size === 0) {
-          console.error('❌ topups collection is empty. Please sync topup packages from the admin panel.');
-        }
+      const allRows = topupRows || [];
+      console.log('🔍 Supabase query returned', allRows.length, 'rows from dataplans');
+      
+      if (allRows.length === 0) {
+        console.warn('⚠️ No rows found in dataplans table.');
       }
       
       const packages = [];
       
       const skippedPackages = [];
       
-      snapshot.forEach((doc) => {
-        const data = doc.data();
-        const packageSlug = data.slug || doc.id;
+      allRows.forEach((data) => {
+        const packageSlug = data.slug || data.id;
         
         // Skip only if explicitly disabled, hidden, or missing required fields
         // Don't skip if enabled/hidden is undefined (assume enabled/visible by default)
@@ -388,25 +384,19 @@ const TopupPage = ({ iccid, countryCode: urlCountryCode }) => {
       console.log('✅ Found', packages.length, 'topup-compatible packages from topups collection');
       console.log('📦 All package slugs:', packages.map(p => p.airaloSlug || p.id));
       
-      // Log detailed info about all packages in collection
-      console.log('🔍 DEBUG: Total packages in collection:', snapshot.size);
+      // Log detailed info about all packages
+      console.log('🔍 DEBUG: Total packages in table:', allRows.length);
       console.log('🔍 DEBUG: eSIM Country Codes:', esimCountryCodes);
       
       // Log first 10 packages with their country codes for debugging
-      const samplePackages = [];
-      snapshot.forEach((doc, idx) => {
-        if (idx < 10) {
-          const data = doc.data();
-          samplePackages.push({
-            slug: data.slug || doc.id,
-            country_codes: data.country_codes || [],
-            enabled: data.enabled,
-            price: data.price,
-            status: data.status
-          });
-        }
-      });
-      console.log('🔍 DEBUG: Sample packages from collection:', samplePackages);
+      const samplePackages = allRows.slice(0, 10).map(data => ({
+        slug: data.slug || data.id,
+        country_codes: data.country_codes || [],
+        enabled: data.enabled,
+        price: data.price,
+        status: data.status
+      }));
+      console.log('🔍 DEBUG: Sample packages from table:', samplePackages);
       
       // Log skipped packages for debugging
       if (skippedPackages.length > 0) {
@@ -421,10 +411,10 @@ const TopupPage = ({ iccid, countryCode: urlCountryCode }) => {
       
       // STRICT FILTERING: If country code is provided, only show matching packages
       // Do NOT show all packages as fallback - this ensures proper filtering
-      if (packages.length === 0 && esimCountryCodes.length > 0 && snapshot.size > 0) {
+      if (packages.length === 0 && esimCountryCodes.length > 0 && allRows.length > 0) {
         console.error('❌ No packages matched country filter!');
         console.error(`   eSIM Country: ${esimCountryCodes.join(', ')}`);
-        console.error(`   Total packages in collection: ${snapshot.size}`);
+        console.error(`   Total packages in table: ${allRows.length}`);
         console.error('   This means packages either:');
         console.error('   1. Don\'t have country codes set');
         console.error('   2. Have different country codes than the eSIM');
@@ -434,27 +424,22 @@ const TopupPage = ({ iccid, countryCode: urlCountryCode }) => {
       if (packages.length === 0) {
         console.error('❌ No packages after filtering!');
         console.error('📊 Summary:');
-        console.error(`  - Total packages in collection: ${snapshot.size}`);
+        console.error(`  - Total packages in table: ${allRows.length}`);
         console.error(`  - Skipped packages: ${skippedPackages.length}`);
         console.error(`  - eSIM Country Codes: [${esimCountryCodes.join(', ')}]`);
         console.error('  - Check if packages have matching country codes');
         console.error('  - Check if packages are enabled and have valid prices');
         
         // Show sample of what packages exist
-        if (snapshot.size > 0) {
-          console.error('📦 Sample of packages in collection (first 5):');
-          let count = 0;
-          snapshot.forEach((doc) => {
-            if (count < 5) {
-              const data = doc.data();
-              console.error(`  ${count + 1}. ${data.slug || doc.id}:`, {
-                country_codes: data.country_codes || 'none',
-                enabled: data.enabled,
-                price: data.price,
-                status: data.status
-              });
-              count++;
-            }
+        if (allRows.length > 0) {
+          console.error('📦 Sample of packages in table (first 5):');
+          allRows.slice(0, 5).forEach((data, idx) => {
+            console.error(`  ${idx + 1}. ${data.slug || data.id}:`, {
+              country_codes: data.country_codes || 'none',
+              enabled: data.enabled,
+              price: data.price,
+              status: data.status
+            });
           });
         }
       }

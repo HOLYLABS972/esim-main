@@ -99,6 +99,8 @@ export async function POST(request) {
     const isGuest = customData.isGuest;
     const affiliateRef = customData.affiliateRef;
     const planName = customData.planName;
+    const country = customData.country || customData.countryCode;
+    const countryCode = customData.countryCode || customData.country;
     const isTopup = customData.type === 'topup';
 
     if (!planId) {
@@ -151,7 +153,11 @@ export async function POST(request) {
     const activationCode = firstSim.matching_id || firstSim.activation_code || null;
     const appleInstallUrl = firstSim.direct_apple_installation_url || null;
 
-    console.log(`✅ Airalo order created: ${airaloOrder.id} | ICCID: ${iccid}`);
+    // Extract country from Airalo response or custom_data
+    const airaloCountryCode = airaloOrder?.country_code || countryCode || null;
+    const airaloCountryName = airaloOrder?.country_name || null;
+
+    console.log(`✅ Airalo order created: ${airaloOrder.id} | ICCID: ${iccid} | Country: ${airaloCountryCode}`);
 
     // Save to Supabase
     if (supabase) {
@@ -175,6 +181,8 @@ export async function POST(request) {
         lpa: smdpAddress,
         matching_id: activationCode,
         direct_apple_installation_url: appleInstallUrl,
+        country_code: airaloCountryCode,
+        country_name: airaloCountryName,
         is_guest: isGuest ?? !userId,
         airalo_order_data: { sims, order: airaloOrder, paddle_txn: txn.id },
         created_at: new Date().toISOString(),

@@ -99,14 +99,14 @@ const Dashboard = () => {
             // EXACT COPY FROM MOBILE APP - Use same extraction logic
             // Mobile app uses: data.planName, data.countryCode, data.countryName directly
 
-            // Plan Name - exactly like mobile: data.planName ?? 'Unknown Plan'
-            const planName = data.planName?.toString() || 'Unknown Plan';
+            // Plan Name - check both camelCase and snake_case (Supabase returns snake_case)
+            const planName = data.planName?.toString() || data.plan_name?.toString() || 'Unknown Plan';
 
             // Country Code - exactly like mobile: data.countryCode ?? null
-            let countryCode = data.countryCode?.toString() || null;
+            let countryCode = data.countryCode?.toString() || data.country_code?.toString() || null;
 
-            // Country Name - exactly like mobile: data.countryName ?? data.country ?? null
-            let countryName = data.countryName?.toString() || data.country?.toString() || null;
+            // Country Name - check both camelCase and snake_case
+            let countryName = data.countryName?.toString() || data.country_name?.toString() || data.country?.toString() || null;
 
             // If countryCode is missing, try multiple extraction methods (like backend function does)
             // Check multiple locations for package_id
@@ -249,7 +249,7 @@ const Dashboard = () => {
                 id: data.id,
                 ...data,
                 // EXACT COPY FROM MOBILE APP - Use same field names and extraction
-                orderId: data.orderId || data.id,
+                orderId: data.orderId || data.order_id || data.id,
                 planName: planName, // Use extracted planName (same as mobile)
                 amount: price,
                 status: data.status || 'unknown',
@@ -266,8 +266,8 @@ const Dashboard = () => {
                 esimData: data.esimData || data,
                 // Map QR code data
                 qrCode: {
-                  qrCode: data.qrCode || data.orderResult?.qrCode,
-                  qrCodeUrl: data.qrCodeUrl || data.orderResult?.qrCodeUrl,
+                  qrCode: data.qrCode || data.qr_code || data.orderResult?.qrCode,
+                  qrCodeUrl: data.qrCodeUrl || data.qr_code_url || data.orderResult?.qrCodeUrl,
                   directAppleInstallationUrl: data.directAppleInstallationUrl || data.orderResult?.directAppleInstallationUrl,
                   iccid: data.iccid || 
                          data.orderResult?.iccid ||
