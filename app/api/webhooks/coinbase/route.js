@@ -1,283 +1,196 @@
 import { NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
 
-// Set timezone to match Coinbase Commerce server timezone (PST/PDT: -08:00)
-// This is important for webhook signature verification and timestamp validation
-// Coinbase compares server timestamps, so they must match
-if (typeof process !== 'undefined' && process.env.TZ === undefined) {
-  // Default to PST/PDT timezone for Coinbase compatibility
-  // You can override this by setting TZ environment variable
-  process.env.TZ = 'America/Los_Angeles'; // PST/PDT (-08:00/-07:00)
+export const dynamic = 'force-dynamic';
+
+const AIRALO_BASE = 'https://partners-api.airalo.com/v2';
+const AIRALO_CLIENT_ID = process.env.AIRALO_CLIENT_ID;
+const AIRALO_CLIENT_SECRET = process.env.AIRALO_CLIENT_SECRET;
+const COINBASE_WEBHOOK_SECRET = process.env.COINBASE_WEBHOOK_SECRET;
+
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://uhpuqiptxcjluwsetoev.supabase.co';
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+let airaloToken = null;
+let airaloTokenExpiry = 0;
+
+async function getAiraloToken() {
+  if (airaloToken && Date.now() < airaloTokenExpiry) return airaloToken;
+  const res = await fetch(`${AIRALO_BASE}/token`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded', Accept: 'application/json' },
+    body: new URLSearchParams({
+      client_id: AIRALO_CLIENT_ID,
+      client_secret: AIRALO_CLIENT_SECRET,
+      grant_type: 'client_credentials',
+    }),
+  });
+  if (!res.ok) throw new Error(`Airalo auth failed: ${await res.text()}`);
+  const data = await res.json();
+  airaloToken = data.data?.access_token;
+  airaloTokenExpiry = Date.now() + (data.data?.expires_in || 3600) * 1000 - 60000;
+  return airaloToken;
 }
 
-// Alternative: Set to fixed UTC-8 offset
-// process.env.TZ = 'PST8PDT';
-
-// Lazy load Firebase Admin to avoid initialization issues
-let db = null;
-
-async function getFirestore() {
-  if (db) return db;
-
-  try {
-    const admin = await import('firebase-admin/app');
-    const firestore = await import('firebase-admin/firestore');
-
-    // Initialize Firebase Admin if not already initialized
-    if (!admin.getApps().length) {
-      // Use service account from environment variables or default credentials
-      const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT_KEY
-        ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY)
-        : undefined;
-
-      if (serviceAccount) {
-        admin.initializeApp({
-          credential: admin.cert(serviceAccount),
-        });
-      } else {
-        // Use default credentials (for Firebase hosting/Cloud Run/Vercel)
-        // These will be automatically detected from environment
-        admin.initializeApp();
-      }
-    }
-
-    db = firestore.getFirestore();
-    return db;
-  } catch (error) {
-    console.error('❌ Firebase Admin initialization error:', error);
-    throw error;
-  }
+async function createAiraloOrder(token, packageId, quantity = 1) {
+  const res = await fetch(`${AIRALO_BASE}/orders`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+    body: JSON.stringify({ package_id: packageId, quantity }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data?.message || `Airalo error ${res.status}`);
+  return data.data;
 }
 
-// Get Coinbase webhook secret from config
-async function getCoinbaseWebhookSecret() {
-  try {
-    const firestore = await getFirestore();
-    const { doc, getDoc } = await import('firebase-admin/firestore');
-    
-    // First try Firestore
-    const configRef = doc(firestore, 'config', 'coinbase');
-    const configDoc = await getDoc(configRef);
-    
-    if (configDoc.exists()) {
-      const configData = configDoc.data();
-      return configData.webhook_secret || configData.webhookSecret;
-    }
-    
-    // Fallback to environment variable
-    return process.env.COINBASE_WEBHOOK_SECRET || null;
-  } catch (error) {
-    console.error('❌ Error getting Coinbase webhook secret:', error);
-    return process.env.COINBASE_WEBHOOK_SECRET || null;
-  }
-}
-
-// Verify Coinbase webhook signature
-function verifyWebhookSignature(body, signature, secret) {
-  if (!secret) {
-    console.warn('⚠️ Webhook secret not configured, skipping signature verification');
-    return true; // Allow in development, but should be false in production
-  }
-
+function verifySignature(rawBody, signature, secret) {
+  if (!secret) return true; // skip if not configured
   try {
     const hmac = crypto.createHmac('sha256', secret);
-    const hash = hmac.update(body).digest('hex');
+    const hash = hmac.update(rawBody).digest('hex');
     return crypto.timingSafeEqual(Buffer.from(hash), Buffer.from(signature));
-  } catch (error) {
-    console.error('❌ Error verifying webhook signature:', error);
+  } catch {
     return false;
-  }
-}
-
-// Process confirmed charge
-async function processConfirmedCharge(charge) {
-  try {
-    const firestore = await getFirestore();
-    const { doc, getDoc, updateDoc, serverTimestamp } = await import('firebase-admin/firestore');
-    
-    console.log('✅ Processing confirmed Coinbase charge:', charge.code || charge.id);
-    
-    // Extract order ID from metadata
-    const orderId = charge.metadata?.order_id;
-    if (!orderId) {
-      console.error('❌ No order_id found in charge metadata');
-      return { success: false, error: 'No order_id in metadata' };
-    }
-
-    // Find the order in Firestore
-    // First try in orders collection
-    let orderRef = doc(firestore, 'orders', orderId);
-    let orderDoc = await getDoc(orderRef);
-    
-    // If not found, search in users' esims subcollection
-    if (!orderDoc.exists()) {
-      console.log('🔍 Order not found in orders collection, searching in users...');
-      // We need to find which user has this order
-      // For now, we'll try to get it from the pending order or metadata
-      const userId = charge.metadata?.user_id;
-      if (userId) {
-        orderRef = doc(firestore, 'users', userId, 'esims', orderId);
-        orderDoc = await getDoc(orderRef);
-      }
-    }
-
-    if (!orderDoc.exists()) {
-      console.error('❌ Order not found:', orderId);
-      return { success: false, error: 'Order not found' };
-    }
-
-    const orderData = orderDoc.data();
-    console.log('📋 Found order:', orderData);
-
-    // Update order with payment confirmation
-    await updateDoc(orderRef, {
-      paymentStatus: 'confirmed',
-      paymentMethod: 'coinbase',
-      coinbaseChargeId: charge.code || charge.id,
-      coinbaseChargeData: charge,
-      paymentConfirmedAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
-    });
-
-    // If order is already processed (has eSIM), just update payment status
-    if (orderData.status === 'active' && orderData.processingStatus === 'completed') {
-      console.log('✅ Order already processed, payment status updated');
-      return { success: true, message: 'Payment confirmed, order already processed' };
-    }
-
-    // If order needs to be processed, trigger order creation
-    // This would typically be done by the payment success page, but we'll ensure it's marked
-    console.log('✅ Payment confirmed for order:', orderId);
-    return { success: true, orderId, needsProcessing: !orderData.airaloOrderId };
-  } catch (error) {
-    console.error('❌ Error processing confirmed charge:', error);
-    return { success: false, error: error.message };
-  }
-}
-
-// Process failed charge
-async function processFailedCharge(charge) {
-  try {
-    const firestore = await getFirestore();
-    const { doc, getDoc, updateDoc, serverTimestamp } = await import('firebase-admin/firestore');
-    
-    console.log('❌ Processing failed Coinbase charge:', charge.code || charge.id);
-    
-    const orderId = charge.metadata?.order_id;
-    if (!orderId) {
-      return { success: false, error: 'No order_id in metadata' };
-    }
-
-    // Find and update order
-    let orderRef = doc(firestore, 'orders', orderId);
-    let orderDoc = await getDoc(orderRef);
-    
-    if (!orderDoc.exists()) {
-      const userId = charge.metadata?.user_id;
-      if (userId) {
-        orderRef = doc(firestore, 'users', userId, 'esims', orderId);
-        orderDoc = await getDoc(orderRef);
-      }
-    }
-
-    if (orderDoc.exists()) {
-      await updateDoc(orderRef, {
-        paymentStatus: 'failed',
-        paymentMethod: 'coinbase',
-        coinbaseChargeId: charge.code || charge.id,
-        paymentFailedAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
-      });
-    }
-
-    return { success: true };
-  } catch (error) {
-    console.error('❌ Error processing failed charge:', error);
-    return { success: false, error: error.message };
   }
 }
 
 export async function POST(request) {
   try {
-    console.log('🔔 Coinbase webhook received');
-
-    // Get raw body for signature verification
     const rawBody = await request.text();
     const signature = request.headers.get('x-cc-webhook-signature') || '';
 
-    // Get webhook secret
-    const webhookSecret = await getCoinbaseWebhookSecret();
+    console.log('🔔 Coinbase webhook received');
 
     // Verify signature
-    if (!verifyWebhookSignature(rawBody, signature, webhookSecret)) {
-      console.error('❌ Invalid webhook signature');
-      return NextResponse.json(
-        { error: 'Invalid signature' },
-        { status: 401 }
-      );
+    if (COINBASE_WEBHOOK_SECRET && !verifySignature(rawBody, signature, COINBASE_WEBHOOK_SECRET)) {
+      console.error('❌ Invalid Coinbase webhook signature');
+      return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
     }
 
-    // Parse webhook data
     const event = JSON.parse(rawBody);
-    console.log('📦 Coinbase webhook event:', {
-      type: event.type,
-      chargeId: event.data?.code || event.data?.id
-    });
+    const eventType = event.type;
+    console.log(`📦 Coinbase event: ${eventType}`);
 
-    // Handle different event types
-    switch (event.type) {
-      case 'charge:confirmed':
-      case 'charge:resolved':
-        console.log('✅ Payment confirmed/resolved');
-        const confirmResult = await processConfirmedCharge(event.data);
-        return NextResponse.json({ 
-          success: true, 
-          message: 'Charge confirmed',
-          result: confirmResult
-        });
-
-      case 'charge:failed':
-      case 'charge:delayed':
-        console.log('❌ Payment failed/delayed');
-        const failResult = await processFailedCharge(event.data);
-        return NextResponse.json({ 
-          success: true, 
-          message: 'Charge failed',
-          result: failResult
-        });
-
-      case 'charge:created':
-      case 'charge:pending':
-        console.log('⏳ Payment pending');
-        return NextResponse.json({ 
-          success: true, 
-          message: 'Charge pending' 
-        });
-
-      default:
-        console.log('ℹ️ Unhandled event type:', event.type);
-        return NextResponse.json({ 
-          success: true, 
-          message: 'Event received but not processed' 
-        });
+    // Only process confirmed/resolved charges
+    if (eventType !== 'charge:confirmed' && eventType !== 'charge:resolved') {
+      console.log(`⏭️ Skipping event: ${eventType}`);
+      return NextResponse.json({ received: true });
     }
-  } catch (error) {
-    console.error('❌ Webhook processing error:', error);
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: error.message || 'Webhook processing failed' 
-      },
-      { status: 500 }
-    );
+
+    const charge = event.data;
+    const metadata = charge.metadata || {};
+    const orderId = metadata.order_id || metadata.orderId;
+    const planId = metadata.plan_id || metadata.planId;
+    const customerEmail = metadata.customer_email || metadata.customerEmail || metadata.email;
+    const userId = metadata.user_id || metadata.userId;
+    const planName = metadata.plan_name || metadata.planName;
+    const isTopup = metadata.type === 'topup';
+
+    // Get amount from pricing
+    const pricing = charge.pricing || {};
+    const localPrice = pricing.local || {};
+    const amount = parseFloat(localPrice.amount) || 0;
+    const currency = (localPrice.currency || 'usd').toLowerCase();
+
+    console.log(`📋 Order: ${orderId} | Plan: ${planId} | Email: ${customerEmail} | $${amount}`);
+
+    if (!planId) {
+      console.error('❌ No planId in charge metadata:', metadata);
+      return NextResponse.json({ error: 'No planId in metadata' }, { status: 400 });
+    }
+
+    const supabase = SUPABASE_SERVICE_KEY ? createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY) : null;
+
+    // Idempotency check
+    if (supabase && orderId) {
+      const { data: existing } = await supabase
+        .from('orders')
+        .select('id,status,airalo_order_id')
+        .eq('order_id', orderId)
+        .maybeSingle();
+
+      if (existing && existing.airalo_order_id) {
+        console.log(`✅ Order ${orderId} already fulfilled (Airalo: ${existing.airalo_order_id})`);
+        return NextResponse.json({ received: true, already_fulfilled: true });
+      }
+    }
+
+    if (!AIRALO_CLIENT_ID || !AIRALO_CLIENT_SECRET) {
+      console.error('❌ Airalo API not configured');
+      return NextResponse.json({ error: 'Airalo not configured' }, { status: 500 });
+    }
+
+    if (isTopup) {
+      console.log('⏭️ Topup order — skipping Airalo provisioning');
+      return NextResponse.json({ received: true, type: 'topup' });
+    }
+
+    // Provision eSIM via Airalo
+    const token = await getAiraloToken();
+    const airaloOrder = await createAiraloOrder(token, planId, 1);
+
+    const sims = airaloOrder?.sims || [];
+    const firstSim = sims[0] || {};
+    const qrCode = firstSim.qrcode || firstSim.qrcode_url || null;
+    const iccid = firstSim.iccid || null;
+    const smdpAddress = firstSim.lpa || firstSim.smdp_address || null;
+    const activationCode = firstSim.matching_id || firstSim.activation_code || null;
+    const appleInstallUrl = firstSim.direct_apple_installation_url || null;
+
+    console.log(`✅ Airalo order: ${airaloOrder.id} | ICCID: ${iccid}`);
+
+    // Save to Supabase
+    if (supabase) {
+      const orderRecord = {
+        id: orderId || `roamjet-${Date.now()}`,
+        order_id: orderId || `roamjet-${Date.now()}`,
+        user_id: userId || null,
+        customer_email: customerEmail || null,
+        plan_id: planId,
+        plan_name: planName || planId,
+        amount: amount,
+        currency: currency,
+        payment_method: 'coinbase',
+        status: 'active',
+        airalo_order_id: String(airaloOrder.id),
+        iccid: iccid,
+        qr_code: qrCode,
+        qr_code_url: qrCode,
+        smdp_address: smdpAddress,
+        activation_code: activationCode,
+        lpa: smdpAddress,
+        matching_id: activationCode,
+        direct_apple_installation_url: appleInstallUrl,
+        is_guest: !userId,
+        airalo_order_data: { sims, order: airaloOrder, coinbase_charge: charge.code },
+        created_at: new Date().toISOString(),
+      };
+
+      const { error: dbError } = await supabase.from('orders').upsert(orderRecord, { onConflict: 'id' });
+      if (dbError) {
+        console.error('⚠️ Supabase error:', dbError);
+      } else {
+        console.log('💾 Order saved to Supabase');
+      }
+    }
+
+    return NextResponse.json({
+      received: true,
+      orderId,
+      airaloOrderId: airaloOrder.id,
+      iccid,
+    });
+  } catch (e) {
+    console.error('❌ Coinbase webhook error:', e);
+    return NextResponse.json({ error: e.message }, { status: 500 });
   }
 }
 
-// Coinbase webhooks should only accept POST requests
 export async function GET() {
-  return NextResponse.json(
-    { error: 'Method not allowed' },
-    { status: 405 }
-  );
+  return NextResponse.json({ error: 'Method not allowed' }, { status: 405 });
 }
-
