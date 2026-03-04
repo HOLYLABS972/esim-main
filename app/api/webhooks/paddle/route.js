@@ -8,6 +8,10 @@ const AIRALO_BASE = 'https://partners-api.airalo.com/v2';
 const AIRALO_CLIENT_ID = process.env.AIRALO_CLIENT_ID;
 const AIRALO_CLIENT_SECRET = process.env.AIRALO_CLIENT_SECRET;
 const PADDLE_WEBHOOK_SECRET = process.env.PADDLE_WEBHOOK_SECRET;
+const PADDLE_API_KEY = process.env.PADDLE_API_KEY || process.env.NEXT_PUBLIC_PDL_API_KEY;
+const PADDLE_API_BASE = process.env.NEXT_PUBLIC_PADDLE_ENV === 'sandbox'
+  ? 'https://sandbox-api.paddle.com'
+  : 'https://api.paddle.com';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://uhpuqiptxcjluwsetoev.supabase.co';
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -91,6 +95,20 @@ function verifyPaddleSignature(rawBody, signature) {
   }
 }
 
+async function getPaddleCustomerEmail(customerId) {
+  if (!PADDLE_API_KEY || !customerId) return null;
+  try {
+    const res = await fetch(`${PADDLE_API_BASE}/customers/${customerId}`, {
+      headers: { Authorization: `Bearer ${PADDLE_API_KEY}` },
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.data?.email ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export async function POST(request) {
   let rawBody;
   try {
@@ -118,7 +136,7 @@ export async function POST(request) {
     const customData = txn.custom_data || {};
     const orderId = customData.orderId || customData.orderID;
     const planId = customData.planId;
-    const customerEmail = customData.customerEmail;
+    let customerEmail = customData.customerEmail;
     const userId = customData.userId;
     const isGuest = customData.isGuest;
     const affiliateRef = customData.affiliateRef;
@@ -127,6 +145,11 @@ export async function POST(request) {
     const countryCode = customData.countryCode || customData.country;
     const countryName = customData.countryName || customData.country_name;
     const isTopup = customData.type === 'topup';
+
+    if (!customerEmail && txn.customer_id) {
+      customerEmail = await getPaddleCustomerEmail(txn.customer_id);
+      if (customerEmail) console.log(`📧 Got customer email from Paddle: ${customerEmail}`);
+    }
 
     if (!planId) {
       console.error('❌ No planId in custom_data:', customData);

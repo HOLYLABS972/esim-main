@@ -398,16 +398,6 @@ const SharePackagePage = () => {
   }, []);
 
   const handlePurchase = async (paymentMethod = 'stripe') => {
-    // Require auth: redirect to login instead of asking for email
-    if (!currentUser) {
-      const returnUrl = typeof window !== 'undefined'
-        ? encodeURIComponent(window.location.pathname + window.location.search)
-        : encodeURIComponent(`/share-package/${packageId}`);
-      router.push(`/login?returnUrl=${returnUrl}`);
-      toast.error('Please sign in to continue with your purchase');
-      return;
-    }
-
     if (!acceptedRefund) {
       toast.error('Please accept the refund policy to continue');
       return;
@@ -425,10 +415,10 @@ const SharePackagePage = () => {
       return;
     }
 
-    const customerEmail = currentUser.email;
+    // No login required: email comes from Paddle at checkout
+    const customerEmail = currentUser?.email ?? null;
 
     setSelectedPaymentMethod(paymentMethod);
-    setIsProcessing(true);
     setIsProcessing(true);
     
     // Calculate discounted price
@@ -448,7 +438,7 @@ const SharePackagePage = () => {
       finalPrice,
       minimumPrice,
       paymentMethod,
-      customerEmail,
+      customerEmail: customerEmail ?? '(from Paddle)',
       isAuthenticated: !!currentUser,
       selectedDataGB
     });
@@ -492,9 +482,9 @@ const SharePackagePage = () => {
         amount: finalPrice, // Use discounted price
         currency: 'usd',
         originalAmount: originalPrice, // Include original amount for reference
-        userId: currentUser?.uid || null, // null for guest users
-        isGuest: false, // Auth required
-        affiliateRef: affiliateRef || null, // Affiliate tracking
+        userId: currentUser?.uid || null,
+        isGuest: !currentUser,
+        affiliateRef: affiliateRef || null,
         countryCode: planToUse.country_code || (planToUse.country_codes && planToUse.country_codes[0]) || null,
         countryName: planToUse.country_name || null,
       };
@@ -509,7 +499,7 @@ const SharePackagePage = () => {
         amount: finalPrice,
         currency: 'usd',
         paymentMethod: paymentMethod,
-        isGuest: false,
+        isGuest: !currentUser,
         affiliateRef: affiliateRef || null
       };
       

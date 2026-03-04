@@ -291,75 +291,23 @@ const PlanSelectionBottomSheet = ({
     console.log('🔍 DEBUG: currentUser:', currentUser);
     console.log('🔍 DEBUG: plan:', plan.name);
     console.log('🌐 DEBUG: locale:', locale);
-    
-    // Check if user is logged in
-    if (!currentUser) {
-      console.log('🔐 User not logged in, redirecting to mobile app');
-      
-      // Redirect to mobile app using AppsFlyer OneLink if available, otherwise use platform detection
-      if (typeof window !== 'undefined' && window.APPSFLYER_ONELINK_URL) {
-        console.log('📱 Redirecting to AppsFlyer OneLink:', window.APPSFLYER_ONELINK_URL);
-        window.location.href = window.APPSFLYER_ONELINK_URL;
-      } else {
-        // Fallback to platform detection
-        const platformInfo = detectPlatform();
-        if (platformInfo.downloadUrl) {
-          console.log('📱 Redirecting to app store:', platformInfo.downloadUrl);
-          window.location.href = platformInfo.downloadUrl;
-        } else {
-          console.log('⚠️ No mobile app URL available, user is on desktop - redirecting to login');
-          // For desktop users, redirect to login
-          const countryCode = plan.country_codes?.[0] || plan.country_code;
-          const countryFlag = countryCode ? (() => {
-            const codePoints = countryCode.toUpperCase().split('').map(char => 127397 + char.charCodeAt());
-            return String.fromCodePoint(...codePoints);
-          })() : '🌍';
-          
-          // Build return URL with language prefix
-          let returnUrl = `/share-package/${plan.id}?country=${countryCode || ''}&flag=${countryFlag}`;
-          
-          // Get language prefix - use locale from context first, then pathname
-          let langPrefix = '';
-          if (locale && locale !== 'en') {
-            langPrefix = `/${locale}`;
-            returnUrl = `${langPrefix}${returnUrl}`;
-          } else {
-            // Fallback to pathname detection
-            const langMatch = pathname.match(/^\/(ar|de|es|fr|he|ru)\//);
-            langPrefix = langMatch ? `/${langMatch[1]}` : '';
-            if (langPrefix) {
-              returnUrl = `${langPrefix}${returnUrl}`;
-            }
-          }
-          
-          console.log('🔍 DEBUG: Redirecting to:', `${langPrefix}/login?returnUrl=${encodeURIComponent(returnUrl)}`);
-          router.push(`${langPrefix}/login?returnUrl=${encodeURIComponent(returnUrl)}`);
-        }
-      }
-      return;
-    }
-    
-    // User is logged in, proceed to share package page
-    console.log('✅ User logged in, proceeding to checkout');
+
     const countryCode = plan.country_codes?.[0] || plan.country_code;
     const countryFlag = countryCode ? (() => {
       const codePoints = countryCode.toUpperCase().split('').map(char => 127397 + char.charCodeAt());
       return String.fromCodePoint(...codePoints);
     })() : '🌍';
-    
-    // Navigate to the share package page with country info and language prefix
+
     const params = new URLSearchParams({
       country: countryCode || '',
       flag: countryFlag
     });
-    
-    // Build URL with language prefix if needed
     let targetUrl = `/share-package/${plan.id}?${params.toString()}`;
     if (locale && locale !== 'en') {
       targetUrl = `/${locale}${targetUrl}`;
     }
-    
     console.log('📦 Navigating to:', targetUrl);
+    onClose?.();
     router.push(targetUrl);
   };
 
