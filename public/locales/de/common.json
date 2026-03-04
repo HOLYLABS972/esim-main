@@ -21,6 +21,7 @@
     "with": "mit",
     "description": "RoamJet: Global eSIM für Reisende, digitale Nomaden und Rucksacktouristen. Kaufen Sie sofortige internationale Datenpläne für über 200 Länder. Keine Roaming-Gebühren, keine physischen SIM-Karten erforderlich. Installieren Sie Reise-eSIM online in Minuten, aktivieren Sie im Ausland in Sekunden.",
     "downloadApp": "App herunterladen",
+    "learnMore": "Mehr erfahren",
     "exploreTariffs": "Tarife erkunden",
     "popularCountries": {
       "france": "🇫🇷 Frankreich",
@@ -67,9 +68,9 @@
   },
   "activation": {
     "downloads": "Downloads",
-    "appAvailable": "Unsere App ist für iOS- und Android-Geräte verfügbar.",
-    "downloadOurApp": "Laden Sie unsere App herunter",
-    "appDescription": "Holen Sie das Beste aus Ihrem eSIM mit unserer mobilen App heraus. Verwalten Sie Ihre Pläne, verfolgen Sie die Nutzung und erhalten Sie sofortigen Support.",
+    "appAvailable": "EasyCall – SMS & Anrufe von Roamjet. Für iOS und Android verfügbar.",
+    "downloadOurApp": "EasyCall – SMS & Anrufe von Roamjet",
+    "appDescription": "Unsere VoIP-App für Anrufe und SMS. Zweite Nummer, unbegrenzte Anrufe und Texte, globale Abdeckung – ohne eSIM. Von Roamjet.",
     "downloadForIOS": "Für iOS herunterladen",
     "downloadForAndroid": "Für Android herunterladen",
     "appLinksSoon": "App Store-Links werden bald verfügbar sein.",

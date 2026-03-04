@@ -23,6 +23,11 @@ export default function HeroSection() {
     return `/${locale}${path}`;
   };
 
+  const handleScrollToPlans = () => {
+    const el = document.getElementById('esim-plans');
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
   const handleDownloadApp = () => {
     // OneLink handles platform detection automatically
     if (typeof window !== 'undefined' && window.APPSFLYER_ONELINK_URL) {
@@ -136,7 +141,15 @@ export default function HeroSection() {
             <p className="mx-auto max-w-4xl py-6 text-base sm:text-lg lg:text-xl font-medium text-pretty text-gray-600 px-4 sm:px-0">
               {t('hero.description')}
             </p>
-            <div className="mt-8 sm:mt-10 flex items-center justify-center px-4 sm:px-0">
+            <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 px-4 sm:px-0">
+              <button
+                onClick={handleScrollToPlans}
+                className="btn-primary w-full sm:w-auto border-2 border-gray-800 bg-transparent text-gray-800 hover:bg-gray-100"
+                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#f3f4f6'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+              >
+                {t('hero.learnMore', 'Learn More')}
+              </button>
               <button
                 onClick={handleDownloadApp}
                 className="btn-primary w-full sm:w-auto"
