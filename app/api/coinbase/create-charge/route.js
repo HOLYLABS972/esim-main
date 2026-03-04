@@ -41,9 +41,13 @@ export async function POST(request) {
       metadata: {
         order_id: orderData.orderId,
         plan_id: orderData.planId,
+        plan_name: orderData.planName || null,
         customer_email: orderData.customerEmail,
         source: 'esim_shop',
-        user_id: orderData.userId || null
+        user_id: orderData.userId || null,
+        country_code: orderData.countryCode || orderData.country || null,
+        country_name: orderData.countryName || null,
+        quantity: orderData.quantity != null ? String(orderData.quantity) : '1',
       },
       redirect_url: `${baseRedirectUrl}?${redirectParams.toString()}`,
       cancel_url: `${request.headers.get('origin') || 'https://store.roamjet.net'}/checkout`

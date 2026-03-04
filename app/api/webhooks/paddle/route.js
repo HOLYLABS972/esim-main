@@ -12,6 +12,18 @@ const PADDLE_WEBHOOK_SECRET = process.env.PADDLE_WEBHOOK_SECRET;
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://uhpuqiptxcjluwsetoev.supabase.co';
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
+// Fallback: country code → name when Airalo and custom_data don't provide country_name
+const COUNTRY_CODE_TO_NAME = {
+  AE: 'United Arab Emirates', MX: 'Mexico', US: 'United States', GB: 'United Kingdom',
+  DE: 'Germany', FR: 'France', ES: 'Spain', IT: 'Italy', CA: 'Canada', AU: 'Australia',
+  JP: 'Japan', KR: 'South Korea', IN: 'India', BR: 'Brazil', TR: 'Turkey', EG: 'Egypt',
+  SA: 'Saudi Arabia', TH: 'Thailand', SG: 'Singapore', MY: 'Malaysia', ID: 'Indonesia',
+  PH: 'Philippines', VN: 'Vietnam', PL: 'Poland', NL: 'Netherlands', BE: 'Belgium',
+  CH: 'Switzerland', AT: 'Austria', PT: 'Portugal', IE: 'Ireland', NZ: 'New Zealand',
+  GR: 'Greece', CZ: 'Czech Republic', RO: 'Romania', HU: 'Hungary', SE: 'Sweden',
+  NO: 'Norway', DK: 'Denmark', FI: 'Finland', IL: 'Israel', ZA: 'South Africa',
+};
+
 let airaloToken = null;
 let airaloTokenExpiry = 0;
 
@@ -113,6 +125,7 @@ export async function POST(request) {
     const planName = customData.planName;
     const country = customData.country || customData.countryCode;
     const countryCode = customData.countryCode || customData.country;
+    const countryName = customData.countryName || customData.country_name;
     const isTopup = customData.type === 'topup';
 
     if (!planId) {
@@ -181,9 +194,17 @@ export async function POST(request) {
     const activationCode = firstSim.matching_id || firstSim.activation_code || null;
     const appleInstallUrl = firstSim.direct_apple_installation_url || null;
 
-    // Extract country from Airalo response or custom_data
+    // Extract country from Airalo response or custom_data; fallback code→name when missing
     const airaloCountryCode = airaloOrder?.country_code || countryCode || null;
-    const airaloCountryName = airaloOrder?.country_name || null;
+    let airaloCountryName = airaloOrder?.country_name || countryName || null;
+    if (!airaloCountryName && airaloCountryCode) {
+      airaloCountryName = COUNTRY_CODE_TO_NAME[String(airaloCountryCode).toUpperCase()] || null;
+    }
+
+    const basePlanName = planName || planId;
+    const planDisplayName = (basePlanName && (airaloCountryName || airaloCountryCode))
+      ? `${basePlanName} · ${airaloCountryName || `(${airaloCountryCode})`}`
+      : basePlanName;
 
     console.log(`✅ Airalo order created: ${airaloOrder.id} | ICCID: ${iccid} | Country: ${airaloCountryCode}`);
 
@@ -195,7 +216,7 @@ export async function POST(request) {
         user_id: userId || null,
         customer_email: customerEmail || null,
         plan_id: planId,
-        plan_name: planName || planId,
+        plan_name: planDisplayName,
         amount: amount,
         currency: (txn.currency_code || 'usd').toLowerCase(),
         payment_method: 'paddle',

@@ -76,6 +76,7 @@ export async function POST(request) {
         iccid: orderData.iccid || null,
         country: orderData.country || orderData.countryCode || null,
         countryCode: orderData.countryCode || orderData.country || null,
+        countryName: orderData.countryName || null,
       },
     };
 
