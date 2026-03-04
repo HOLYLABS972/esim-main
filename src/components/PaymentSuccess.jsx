@@ -46,29 +46,48 @@ const PaymentSuccess = () => {
   // Poll Paddle transaction → get orderId from custom_data → poll Supabase
   async function pollPaddleOrder(txnId) {
     try {
-      // First get the order ID from Paddle transaction
+      // Get the order ID from Paddle transaction
       const res = await fetch(`/api/paddle/transaction?txn=${encodeURIComponent(txnId)}`);
-      if (!res.ok) throw new Error('Could not load transaction');
-      const data = await res.json();
-
-      if (data.status !== 'completed') {
-        // Transaction not complete yet, retry
-        if (pollCount.current < 5) {
+      if (!res.ok) {
+        if (pollCount.current < 15) {
           pollCount.current++;
-          setTimeout(() => pollPaddleOrder(txnId), 3000);
+          setTimeout(() => pollPaddleOrder(txnId), 2000);
           return;
         }
-        throw new Error('Transaction not completed. If you were charged, your eSIM will be delivered shortly.');
+        throw new Error('Could not load transaction');
       }
+      const data = await res.json();
 
       const oid = data.customData?.orderId;
+
+      if (data.status !== 'completed') {
+        // Transaction not complete yet, retry up to 15 times (30s)
+        if (pollCount.current < 15) {
+          pollCount.current++;
+          setTimeout(() => pollPaddleOrder(txnId), 2000);
+          return;
+        }
+        // After 30s, if we have an orderId, try polling Supabase directly
+        // (webhook may have already fulfilled it)
+        if (oid) {
+          pollCount.current = 0;
+          pollOrderById(oid);
+          return;
+        }
+        // Show timeout, not error — payment likely went through
+        setStatus('timeout');
+        setOrder({ email: data.customData?.customerEmail, plan_name: data.customData?.planName });
+        return;
+      }
+
       if (oid) {
+        pollCount.current = 0;
         pollOrderById(oid);
       } else {
         // No orderId — webhook will handle, show generic success
         setStatus('ready');
         setOrder({
-          planName: data.customData?.planName || 'eSIM Plan',
+          plan_name: data.customData?.planName || 'eSIM Plan',
           email: data.customData?.customerEmail,
         });
       }
