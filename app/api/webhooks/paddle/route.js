@@ -34,19 +34,22 @@ async function getAiraloToken() {
 }
 
 async function createAiraloOrder(token, packageId, quantity = 1, email = null) {
-  const body = { package_id: packageId, quantity };
+  const formData = new FormData();
+  formData.append('package_id', String(packageId));
+  formData.append('quantity', String(quantity));
+  formData.append('type', 'sim');
   if (email) {
-    body.description = `eSIM order for ${email}`;
-    body.to_email = email;
+    formData.append('description', `eSIM order for ${email}`);
+    formData.append('to_email', email);
+    formData.append('sharing_option[]', 'link');
   }
   const res = await fetch(`${AIRALO_BASE}/orders`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
       Accept: 'application/json',
     },
-    body: JSON.stringify(body),
+    body: formData,
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data?.message || `Airalo error ${res.status}`);
@@ -117,7 +120,12 @@ export async function POST(request) {
     const totalAmount = txn.details?.totals?.total;
     const amount = totalAmount ? parseInt(totalAmount, 10) / 100 : 0;
 
-    console.log(`📦 Processing order: ${orderId} | Plan: ${planId} | Email: ${customerEmail} | Amount: $${amount}`);
+    // Quantity from transaction items (Paddle sends items[].quantity)
+    const quantity = Math.max(1, Number(
+      txn.items?.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0)
+    ) || 1);
+
+    console.log(`📦 Processing order: ${orderId} | Plan: ${planId} | Email: ${customerEmail} | Qty: ${quantity} | Amount: $${amount}`);
 
     const supabase = SUPABASE_SERVICE_KEY ? createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY) : null;
 
@@ -148,7 +156,7 @@ export async function POST(request) {
 
     // Provision eSIM via Airalo
     const token = await getAiraloToken();
-    const airaloOrder = await createAiraloOrder(token, planId, 1, customerEmail);
+    const airaloOrder = await createAiraloOrder(token, planId, quantity, customerEmail);
 
     const sims = airaloOrder?.sims || [];
     const firstSim = sims[0] || {};

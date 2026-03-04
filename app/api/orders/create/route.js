@@ -38,19 +38,22 @@ async function getAiraloToken() {
 }
 
 async function createAiraloOrder(token, packageId, quantity = 1, email = null) {
-  const body = { package_id: packageId, quantity };
+  const formData = new FormData();
+  formData.append('package_id', String(packageId));
+  formData.append('quantity', String(quantity));
+  formData.append('type', 'sim');
   if (email) {
-    body.description = `eSIM order for ${email}`;
-    body.to_email = email;
+    formData.append('description', `eSIM order for ${email}`);
+    formData.append('to_email', email);
+    formData.append('sharing_option[]', 'link');
   }
   const res = await fetch(`${AIRALO_BASE}/orders`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
       Accept: 'application/json',
     },
-    body: JSON.stringify(body),
+    body: formData,
   });
 
   const data = await res.json();
