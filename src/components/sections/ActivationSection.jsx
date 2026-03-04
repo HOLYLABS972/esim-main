@@ -1,17 +1,29 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useI18n } from '../../contexts/I18nContext';
 import Image from 'next/image';
-import { appStoreLinks } from '../../utils/appStoreLinks';
+
+const APPSFLYER_ONELINK_BASE = 'https://roamjet.onelink.me/Sc5I';
 
 export default function ActivationSection() {
   const { t, isLoading: translationsLoading } = useI18n();
+  const [appLink, setAppLink] = useState(APPSFLYER_ONELINK_BASE);
 
-  // Use hardcoded app store links
-  const appStoreLinksData = {
-    iosUrl: appStoreLinks.ios,
-    androidUrl: appStoreLinks.android
-  };
+  // Prefer AppsFlyer OneLink URL when available (set by smart script), else use base OneLink
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.APPSFLYER_ONELINK_URL) {
+      setAppLink(window.APPSFLYER_ONELINK_URL);
+    }
+    const check = () => {
+      if (typeof window !== 'undefined' && window.APPSFLYER_ONELINK_URL) {
+        setAppLink(window.APPSFLYER_ONELINK_URL);
+      }
+    };
+    window.addEventListener('load', check);
+    return () => window.removeEventListener('load', check);
+  }, []);
+
   const loading = false;
 
 
@@ -117,50 +129,19 @@ export default function ActivationSection() {
                     {t('activation.appDescription')}
                   </p>
 
-                  {/* App Store Buttons */}
-                  <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                  {/* Single Download App button (AppsFlyer OneLink) */}
+                  <div className="flex justify-center lg:justify-start">
                     {loading ? (
                       <div className="text-white">{t('activation.loadingAppLinks')}</div>
                     ) : (
-                      <>
-                        {appStoreLinksData.iosUrl && (
-                          <a
-                            href={appStoreLinksData.iosUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="btn-primary inline-flex items-center justify-center px-6 py-3"
-                          >
-                            <Image
-                              src="/images/logo_icon/apple.svg"
-                              alt="iOS"
-                              width={20}
-                              height={20}
-                              className="w-5 h-5 mr-2 brightness-0 invert"
-                            />
-                            {t('activation.downloadForIOS')}
-                          </a>
-                        )}
-                        {appStoreLinksData.androidUrl && (
-                          <a
-                            href={appStoreLinksData.androidUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="btn-secondary inline-flex items-center justify-center px-6 py-3"
-                          >
-                            <Image
-                              src="/images/logo_icon/android.png"
-                              alt="Android"
-                              width={20}
-                              height={20}
-                              className="w-5 h-5 mr-2 brightness-0"
-                            />
-                            {t('activation.downloadForAndroid')}
-                          </a>
-                        )}
-                        {!appStoreLinksData.iosUrl && !appStoreLinksData.androidUrl && (
-                          <div className="text-white/80">{t('activation.appLinksSoon')}</div>
-                        )}
-                      </>
+                      <a
+                        href={appLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn-primary inline-flex items-center justify-center px-8 py-3"
+                      >
+                        {t('navbar.downloadApp', 'Download App')}
+                      </a>
                     )}
                   </div>
                 </div>

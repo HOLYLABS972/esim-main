@@ -1,16 +1,11 @@
 'use client';
 
-import { Suspense } from 'react';
 import { useI18n } from '../../contexts/I18nContext';
-import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import Link from 'next/link';
-import CountrySearchBar from '../CountrySearchBar';
 import toast from 'react-hot-toast';
 
 export default function HeroSection() {
   const { t, isLoading, locale } = useI18n();
-  const router = useRouter();
 
   // Check if current locale is RTL
   const isRTL = locale === 'ar' || locale === 'he';
@@ -26,16 +21,6 @@ export default function HeroSection() {
   const handleScrollToPlans = () => {
     const el = document.getElementById('esim-plans');
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
-
-  const handleDownloadApp = () => {
-    // OneLink handles platform detection automatically
-    if (typeof window !== 'undefined' && window.APPSFLYER_ONELINK_URL) {
-      console.log('Opening AppsFlyer OneLink - smart routing to correct store');
-      window.open(window.APPSFLYER_ONELINK_URL, '_blank');
-    } else {
-      console.warn('OneLink URL not ready yet');
-    }
   };
 
   const handleCopyDiscountCode = async () => {
@@ -85,13 +70,6 @@ export default function HeroSection() {
         </div>
 
         <div className="mx-auto max-w-5xl py-6 sm:py-12 lg:py-24  justify-center">
-          {/* Country Search Bar */}
-          <div className="mb-8 sm:mb-12">
-            <Suspense fallback={<div className="h-16" />}>
-              <CountrySearchBar showCountryCount={true} />
-            </Suspense>
-          </div>
-
           {/* Main Content */}
 
           <div className="text-center">
@@ -141,23 +119,24 @@ export default function HeroSection() {
             <p className="mx-auto max-w-4xl py-6 text-base sm:text-lg lg:text-xl font-medium text-pretty text-gray-600 px-4 sm:px-0">
               {t('hero.description')}
             </p>
-            <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 px-4 sm:px-0">
+            {/* Browse Plans - search bar look, button behavior (in hero, not fixed) */}
+            <div className="mt-[60px] w-full max-w-3xl mx-auto px-4" dir={isRTL ? 'rtl' : 'ltr'}>
               <button
+                type="button"
                 onClick={handleScrollToPlans}
-                className="btn-primary w-full sm:w-auto border-2 border-gray-800 bg-transparent text-gray-800 hover:bg-gray-100"
-                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#f3f4f6'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+                className="relative w-full group cursor-pointer text-left border-0 rounded-full focus:outline-none focus:ring-2 focus:ring-cobalt-blue/50 focus:ring-offset-2"
+                aria-label={t('hero.learnMore', 'Browse Plans')}
               >
-                {t('hero.learnMore', 'Learn More')}
-              </button>
-              <button
-                onClick={handleDownloadApp}
-                className="btn-primary w-full sm:w-auto"
-                style={{ backgroundColor: '#000000' }}
-                onMouseEnter={(e) => e.target.style.backgroundColor = '#1f1f1f'}
-                onMouseLeave={(e) => e.target.style.backgroundColor = '#000000'}
-              >
-                {t('hero.downloadApp')}
+                <div className={`relative flex items-center w-full px-6 py-4 sm:py-5 text-base sm:text-lg border-2 border-gray-200 rounded-full bg-white/90 backdrop-blur-md shadow-lg hover:shadow-xl hover:border-gray-300 transition-all duration-300 ${isRTL ? 'pr-6 pl-24 sm:pl-28' : 'pl-6 pr-24 sm:pr-28'}`}>
+                  <span className="text-gray-500 font-medium pointer-events-none">
+                    {t('hero.learnMore', 'Browse Plans')}
+                  </span>
+                  <span className={`absolute top-1/2 -translate-y-1/2 flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white/80 backdrop-blur-md border-2 border-cobalt-blue/30 group-hover:border-cobalt-blue group-hover:bg-white/95 transition-all duration-300 group-hover:scale-105 shadow-lg pointer-events-none ${isRTL ? 'left-2 sm:left-3' : 'right-2 sm:right-3'}`}>
+                    <svg className="w-5 h-5 sm:w-6 sm:h-6 text-cobalt-blue" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                      <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+                    </svg>
+                  </span>
+                </div>
               </button>
             </div>
           </div>

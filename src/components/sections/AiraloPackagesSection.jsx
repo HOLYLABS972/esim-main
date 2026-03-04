@@ -102,7 +102,6 @@ export default function AiraloPackagesSection() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('countries');
-  const [selectedSubRegion, setSelectedSubRegion] = useState('global');
 
   // Countries tab state
   const [countries, setCountries] = useState([]);
@@ -315,15 +314,6 @@ export default function AiraloPackagesSection() {
     return SUB_REGIONS.filter(sr => tieredPlansByRegion[sr.key]?.length > 0);
   }, [tieredPlansByRegion]);
 
-  // Auto-select first available sub-region
-  useEffect(() => {
-    if (activeTab === 'regions' && availableSubRegions.length > 0) {
-      if (!tieredPlansByRegion[selectedSubRegion]) {
-        setSelectedSubRegion(availableSubRegions[0].key);
-      }
-    }
-  }, [activeTab, availableSubRegions, tieredPlansByRegion]);
-
   const isRu = locale === 'ru';
 
   const getSubRegionLabel = (sr) => isRu ? sr.labelRu : sr.label;
@@ -485,69 +475,46 @@ export default function AiraloPackagesSection() {
           </div>
         )}
 
-        {/* Regions Tab */}
+        {/* Regions Tab - same list style as countries, 1GB only, one click */}
         {activeTab === 'regions' && (
           <div>
-            {/* Sub-region chips */}
-            <div className="flex flex-wrap justify-center gap-2 mb-6">
-              {availableSubRegions.map((sr) => (
-                <button
-                  key={sr.key}
-                  onClick={() => setSelectedSubRegion(sr.key)}
-                  className={`px-3 py-1.5 rounded-full font-medium text-xs transition-all duration-200 ${
-                    selectedSubRegion === sr.key
-                      ? 'bg-tufts-blue text-white shadow-md shadow-tufts-blue/30'
-                      : 'bg-white text-gray-700 hover:bg-tufts-blue/10 hover:text-tufts-blue border border-gray-200 hover:border-tufts-blue/20'
-                  }`}
-                >
-                  {sr.key === 'global' && <span className="mr-1">🌍</span>}
-                  {getSubRegionLabel(sr)}
-                </button>
-              ))}
-            </div>
-
-            {/* Tiered plans for selected sub-region */}
-            {tieredPlansByRegion[selectedSubRegion] ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {tieredPlansByRegion[selectedSubRegion].map((tier, idx) => {
-                  const plan = tier.plan;
-                  const price = parseFloat(plan.price || 0);
-                  return (
-                    <div
-                      key={idx}
-                      className="bg-white rounded-xl border border-gray-100 hover:border-tufts-blue/30 hover:shadow-md transition-all duration-200 p-4 flex flex-col justify-between"
-                    >
-                      <div>
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-lg font-bold text-gray-900">
-                            {formatData(plan)}
-                          </span>
-                          <span className="text-xs text-gray-500 bg-gray-50 px-2 py-1 rounded-full">
-                            {formatValidity(plan)}
-                          </span>
-                        </div>
-                        {plan.name && (
-                          <p className="text-xs text-gray-400 mb-2 truncate">{plan.name}</p>
-                        )}
+            <div className="space-y-2">
+              {availableSubRegions.map((sr) => {
+                const tiers = tieredPlansByRegion[sr.key] || [];
+                const oneGBTier = tiers.find(t => t.min === 1 && t.max === 1.9);
+                const tier = oneGBTier || tiers[0];
+                const plan = tier?.plan;
+                if (!plan) return null;
+                const price = parseFloat(plan.price || 0);
+                const regionLabel = getSubRegionLabel(sr);
+                return (
+                  <button
+                    type="button"
+                    key={sr.key}
+                    onClick={() => handlePackageClick(plan.id)}
+                    className="w-full px-6 py-4 bg-transparent rounded-lg shadow-sm hover:shadow-md border border-gray-100 hover:border-tufts-blue/20 transition-all duration-200 flex items-center justify-between cursor-pointer"
+                  >
+                    <div className="flex items-center space-x-4">
+                      <div className="flex-shrink-0">
+                        <span className="text-2xl">🌍</span>
                       </div>
-                      <div className="flex items-center justify-between mt-3">
-                        <span className="text-xl font-bold text-tufts-blue">
-                          ${price.toFixed(2)}
-                        </span>
-                        <button
-                          onClick={() => handlePackageClick(plan.id)}
-                          className="px-4 py-2 bg-tufts-blue text-white text-sm font-medium rounded-lg hover:bg-tufts-blue-dark transition-colors"
-                        >
-                          {isRu ? 'Купить' : 'Buy'}
-                        </button>
+                      <div className="text-left">
+                        <h3 className="text-lg font-semibold text-gray-900">{regionLabel}</h3>
+                        <p className="text-sm text-gray-500">1GB • 7 Days</p>
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-            ) : (
+                    <div className="text-right">
+                      <div className="text-lg font-semibold text-gray-900">
+                        ${price.toFixed(2)}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+            {availableSubRegions.length === 0 && (
               <div className="text-center text-gray-500 py-12">
-                {isRu ? 'Нет доступных планов для этого региона' : 'No plans available for this region'}
+                {isRu ? 'Нет доступных планов для регионов' : 'No region plans available'}
               </div>
             )}
           </div>

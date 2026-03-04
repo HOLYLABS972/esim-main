@@ -36,6 +36,7 @@ export async function POST(request) {
 
     let synced = 0;
     for (const pkg of packages) {
+      const imageUrl = typeof pkg.image === 'string' ? pkg.image : (pkg.image?.url ?? pkg.url ?? null);
       const planData = {
         slug: pkg.slug || pkg.id,
         name: pkg.title || pkg.name || '',
@@ -49,6 +50,9 @@ export async function POST(request) {
         enabled: true,
         hidden: false,
         updated_at: new Date().toISOString(),
+        ...(imageUrl && { image_url: imageUrl }),
+        ...(pkg.gradient_start && { gradient_start: pkg.gradient_start }),
+        ...(pkg.gradient_end && { gradient_end: pkg.gradient_end }),
       };
 
       const { error } = await supabaseAdmin
