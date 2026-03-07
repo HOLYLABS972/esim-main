@@ -70,11 +70,11 @@ function TopupContent() {
   return (
     <div className="min-h-screen bg-[#0F1322] flex flex-col items-center justify-center p-6">
       <div className="bg-[#1C2438] rounded-2xl p-8 max-w-sm w-full text-center">
-        <h1 className="text-xl font-semibold text-white mb-2">Top Up</h1>
-        <p className="text-white/60 text-sm mb-6">Opening payment…</p>
-        <p className="text-2xl font-bold text-[#56A8E5] mb-6">
+        <h1 className="text-xl font-semibold text-white mb-2">Virtual card top-up</h1>
+        <p className="text-2xl font-bold text-[#56A8E5] mb-2">
           ${amount.toFixed(2)}
         </p>
+        <p className="text-white/60 text-sm mb-6">Opening payment…</p>
         {loading && (
           <div className="w-10 h-10 border-2 border-white/20 border-t-[#56A8E5] rounded-full animate-spin mx-auto mb-4" />
         )}
