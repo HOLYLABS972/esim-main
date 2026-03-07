@@ -1,8 +1,11 @@
 import Providers from '../src/components/Providers'
+import { Suspense } from 'react'
 import ConditionalNavbar from '../src/components/ConditionalNavbar'
 import ConditionalFooter from '../src/components/ConditionalFooter'
 import LanguageWrapper from '../src/components/LanguageWrapper'
 import ConditionalMain from '../src/components/ConditionalMain'
+import Navbar from '../src/components/Navbar'
+import Footer from '../src/components/Footer'
 import './globals.css'
 import './rtl.css'
 
@@ -179,11 +182,15 @@ export default function RootLayout({ children }) {
         <Providers>
           <LanguageWrapper>
             <div className="bg-white">
-              <ConditionalNavbar />
+              <Suspense fallback={<Navbar />}>
+                <ConditionalNavbar />
+              </Suspense>
               <ConditionalMain>
                 {children}
               </ConditionalMain>
-              <ConditionalFooter />
+              <Suspense fallback={<Footer />}>
+                <ConditionalFooter />
+              </Suspense>
             </div>
           </LanguageWrapper>
         </Providers>
