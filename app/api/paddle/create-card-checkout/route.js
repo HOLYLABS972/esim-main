@@ -1,13 +1,27 @@
 import { NextResponse } from 'next/server';
-import { getFirebaseAuth, getFirebaseProjectId } from '../../../lib/firebaseAdmin';
 
 export const dynamic = 'force-dynamic';
 
 /**
- * Proxy for mobile app: verifies Firebase token, then calls the existing
- * Firebase callable create_paddle_card_checkout_url. Vercel is frontend-only;
- * all Paddle logic stays in Firebase.
+ * No-auth proxy: forwards request to Firebase callable. Firebase validates the token.
+ * Project ID from FIREBASE_PROJECT_ID or from token "aud" (no Vercel auth config needed).
  */
+function getProjectIdFromToken(idToken) {
+  try {
+    const parts = idToken.split('.');
+    if (parts.length !== 3) return null;
+    let payload = parts[1];
+    payload = payload.replace(/-/g, '+').replace(/_/g, '/');
+    const pad = payload.length % 4;
+    if (pad) payload += '===='.slice(0, 4 - pad);
+    const decoded = Buffer.from(payload, 'base64').toString('utf8');
+    const data = JSON.parse(decoded);
+    return data.aud || data.firebase?.project_id || null;
+  } catch {
+    return null;
+  }
+}
+
 export async function POST(request) {
   try {
     const authHeader = request.headers.get('authorization');
@@ -15,17 +29,6 @@ export async function POST(request) {
     if (!idToken) {
       return NextResponse.json(
         { error: 'Missing Authorization: Bearer <token>' },
-        { status: 401 }
-      );
-    }
-
-    try {
-      const auth = await getFirebaseAuth();
-      await auth.verifyIdToken(idToken);
-    } catch (e) {
-      console.error('Firebase token verification failed:', e.message);
-      return NextResponse.json(
-        { error: 'Invalid or expired token' },
         { status: 401 }
       );
     }
@@ -40,11 +43,11 @@ export async function POST(request) {
       );
     }
 
-    const projectId = await getFirebaseProjectId();
+    const projectId = process.env.FIREBASE_PROJECT_ID || process.env.GCLOUD_PROJECT || getProjectIdFromToken(idToken);
     if (!projectId) {
       return NextResponse.json(
-        { error: 'Firebase project not configured' },
-        { status: 500 }
+        { error: 'Set FIREBASE_PROJECT_ID on Vercel, or send a valid Firebase ID token' },
+        { status: 503 }
       );
     }
 
