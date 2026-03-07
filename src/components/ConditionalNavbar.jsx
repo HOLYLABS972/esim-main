@@ -1,15 +1,21 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import Navbar from './Navbar';
 
 const ConditionalNavbar = () => {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   // Hide navbar on admin and share-package pages
   if (pathname?.startsWith('/admin') || pathname?.startsWith('/share-package')) {
+    return null;
+  }
+
+  // Hide navbar on virtual card top-up (from app WebView: /topup?cardId=...&amount=...)
+  if (pathname === '/topup' && searchParams?.get('cardId')) {
     return null;
   }
   
