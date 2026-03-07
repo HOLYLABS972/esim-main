@@ -7,6 +7,8 @@ function TopupContent() {
   const searchParams = useSearchParams();
   const cardId = searchParams?.get('cardId') || '';
   const amountParam = searchParams?.get('amount') || '0';
+  const email = searchParams?.get('email') || '';
+  const userId = searchParams?.get('userId') || '';
   const amount = parseFloat(amountParam) || 0;
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
@@ -17,59 +19,53 @@ function TopupContent() {
       setLoading(false);
       return;
     }
+    if (!email) {
+      setError('Missing email');
+      setLoading(false);
+      return;
+    }
 
     const base = typeof window !== 'undefined' ? window.location.origin : '';
     const successUrl = `${base}/payment-success`;
     const cancelUrl = `${base}/`;
 
-    function run() {
-      const token = typeof window !== 'undefined' ? window.__FIREBASE_ID_TOKEN__ : null;
-      if (!token) {
-        setTimeout(run, 200);
-        return;
-      }
+    setLoading(true);
+    setError('');
 
-      setLoading(true);
-      setError('');
-
-      fetch(`${base}/api/paddle/create-topup-checkout`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          cardId,
-          amount,
-          successUrl,
-          cancelUrl,
-        }),
+    fetch(`${base}/api/paddle/create-topup-checkout`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email,
+        cardId,
+        amount,
+        userId: userId || undefined,
+        successUrl,
+        cancelUrl,
+      }),
+    })
+      .then((r) => {
+        if (!r.ok) {
+          return r.json().then((d) => {
+            throw new Error(d.error || d.message || 'Request failed');
+          });
+        }
+        return r.json();
       })
-        .then((r) => {
-          if (!r.ok) {
-            return r.json().then((d) => {
-              throw new Error(d.error || d.message || 'Request failed');
-            });
-          }
-          return r.json();
-        })
-        .then((data) => {
-          const url = data.checkoutUrl || data.url;
-          if (url) {
-            window.location.href = url;
-          } else {
-            setError('No checkout URL');
-            setLoading(false);
-          }
-        })
-        .catch((e) => {
-          setError(e.message || 'Checkout failed');
+      .then((data) => {
+        const url = data.checkoutUrl || data.url;
+        if (url) {
+          window.location.href = url;
+        } else {
+          setError('No checkout URL');
           setLoading(false);
-        });
-    }
-
-    run();
-  }, [cardId, amount]);
+        }
+      })
+      .catch((e) => {
+        setError(e.message || 'Checkout failed');
+        setLoading(false);
+      });
+  }, [cardId, amount, email, userId]);
 
   return (
     <div className="min-h-screen bg-[#0F1322] flex flex-col items-center justify-center p-6">

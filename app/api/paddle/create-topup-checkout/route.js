@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { getFirebaseAuth } from '../../../lib/firebaseAdmin';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,48 +16,12 @@ function getPaddleApiKey() {
   ).trim() || null;
 }
 
-function getBearerToken(request) {
-  const auth = request.headers.get('authorization') || request.headers.get('Authorization') || '';
-  return auth.startsWith('Bearer ') ? auth.slice(7) : null;
-}
-
+/**
+ * Create Paddle top-up checkout. No Firebase — just email, cardId, amount.
+ * Body: { email, cardId, amount, userId?, successUrl?, cancelUrl? }
+ */
 export async function POST(request) {
   try {
-    const token = getBearerToken(request);
-    if (!token) {
-      return NextResponse.json(
-        { error: 'Missing Authorization: Bearer <token>' },
-        { status: 401 }
-      );
-    }
-
-    const auth = await getFirebaseAuth();
-    if (!auth) {
-      return NextResponse.json(
-        { error: 'Server auth not configured. Set FIREBASE_SERVICE_ACCOUNT_KEY.' },
-        { status: 503 }
-      );
-    }
-
-    let decoded;
-    try {
-      decoded = await auth.verifyIdToken(token);
-    } catch (e) {
-      return NextResponse.json(
-        { error: 'Invalid or expired token' },
-        { status: 401 }
-      );
-    }
-
-    const uid = decoded.uid;
-    const email = (decoded.email || '').trim();
-    if (!email) {
-      return NextResponse.json(
-        { error: 'User email not found' },
-        { status: 400 }
-      );
-    }
-
     let body;
     try {
       body = await request.json();
@@ -66,8 +29,14 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
     }
 
+    const email = (body.email || '').toString().trim();
     const cardId = (body.cardId || '').toString().trim();
+    const userId = (body.userId || '').toString().trim();
     const amountRaw = body.amount;
+
+    if (!email) {
+      return NextResponse.json({ error: 'email is required' }, { status: 400 });
+    }
     if (!cardId) {
       return NextResponse.json({ error: 'cardId is required' }, { status: 400 });
     }
@@ -109,7 +78,7 @@ export async function POST(request) {
         headers,
         body: JSON.stringify({
           email,
-          custom_data: { firebase_uid: uid, type: 'virtual_card_topup' },
+          custom_data: { firebase_uid: userId || '', type: 'virtual_card_topup' },
         }),
       });
       if (!createRes.ok) {
@@ -154,7 +123,7 @@ export async function POST(request) {
       collection_mode: 'automatic',
       checkout: { url: successUrl },
       custom_data: {
-        firebase_uid: uid,
+        firebase_uid: userId,
         type: 'virtual_card_topup',
         cardId,
       },
