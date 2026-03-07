@@ -5,14 +5,17 @@ import { I18nProvider } from '../contexts/I18nContext';
 
 const LanguageWrapper = ({ children }) => {
   const pathname = usePathname();
+  const languagePrefixes = [
+    'en', 'en-US', 'en-CA',
+    'he', 'ar', 'ru', 'de', 'fr', 'es',
+    'fr-CA', 'id', 'ja', 'pt-BR', 'tr', 'uk', 'vi', 'zh-Hans',
+    'hebrew', 'arabic', 'russian', 'german', 'french', 'spanish'
+  ];
   
   // Pages that should have I18n context
   const translatedPages = [
     '/', 
-    // New language-code routes
-    '/he', '/ar', '/ru', '/de', '/fr', '/es',
-    // Old language routes (for backward compatibility)
-    '/hebrew', '/arabic', '/russian', '/german', '/french', '/spanish', 
+    ...languagePrefixes.map((prefix) => `/${prefix}`),
     // Other translated pages
     '/contact', '/login', '/register', '/dashboard', '/esim-plans', '/privacy-policy', '/terms-of-service', '/cookie-policy'
   ];
@@ -20,20 +23,8 @@ const LanguageWrapper = ({ children }) => {
   // Check for special pages that should always have i18n context
   const isSpecialPage = pathname === '/not-found' || pathname === '/404';
 
-  // Check for language-specific routes (e.g., /he/contact, /ru/login, etc.)
-  const isLanguageSpecificPage = pathname.startsWith('/he/') || 
-                                pathname.startsWith('/ar/') || 
-                                pathname.startsWith('/ru/') || 
-                                pathname.startsWith('/de/') || 
-                                pathname.startsWith('/fr/') || 
-                                pathname.startsWith('/es/') ||
-                                // Old language routes (for backward compatibility)
-                                pathname.startsWith('/hebrew/') || 
-                                pathname.startsWith('/arabic/') || 
-                                pathname.startsWith('/russian/') || 
-                                pathname.startsWith('/german/') || 
-                                pathname.startsWith('/french/') || 
-                                pathname.startsWith('/spanish/');
+  // Check for language-specific routes (e.g., /he/contact, /fr-CA/login, etc.)
+  const isLanguageSpecificPage = languagePrefixes.some((prefix) => pathname.startsWith(`/${prefix}/`));
   
   if (!translatedPages.includes(pathname) && !isLanguageSpecificPage && !isSpecialPage) {
     console.log('LanguageWrapper: No I18n context for pathname:', pathname);

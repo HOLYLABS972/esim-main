@@ -37,6 +37,44 @@ export const I18nProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isInitialized, setIsInitialized] = useState(false);
 
+  const localeAliasToBase = {
+    en: 'en',
+    'en-US': 'en',
+    'en-CA': 'en',
+    ar: 'ar',
+    'ar-SA': 'ar',
+    he: 'he',
+    ru: 'ru',
+    de: 'de',
+    'de-DE': 'de',
+    fr: 'fr',
+    'fr-FR': 'fr',
+    'fr-CA': 'fr',
+    es: 'es',
+    'es-ES': 'es',
+    id: 'en',
+    ja: 'en',
+    'pt-BR': 'en',
+    tr: 'en',
+    uk: 'en',
+    vi: 'en',
+    'zh-Hans': 'en',
+    hebrew: 'he',
+    arabic: 'ar',
+    russian: 'ru',
+    german: 'de',
+    french: 'fr',
+    spanish: 'es',
+  };
+
+  const detectLocaleFromPath = (currentPath) => {
+    const firstSegment = currentPath?.split('/').filter(Boolean)[0];
+    if (!firstSegment) return 'en';
+    return localeAliasToBase[firstSegment] || 'en';
+  };
+
+  const normalizeLocale = (value) => localeAliasToBase[value] || 'en';
+
   // Initialize locale and translations on mount
   useEffect(() => {
     const initializeLocale = async () => {
@@ -98,29 +136,16 @@ export const I18nProvider = ({ children }) => {
       let initialLocale = 'en';
       
       if (savedLanguage) {
+        const normalizedSavedLanguage = normalizeLocale(savedLanguage);
         console.log('I18nContext: Found saved language:', savedLanguage);
-        initialLocale = savedLanguage;
+        initialLocale = normalizedSavedLanguage;
       } else if (domainLanguage) {
         // Use domain language if no saved preference
         console.log('I18nContext: Using domain language:', domainLanguage);
-        initialLocale = domainLanguage;
+        initialLocale = normalizeLocale(domainLanguage);
       } else {
         // Fallback to pathname detection if no saved language or domain language
-        // Check for language prefix followed by / or end of string to avoid false matches
-        if (pathname.startsWith('/he/') || pathname === '/he') initialLocale = 'he';
-        else if (pathname.startsWith('/ar/') || pathname === '/ar') initialLocale = 'ar';
-        else if (pathname.startsWith('/ru/') || pathname === '/ru') initialLocale = 'ru';
-        else if (pathname.startsWith('/de/') || pathname === '/de') initialLocale = 'de';
-        else if (pathname.startsWith('/fr/') || pathname === '/fr') initialLocale = 'fr';
-        else if (pathname.startsWith('/es/') || pathname === '/es') initialLocale = 'es';
-        // Support old language routes for backward compatibility
-        else if (pathname.startsWith('/hebrew/') || pathname === '/hebrew') initialLocale = 'he';
-        else if (pathname.startsWith('/arabic/') || pathname === '/arabic') initialLocale = 'ar';
-        else if (pathname.startsWith('/russian/') || pathname === '/russian') initialLocale = 'ru';
-        else if (pathname.startsWith('/german/') || pathname === '/german') initialLocale = 'de';
-        else if (pathname.startsWith('/french/') || pathname === '/french') initialLocale = 'fr';
-        else if (pathname.startsWith('/spanish/') || pathname === '/spanish') initialLocale = 'es';
-        
+        initialLocale = detectLocaleFromPath(pathname);
         console.log('I18nContext: No saved language or domain language, detected from pathname:', initialLocale);
       }
       
@@ -155,19 +180,7 @@ export const I18nProvider = ({ children }) => {
   // Sync locale with URL changes (for when user navigates via URL)
   useEffect(() => {
     if (isInitialized) {
-      // Check for language prefix followed by / or end of string to avoid false matches like /esim-plans
-      const urlLanguage = pathname.startsWith('/he/') || pathname === '/he' ? 'he' :
-                         pathname.startsWith('/ar/') || pathname === '/ar' ? 'ar' :
-                         pathname.startsWith('/ru/') || pathname === '/ru' ? 'ru' :
-                         pathname.startsWith('/de/') || pathname === '/de' ? 'de' :
-                         pathname.startsWith('/fr/') || pathname === '/fr' ? 'fr' :
-                         pathname.startsWith('/es/') || pathname === '/es' ? 'es' :
-                         pathname.startsWith('/hebrew/') || pathname === '/hebrew' ? 'he' :
-                         pathname.startsWith('/arabic/') || pathname === '/arabic' ? 'ar' :
-                         pathname.startsWith('/russian/') || pathname === '/russian' ? 'ru' :
-                         pathname.startsWith('/german/') || pathname === '/german' ? 'de' :
-                         pathname.startsWith('/french/') || pathname === '/french' ? 'fr' :
-                         pathname.startsWith('/spanish/') || pathname === '/spanish' ? 'es' : 'en';
+      const urlLanguage = detectLocaleFromPath(pathname);
       
       if (urlLanguage !== locale) {
         console.log('I18nContext: URL language changed from', locale, 'to', urlLanguage, '- updating context only');
@@ -271,4 +284,3 @@ export const I18nProvider = ({ children }) => {
     </I18nContext.Provider>
   );
 };
-

@@ -133,14 +133,23 @@ export default function RootLayout({ children }) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         
         {/* hreflang tags for multilingual SEO */}
-        <link rel="alternate" href="https://esim.romajet.net" hrefLang="x-default" />
-        <link rel="alternate" href="https://esim.romajet.net" hrefLang="en" />
-        <link rel="alternate" href="https://es.romajet.net" hrefLang="es" />
-        <link rel="alternate" href="https://fr.romajet.net" hrefLang="fr" />
-        <link rel="alternate" href="https://de.romajet.net" hrefLang="de" />
-        <link rel="alternate" href="https://ar.romajet.net" hrefLang="ar" />
-        <link rel="alternate" href="https://ru.romajet.net" hrefLang="ru" />
-        <link rel="alternate" href="https://he.romajet.net" hrefLang="he" />
+        <link rel="alternate" href="https://www.roamjet.net/en" hrefLang="x-default" />
+        <link rel="alternate" href="https://www.roamjet.net/en" hrefLang="en-US" />
+        <link rel="alternate" href="https://www.roamjet.net/en-CA" hrefLang="en-CA" />
+        <link rel="alternate" href="https://www.roamjet.net/ar" hrefLang="ar-SA" />
+        <link rel="alternate" href="https://www.roamjet.net/de" hrefLang="de-DE" />
+        <link rel="alternate" href="https://www.roamjet.net/es" hrefLang="es-ES" />
+        <link rel="alternate" href="https://www.roamjet.net/fr" hrefLang="fr-FR" />
+        <link rel="alternate" href="https://www.roamjet.net/fr-CA" hrefLang="fr-CA" />
+        <link rel="alternate" href="https://www.roamjet.net/he" hrefLang="he" />
+        <link rel="alternate" href="https://www.roamjet.net/id" hrefLang="id" />
+        <link rel="alternate" href="https://www.roamjet.net/ja" hrefLang="ja" />
+        <link rel="alternate" href="https://www.roamjet.net/pt-BR" hrefLang="pt-BR" />
+        <link rel="alternate" href="https://www.roamjet.net/ru" hrefLang="ru" />
+        <link rel="alternate" href="https://www.roamjet.net/tr" hrefLang="tr" />
+        <link rel="alternate" href="https://www.roamjet.net/uk" hrefLang="uk" />
+        <link rel="alternate" href="https://www.roamjet.net/vi" hrefLang="vi" />
+        <link rel="alternate" href="https://www.roamjet.net/zh-Hans" hrefLang="zh-Hans" />
         
         {/* Structured Data for SEO */}
         <script

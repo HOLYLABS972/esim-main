@@ -40,6 +40,8 @@ const LanguageSelector = () => {
     }
     
     // Fallback to pathname detection for both old and new routes
+    if (pathname.startsWith('/en-CA')) return languages.find(lang => lang.code === 'en');
+    if (pathname.startsWith('/fr-CA')) return languages.find(lang => lang.code === 'fr');
     if (pathname.startsWith('/he')) return languages.find(lang => lang.code === 'he');
     if (pathname.startsWith('/ar')) return languages.find(lang => lang.code === 'ar');
     if (pathname.startsWith('/ru')) return languages.find(lang => lang.code === 'ru');
@@ -65,7 +67,7 @@ const LanguageSelector = () => {
     // Handle blog URLs specially
     if (currentPath.includes('/blog')) {
       // Check for blog post with language prefix first
-      const langBlogPostMatch = currentPath.match(/^\/(he|ar|ru|de|fr|es)\/blog\/(.+)$/);
+      const langBlogPostMatch = currentPath.match(/^\/([A-Za-z-]+)\/blog\/(.+)$/);
       if (langBlogPostMatch) {
         const slug = langBlogPostMatch[2];
         console.log('LanguageSelector: Found localized blog post slug:', slug);
@@ -81,7 +83,7 @@ const LanguageSelector = () => {
       }
       
       // Check for localized blog list page
-      const langBlogListMatch = currentPath.match(/^\/(he|ar|ru|de|fr|es)\/blog\/?$/);
+      const langBlogListMatch = currentPath.match(/^\/([A-Za-z-]+)\/blog\/?$/);
       if (langBlogListMatch) {
         console.log('LanguageSelector: Found localized blog list page');
         return getLocalizedBlogListUrl(languageCode);
@@ -97,7 +99,14 @@ const LanguageSelector = () => {
     // Remove any existing language prefix from the path
     let cleanPath = currentPath;
     const languagePrefixes = [
+      '/zh-Hans',
+      '/pt-BR',
+      '/en-US',
+      '/en-CA',
+      '/fr-CA',
       '/he', '/ar', '/ru', '/de', '/fr', '/es', // New language codes
+      '/en',
+      '/id', '/ja', '/tr', '/uk', '/vi',
       '/hebrew', '/arabic', '/russian', '/german', '/french', '/spanish' // Old language names
     ];
     

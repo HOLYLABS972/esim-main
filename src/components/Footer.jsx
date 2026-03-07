@@ -29,28 +29,46 @@ const Footer = () => {
   
   const loading = false;
 
-  // Check if we're on a language-specific page
-  const isLanguagePage = [
-    // New language-code routes
-    '/he', '/ar', '/ru', '/de', '/fr', '/es',
-    // Old language routes (for backward compatibility)
-    '/hebrew', '/arabic', '/russian', '/german', '/french', '/spanish'
-  ].includes(pathname);
+  const localePrefixes = [
+    'en', 'en-US', 'en-CA',
+    'he', 'ar', 'ru', 'de', 'fr', 'es',
+    'fr-CA', 'id', 'ja', 'pt-BR', 'tr', 'uk', 'vi', 'zh-Hans',
+    'hebrew', 'arabic', 'russian', 'german', 'french', 'spanish'
+  ];
 
-  // Check for language-specific routes (e.g., /he/contact, /ru/login, etc.)
-  const isLanguageSpecificPage = pathname.startsWith('/he/') ||
-                                pathname.startsWith('/ar/') ||
-                                pathname.startsWith('/ru/') ||
-                                pathname.startsWith('/de/') ||
-                                pathname.startsWith('/fr/') ||
-                                pathname.startsWith('/es/') ||
-                                // Old language routes (for backward compatibility)
-                                pathname.startsWith('/hebrew/') ||
-                                pathname.startsWith('/arabic/') ||
-                                pathname.startsWith('/russian/') ||
-                                pathname.startsWith('/german/') ||
-                                pathname.startsWith('/french/') ||
-                                pathname.startsWith('/spanish/');
+  const localeToLanguage = {
+    en: 'en',
+    'en-US': 'en',
+    'en-CA': 'en',
+    he: 'he',
+    ar: 'ar',
+    ru: 'ru',
+    de: 'de',
+    fr: 'fr',
+    'fr-CA': 'fr',
+    es: 'es',
+    id: 'en',
+    ja: 'en',
+    'pt-BR': 'en',
+    tr: 'en',
+    uk: 'en',
+    vi: 'en',
+    'zh-Hans': 'en',
+    hebrew: 'he',
+    arabic: 'ar',
+    russian: 'ru',
+    german: 'de',
+    french: 'fr',
+    spanish: 'es'
+  };
+
+  const pathFirstSegment = pathname.split('/').filter(Boolean)[0] || '';
+
+  // Check if we're on a language-specific page
+  const isLanguagePage = localePrefixes.some((prefix) => pathname === `/${prefix}`);
+
+  // Check for language-specific routes (e.g., /he/contact, /fr-CA/login, etc.)
+  const isLanguageSpecificPage = localePrefixes.some((prefix) => pathname.startsWith(`/${prefix}/`));
 
   // Use translations on language-specific pages and language-specific routes
   const getText = (key, englishText) => {
@@ -59,24 +77,15 @@ const Footer = () => {
 
   // Helper function to get language prefix from pathname
   const getLanguagePrefix = () => {
-    const languageCodes = ['ar', 'he', 'ru', 'de', 'fr', 'es'];
-    for (const code of languageCodes) {
-      if (pathname.startsWith(`/${code}/`) || pathname === `/${code}`) {
-        return `/${code}`;
-      }
+    if (localePrefixes.includes(pathFirstSegment)) {
+      return `/${pathFirstSegment}`;
     }
     return '';
   };
 
   // Get current language code from pathname
   const getCurrentLanguage = () => {
-    const languageCodes = ['ar', 'he', 'ru', 'de', 'fr', 'es'];
-    for (const code of languageCodes) {
-      if (pathname.startsWith(`/${code}/`) || pathname === `/${code}`) {
-        return code;
-      }
-    }
-    return 'en';
+    return localeToLanguage[pathFirstSegment] || 'en';
   };
 
   const langPrefix = getLanguagePrefix();
