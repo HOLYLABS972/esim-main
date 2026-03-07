@@ -1,11 +1,6 @@
 import Providers from '../src/components/Providers'
-import { Suspense } from 'react'
-import ConditionalNavbar from '../src/components/ConditionalNavbar'
-import ConditionalFooter from '../src/components/ConditionalFooter'
 import LanguageWrapper from '../src/components/LanguageWrapper'
-import ConditionalMain from '../src/components/ConditionalMain'
-import Navbar from '../src/components/Navbar'
-import Footer from '../src/components/Footer'
+import LayoutChrome from '../src/components/LayoutChrome'
 import './globals.css'
 import './rtl.css'
 
@@ -182,15 +177,9 @@ export default function RootLayout({ children }) {
         <Providers>
           <LanguageWrapper>
             <div className="bg-white">
-              <Suspense fallback={<Navbar />}>
-                <ConditionalNavbar />
-              </Suspense>
-              <ConditionalMain>
+              <LayoutChrome>
                 {children}
-              </ConditionalMain>
-              <Suspense fallback={<Footer />}>
-                <ConditionalFooter />
-              </Suspense>
+              </LayoutChrome>
             </div>
           </LanguageWrapper>
         </Providers>
