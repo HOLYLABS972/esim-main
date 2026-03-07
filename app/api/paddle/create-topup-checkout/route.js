@@ -105,8 +105,7 @@ export async function POST(request) {
         {
           quantity: 1,
           price: {
-            description: `Virtual card top-up — $${amountNum.toFixed(2)} USD`,
-            name: 'Virtual card top-up',
+            description: `$${amountNum.toFixed(2)}`,
             unit_price: {
               amount: String(amountCents),
               currency_code: 'USD',
