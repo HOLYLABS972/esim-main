@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic';
 
 /**
  * Same flow as website checkout: create Paddle transaction on roamjet.net, return checkout URL.
- * Uses the same Paddle API key as create-transaction (website eSIM checkout).
+ * Uses the same Paddle API key as create-transaction (website checkout).
  */
 const PADDLE_API_BASE = process.env.NEXT_PUBLIC_PADDLE_ENV === 'sandbox'
   ? 'https://sandbox-api.paddle.com'
@@ -28,7 +28,7 @@ export async function POST(request) {
       return NextResponse.json(
         {
           error:
-            'Paddle API key not configured. Set PADDLE_API_KEY or NEXT_PUBLIC_PDL_API_KEY on Vercel (same as website eSIM checkout).',
+            'Paddle API key not configured. Set PADDLE_API_KEY or NEXT_PUBLIC_PDL_API_KEY on Vercel (same as website checkout).',
         },
         { status: 500 }
       );
