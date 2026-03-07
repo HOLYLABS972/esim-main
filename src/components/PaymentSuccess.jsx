@@ -50,6 +50,7 @@ const PaymentSuccess = () => {
       let oid = null;
       let customerEmail = null;
       let planName = null;
+      let customType = null;
 
       for (let i = 0; i < 10; i++) {
         try {
@@ -59,6 +60,11 @@ const PaymentSuccess = () => {
             oid = data.customData?.orderId;
             customerEmail = data.customData?.customerEmail;
             planName = data.customData?.planName;
+            customType = data.customData?.type;
+            if (customType === 'card_save') {
+              setStatus('card_save');
+              return;
+            }
             if (oid) break;
           }
         } catch {}
@@ -143,14 +149,21 @@ const PaymentSuccess = () => {
     <div className="min-h-screen bg-gray-950 flex items-center justify-center p-6">
       <div className="max-w-md w-full text-center">
 
+        {/* Card save (add payment method) — no eSIM wording */}
+        {status === 'card_save' && (
+          <>
+            <CheckCircle className="w-16 h-16 text-green-400 mx-auto mb-4" />
+            <h1 className="text-2xl font-bold text-white mb-2">Card added successfully</h1>
+            <p className="text-white/50 mb-6">You can close this page and return to the app.</p>
+            <a href="/" className="inline-block px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition">
+              Back to Home
+            </a>
+          </>
+        )}
+
         {/* Processing */}
         {status === 'processing' && (
-          <>
-            <Loader2 className="w-16 h-16 text-blue-400 mx-auto mb-4 animate-spin" />
-            <h1 className="text-2xl font-bold text-white mb-2">Setting up your eSIM...</h1>
-            <p className="text-white/50 mb-2">This usually takes 10-30 seconds.</p>
-            <p className="text-white/30 text-sm">Do not close this page.</p>
-          </>
+          <div className="min-h-screen bg-gray-950" />
         )}
 
         {/* Ready — QR code */}
@@ -204,14 +217,11 @@ const PaymentSuccess = () => {
             <Loader2 className="w-16 h-16 text-yellow-400 mx-auto mb-4" />
             <h1 className="text-2xl font-bold text-white mb-2">Almost there...</h1>
             <p className="text-white/50 mb-4">
-              Your payment was received. Your eSIM is being provisioned and will be ready shortly.
-            </p>
-            <p className="text-white/40 text-sm mb-4">
-              If you already received your eSIM, you can find it in your dashboard.
+              Your payment was received. Check your dashboard when ready.
             </p>
             {order?.customer_email && (
               <p className="text-white/50 mb-4">
-                We'll send your eSIM details to <strong className="text-white">{order.customer_email}</strong>
+                We'll send the details to <strong className="text-white">{order.customer_email}</strong>
               </p>
             )}
             <a href="/dashboard" className="inline-block px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition">
