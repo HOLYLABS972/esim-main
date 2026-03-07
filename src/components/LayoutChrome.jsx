@@ -9,23 +9,24 @@ import Navbar from './Navbar';
 import Footer from './Footer';
 
 /**
- * Renders navbar + main + footer only when NOT on the topup route.
- * For /topup (and /topup/*), renders only the page content — no header, no footer.
+ * Renders navbar + main + footer only when NOT on a chromeless route.
+ * Chromeless: /topup, /payment-success — no header, no footer (e.g. WebView / Paddle return).
  * When pathname is unknown (e.g. first paint / hydration), we default to chromeless
- * so the topup load screen never shows the navbar.
+ * so those load screens never show the navbar.
  */
 export default function LayoutChrome({ children }) {
   const pathname = usePathname();
-  // Topup route: no navbar, no footer. Also treat unknown pathname as chromeless so load screen has no navbar.
-  const isTopup =
+  const isChromeless =
     pathname == null ||
     pathname === '' ||
     pathname === '/topup' ||
     pathname.startsWith('/topup/') ||
     pathname.endsWith('/topup') ||
-    pathname.includes('/topup');
+    pathname.includes('/topup') ||
+    pathname === '/payment-success' ||
+    pathname.includes('payment-success');
 
-  if (isTopup) {
+  if (isChromeless) {
     return <main className="min-h-screen">{children}</main>;
   }
 

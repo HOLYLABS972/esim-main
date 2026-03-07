@@ -13,26 +13,29 @@ const ConditionalNavbar = () => {
     return null;
   }
 
-  // Hide navbar on virtual card top-up (from app WebView: /topup — no header)
-  if (pathname === '/topup' || pathname?.startsWith('/topup/')) {
+  // Hide navbar on virtual card top-up and payment-success (WebView / Paddle return — no header)
+  if (
+    pathname === '/topup' ||
+    pathname?.startsWith('/topup/') ||
+    pathname === '/payment-success' ||
+    pathname?.includes('payment-success')
+  ) {
     return null;
   }
-  
+
   // Show full navbar on login and register pages (same as other pages)
   if (pathname === '/login' || pathname === '/register') {
     return <Navbar />;
   }
-  
+
   // Hide back button on dashboard page (but keep language selector)
   if (pathname === '/dashboard' || pathname?.match(/^\/[a-z]{2}\/dashboard$/)) {
     return <Navbar hideBackButton={true} />;
   }
-  
-  // Hide back button on landing page (root route) and payment success page
+
+  // Hide back button on landing page (root route)
   const isLandingPage = pathname === '/';
-  const isPaymentSuccessPage = pathname === '/payment-success';
-  
-  return <Navbar hideBackButton={isLandingPage || isPaymentSuccessPage} />;
+  return <Navbar hideBackButton={isLandingPage} />;
 };
 
 export default ConditionalNavbar;

@@ -42,11 +42,18 @@ export function middleware(request) {
   const pathname = request.nextUrl.pathname;
   const rewrittenPath = getRewrittenPath(pathname);
 
-  if (!rewrittenPath) return NextResponse.next();
+  let res;
+  if (rewrittenPath) {
+    const url = request.nextUrl.clone();
+    url.pathname = rewrittenPath;
+    res = NextResponse.rewrite(url);
+  } else {
+    res = NextResponse.next();
+  }
 
-  const url = request.nextUrl.clone();
-  url.pathname = rewrittenPath;
-  return NextResponse.rewrite(url);
+  // So root layout can hide navbar/footer for /topup on the server (no client flash)
+  res.headers.set('x-pathname', pathname);
+  return res;
 }
 
 export const config = {
