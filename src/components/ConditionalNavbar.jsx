@@ -14,7 +14,7 @@ const ConditionalNavbar = () => {
   }
 
   // Hide navbar on virtual card top-up (from app WebView: /topup — no header)
-  if (pathname === '/topup') {
+  if (pathname === '/topup' || pathname?.startsWith('/topup/')) {
     return null;
   }
   

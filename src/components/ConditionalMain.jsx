@@ -6,7 +6,7 @@ const ConditionalMain = ({ children }) => {
   const pathname = usePathname();
   
   // Admin, share-package, and topup (WebView) use minimal layout — no main padding
-  if (pathname?.startsWith('/admin') || pathname?.startsWith('/share-package') || pathname === '/topup') {
+  if (pathname?.startsWith('/admin') || pathname?.startsWith('/share-package') || pathname === '/topup' || pathname?.startsWith('/topup/')) {
     return <main>{children}</main>;
   }
   // Store pages and auth pages don't need top padding (they have their own layout)

@@ -11,7 +11,7 @@ const ConditionalFooter = () => {
   }
 
   // Hide footer on virtual card top-up (from app WebView: /topup — no footer)
-  if (pathname === '/topup') {
+  if (pathname === '/topup' || pathname?.startsWith('/topup/')) {
     return null;
   }
 
