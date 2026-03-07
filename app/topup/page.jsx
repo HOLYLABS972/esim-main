@@ -71,7 +71,7 @@ function TopupContent() {
     <div className="min-h-screen bg-[#0F1322] flex flex-col items-center justify-center p-6">
       <div className="bg-[#1C2438] rounded-2xl p-8 max-w-sm w-full text-center">
         <h1 className="text-xl font-semibold text-white mb-2">Top Up</h1>
-        <p className="text-white/60 text-sm mb-6">Preparing checkout…</p>
+        <p className="text-white/60 text-sm mb-6">Opening payment…</p>
         <p className="text-2xl font-bold text-[#56A8E5] mb-6">
           ${amount.toFixed(2)}
         </p>
