@@ -10,8 +10,13 @@ const ConditionalFooter = () => {
     return null;
   }
 
-  // Hide footer on virtual card top-up (from app WebView: /topup — no footer)
-  if (pathname === '/topup' || pathname?.startsWith('/topup/')) {
+  // Hide footer on virtual card top-up and payment-success (WebView / Paddle return — no footer)
+  if (
+    pathname === '/topup' ||
+    pathname?.startsWith('/topup/') ||
+    pathname === '/payment-success' ||
+    pathname?.includes('payment-success')
+  ) {
     return null;
   }
 
