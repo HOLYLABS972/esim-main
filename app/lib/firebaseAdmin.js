@@ -1,16 +1,19 @@
 /**
  * Firebase Admin for API routes (server-side).
- * Used to verify Firebase ID tokens and access Firestore.
+ * Uses dynamic import so firebase-admin is not loaded at build time (Vercel).
  * Set FIREBASE_SERVICE_ACCOUNT_KEY to a JSON string of your service account key.
  */
-import { initializeApp, getApps, cert } from 'firebase-admin/app';
-import { getAuth } from 'firebase-admin/auth';
-import { getFirestore } from 'firebase-admin/firestore';
-
 let auth = null;
 let firestore = null;
 
-function getFirebaseAdmin() {
+async function getFirebaseAdmin() {
+  if (auth && firestore) {
+    return { auth, firestore };
+  }
+  const { initializeApp, getApps, cert } = await import('firebase-admin/app');
+  const { getAuth } = await import('firebase-admin/auth');
+  const { getFirestore } = await import('firebase-admin/firestore');
+
   if (getApps().length === 0) {
     const key = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
     if (key) {
@@ -25,15 +28,17 @@ function getFirebaseAdmin() {
       initializeApp();
     }
   }
-  return { auth: getAuth(), firestore: getFirestore() };
+  auth = getAuth();
+  firestore = getFirestore();
+  return { auth, firestore };
 }
 
-export function getFirebaseAuth() {
-  if (!auth) ({ auth } = getFirebaseAdmin());
-  return auth;
+export async function getFirebaseAuth() {
+  const admin = await getFirebaseAdmin();
+  return admin.auth;
 }
 
-export function getFirebaseFirestore() {
-  if (!firestore) ({ firestore } = getFirebaseAdmin());
-  return firestore;
+export async function getFirebaseFirestore() {
+  const admin = await getFirebaseAdmin();
+  return admin.firestore;
 }

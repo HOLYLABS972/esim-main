@@ -29,7 +29,7 @@ export async function POST(request) {
 
     let decoded;
     try {
-      const auth = getFirebaseAuth();
+      const auth = await getFirebaseAuth();
       decoded = await auth.verifyIdToken(idToken);
     } catch (e) {
       console.error('Firebase token verification failed:', e.message);
@@ -75,7 +75,7 @@ export async function POST(request) {
       Authorization: `Bearer ${apiKey}`,
     };
 
-    const db = getFirebaseFirestore();
+    const db = await getFirebaseFirestore();
     const paddleRef = db.collection('users').doc(uid).collection('paddle').doc('customer');
     let customerId = null;
     const cached = await paddleRef.get();
