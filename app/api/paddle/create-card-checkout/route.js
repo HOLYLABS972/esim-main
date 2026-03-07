@@ -1,20 +1,12 @@
 import { NextResponse } from 'next/server';
-import { getFirebaseAuth, getFirebaseFirestore } from '../../../lib/firebaseAdmin';
+import { getFirebaseAuth, getFirebaseProjectId } from '../../../lib/firebaseAdmin';
 
 export const dynamic = 'force-dynamic';
 
-const PADDLE_API_BASE = process.env.NEXT_PUBLIC_PADDLE_ENV === 'sandbox'
-  ? 'https://sandbox-api.paddle.com'
-  : 'https://api.paddle.com';
-
-function getPaddleApiKey() {
-  return process.env.PADDLE_API_KEY || process.env.NEXT_PUBLIC_PDL_API_KEY;
-}
-
 /**
- * Proxy for mobile app: creates a Paddle card-checkout URL on the main domain (roamjet.net).
- * Expects Authorization: Bearer <firebase_id_token> and body: { userId, email, successUrl, cancelUrl }.
- * Returns { checkoutUrl } (no redirect).
+ * Proxy for mobile app: verifies Firebase token, then calls the existing
+ * Firebase callable create_paddle_card_checkout_url. Vercel is frontend-only;
+ * all Paddle logic stays in Firebase.
  */
 export async function POST(request) {
   try {
@@ -27,10 +19,9 @@ export async function POST(request) {
       );
     }
 
-    let decoded;
     try {
       const auth = await getFirebaseAuth();
-      decoded = await auth.verifyIdToken(idToken);
+      await auth.verifyIdToken(idToken);
     } catch (e) {
       console.error('Firebase token verification failed:', e.message);
       return NextResponse.json(
@@ -38,8 +29,6 @@ export async function POST(request) {
         { status: 401 }
       );
     }
-
-    const uid = decoded.uid;
 
     let body;
     try {
@@ -51,135 +40,67 @@ export async function POST(request) {
       );
     }
 
-    const email = body.email ?? decoded.email ?? '';
-    const successUrl = body.successUrl || 'https://roamjet.net/add-card-success';
-    const cancelUrl = body.cancelUrl || 'https://roamjet.net/add-card-cancel';
-
-    if (!email || !email.trim()) {
+    const projectId = await getFirebaseProjectId();
+    if (!projectId) {
       return NextResponse.json(
-        { error: 'email is required' },
-        { status: 400 }
-      );
-    }
-
-    const apiKey = getPaddleApiKey();
-    if (!apiKey) {
-      return NextResponse.json(
-        { error: 'Paddle API key not configured. Set PADDLE_API_KEY.' },
+        { error: 'Firebase project not configured' },
         { status: 500 }
       );
     }
 
-    const headers = {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-    };
+    const region = process.env.FIREBASE_FUNCTIONS_REGION || 'us-central1';
+    const url = `https://${region}-${projectId}.cloudfunctions.net/create_paddle_card_checkout_url`;
 
-    const db = await getFirebaseFirestore();
-    const paddleRef = db.collection('users').doc(uid).collection('paddle').doc('customer');
-    let customerId = null;
-    const cached = await paddleRef.get();
-    if (cached.exists && cached.data()?.customer_id) {
-      customerId = cached.data().customer_id;
-    }
-
-    if (!customerId) {
-      const searchRes = await fetch(
-        `${PADDLE_API_BASE}/customers?${new URLSearchParams({ email: email.trim() })}`,
-        { headers }
-      );
-      if (searchRes.ok) {
-        const searchData = await searchRes.json();
-        const data = searchData.data || [];
-        if (data.length > 0) {
-          customerId = data[0].id;
-          await paddleRef.set({ customer_id: customerId, email: email.trim() }, { merge: true });
-        }
-      }
-      if (!customerId) {
-        const createRes = await fetch(`${PADDLE_API_BASE}/customers`, {
-          method: 'POST',
-          headers,
-          body: JSON.stringify({
-            email: email.trim(),
-            custom_data: { firebase_uid: uid },
-          }),
-        });
-        if (!createRes.ok) {
-          const errText = await createRes.text();
-          console.error('Paddle create customer failed:', errText);
-          return NextResponse.json(
-            { error: 'Failed to create Paddle customer' },
-            { status: 502 }
-          );
-        }
-        const createData = await createRes.json();
-        customerId = createData.data?.id;
-        if (!customerId) {
-          return NextResponse.json(
-            { error: 'Invalid Paddle customer response' },
-            { status: 502 }
-          );
-        }
-        await paddleRef.set({ customer_id: customerId, email: email.trim() }, { merge: true });
-      }
-    }
-
-    const checkoutPayload = {
-      items: [
-        {
-          price: {
-            description: 'Card verification — $1 hold (refundable)',
-            unit_price: {
-              amount: '100',
-              currency_code: 'USD',
-            },
-          },
-          quantity: 1,
-        },
-      ],
-      customer_id: customerId,
-      collection_mode: 'automatic',
-      checkout: {
-        url: successUrl,
-      },
-      custom_data: {
-        firebase_uid: uid,
-        purpose: 'card_save',
+    const callableBody = {
+      data: {
+        userId: body.userId,
+        email: body.email,
+        successUrl: body.successUrl || 'https://roamjet.net/add-card-success',
+        cancelUrl: body.cancelUrl || 'https://roamjet.net/add-card-cancel',
       },
     };
 
-    const txnRes = await fetch(`${PADDLE_API_BASE}/transactions`, {
+    const res = await fetch(url, {
       method: 'POST',
-      headers,
-      body: JSON.stringify(checkoutPayload),
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${idToken}`,
+      },
+      body: JSON.stringify(callableBody),
     });
 
-    if (!txnRes.ok) {
-      const errText = await txnRes.text();
-      console.error('Paddle create transaction failed:', txnRes.status, errText);
+    const text = await res.text();
+    let data;
+    try {
+      data = text ? JSON.parse(text) : {};
+    } catch {
+      console.error('Firebase callable response not JSON:', text?.slice(0, 200));
       return NextResponse.json(
-        { error: errText || 'Paddle checkout creation failed' },
-        { status: txnRes.status >= 500 ? 502 : 400 }
+        { error: 'Invalid response from function' },
+        { status: 502 }
       );
     }
 
-    const txnData = await txnRes.json();
-    const data = txnData.data || {};
-    let checkoutUrl = data.checkout?.url;
-    if (!checkoutUrl && data.id) {
-      checkoutUrl = `https://checkout.paddle.com/checkout/custom?_ptxn=${data.id}`;
+    if (!res.ok) {
+      const errMsg = data?.error?.message || data?.message || text || `Function error ${res.status}`;
+      return NextResponse.json(
+        { error: errMsg },
+        { status: res.status >= 500 ? 502 : res.status }
+      );
     }
+
+    const result = data.result;
+    const checkoutUrl = result?.checkoutUrl || result?.url;
     if (!checkoutUrl) {
       return NextResponse.json(
-        { error: 'No checkout URL in Paddle response' },
+        { error: 'No checkout URL in function result' },
         { status: 502 }
       );
     }
 
     return NextResponse.json({ checkoutUrl });
   } catch (e) {
-    console.error('create-card-checkout error:', e);
+    console.error('create-card-checkout proxy error:', e);
     return NextResponse.json(
       { error: e.message || 'Internal server error' },
       { status: 500 }
