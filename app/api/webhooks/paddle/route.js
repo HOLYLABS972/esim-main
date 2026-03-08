@@ -145,6 +145,36 @@ export async function POST(request) {
     const countryCode = customData.countryCode || customData.country;
     const countryName = customData.countryName || customData.country_name;
     const isTopup = customData.type === 'topup';
+    const isVirtualCardTopup = customData.type === 'virtual_card_topup';
+
+    // Virtual card top-up: trigger Firebase HTTP function to credit card (RoamJet has no Admin SDK).
+    if (isVirtualCardTopup) {
+      const triggerUrl = process.env.PADDLE_TOPUP_TRIGGER_URL || process.env.FIREBASE_PADDLE_TOPUP_TRIGGER_URL;
+      if (triggerUrl) {
+        try {
+          const res = await fetch(triggerUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'paddle-signature': request.headers.get('paddle-signature') || '',
+            },
+            body: rawBody,
+          });
+          const text = await res.text();
+          if (!res.ok) {
+            console.error('❌ Paddle top-up trigger failed:', res.status, text);
+            return NextResponse.json({ error: text || 'Trigger failed' }, { status: res.status });
+          }
+          console.log('✅ Virtual card top-up trigger succeeded:', res.status);
+          return NextResponse.json({ received: true, type: 'virtual_card_topup' });
+        } catch (err) {
+          console.error('❌ Paddle top-up trigger error:', err);
+          return NextResponse.json({ error: err.message }, { status: 500 });
+        }
+      }
+      console.log('⏭️ Virtual card top-up (no PADDLE_TOPUP_TRIGGER_URL) — acknowledged only');
+      return NextResponse.json({ received: true, type: 'virtual_card_topup' });
+    }
 
     if (!customerEmail && txn.customer_id) {
       customerEmail = await getPaddleCustomerEmail(txn.customer_id);

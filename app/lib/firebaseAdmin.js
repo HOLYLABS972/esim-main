@@ -1,8 +1,7 @@
 /**
  * Firebase Admin Auth only (for token verification).
- * Does not load Firestore, so no @opentelemetry dependency in serverless.
  * Optional: FIREBASE_SERVICE_ACCOUNT_KEY (JSON string) and/or FIREBASE_PROJECT_ID.
- * If neither is set, the proxy returns 503 until you configure them.
+ * If neither is set, getFirebaseAuth returns null until you configure them.
  */
 let auth = null;
 let projectId = null;
