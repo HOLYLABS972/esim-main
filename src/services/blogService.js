@@ -2,22 +2,71 @@ import { supabase } from '../supabase/config';
 
 const BRAND = 'esim';
 
-// Get all blog posts (public posts only, ordered by date)
-export const getBlogPosts = async () => {
+// Supported blog locales (must match DB language column values)
+const SUPPORTED_LOCALES = ['en', 'ar', 'de', 'es', 'fr', 'he', 'ru', 'pt', 'tr', 'ja', 'zh', 'id', 'uk', 'vi'];
+
+/**
+ * Get locale from pathname (e.g. /de/blog -> 'de', /blog -> 'en').
+ * Used by server components via x-pathname header.
+ */
+export function getLocaleFromPathname(pathname) {
+  if (!pathname || pathname === '/') return 'en';
+  const segments = pathname.split('/').filter(Boolean);
+  const first = segments[0];
+  if (SUPPORTED_LOCALES.includes(first)) return first;
+  return 'en';
+}
+
+// Get all blog posts (public posts only, optionally filtered by locale)
+export const getBlogPosts = async (locale = 'en') => {
   try {
     if (!supabase) {
       console.error('Supabase client not initialized');
       return [];
     }
 
-    const { data, error } = await supabase
+    let query = supabase
       .from('blog_posts')
       .select('*')
       .eq('brand', BRAND)
       .eq('status', 'published')
       .order('published_at', { ascending: false });
 
+    // Filter by language/locale when column exists
+    const normalizedLocale = locale && SUPPORTED_LOCALES.includes(locale) ? locale : 'en';
+    query = query.eq('language', normalizedLocale);
+
+    const { data, error } = await query;
+
     if (error) {
+      // If language column is missing, fetch all and filter in memory (backward compatibility)
+      if (error.code === '42703' || error.message?.includes('language')) {
+        const { data: allData, error: allError } = await supabase
+          .from('blog_posts')
+          .select('*')
+          .eq('brand', BRAND)
+          .eq('status', 'published')
+          .order('published_at', { ascending: false });
+        if (allError) {
+          console.error('Error getting blog posts:', allError);
+          return [];
+        }
+        const filtered = (allData || []).filter(p => (p.language || 'en') === normalizedLocale);
+        return filtered.map(post => ({
+          id: post.id,
+          slug: post.slug,
+          title: post.title,
+          excerpt: post.excerpt,
+          content: post.content,
+          coverImage: post.featured_image,
+          author: post.author || 'Roamjet Team',
+          tags: post.tags || [],
+          published: post.status === 'published',
+          publishedAt: post.published_at ? new Date(post.published_at) : new Date(),
+          metaDescription: post.seo_description || post.excerpt,
+          language: post.language || 'en',
+        }));
+      }
       console.error('Error getting blog posts:', error);
       return [];
     }
@@ -34,6 +83,7 @@ export const getBlogPosts = async () => {
       published: post.status === 'published',
       publishedAt: post.published_at ? new Date(post.published_at) : new Date(),
       metaDescription: post.seo_description || post.excerpt,
+      language: post.language || 'en',
     }));
   } catch (error) {
     console.error('Error getting blog posts:', error);
@@ -41,20 +91,51 @@ export const getBlogPosts = async () => {
   }
 };
 
-// Get single blog post by slug
-export const getBlogPost = async (slug) => {
+// Get single blog post by slug (optionally filtered by locale)
+export const getBlogPost = async (slug, locale = 'en') => {
   try {
     if (!supabase) return null;
 
-    const { data, error } = await supabase
+    const normalizedLocale = locale && SUPPORTED_LOCALES.includes(locale) ? locale : 'en';
+
+    let query = supabase
       .from('blog_posts')
       .select('*')
       .eq('slug', slug)
       .eq('brand', BRAND)
       .eq('status', 'published')
-      .single();
+      .eq('language', normalizedLocale);
 
-    if (error || !data) return null;
+    const { data, error } = await query.single();
+
+    if (error) {
+      // If language column missing or no row, try without language filter and pick by locale
+      if (error.code === 'PGRST116' || error.code === '42703' || error.message?.includes('language')) {
+        const { data: rows, error: allError } = await supabase
+          .from('blog_posts')
+          .select('*')
+          .eq('slug', slug)
+          .eq('brand', BRAND)
+          .eq('status', 'published');
+        if (allError || !rows?.length) return null;
+        const data = rows.find(r => (r.language || 'en') === normalizedLocale) || rows[0];
+        return {
+          id: data.id,
+          slug: data.slug,
+          title: data.title,
+          excerpt: data.excerpt,
+          content: data.content,
+          coverImage: data.featured_image,
+          author: data.author || 'Roamjet Team',
+          tags: data.tags || [],
+          published: true,
+          publishedAt: data.published_at ? new Date(data.published_at) : new Date(),
+          metaDescription: data.seo_description || data.excerpt,
+          language: data.language || 'en',
+        };
+      }
+      return null;
+    }
 
     return {
       id: data.id,
@@ -68,6 +149,7 @@ export const getBlogPost = async (slug) => {
       published: true,
       publishedAt: data.published_at ? new Date(data.published_at) : new Date(),
       metaDescription: data.seo_description || data.excerpt,
+      language: data.language || 'en',
     };
   } catch (error) {
     console.error('Error getting blog post:', error);
@@ -114,10 +196,10 @@ export const createBlogPost = async (postData) => {
   }
 };
 
-// Get featured blog posts
-export const getFeaturedBlogPosts = async (limit = 3) => {
+// Get featured blog posts (optionally filtered by locale)
+export const getFeaturedBlogPosts = async (limit = 3, locale = 'en') => {
   try {
-    const posts = await getBlogPosts();
+    const posts = await getBlogPosts(locale);
     return posts.slice(0, limit);
   } catch (error) {
     console.error('Error getting featured blog posts:', error);
@@ -125,10 +207,10 @@ export const getFeaturedBlogPosts = async (limit = 3) => {
   }
 };
 
-// Search blog posts
-export const searchBlogPosts = async (searchTerm) => {
+// Search blog posts (optionally filtered by locale)
+export const searchBlogPosts = async (searchTerm, locale = 'en') => {
   try {
-    const posts = await getBlogPosts();
+    const posts = await getBlogPosts(locale);
     if (!searchTerm) return posts;
     const searchLower = searchTerm.toLowerCase();
     return posts.filter(post =>

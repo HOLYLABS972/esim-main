@@ -233,7 +233,7 @@ export default function FAQ() {
             Can't find the answer you're looking for? Our support team is here to help.
           </p>
           <a
-            href="mailto:info@roamjet.net"
+            href="mailto:dima@holylabs.net"
             className="inline-block bg-white text-tufts-blue font-semibold px-8 py-3 rounded-lg hover:bg-gray-100 transition-colors"
           >
             Contact Support

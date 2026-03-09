@@ -80,7 +80,7 @@ export default function PrivacyPolicyFr() {
                 Nous conservons ces informations et les utilisons pour exploiter le service, la facturation et à des fins internes. <strong>Ces informations ne sont PAS transférées à un tiers</strong> sauf à des fins de traitement des paiements via des passerelles de paiement sécurisées.
               </p>
               <p>
-                Si vous avez des questions concernant les informations que nous avons stockées ou concernant tout problème de confidentialité, n'hésitez pas à contacter notre équipe par e-mail : <a href="mailto:info@roamjet.net" className="text-blue-600 hover:underline">info@roamjet.net</a>
+                Si vous avez des questions concernant les informations que nous avons stockées ou concernant tout problème de confidentialité, n'hésitez pas à contacter notre équipe par e-mail : <a href="mailto:dima@holylabs.net" className="text-blue-600 hover:underline">dima@holylabs.net</a>
               </p>
             </div>
           </section>
@@ -99,7 +99,7 @@ export default function PrivacyPolicyFr() {
                 <li><strong>Droit de restreindre le traitement :</strong> Vous avez le droit de demander que nous restreignions le traitement de vos données personnelles, dans certaines conditions.</li>
               </ul>
               <p>
-                Pour exercer l'un de ces droits, veuillez nous contacter à <a href="mailto:info@roamjet.net" className="text-blue-600 hover:underline">info@roamjet.net</a>. Nous répondrons à votre demande dans les 30 jours.
+                Pour exercer l'un de ces droits, veuillez nous contacter à <a href="mailto:dima@holylabs.net" className="text-blue-600 hover:underline">dima@holylabs.net</a>. Nous répondrons à votre demande dans les 30 jours.
               </p>
             </div>
           </section>
@@ -112,7 +112,7 @@ export default function PrivacyPolicyFr() {
                 Si vous avez des questions sur cette politique de confidentialité ou nos pratiques, veuillez nous contacter :
               </p>
               <p>
-                E-mail : <a href="mailto:info@roamjet.net" className="text-blue-600 hover:underline">info@roamjet.net</a>
+                E-mail : <a href="mailto:dima@holylabs.net" className="text-blue-600 hover:underline">dima@holylabs.net</a>
               </p>
             </div>
           </section>

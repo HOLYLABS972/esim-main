@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { getBlogPosts } from '../../src/services/blogService';
+import { headers } from 'next/headers';
+import { getBlogPosts, getLocaleFromPathname } from '../../src/services/blogService';
 
 // Metadata for SEO
 export const metadata = {
@@ -53,11 +54,15 @@ function getReadingTime(content) {
 }
 
 export default async function BlogPage() {
+  const headersList = await headers();
+  const pathname = headersList.get('x-pathname') || '';
+  const locale = getLocaleFromPathname(pathname);
+
   let posts = [];
   let error = null;
 
   try {
-    posts = await getBlogPosts();
+    posts = await getBlogPosts(locale);
   } catch (err) {
     console.error('Failed to fetch blog posts:', err);
     error = 'Unable to load blog posts. Please try again later.';
@@ -139,7 +144,7 @@ export default async function BlogPage() {
                   </div>
                   <div className="group relative">
                     <h3 className="mt-3 text-lg font-semibold leading-6 text-gray-900 group-hover:text-gray-600">
-                      <Link href={`/blog/${post.slug}`}>
+                      <Link href={locale && locale !== 'en' ? `/${locale}/blog/${post.slug}` : `/blog/${post.slug}`}>
                         <span className="absolute inset-0" />
                         {post.title}
                       </Link>
@@ -161,28 +166,6 @@ export default async function BlogPage() {
             ))}
           </div>
         )}
-      </div>
-
-      {/* CTA Section */}
-      <div className="bg-blue-600">
-        <div className="px-6 py-24 sm:px-6 sm:py-32 lg:px-8">
-          <div className="mx-auto max-w-2xl text-center">
-            <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
-              Ready to Travel?
-            </h2>
-            <p className="mx-auto mt-6 max-w-xl text-lg leading-8 text-blue-100">
-              Get reliable international connectivity with Roamjet eSIM. Plans starting from just $4.
-            </p>
-            <div className="mt-10 flex items-center justify-center gap-x-6">
-              <Link
-                href="/"
-                className="rounded-md bg-white px-3.5 py-2.5 text-sm font-semibold text-blue-600 shadow-sm hover:bg-blue-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-              >
-                Browse eSIM Plans
-              </Link>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );

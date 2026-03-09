@@ -16,7 +16,7 @@ const Footer = () => {
   const currentYear = new Date().getFullYear();
   // Hardcoded contact information
   const contactInfo = {
-    email: 'info@roamjet.net'
+    email: 'dima@holylabs.net'
   };
   
   // Hardcoded social media links

@@ -33,7 +33,7 @@ export default function RefundPolicy() {
             <h3 className="text-xl font-semibold text-gray-900 mb-3">Eligibility Within the 14-Day Window</h3>
             <ul className="list-disc pl-6 space-y-2 text-gray-700">
               <li>Refunds are available for unused data plans when the eSIM has not been activated and no data has been consumed.</li>
-              <li>To request a refund, contact info@roamjet.net with your order number and reason for the request. Approved refunds are processed to the original payment method within 7 business days.</li>
+              <li>To request a refund, contact dima@holylabs.net with your order number and reason for the request. Approved refunds are processed to the original payment method within 7 business days.</li>
             </ul>
           </section>
 
@@ -43,13 +43,13 @@ export default function RefundPolicy() {
               eSIM plans that have been activated, used (including any amount of data consumption), or expired are non-refundable. Activation is determined by the first byte of data consumed or explicit activation recorded in our systems. Refunds are not available after the 14-day window from the purchase date.
             </p>
             <p className="text-gray-700 leading-relaxed">
-              If you have scanned the QR code, installed the eSIM profile on your device, consumed any data, or if the plan&apos;s validity period has ended, we will not issue a refund for that purchase. Please ensure your device is compatible and that you follow the activation instructions carefully before purchasing. If you are unsure, contact support at info@roamjet.net prior to purchase.
+              If you have scanned the QR code, installed the eSIM profile on your device, consumed any data, or if the plan&apos;s validity period has ended, we will not issue a refund for that purchase. Please ensure your device is compatible and that you follow the activation instructions carefully before purchasing. If you are unsure, contact support at dima@holylabs.net prior to purchase.
             </p>
           </section>
 
           <section>
             <h3 className="text-xl font-semibold text-gray-900 mb-3">Contact</h3>
-            <p className="text-gray-700 leading-relaxed">For refund requests or questions, please contact: <a href="mailto:info@roamjet.net" className="text-blue-600">info@roamjet.net</a></p>
+            <p className="text-gray-700 leading-relaxed">For refund requests or questions, please contact: <a href="mailto:dima@holylabs.net" className="text-blue-600">dima@holylabs.net</a></p>
           </section>
 
           <div className="pt-8 border-t border-gray-200">

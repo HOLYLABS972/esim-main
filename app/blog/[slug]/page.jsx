@@ -1,11 +1,15 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
-import { getBlogPost, getBlogPosts } from '../../../src/services/blogService';
+import { headers } from 'next/headers';
+import { getBlogPost, getBlogPosts, getLocaleFromPathname } from '../../../src/services/blogService';
 
 // Generate metadata dynamically based on the blog post
 export async function generateMetadata({ params }) {
-  const post = await getBlogPost(params.slug);
+  const headersList = await headers();
+  const pathname = headersList.get('x-pathname') || '';
+  const locale = getLocaleFromPathname(pathname);
+  const post = await getBlogPost(params.slug, locale);
 
   if (!post) {
     return {
@@ -52,7 +56,7 @@ export async function generateMetadata({ params }) {
 // Generate static params for all blog posts (optional, for static generation)
 export async function generateStaticParams() {
   try {
-    const posts = await getBlogPosts();
+    const posts = await getBlogPosts('en');
     return posts.map((post) => ({
       slug: post.slug,
     }));
@@ -81,11 +85,17 @@ function getReadingTime(content) {
 }
 
 export default async function BlogPostPage({ params }) {
-  const post = await getBlogPost(params.slug);
+  const headersList = await headers();
+  const pathname = headersList.get('x-pathname') || '';
+  const locale = getLocaleFromPathname(pathname);
+  const post = await getBlogPost(params.slug, locale);
 
   if (!post) {
     notFound();
   }
+
+  const blogListHref = locale && locale !== 'en' ? `/${locale}/blog` : '/blog';
+  const postBaseUrl = `https://roamjet.net${locale && locale !== 'en' ? `/${locale}/blog` : '/blog'}/${post.slug}`;
 
   return (
     <div className="bg-white">
@@ -117,7 +127,7 @@ export default async function BlogPostPage({ params }) {
                   <svg className="h-5 w-5 flex-shrink-0 text-gray-300" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                     <path d="M5.555 17.776l8-16 .894.448-8 16-.894-.448z" />
                   </svg>
-                  <Link href="/blog" className="ml-4 text-sm font-medium text-gray-500 hover:text-gray-700">
+                  <Link href={blogListHref} className="ml-4 text-sm font-medium text-gray-500 hover:text-gray-700">
                     Blog
                   </Link>
                 </div>
@@ -185,7 +195,7 @@ export default async function BlogPostPage({ params }) {
             <h3 className="text-lg font-semibold text-gray-900">Share this article</h3>
             <div className="mt-4 flex space-x-6">
               <a
-                href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(`https://roamjet.net/blog/${post.slug}`)}&text=${encodeURIComponent(post.title)}`}
+                href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(postBaseUrl)}&text=${encodeURIComponent(post.title)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-400 hover:text-blue-500"
@@ -196,7 +206,7 @@ export default async function BlogPostPage({ params }) {
                 </svg>
               </a>
               <a
-                href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(`https://roamjet.net/blog/${post.slug}`)}`}
+                href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(postBaseUrl)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-400 hover:text-blue-600"
@@ -207,7 +217,7 @@ export default async function BlogPostPage({ params }) {
                 </svg>
               </a>
               <a
-                href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(`https://roamjet.net/blog/${post.slug}`)}`}
+                href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(postBaseUrl)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-400 hover:text-blue-700"
@@ -223,7 +233,7 @@ export default async function BlogPostPage({ params }) {
           {/* Back to Blog */}
           <div className="mt-16 border-t border-gray-200 pt-8">
             <Link
-              href="/blog"
+              href={blogListHref}
               className="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-500"
             >
               <svg className="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
@@ -231,28 +241,6 @@ export default async function BlogPostPage({ params }) {
               </svg>
               Back to all articles
             </Link>
-          </div>
-        </div>
-      </div>
-
-      {/* CTA Section */}
-      <div className="mt-32 bg-blue-600">
-        <div className="px-6 py-24 sm:px-6 sm:py-32 lg:px-8">
-          <div className="mx-auto max-w-2xl text-center">
-            <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
-              Ready to Travel?
-            </h2>
-            <p className="mx-auto mt-6 max-w-xl text-lg leading-8 text-blue-100">
-              Get reliable international connectivity with Roamjet eSIM. Plans starting from just $4.
-            </p>
-            <div className="mt-10 flex items-center justify-center gap-x-6">
-              <Link
-                href="/"
-                className="rounded-md bg-white px-3.5 py-2.5 text-sm font-semibold text-blue-600 shadow-sm hover:bg-blue-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-              >
-                Browse eSIM Plans
-              </Link>
-            </div>
           </div>
         </div>
       </div>
