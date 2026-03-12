@@ -11,6 +11,12 @@ function getPaddleApiKey() {
   return process.env.PADDLE_API_KEY || process.env.NEXT_PUBLIC_PDL_API_KEY;
 }
 
+function normalizeCustomerEmail(rawEmail, orderId) {
+  const email = String(rawEmail || '').trim().toLowerCase();
+  if (email) return email;
+  return `pending+${String(orderId || Date.now())}@roamjet.local`;
+}
+
 export async function POST(request) {
   try {
     const apiKey = getPaddleApiKey();
@@ -44,6 +50,9 @@ export async function POST(request) {
     const countryLabel = orderData.countryName || (orderData.countryCode ? `(${orderData.countryCode})` : null);
     const itemTitle = countryLabel ? `${planName} · ${countryLabel}` : planName;
 
+    const orderId = orderData.orderId || `roamjet-${Date.now()}`;
+    const customerEmail = normalizeCustomerEmail(orderData.customerEmail, orderId);
+
     const payload = {
       items: [
         {
@@ -68,11 +77,11 @@ export async function POST(request) {
         url: successCallbackUrl,
       },
       custom_data: {
-        orderId: orderData.orderId,
-        orderID: orderData.orderId,
+        orderId,
+        orderID: orderId,
         planId: orderData.planId,
         planName: orderData.planName,
-        customerEmail: orderData.customerEmail,
+        customerEmail,
         type: orderData.type || 'esim',
         userId: orderData.userId || null,
         isGuest: orderData.isGuest ?? !orderData.userId,
@@ -125,7 +134,6 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Invalid Paddle response' }, { status: 500 });
     }
 
-    const orderId = orderData.orderId || `roamjet-${Date.now()}`;
     const checkoutUrl = `${baseUrl.replace(/\/$/, '')}/checkout?_ptxn=${encodeURIComponent(txn.id)}`;
 
     if (supabase) {
@@ -133,7 +141,7 @@ export async function POST(request) {
         id: orderId,
         order_id: orderId,
         user_id: orderData.userId || null,
-        customer_email: orderData.customerEmail || null,
+        customer_email: customerEmail,
         plan_id: orderData.planId || null,
         plan_name: orderData.planName || 'eSIM Plan',
         amount: parseFloat(orderData.amount) || 0,
