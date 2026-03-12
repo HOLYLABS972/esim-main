@@ -159,11 +159,9 @@ export default function CheckoutPageClient() {
   if (txnId) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="max-w-md mx-auto bg-white rounded-xl shadow-lg p-6 text-center">
-          <p className="text-gray-600 mb-4">If checkout did not open, try again or return to the store.</p>
-          <a href="/" className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-            Return to store
-          </a>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4" />
+          <p className="text-gray-600">Opening secure checkout...</p>
         </div>
       </div>
     );
