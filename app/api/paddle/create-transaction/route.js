@@ -1,8 +1,11 @@
 import { NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 
 const PADDLE_API_BASE = process.env.NEXT_PUBLIC_PADDLE_ENV === 'sandbox'
   ? 'https://sandbox-api.paddle.com'
   : 'https://api.paddle.com';
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://uhpuqiptxcjluwsetoev.supabase.co';
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 function getPaddleApiKey() {
   return process.env.PADDLE_API_KEY || process.env.NEXT_PUBLIC_PDL_API_KEY;
@@ -20,6 +23,7 @@ export async function POST(request) {
 
     const body = await request.json();
     const { orderData, successUrl, cancelUrl } = body;
+    const supabase = SUPABASE_SERVICE_KEY ? createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY) : null;
 
     if (!orderData || orderData.amount == null) {
       return NextResponse.json({ error: 'Missing orderData or amount' }, { status: 400 });
@@ -121,10 +125,47 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Invalid Paddle response' }, { status: 500 });
     }
 
-    const checkoutUrl = txn.checkout?.url;
+    const orderId = orderData.orderId || `roamjet-${Date.now()}`;
+    const checkoutUrl = `${baseUrl.replace(/\/$/, '')}/checkout?_ptxn=${encodeURIComponent(txn.id)}`;
+
+    if (supabase) {
+      const pendingOrder = {
+        id: orderId,
+        order_id: orderId,
+        user_id: orderData.userId || null,
+        customer_email: orderData.customerEmail || null,
+        plan_id: orderData.planId || null,
+        plan_name: orderData.planName || 'eSIM Plan',
+        amount: parseFloat(orderData.amount) || 0,
+        currency: currency.toLowerCase(),
+        payment_method: 'paddle',
+        status: 'pending',
+        transaction_id: txn.id,
+        paddle_transaction_id: txn.id,
+        country_code: orderData.countryCode || orderData.country || null,
+        country_name: orderData.countryName || null,
+        is_guest: orderData.isGuest ?? !orderData.userId,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      const { error: dbError } = await supabase
+        .from('orders')
+        .upsert(pendingOrder, { onConflict: 'id' });
+
+      if (dbError) {
+        console.error('Failed to create pending order:', dbError);
+        return NextResponse.json(
+          { error: 'Failed to create pending order' },
+          { status: 500 }
+        );
+      }
+    }
+
     return NextResponse.json({
       transactionId: txn.id,
-      checkoutUrl: checkoutUrl || null,
+      checkoutUrl,
+      orderId,
       status: txn.status,
     });
   } catch (e) {

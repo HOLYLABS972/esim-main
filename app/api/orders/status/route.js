@@ -20,7 +20,7 @@ export async function GET(request) {
     // Look up by order_id or id
     const { data, error } = await supabase
       .from('orders')
-      .select('id,order_id,status,plan_id,plan_name,customer_email,iccid,qr_code,qr_code_url,smdp_address,activation_code,airalo_order_id,direct_apple_installation_url,created_at')
+      .select('id,order_id,status,plan_id,plan_name,customer_email,iccid,qr_code,qr_code_url,smdp_address,activation_code,airalo_order_id,direct_apple_installation_url,country_code,country_name,transaction_id,paddle_transaction_id,amount,currency,created_at,updated_at')
       .or(`order_id.eq.${id},id.eq.${id}`)
       .maybeSingle();
 

@@ -274,6 +274,8 @@ export async function POST(request) {
         currency: (txn.currency_code || 'usd').toLowerCase(),
         payment_method: 'paddle',
         status: 'active',
+        transaction_id: txn.id,
+        paddle_transaction_id: txn.id,
         airalo_order_id: String(airaloOrder.id),
         iccid: iccid,
         qr_code: qrCode,
@@ -288,6 +290,7 @@ export async function POST(request) {
         is_guest: isGuest ?? !userId,
         airalo_order_data: { sims, order: airaloOrder, paddle_txn: txn.id },
         created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       };
 
       const { error: dbError } = await supabase.from('orders').upsert(orderRecord, { onConflict: 'id' });
