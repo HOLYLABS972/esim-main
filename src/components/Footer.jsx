@@ -8,6 +8,7 @@ import { Mail, Facebook, Twitter, Instagram, Youtube } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { useI18n } from '../contexts/I18nContext';
 import { useAuth } from '../contexts/AuthContext';
+import { getLocalizedPath } from '../utils/languageUtils';
 
 const Footer = () => {
   const pathname = usePathname();
@@ -92,18 +93,18 @@ const Footer = () => {
   const currentLanguage = getCurrentLanguage();
 
   const quickLinks = [
-    { name: 'FAQ', path: `${langPrefix}/faq` },
+    { name: 'FAQ', path: getLocalizedPath('/faq', currentLanguage) },
     { name: getText('navbar.affiliate', 'Affiliate'), path: '/affiliate' },
-    ...(currentUser ? [{ name: getText('navbar.dashboard', 'Dashboard'), path: `${langPrefix}/dashboard` }] : []),
-    { name: getText('navbar.login', 'Login'), path: `${langPrefix}/login` },
-    { name: getText('navbar.blog', 'Blog'), path: '/blog' }
+    ...(currentUser ? [{ name: getText('navbar.dashboard', 'Dashboard'), path: getLocalizedPath('/dashboard', currentLanguage) }] : []),
+    { name: getText('navbar.login', 'Login'), path: getLocalizedPath('/login', currentLanguage) },
+    { name: getText('navbar.blog', 'Blog'), path: getLocalizedPath('/blog', currentLanguage) }
   ];
 
   const usefulLinks = [
-    { name: getText('footer.deviceCompatibility', 'Device Compatibility'), path: `${langPrefix}/device-compatibility` },
-    { name: getText('footer.privacyPolicy', 'Privacy Policy'), path: `${langPrefix}/privacy-policy` },
-    { name: getText('footer.refundPolicy', 'Refund Policy'), path: `${langPrefix}/refund-policy` },
-    { name: getText('footer.termsOfService', 'Terms of Service'), path: `${langPrefix}/terms-of-service` }
+    { name: getText('footer.deviceCompatibility', 'Device Compatibility'), path: getLocalizedPath('/device-compatibility', currentLanguage) },
+    { name: getText('footer.privacyPolicy', 'Privacy Policy'), path: getLocalizedPath('/privacy-policy', currentLanguage) },
+    { name: getText('footer.refundPolicy', 'Refund Policy'), path: '/refund-policy' },
+    { name: getText('footer.termsOfService', 'Terms of Service'), path: getLocalizedPath('/terms-of-service', currentLanguage) }
   ];
 
   // Custom TikTok Icon Component

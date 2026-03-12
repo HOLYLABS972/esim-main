@@ -3,12 +3,18 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Search, CheckCircle } from 'lucide-react';
+import { useI18n } from '../../src/contexts/I18nContext';
 
 export default function DeviceCompatibility() {
+  const { t } = useI18n();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedBrand, setSelectedBrand] = useState('all');
   const [selectedPhone, setSelectedPhone] = useState(null);
   const [showConfetti, setShowConfetti] = useState(false);
+
+  useEffect(() => {
+    document.title = `${t('deviceCompatibilityPage.title', 'eSIM Compatible Phones')} | RoamJet`;
+  }, [t]);
 
   // Confetti effect
   useEffect(() => {
@@ -338,9 +344,11 @@ export default function DeviceCompatibility() {
         {/* Header */}
         <div className="bg-tufts-blue rounded-2xl shadow-lg p-8 md:p-12 mb-8 text-white">
           <div className="max-w-3xl">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">eSIM Compatible Phones</h1>
+            <h1 className="text-4xl md:text-5xl font-bold mb-4">
+              {t('deviceCompatibilityPage.title', 'eSIM Compatible Phones')}
+            </h1>
             <p className="text-xl text-blue-100 mb-6">
-              Find your phone model and check if it supports eSIM technology. All devices listed below are eSIM compatible.
+              {t('deviceCompatibilityPage.description', 'Find your phone model and check if it supports eSIM technology. All devices listed below are eSIM compatible.')}
             </p>
             
             {/* Search Box */}
@@ -348,7 +356,7 @@ export default function DeviceCompatibility() {
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <input
                 type="text"
-                placeholder="Search for phone model (e.g., iPhone 15, Galaxy S24)..."
+                placeholder={t('deviceCompatibilityPage.searchPlaceholder', 'Search for phone model (e.g., iPhone 15, Galaxy S24)...')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-12 pr-4 py-4 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white shadow-lg"
@@ -365,7 +373,7 @@ export default function DeviceCompatibility() {
                     : 'bg-white/20 text-white hover:bg-white/30'
                 }`}
               >
-                All Brands
+                {t('deviceCompatibilityPage.allBrands', 'All Brands')}
               </button>
               {brands.map(brand => (
                 <button
@@ -391,25 +399,25 @@ export default function DeviceCompatibility() {
               <div className="mb-4 flex justify-center">
                 <CheckCircle className="w-20 h-20 text-green-500" />
               </div>
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">🎉 You're Ready to Go!</h2>
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">{t('deviceCompatibilityPage.readyTitle', "You're Ready to Go!")}</h2>
               <p className="text-lg text-gray-600 mb-4">
-                <strong>{selectedPhone.model}</strong> supports eSIM!
+                <strong>{selectedPhone.model}</strong> {t('deviceCompatibilityPage.supportsEsim', 'supports eSIM!')}
               </p>
               <p className="text-gray-500 mb-6">
-                Your {selectedPhone.brand} is compatible with RoamJet eSIM plans. Get connected in minutes!
+                {t('deviceCompatibilityPage.compatibleWithRoamjet', 'Your {{brand}} is compatible with RoamJet eSIM plans. Get connected in minutes!', { brand: selectedPhone.brand })}
               </p>
               <div className="space-y-3">
                 <Link
                   href="/esim-plans"
                   className="block w-full bg-tufts-blue text-white font-semibold px-6 py-3 rounded-lg hover:bg-cobalt-blue hover:shadow-lg transition-all"
                 >
-                  Browse eSIM Plans →
+                  {t('deviceCompatibilityPage.browsePlans', 'Browse eSIM Plans ->')}
                 </Link>
                 <button
                   onClick={() => setSelectedPhone(null)}
                   className="block w-full bg-gray-100 text-gray-700 font-medium px-6 py-3 rounded-lg hover:bg-gray-200 transition-colors"
                 >
-                  Check Another Device
+                  {t('deviceCompatibilityPage.checkAnotherDevice', 'Check Another Device')}
                 </button>
               </div>
             </div>
@@ -425,7 +433,7 @@ export default function DeviceCompatibility() {
                   <span className="text-3xl mr-3">{filteredPhones[brand].logo}</span>
                   <div>
                     <h2 className="text-2xl font-bold text-gray-900">{filteredPhones[brand].name}</h2>
-                    <p className="text-sm text-gray-500">{filteredPhones[brand].models.length} compatible models</p>
+                    <p className="text-sm text-gray-500">{filteredPhones[brand].models.length} {t('deviceCompatibilityPage.compatibleModels', 'compatible models')}</p>
                   </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
@@ -443,7 +451,7 @@ export default function DeviceCompatibility() {
             ))
           ) : (
             <div className="bg-white rounded-lg shadow-sm p-12 text-center">
-              <p className="text-gray-500 text-lg">No phones found matching your search.</p>
+              <p className="text-gray-500 text-lg">{t('deviceCompatibilityPage.noPhonesFound', 'No phones found matching your search.')}</p>
               <button
                 onClick={() => {
                   setSearchTerm('');
@@ -451,7 +459,7 @@ export default function DeviceCompatibility() {
                 }}
                 className="mt-4 text-blue-600 hover:text-blue-700 font-medium"
               >
-                Clear filters
+                {t('deviceCompatibilityPage.clearFilters', 'Clear filters')}
               </button>
             </div>
           )}
@@ -459,52 +467,52 @@ export default function DeviceCompatibility() {
 
         {/* Important Notes */}
         <div className="mt-8 bg-yellow-50 border border-yellow-200 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-3">⚠️ Important Requirements:</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-3">{t('deviceCompatibilityPage.importantRequirements', 'Important Requirements:')}</h3>
           <ul className="space-y-2 text-gray-700">
             <li className="flex items-start">
               <span className="text-yellow-600 mr-2">•</span>
-              <span><strong>Device must be carrier-unlocked</strong> to use eSIM from RoamJet</span>
+              <span>{t('deviceCompatibilityPage.req1', 'Device must be carrier-unlocked to use eSIM from RoamJet')}</span>
             </li>
             <li className="flex items-start">
               <span className="text-yellow-600 mr-2">•</span>
-              <span>iPhone requires <strong>iOS 12.1 or later</strong></span>
+              <span>{t('deviceCompatibilityPage.req2', 'iPhone requires iOS 12.1 or later')}</span>
             </li>
             <li className="flex items-start">
               <span className="text-yellow-600 mr-2">•</span>
-              <span>Android devices require <strong>Android 9.0 (Pie) or later</strong></span>
+              <span>{t('deviceCompatibilityPage.req3', 'Android devices require Android 9.0 (Pie) or later')}</span>
             </li>
             <li className="flex items-start">
               <span className="text-yellow-600 mr-2">•</span>
-              <span>Some carriers may restrict eSIM functionality even on supported devices</span>
+              <span>{t('deviceCompatibilityPage.req4', 'Some carriers may restrict eSIM functionality even on supported devices')}</span>
             </li>
           </ul>
         </div>
 
         {/* How to Check */}
         <div className="mt-6 bg-white rounded-lg shadow-sm p-6">
-          <h3 className="text-xl font-semibold text-gray-900 mb-4">How to Verify eSIM Support on Your Device</h3>
+          <h3 className="text-xl font-semibold text-gray-900 mb-4">{t('deviceCompatibilityPage.verifyTitle', 'How to Verify eSIM Support on Your Device')}</h3>
           <div className="grid md:grid-cols-2 gap-6">
             <div className="bg-gray-50 p-4 rounded-lg">
               <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
-                <span className="text-2xl mr-2">🍎</span> For iPhone
+                <span className="text-2xl mr-2">🍎</span> {t('deviceCompatibilityPage.iphoneTitle', 'For iPhone')}
               </h4>
               <ol className="list-decimal pl-5 space-y-2 text-gray-700">
-                <li>Open <strong>Settings</strong></li>
-                <li>Tap on <strong>Cellular</strong> or <strong>Mobile Data</strong></li>
-                <li>If you see <strong>"Add Cellular Plan"</strong> or <strong>"Add eSIM"</strong>, your device supports eSIM</li>
-                <li>You can also dial <strong>*#06#</strong> - if you see an EID number, eSIM is supported</li>
+                <li>{t('deviceCompatibilityPage.iphoneStep1', 'Open Settings')}</li>
+                <li>{t('deviceCompatibilityPage.iphoneStep2', 'Tap on Cellular or Mobile Data')}</li>
+                <li>{t('deviceCompatibilityPage.iphoneStep3', 'If you see "Add Cellular Plan" or "Add eSIM", your device supports eSIM')}</li>
+                <li>{t('deviceCompatibilityPage.iphoneStep4', 'You can also dial *#06# - if you see an EID number, eSIM is supported')}</li>
               </ol>
             </div>
             <div className="bg-gray-50 p-4 rounded-lg">
               <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
-                <span className="text-2xl mr-2">🤖</span> For Android
+                <span className="text-2xl mr-2">🤖</span> {t('deviceCompatibilityPage.androidTitle', 'For Android')}
               </h4>
               <ol className="list-decimal pl-5 space-y-2 text-gray-700">
-                <li>Open <strong>Settings</strong></li>
-                <li>Go to <strong>Network & Internet</strong> or <strong>Connections</strong></li>
-                <li>Tap on <strong>Mobile Network</strong> or <strong>SIM card manager</strong></li>
-                <li>If you see <strong>"Add carrier"</strong> or <strong>"Add mobile plan"</strong>, your device supports eSIM</li>
-                <li>You can also dial <strong>*#06#</strong> to check for an EID number</li>
+                <li>{t('deviceCompatibilityPage.androidStep1', 'Open Settings')}</li>
+                <li>{t('deviceCompatibilityPage.androidStep2', 'Go to Network & Internet or Connections')}</li>
+                <li>{t('deviceCompatibilityPage.androidStep3', 'Tap on Mobile Network or SIM card manager')}</li>
+                <li>{t('deviceCompatibilityPage.androidStep4', 'If you see "Add carrier" or "Add mobile plan", your device supports eSIM')}</li>
+                <li>{t('deviceCompatibilityPage.androidStep5', 'You can also dial *#06# to check for an EID number')}</li>
               </ol>
             </div>
           </div>
@@ -512,13 +520,13 @@ export default function DeviceCompatibility() {
 
         {/* CTA */}
         <div className="mt-8 text-center bg-tufts-blue rounded-lg p-8 text-white">
-          <h3 className="text-2xl font-bold mb-4">Device Compatible? Get Connected Now!</h3>
-          <p className="mb-6 text-lg">Browse our eSIM plans for 200+ countries worldwide</p>
+          <h3 className="text-2xl font-bold mb-4">{t('deviceCompatibilityPage.ctaTitle', 'Device Compatible? Get Connected Now!')}</h3>
+          <p className="mb-6 text-lg">{t('deviceCompatibilityPage.ctaDescription', 'Browse our eSIM plans for 200+ countries worldwide')}</p>
           <Link
             href="/esim-plans"
             className="inline-block bg-white text-tufts-blue font-semibold px-8 py-3 rounded-lg hover:bg-gray-100 transition-colors shadow-lg"
           >
-            View eSIM Plans →
+            {t('deviceCompatibilityPage.viewPlans', 'View eSIM Plans ->')}
           </Link>
         </div>
 
@@ -528,7 +536,7 @@ export default function DeviceCompatibility() {
             href="/" 
             className="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium"
           >
-            ← Back to Home
+            {t('deviceCompatibilityPage.backHome', '<- Back to Home')}
           </Link>
         </div>
       </div>

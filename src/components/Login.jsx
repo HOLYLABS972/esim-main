@@ -41,6 +41,10 @@ const Login = () => {
     return `/${currentLanguage}${path}`;
   };
 
+  useEffect(() => {
+    document.title = t('auth.login.title', 'Sign in to your account') + ' | RoamJet';
+  }, [t, locale]);
+
   const handleEmailSubmit = async (e) => {
     e.preventDefault();
     

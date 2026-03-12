@@ -18,6 +18,50 @@ const supportedLanguages = {
   ru: { name: 'Русский', flag: '🇷🇺', direction: 'ltr' }
 };
 
+const localeToLanguageMap = {
+  en: 'en',
+  'en-US': 'en',
+  'en-CA': 'en',
+  ar: 'ar',
+  'ar-SA': 'ar',
+  he: 'he',
+  ru: 'ru',
+  de: 'de',
+  'de-DE': 'de',
+  fr: 'fr',
+  'fr-FR': 'fr',
+  'fr-CA': 'fr',
+  es: 'es',
+  'es-ES': 'es',
+  id: 'en',
+  ja: 'en',
+  'pt-BR': 'en',
+  tr: 'en',
+  uk: 'en',
+  vi: 'en',
+  'zh-Hans': 'en',
+  hebrew: 'he',
+  arabic: 'ar',
+  russian: 'ru',
+  german: 'de',
+  french: 'fr',
+  spanish: 'es',
+};
+
+const localizedStaticPaths = new Set([
+  '/',
+  '/blog',
+  '/contact',
+  '/dashboard',
+  '/device-compatibility',
+  '/esim-plans',
+  '/faq',
+  '/login',
+  '/privacy-policy',
+  '/register',
+  '/terms-of-service',
+]);
+
 /**
  * Get language name
  * @param {string} code - Language code
@@ -56,35 +100,31 @@ export function detectLanguageFromPath(pathname) {
   const firstSegment = pathname.split('/').filter(Boolean)[0];
   if (!firstSegment) return null;
 
-  const localeToLanguage = {
-    en: 'en',
-    'en-US': 'en',
-    'en-CA': 'en',
-    ar: 'ar',
-    'ar-SA': 'ar',
-    he: 'he',
-    ru: 'ru',
-    de: 'de',
-    'de-DE': 'de',
-    fr: 'fr',
-    'fr-FR': 'fr',
-    'fr-CA': 'fr',
-    es: 'es',
-    'es-ES': 'es',
-    id: 'en',
-    ja: 'en',
-    'pt-BR': 'en',
-    tr: 'en',
-    uk: 'en',
-    vi: 'en',
-    'zh-Hans': 'en',
-    hebrew: 'he',
-    arabic: 'ar',
-    russian: 'ru',
-    german: 'de',
-    french: 'fr',
-    spanish: 'es',
-  };
+  return localeToLanguageMap[firstSegment] || null;
+}
 
-  return localeToLanguage[firstSegment] || null;
+export function normalizeLanguageCode(code) {
+  return localeToLanguageMap[code] || 'en';
+}
+
+export function getLocalizedPath(pathname, locale) {
+  const normalizedLocale = normalizeLanguageCode(locale);
+
+  if (!pathname || normalizedLocale === 'en') {
+    return pathname || '/';
+  }
+
+  if (pathname.startsWith('/blog/')) {
+    return `/${normalizedLocale}${pathname}`;
+  }
+
+  if (!localizedStaticPaths.has(pathname)) {
+    return pathname;
+  }
+
+  if (pathname === '/') {
+    return `/${normalizedLocale}`;
+  }
+
+  return `/${normalizedLocale}${pathname}`;
 }

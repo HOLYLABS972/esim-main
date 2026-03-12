@@ -7,7 +7,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useI18n } from '../contexts/I18nContext';
 import { useAuth } from '../contexts/AuthContext';
 import LanguageSelector from './LanguageSelector';
-import { detectLanguageFromPath } from '../utils/languageUtils';
+import { detectLanguageFromPath, getLocalizedPath, normalizeLanguageCode } from '../utils/languageUtils';
 
 const Navbar = ({ hideLanguageSelector = false }) => {
   const { t, locale } = useI18n();
@@ -19,12 +19,12 @@ const Navbar = ({ hideLanguageSelector = false }) => {
   // Detect current language from multiple sources
   const getCurrentLanguage = () => {
     // First try I18n context
-    if (locale) return locale;
+    if (locale) return normalizeLanguageCode(locale);
     
     // Check localStorage
     if (typeof window !== 'undefined') {
       const savedLanguage = localStorage.getItem('roamjet-language');
-      if (savedLanguage) return savedLanguage;
+      if (savedLanguage) return normalizeLanguageCode(savedLanguage);
     }
     
     // Fallback to URL detection, with default to 'en'
@@ -35,10 +35,7 @@ const Navbar = ({ hideLanguageSelector = false }) => {
 
   // Generate localized URLs
   const getLocalizedUrl = (path) => {
-    if (currentLanguage === 'en') {
-      return path;
-    }
-    return `/${currentLanguage}${path}`;
+    return getLocalizedPath(path, currentLanguage);
   };
 
   const handleDownloadApp = () => {
