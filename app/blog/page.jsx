@@ -33,10 +33,10 @@ const BLOG_COPY = {
     locale: 'de_DE',
   },
   ru: {
-    title: 'Sovety i gidy dlya puteshestviy',
-    description: 'Otkryvayte udivitelnye napravleniya, poleznye sovety dlya puteshestviy i ostavaytes na svyazi po vsemu miru s nashimi gidami i sovetami po eSIM.',
-    seoTitle: 'Sovety dlya puteshestviy i gidy po eSIM | Blog Roamjet',
-    seoDescription: 'Otkryvayte sovety dlya puteshestviy, gidy po napravleniyam i sposoby ostavatsya na svyazi po vsemu miru s Roamjet eSIM.',
+    title: 'Советы и гиды для путешествий',
+    description: 'Открывайте удивительные направления, полезные советы для путешествий и оставайтесь на связи по всему миру с нашими гидами и советами по eSIM.',
+    seoTitle: 'Советы для путешествий и гиды по eSIM | Блог Roamjet',
+    seoDescription: 'Открывайте советы для путешествий, гиды по направлениям и способы оставаться на связи по всему миру с Roamjet eSIM.',
     locale: 'ru_RU',
   },
   he: {
