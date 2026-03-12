@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
@@ -81,25 +81,16 @@ const Footer = () => {
     return (isLanguagePage || isLanguageSpecificPage) ? t(key, englishText) : englishText;
   };
 
-  // Helper function to get language prefix from pathname
-  const getLanguagePrefix = () => {
-    if (localePrefixes.includes(pathFirstSegment)) {
-      return `/${pathFirstSegment}`;
-    }
-    return '';
-  };
-
   // Get current language code from pathname
   const getCurrentLanguage = () => {
     return localeToLanguage[pathFirstSegment] || 'en';
   };
 
-  const langPrefix = getLanguagePrefix();
   const currentLanguage = getCurrentLanguage();
 
   const quickLinks = [
     { name: 'FAQ', path: getLocalizedPath('/faq', currentLanguage) },
-    { name: getText('navbar.affiliate', 'Affiliate'), path: '/affiliate' },
+    { name: getText('navbar.affiliate', 'Affiliate'), path: getLocalizedPath('/affiliate', currentLanguage) },
     ...(currentUser ? [{ name: getText('navbar.dashboard', 'Dashboard'), path: getLocalizedPath('/dashboard', currentLanguage) }] : []),
     { name: getText('navbar.login', 'Login'), path: getLocalizedPath('/login', currentLanguage) },
     { name: getText('navbar.blog', 'Blog'), path: getLocalizedPath('/blog', currentLanguage) }
@@ -108,7 +99,7 @@ const Footer = () => {
   const usefulLinks = [
     { name: getText('footer.deviceCompatibility', 'Device Compatibility'), path: getLocalizedPath('/device-compatibility', currentLanguage) },
     { name: getText('footer.privacyPolicy', 'Privacy Policy'), path: getLocalizedPath('/privacy-policy', currentLanguage) },
-    { name: getText('footer.refundPolicy', 'Refund Policy'), path: '/refund-policy' },
+    { name: getText('footer.refundPolicy', 'Refund Policy'), path: getLocalizedPath('/refund-policy', currentLanguage) },
     { name: getText('footer.termsOfService', 'Terms of Service'), path: getLocalizedPath('/terms-of-service', currentLanguage) }
   ];
 

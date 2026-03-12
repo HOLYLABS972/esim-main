@@ -62,6 +62,7 @@ const localeToLanguageMap = {
 
 const localizedStaticPaths = new Set([
   '/',
+  '/affiliate',
   '/blog',
   '/contact',
   '/dashboard',
@@ -70,6 +71,7 @@ const localizedStaticPaths = new Set([
   '/faq',
   '/login',
   '/privacy-policy',
+  '/refund-policy',
   '/register',
   '/terms-of-service',
 ]);
