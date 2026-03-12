@@ -18,8 +18,8 @@ export async function GET(request) {
 
     const { data, error } = await supabaseAdmin
       .from('orders')
-      .select('id,order_id,status,plan_id,plan_name,customer_email,iccid,qr_code,qr_code_url,smdp_address,activation_code,airalo_order_id,direct_apple_installation_url,country_code,country_name,amount,currency,created_at,updated_at')
-      .ilike('customer_email', email)
+      .select('id,order_id,status,plan_id,plan_name,customer_email,email,user_email,iccid,qr_code,qr_code_url,smdp_address,activation_code,airalo_order_id,direct_apple_installation_url,country_code,country_name,amount,currency,created_at,updated_at')
+      .or(`customer_email.ilike.%${email}%,email.ilike.%${email}%,user_email.ilike.%${email}%`)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -27,8 +27,19 @@ export async function GET(request) {
       return NextResponse.json({ error: error.message || 'Database error' }, { status: 500 });
     }
 
+    const normalizeEmail = (value) => String(value || '').trim().toLowerCase();
+    const orders = (data || []).filter((order) => {
+      const candidates = [
+        order?.customer_email,
+        order?.email,
+        order?.user_email,
+      ].map(normalizeEmail).filter(Boolean);
+
+      return candidates.some((candidate) => candidate === email);
+    }).map(({ email: _email, user_email: _userEmail, ...order }) => order);
+
     return NextResponse.json({
-      orders: data || [],
+      orders,
     });
   } catch (e) {
     console.error('Orders by email error:', e);
