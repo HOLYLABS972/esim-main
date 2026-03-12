@@ -70,30 +70,6 @@ export default function HeroSection() {
         </div>
 
         <div className="mx-auto max-w-5xl py-6 sm:py-12 lg:py-24  justify-center">
-          <div className="mb-8 flex justify-center">
-            <a
-              href="http://foxywall.xyz/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group inline-flex max-w-3xl items-center gap-3 rounded-2xl border border-red-200 bg-gradient-to-r from-red-50 via-white to-red-100 px-4 py-3 text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-red-300 hover:shadow-md sm:px-5"
-            >
-              <span className="rounded-full bg-red-600 px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-white">
-                30% OFF
-              </span>
-              <div className="min-w-0">
-                <div className="text-sm font-semibold text-red-700 sm:text-base">
-                  {t('hero.vpnBannerTitle', 'VPN discount available now')}
-                </div>
-                <div className="text-xs text-gray-600 sm:text-sm">
-                  {t('hero.vpnBannerSubtitle', 'Redeem now on Foxywall')}
-                </div>
-              </div>
-              <span className={`shrink-0 text-sm font-semibold text-red-700 transition-transform duration-200 group-hover:translate-x-0.5 ${isRTL ? 'mr-auto' : 'ml-auto'}`}>
-                {t('hero.vpnBannerCta', 'Redeem now')} →
-              </span>
-            </a>
-          </div>
-
           {/* Main Content */}
 
           <div className="text-center">
@@ -162,6 +138,30 @@ export default function HeroSection() {
                   </span>
                 </div>
               </button>
+            </div>
+
+            <div className="mt-6 flex justify-center px-4">
+              <a
+                href="http://foxywall.xyz/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group inline-flex w-full max-w-3xl items-center gap-3 rounded-2xl border border-red-200 bg-gradient-to-r from-red-50 via-white to-red-100 px-4 py-3 text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-red-300 hover:shadow-md sm:px-5"
+              >
+                <span className="rounded-full bg-red-600 px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-white">
+                  30% OFF
+                </span>
+                <div className="min-w-0">
+                  <div className="text-sm font-semibold text-red-700 sm:text-base">
+                    {t('hero.vpnBannerTitle', 'VPN discount available now')}
+                  </div>
+                  <div className="text-xs text-gray-600 sm:text-sm">
+                    {t('hero.vpnBannerSubtitle', 'Redeem now on Foxywall')}
+                  </div>
+                </div>
+                <span className={`shrink-0 text-sm font-semibold text-red-700 transition-transform duration-200 group-hover:translate-x-0.5 ${isRTL ? 'mr-auto' : 'ml-auto'}`}>
+                  {t('hero.vpnBannerCta', 'Redeem now')}
+                </span>
+              </a>
             </div>
           </div>
 
