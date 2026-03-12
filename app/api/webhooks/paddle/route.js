@@ -274,8 +274,6 @@ export async function POST(request) {
         currency: (txn.currency_code || 'usd').toLowerCase(),
         payment_method: 'paddle',
         status: 'active',
-        transaction_id: txn.id,
-        paddle_transaction_id: txn.id,
         airalo_order_id: String(airaloOrder.id),
         iccid: iccid,
         qr_code: qrCode,

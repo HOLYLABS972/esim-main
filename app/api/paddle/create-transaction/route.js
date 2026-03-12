@@ -11,12 +11,6 @@ function getPaddleApiKey() {
   return process.env.PADDLE_API_KEY || process.env.NEXT_PUBLIC_PDL_API_KEY;
 }
 
-function normalizeCustomerEmail(rawEmail, orderId) {
-  const email = String(rawEmail || '').trim().toLowerCase();
-  if (email) return email;
-  return `pending+${String(orderId || Date.now())}@roamjet.local`;
-}
-
 export async function POST(request) {
   try {
     const apiKey = getPaddleApiKey();
@@ -51,7 +45,7 @@ export async function POST(request) {
     const itemTitle = countryLabel ? `${planName} · ${countryLabel}` : planName;
 
     const orderId = orderData.orderId || `roamjet-${Date.now()}`;
-    const customerEmail = normalizeCustomerEmail(orderData.customerEmail, orderId);
+    const customerEmail = String(orderData.customerEmail || '').trim().toLowerCase() || null;
 
     const payload = {
       items: [
@@ -148,8 +142,6 @@ export async function POST(request) {
         currency: currency.toLowerCase(),
         payment_method: 'paddle',
         status: 'pending',
-        transaction_id: txn.id,
-        paddle_transaction_id: txn.id,
         country_code: orderData.countryCode || orderData.country || null,
         country_name: orderData.countryName || null,
         is_guest: orderData.isGuest ?? !orderData.userId,
@@ -164,7 +156,12 @@ export async function POST(request) {
       if (dbError) {
         console.error('Failed to create pending order:', dbError);
         return NextResponse.json(
-          { error: 'Failed to create pending order' },
+          {
+            error: dbError.message || 'Failed to create pending order',
+            details: dbError.details || null,
+            hint: dbError.hint || null,
+            code: dbError.code || null,
+          },
           { status: 500 }
         );
       }
