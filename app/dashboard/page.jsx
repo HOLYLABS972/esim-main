@@ -15,6 +15,14 @@ export const metadata = {
   alternates: {
     canonical: '/dashboard',
   },
+  robots: {
+    index: false,
+    follow: false,
+    googleBot: {
+      index: false,
+      follow: false,
+    },
+  },
 }
 
 export default function DashboardPage() {

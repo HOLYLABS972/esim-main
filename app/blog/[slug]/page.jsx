@@ -4,6 +4,12 @@ import { notFound } from 'next/navigation';
 import { headers } from 'next/headers';
 import { getBlogPost, getBlogPosts, getLocaleFromPathname } from '../../../src/services/blogService';
 
+function toAbsoluteImageUrl(url) {
+  if (!url) return 'https://roamjet.net/og-blog.jpg';
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  return `https://roamjet.net${url.startsWith('/') ? '' : '/'}${url}`;
+}
+
 // Generate metadata dynamically based on the blog post
 export async function generateMetadata({ params }) {
   const headersList = await headers();
@@ -29,7 +35,7 @@ export async function generateMetadata({ params }) {
       siteName: 'Roamjet',
       images: [
         {
-          url: post.coverImage || 'https://roamjet.net/og-blog.jpg',
+          url: toAbsoluteImageUrl(post.coverImage),
           width: 1200,
           height: 630,
           alt: post.title,
@@ -45,7 +51,7 @@ export async function generateMetadata({ params }) {
       card: 'summary_large_image',
       title: post.title,
       description: post.metaDescription || post.excerpt,
-      images: [post.coverImage || 'https://roamjet.net/og-blog.jpg'],
+      images: [toAbsoluteImageUrl(post.coverImage)],
     },
     alternates: {
       canonical: `https://roamjet.net/blog/${post.slug}`,
@@ -96,9 +102,38 @@ export default async function BlogPostPage({ params }) {
 
   const blogListHref = locale && locale !== 'en' ? `/${locale}/blog` : '/blog';
   const postBaseUrl = `https://roamjet.net${locale && locale !== 'en' ? `/${locale}/blog` : '/blog'}/${post.slug}`;
+  const coverImageUrl = toAbsoluteImageUrl(post.coverImage);
+  const articleStructuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: post.title,
+    description: post.metaDescription || post.excerpt,
+    image: [coverImageUrl],
+    datePublished: post.publishedAt?.toISOString(),
+    dateModified: post.publishedAt?.toISOString(),
+    author: [
+      {
+        '@type': 'Organization',
+        name: post.author || 'Roamjet Team',
+      },
+    ],
+    publisher: {
+      '@type': 'Organization',
+      name: 'Roamjet',
+      logo: {
+        '@type': 'ImageObject',
+        url: 'https://roamjet.net/images/logo_icon/logo2.png',
+      },
+    },
+    mainEntityOfPage: postBaseUrl,
+  };
 
   return (
     <div className="bg-white">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleStructuredData) }}
+      />
       {/* Header */}
       <div className="relative isolate overflow-hidden bg-white px-6 py-24 sm:py-32 lg:px-8">
         <div
@@ -183,6 +218,18 @@ export default async function BlogPostPage({ params }) {
       {/* Article Content */}
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-2xl lg:max-w-4xl">
+          {post.coverImage ? (
+            <div className="overflow-hidden rounded-3xl bg-gray-100 shadow-sm ring-1 ring-gray-200">
+              <Image
+                src={coverImageUrl}
+                alt={post.title}
+                width={1600}
+                height={900}
+                className="h-auto w-full object-cover"
+                priority
+              />
+            </div>
+          ) : null}
           <article className="mx-auto mt-16 max-w-2xl">
             <div 
               className="prose prose-lg prose-indigo mx-auto"
