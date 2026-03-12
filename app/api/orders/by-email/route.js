@@ -18,8 +18,7 @@ export async function GET(request) {
 
     const { data, error } = await supabaseAdmin
       .from('orders')
-      .select('id,order_id,status,plan_id,plan_name,customer_email,email,user_email,iccid,qr_code,qr_code_url,smdp_address,activation_code,airalo_order_id,direct_apple_installation_url,country_code,country_name,amount,currency,created_at,updated_at')
-      .or(`customer_email.ilike.%${email}%,email.ilike.%${email}%,user_email.ilike.%${email}%`)
+      .select('*')
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -36,7 +35,27 @@ export async function GET(request) {
       ].map(normalizeEmail).filter(Boolean);
 
       return candidates.some((candidate) => candidate === email);
-    }).map(({ email: _email, user_email: _userEmail, ...order }) => order);
+    }).map((order) => ({
+      id: order.id,
+      order_id: order.order_id,
+      status: order.status,
+      plan_id: order.plan_id,
+      plan_name: order.plan_name,
+      customer_email: order.customer_email || order.email || order.user_email || '',
+      iccid: order.iccid,
+      qr_code: order.qr_code,
+      qr_code_url: order.qr_code_url,
+      smdp_address: order.smdp_address,
+      activation_code: order.activation_code,
+      airalo_order_id: order.airalo_order_id,
+      direct_apple_installation_url: order.direct_apple_installation_url,
+      country_code: order.country_code,
+      country_name: order.country_name,
+      amount: order.amount,
+      currency: order.currency,
+      created_at: order.created_at,
+      updated_at: order.updated_at,
+    }));
 
     return NextResponse.json({
       orders,
