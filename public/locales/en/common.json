@@ -309,7 +309,7 @@
         "loadingDashboard": "Loading dashboard...",
         "welcomeBack": "Welcome back, {{name}}!",
         "manageOrders": "Manage your eSIM orders and account settings",
-        "shopCta": "Shop eSIM plans",
+        "shopCta": "Active Orders",
         "applyReferral": "Apply Referral",
         "noIccidFound": "No ICCID found in this order. Cannot check eSIM details.",
         "noIccidFoundUsage": "No ICCID found in this order. Cannot check eSIM usage.",

@@ -1,17 +1,17 @@
 {
   "navbar": {
     "logo": "RoamJet",
-    "downloadApp": "Скачать приложение",
-    "contactUs": "Связаться с нами",
+    "downloadApp": "Скачать",
+    "contactUs": "Контакты",
     "blog": "Блог",
-    "plans": "Планы",
+    "plans": "Тарифы",
     "login": "Войти",
     "logout": "Выйти",
-    "dashboard": "Панель управления",
+    "dashboard": "Кабинет",
     "openMenu": "Открыть главное меню",
     "closeMenu": "Закрыть меню",
-    "affiliate": "Партнерская программа",
-    "partnership": "Сотрудничество"
+    "affiliate": "Партнеры",
+    "partnership": "Партнерство"
   },
   "hero": {
     "announcement": "Доступно в более чем 200 странах",
@@ -20,9 +20,9 @@
     "noMatterWhere": "связи где бы вы не",
     "with": "были с",
     "description": "RoamJet: глобальный eSIM для путешественников, цифровых кочевников и мотыльков. Купите мгновенные международные планы данных для более чем 200 стран. Без роуминга, без физических SIM-карт.",
-    "downloadApp": "Скачать приложение",
-    "learnMore": "Смотреть тарифы",
-    "exploreTariffs": "Посмотреть тарифы",
+    "downloadApp": "Скачать",
+    "learnMore": "Тарифы",
+    "exploreTariffs": "Тарифы",
     "popularCountries": {
       "france": "🇫🇷 Франция",
       "usa": "🇺🇸 США",
@@ -96,25 +96,25 @@
   },
   "footer": {
     "companyDescription": "RoamJet - ваш надежный партнер для глобальных решений eSIM. Мгновенная активация, всемирное покрытие и безопасное подключение для путешественников и бизнеса.",
-    "quickLinks": "Быстрые ссылки",
+    "quickLinks": "Навигация",
     "home": "Главная",
     "blog": "Блог",
-    "contactUs": "Связаться с нами",
-    "usefulLinks": "Полезные ссылки",
+    "contactUs": "Контакты",
+    "usefulLinks": "Помощь",
     "privacyPolicy": "Политика конфиденциальности",
     "termsOfService": "Условия обслуживания",
     "cookiePolicy": "Политика файлов cookie",
     "contactInfoNotAvailable": "Контактная информация недоступна",
     "allRightsReserved": "Все права защищены",
-    "deviceCompatibility": "Совместимость устройств",
-    "refundPolicy": "Политика возврата"
+    "deviceCompatibility": "Устройства",
+    "refundPolicy": "Возврат"
   },
   "search": {
     "destinationPlaceholder": "Найдите свое направление (например, Франция, Германия, США)",
     "heroPlaceholder": "Найдите свое направление... (например, Франция, США, Таиланд)",
     "popularDestinations": "Популярные:",
     "searchingFor": "Поиск:",
-    "clearSearch": "Очистить",
+    "clearSearch": "Сброс",
     "packagesPlaceholder": "Поиск пакетов, стран или описаний...",
     "blogPlaceholder": "Поиск в записях блога...",
     "emailPlaceholder": "Введите ваш email",
@@ -126,24 +126,24 @@
     "filters": "Фильтры"
   },
   "plans": {
-    "title": "Планы eSIM",
-    "subtitle": "Выберите идеальный план eSIM",
+    "title": "Тарифы",
+    "subtitle": "Выберите тариф",
     "description": "Просмотрите наш выбор планов eSIM со всего мира. Мгновенная активация, глобальное покрытие и конкурентоспособные цены.",
     "loadingPlans": "Загрузка планов...",
-    "totalPlans": "Всего планов",
+    "totalPlans": "Тарифы",
     "countries": "Страны",
     "startingFrom": "От",
-    "averagePrice": "Средняя цена",
+    "averagePrice": "Среднее",
     "fromPrice": "От ${price}",
     "noPlansAvailable": "Планы недоступны",
-    "showAll": "Показать все",
-    "showLess": "Показать меньше"
+    "showAll": "Все",
+    "showLess": "Меньше"
   },
   "discount": {
     "get35Off": "Получите скидку 35%"
   },
   "language": {
-    "select": "Выберите язык",
+    "select": "Язык",
     "english": "English",
     "hebrew": "עברית",
     "russian": "Русский",
@@ -184,24 +184,24 @@
     "addBankAccountDesc": "Добавьте данные вашего банковского счета для вывода заработка"
   },
   "blog": {
-    "title": "Обзоры eSIM",
-    "subtitle": "Будьте в курсе технологий eSIM",
+    "title": "Блог",
+    "subtitle": "Новости eSIM",
     "description": "Откройте для себя последние тенденции, руководства и обзоры технологий eSIM и решений глобальной связи.",
     "searchPlaceholder": "Поиск постов в блоге...",
-    "allCategories": "Все категории",
+    "allCategories": "Категории",
     "loadingPosts": "Загрузка постов блога...",
     "noPostsFound": "Не найдено постов блога, соответствующих вашим критериям",
     "noPostsAvailable": "Пока нет доступных постов в блоге",
-    "readMore": "Читать далее",
-    "backToBlog": "Вернуться к блогу",
+    "readMore": "Читать",
+    "backToBlog": "Назад",
     "postNotFound": "Пост не найден",
     "postNotFoundDescription": "Пост блога, который вы ищете, не существует.",
-    "relatedTags": "Связанные теги",
+    "relatedTags": "Теги",
     "sharePost": "Поделиться",
     "copyLink": "Копировать ссылку",
     "linkCopied": "Ссылка скопирована в буфер обмена!",
     "newsletter": {
-      "title": "Будьте в курсе новостей eSIM",
+      "title": "Новости eSIM",
       "description": "Получайте последние обзоры eSIM, советы по путешествиям и обновления технологий прямо на ваш почтовый ящик",
       "emailPlaceholder": "Введите ваш email",
       "subscribe": "Подписаться",
@@ -250,7 +250,7 @@
     "trustedByThousands": "Доверяют тысячи путешественников по всему миру"
   },
   "contact": {
-    "title": "Связаться с нами",
+    "title": "Контакты",
     "subtitle": "Мы здесь, чтобы помочь со всеми вашими потребностями в eSIM",
     "description": "Свяжитесь с нашей командой для поддержки, вопросов или партнерства. Мы здесь, чтобы помочь со всеми вашими потребностями в подключении.",
     "sendMessage": "Отправить нам сообщение",

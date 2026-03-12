@@ -7,7 +7,7 @@ const RecentOrders = ({ orders, loading, onViewQRCode }) => {
   const { t } = useI18n();
 
   return (
-    <section className="bg-white py-4">
+    <section id="active-orders" className="bg-white py-4 scroll-mt-24">
       <div className="max-w-2xl mx-auto px-4 sm:px-6">
         <h2 className="text-base font-semibold text-gray-900 mb-3">
           {t('dashboard.recentOrders', 'My eSIMs')}

@@ -1,15 +1,9 @@
 import React from 'react';
-import { User, LogOut } from 'lucide-react';
+import { User } from 'lucide-react';
 import { useI18n } from '../../contexts/I18nContext';
-import { useAuth } from '../../contexts/AuthContext';
 
 const DashboardHeader = ({ currentUser }) => {
   const { t } = useI18n();
-  const { logout } = useAuth();
-
-  const handleLogout = async () => {
-    try { await logout(); } catch (e) { console.error('Logout error:', e); }
-  };
 
   const displayName = currentUser.displayName || currentUser.email?.split('@')[0] || 'User';
 
@@ -30,13 +24,6 @@ const DashboardHeader = ({ currentUser }) => {
               </p>
             </div>
           </div>
-          <button
-            onClick={handleLogout}
-            className="flex-shrink-0 p-2.5 text-red-500 hover:bg-red-50 rounded-full transition-colors"
-            title={t('dashboard.logout', 'Logout')}
-          >
-            <LogOut className="w-5 h-5" />
-          </button>
         </div>
       </div>
     </section>
