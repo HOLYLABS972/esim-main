@@ -133,20 +133,22 @@ export const I18nProvider = ({ children }) => {
         }
       }
       
+      const pathLocale = detectLocaleFromPath(pathname);
       let initialLocale = 'en';
-      
-      if (savedLanguage) {
+
+      if (pathLocale && pathLocale !== 'en') {
+        console.log('I18nContext: Using pathname locale:', pathLocale);
+        initialLocale = pathLocale;
+      } else if (savedLanguage) {
         const normalizedSavedLanguage = normalizeLocale(savedLanguage);
         console.log('I18nContext: Found saved language:', savedLanguage);
         initialLocale = normalizedSavedLanguage;
       } else if (domainLanguage) {
-        // Use domain language if no saved preference
         console.log('I18nContext: Using domain language:', domainLanguage);
         initialLocale = normalizeLocale(domainLanguage);
       } else {
-        // Fallback to pathname detection if no saved language or domain language
-        initialLocale = detectLocaleFromPath(pathname);
-        console.log('I18nContext: No saved language or domain language, detected from pathname:', initialLocale);
+        initialLocale = pathLocale || 'en';
+        console.log('I18nContext: Falling back to pathname/default locale:', initialLocale);
       }
       
       // Set the locale
