@@ -11,6 +11,13 @@ function getPaddleApiKey() {
   return process.env.PADDLE_API_KEY || process.env.NEXT_PUBLIC_PDL_API_KEY;
 }
 
+function normalizeUuid(value) {
+  const input = String(value || '').trim();
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(input)
+    ? input
+    : null;
+}
+
 export async function POST(request) {
   try {
     const apiKey = getPaddleApiKey();
@@ -46,6 +53,7 @@ export async function POST(request) {
 
     const orderId = orderData.orderId || `roamjet-${Date.now()}`;
     const customerEmail = String(orderData.customerEmail || '').trim().toLowerCase() || null;
+    const userId = normalizeUuid(orderData.userId);
 
     const payload = {
       items: [
@@ -134,7 +142,7 @@ export async function POST(request) {
       const pendingOrder = {
         id: orderId,
         order_id: orderId,
-        user_id: orderData.userId || null,
+        user_id: userId,
         customer_email: customerEmail,
         plan_id: orderData.planId || null,
         plan_name: orderData.planName || 'eSIM Plan',

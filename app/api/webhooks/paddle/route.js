@@ -95,6 +95,13 @@ function verifyPaddleSignature(rawBody, signature) {
   }
 }
 
+function normalizeUuid(value) {
+  const input = String(value || '').trim();
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(input)
+    ? input
+    : null;
+}
+
 async function getPaddleCustomerEmail(customerId) {
   if (!PADDLE_API_KEY || !customerId) return null;
   try {
@@ -138,6 +145,7 @@ export async function POST(request) {
     const planId = customData.planId;
     let customerEmail = customData.customerEmail;
     const userId = customData.userId;
+    const normalizedUserId = normalizeUuid(userId);
     const isGuest = customData.isGuest;
     const affiliateRef = customData.affiliateRef;
     const planName = customData.planName;
@@ -266,7 +274,7 @@ export async function POST(request) {
       const orderRecord = {
         id: orderId || `roamjet-${Date.now()}`,
         order_id: orderId || `roamjet-${Date.now()}`,
-        user_id: userId || null,
+        user_id: normalizedUserId,
         customer_email: customerEmail || null,
         plan_id: planId,
         plan_name: planDisplayName,
