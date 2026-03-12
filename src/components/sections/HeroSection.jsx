@@ -158,8 +158,14 @@ export default function HeroSection() {
                     {t('hero.vpnBannerSubtitle', 'Redeem now on Foxywall')}
                   </div>
                 </div>
-                <span className={`shrink-0 text-sm font-semibold text-red-700 transition-transform duration-200 group-hover:translate-x-0.5 ${isRTL ? 'mr-auto' : 'ml-auto'}`}>
-                  {t('hero.vpnBannerCta', 'Redeem now')}
+                <span
+                  className={`shrink-0 inline-flex h-11 w-11 items-center justify-center rounded-full border border-red-300 bg-white text-red-700 shadow-sm transition-all duration-200 group-hover:translate-x-0.5 group-hover:border-red-400 group-hover:bg-red-50 ${isRTL ? 'mr-auto' : 'ml-auto'}`}
+                  aria-label={t('hero.vpnBannerCta', 'Redeem now')}
+                >
+                  <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="m12 5 7 7-7 7" />
+                  </svg>
                 </span>
               </a>
             </div>

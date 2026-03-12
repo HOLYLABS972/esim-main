@@ -91,10 +91,10 @@ const Navbar = ({ hideLanguageSelector = false }) => {
       <nav aria-label="Global" className="mx-auto flex max-w-7xl items-center justify-between p-2 lg:px-8">
         <div className="flex lg:flex-1">
           <Link href={getLocalizedUrl("/")} className="-m-1.5 p-1.5 flex items-center">
-            <span className="sr-only">RoamJet Plans</span>
+            <span className="sr-only">{t('navbar.logo', 'RoamJet')}</span>
             <img
               src="/images/logo_icon/logo2.png"
-              alt="Roam Jet Plans Logo"
+              alt={t('navbar.logo', 'RoamJet')}
               className="h-8 w-auto rounded-none"
             />
             <span className="ml-2 text-xl font-semibold text-gray-900">{t('navbar.logo', 'RoamJet')}</span>
@@ -123,10 +123,10 @@ const Navbar = ({ hideLanguageSelector = false }) => {
           >
             {t('navbar.downloadApp', 'Download')}
           </button>
-          <Link href="/affiliate" className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
+          <Link href={getLocalizedUrl("/affiliate")} className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
             {t('navbar.affiliate', 'Affiliate')}
           </Link>
-          <Link href="/blog" className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
+          <Link href={getLocalizedUrl("/blog")} className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
             {t('navbar.blog', 'Blog')}
           </Link>
           {currentUser ? (
@@ -167,13 +167,13 @@ const Navbar = ({ hideLanguageSelector = false }) => {
             <div className="flex items-center justify-between p-6">
               <Link href={getLocalizedUrl("/")} className="
                flex items-center" onClick={() => setIsMenuOpen(false)}>
-                <span className="sr-only">RoamJet Plans</span>
+                <span className="sr-only">{t('navbar.logo', 'RoamJet')}</span>
                 <img
                   src="/images/logo_icon/logo2.png"
-                  alt="RoamJet Plans Logo"
+                  alt={t('navbar.logo', 'RoamJet')}
                   className="h-8 w-auto rounded-none"
                 />
-                <span className="ml-2 text-xl font-bold text-gray-900">RoamJet</span>
+                <span className="ml-2 text-xl font-bold text-gray-900">{t('navbar.logo', 'RoamJet')}</span>
               </Link>
               <button
                 type="button"
@@ -202,14 +202,14 @@ const Navbar = ({ hideLanguageSelector = false }) => {
                     {t('navbar.downloadApp', 'Download')}
                   </button>
                   <Link
-                    href="/affiliate"
+                    href={getLocalizedUrl("/affiliate")}
                     className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     {t('navbar.affiliate', 'Affiliate')}
                   </Link>
                   <Link
-                    href="/blog"
+                    href={getLocalizedUrl("/blog")}
                     className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2"
                     onClick={() => setIsMenuOpen(false)}
                   >
