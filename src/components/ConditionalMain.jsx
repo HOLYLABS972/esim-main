@@ -18,10 +18,10 @@ const ConditionalMain = ({ children }) => {
   );
   
   if (isStorePage) {
-    return <main className="pt-[50px]">{children}</main>;
+    return <main className="pt-20">{children}</main>;
   }
   
-  return <main className="pt-16">{children}</main>;
+  return <main className="pt-20">{children}</main>;
 };
 
 export default ConditionalMain;

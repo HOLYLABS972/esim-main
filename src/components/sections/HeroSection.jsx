@@ -140,35 +140,6 @@ export default function HeroSection() {
               </button>
             </div>
 
-            <div className="mt-6 flex justify-center px-4">
-              <a
-                href="http://foxywall.xyz/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group inline-flex w-full max-w-3xl items-center gap-3 rounded-2xl border border-red-200 bg-gradient-to-r from-red-50 via-white to-red-100 px-4 py-3 text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-red-300 hover:shadow-md sm:px-5"
-              >
-                <span className="rounded-full bg-red-600 px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-white">
-                  30% OFF
-                </span>
-                <div className="min-w-0">
-                  <div className="text-sm font-semibold text-red-700 sm:text-base">
-                    {t('hero.vpnBannerTitle', 'VPN discount available now')}
-                  </div>
-                  <div className="text-xs text-gray-600 sm:text-sm">
-                    {t('hero.vpnBannerSubtitle', 'Redeem now on Foxywall')}
-                  </div>
-                </div>
-                <span
-                  className={`shrink-0 inline-flex h-11 w-11 items-center justify-center rounded-full border border-red-300 bg-white text-red-700 shadow-sm transition-all duration-200 group-hover:translate-x-0.5 group-hover:border-red-400 group-hover:bg-red-50 ${isRTL ? 'mr-auto' : 'ml-auto'}`}
-                  aria-label={t('hero.vpnBannerCta', 'Redeem now')}
-                >
-                  <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="m12 5 7 7-7 7" />
-                  </svg>
-                </span>
-              </a>
-            </div>
           </div>
 
 

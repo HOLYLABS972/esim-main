@@ -87,6 +87,32 @@ const Navbar = ({ hideLanguageSelector = false }) => {
     <header className={`navbar-header fixed w-full top-0 transition-transform duration-300 ${
       isVisible ? 'translate-y-0' : '-translate-y-full'
     }`} style={{ zIndex: 9999 }}>
+      <a
+        href="https://foxywall.xyz/"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="block w-full border-b border-red-200 bg-gradient-to-r from-red-50 via-white to-red-100"
+      >
+        <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-2 sm:px-6 lg:px-8">
+          <span className="rounded-full bg-red-600 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-white sm:text-xs">
+            30% OFF
+          </span>
+          <div className="min-w-0">
+            <div className="text-sm font-semibold text-red-700 sm:text-base">
+              {t('hero.vpnBannerTitle', 'VPN discount available now')}
+            </div>
+            <div className="text-xs text-gray-600 sm:text-sm">
+              {t('hero.vpnBannerSubtitle', 'Redeem now on Foxywall')}
+            </div>
+          </div>
+          <span className="ml-auto inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-red-300 bg-white text-red-700 shadow-sm transition-all duration-200 hover:border-red-400 hover:bg-red-50">
+            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="m12 5 7 7-7 7" />
+            </svg>
+          </span>
+        </div>
+      </a>
       <div className="bg-white shadow-sm shadow-white/30 w-full">
       <nav aria-label="Global" className="mx-auto flex max-w-7xl items-center justify-between p-2 lg:px-8">
         <div className="flex lg:flex-1">
