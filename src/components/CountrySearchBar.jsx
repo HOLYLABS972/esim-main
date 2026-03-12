@@ -5,6 +5,7 @@ import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { Search, X } from 'lucide-react';
 import { useI18n } from '../contexts/I18nContext';
 import { translateCountryName } from '../utils/countryTranslations';
+import { detectLanguageFromPath } from '../utils/languageUtils';
 
 const CountrySearchBar = ({ onSearch, showCountryCount = true }) => {
   const { t, locale } = useI18n();
@@ -40,13 +41,8 @@ const CountrySearchBar = ({ onSearch, showCountryCount = true }) => {
 
   // Helper function to get language prefix from pathname
   const getLanguagePrefix = () => {
-    const languageCodes = ['ar', 'he', 'ru', 'de', 'fr', 'es'];
-    for (const code of languageCodes) {
-      if (pathname.startsWith(`/${code}/`) || pathname === `/${code}`) {
-        return `/${code}`;
-      }
-    }
-    return '';
+    const code = detectLanguageFromPath(pathname);
+    return code && code !== 'en' ? `/${code}` : '';
   };
 
   // Check if we're on an esim-plans page

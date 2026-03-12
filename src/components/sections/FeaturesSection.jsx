@@ -4,6 +4,7 @@ import { useI18n } from '../../contexts/I18nContext';
 import { usePathname } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
+import { detectLanguageFromPath } from '../../utils/languageUtils';
 
 export default function FeaturesSection() {
   const { t, locale, isLoading } = useI18n();
@@ -11,13 +12,8 @@ export default function FeaturesSection() {
 
   // Get language prefix from pathname
   const getLanguagePrefix = () => {
-    const languageCodes = ['ar', 'he', 'ru', 'de', 'fr', 'es'];
-    for (const code of languageCodes) {
-      if (pathname.startsWith(`/${code}/`) || pathname === `/${code}`) {
-        return `/${code}`;
-      }
-    }
-    return '';
+    const code = detectLanguageFromPath(pathname);
+    return code && code !== 'en' ? `/${code}` : '';
   };
 
   const langPrefix = getLanguagePrefix();

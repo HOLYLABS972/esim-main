@@ -52,13 +52,18 @@ export const I18nProvider = ({ children }) => {
     'fr-CA': 'fr',
     es: 'es',
     'es-ES': 'es',
+    pt: 'pt',
     id: 'en',
-    ja: 'en',
-    'pt-BR': 'en',
-    tr: 'en',
+    ja: 'ja',
+    'pt-BR': 'pt',
+    tr: 'tr',
+    ur: 'ur',
+    zh: 'zh',
+    'zh-Hans': 'zh',
+    hi: 'hi',
+    ko: 'ko',
     uk: 'en',
     vi: 'en',
-    'zh-Hans': 'en',
     hebrew: 'he',
     arabic: 'ar',
     russian: 'ru',
@@ -110,7 +115,7 @@ export const I18nProvider = ({ children }) => {
         
         // Extract subdomain
         const subdomain = hostname.split('.')[0];
-        const supportedLanguageCodes = ['en', 'es', 'fr', 'de', 'ar', 'he', 'ru'];
+        const supportedLanguageCodes = ['en', 'es', 'fr', 'de', 'ar', 'he', 'ru', 'pt', 'tr', 'ur', 'zh', 'hi', 'ja', 'ko'];
         if (supportedLanguageCodes.includes(subdomain)) {
           return subdomain;
         }

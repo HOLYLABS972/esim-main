@@ -11,7 +11,7 @@ export default function SimpleNavbar() {
   const { currentUser, logout } = useAuth();
   
   // Get language prefix from pathname
-  const langMatch = pathname.match(/^\/(ar|de|es|fr|he|ru)\//);
+  const langMatch = pathname.match(/^\/(ar|de|es|fr|he|ru|pt|tr|ur|zh|hi|ja|ko)\//);
   const langPrefix = langMatch ? `/${langMatch[1]}` : '';
   
   const handleLogout = async () => {
@@ -66,4 +66,3 @@ export default function SimpleNavbar() {
     </nav>
   );
 }
-

@@ -32,8 +32,8 @@ const Footer = () => {
 
   const localePrefixes = [
     'en', 'en-US', 'en-CA',
-    'he', 'ar', 'ru', 'de', 'fr', 'es',
-    'fr-CA', 'id', 'ja', 'pt-BR', 'tr', 'uk', 'vi', 'zh-Hans',
+    'he', 'ar', 'ru', 'de', 'fr', 'es', 'pt', 'tr', 'ur', 'zh', 'hi', 'ja', 'ko',
+    'fr-CA', 'id', 'pt-BR', 'uk', 'vi', 'zh-Hans',
     'hebrew', 'arabic', 'russian', 'german', 'french', 'spanish'
   ];
 
@@ -48,13 +48,18 @@ const Footer = () => {
     fr: 'fr',
     'fr-CA': 'fr',
     es: 'es',
+    pt: 'pt',
     id: 'en',
-    ja: 'en',
-    'pt-BR': 'en',
-    tr: 'en',
+    ja: 'ja',
+    'pt-BR': 'pt',
+    tr: 'tr',
+    ur: 'ur',
+    zh: 'zh',
+    'zh-Hans': 'zh',
+    hi: 'hi',
+    ko: 'ko',
     uk: 'en',
     vi: 'en',
-    'zh-Hans': 'en',
     hebrew: 'he',
     arabic: 'ar',
     russian: 'ru',

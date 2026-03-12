@@ -15,7 +15,14 @@ const supportedLanguages = {
   ar: { name: 'العربية', flag: '🇸🇦', direction: 'rtl' },
   'ar-SA': { name: 'العربية (السعودية)', flag: '🇸🇦', direction: 'rtl' },
   he: { name: 'עברית', flag: '🇮🇱', direction: 'rtl' },
-  ru: { name: 'Русский', flag: '🇷🇺', direction: 'ltr' }
+  pt: { name: 'Português', flag: '🇵🇹', direction: 'ltr' },
+  ru: { name: 'Русский', flag: '🇷🇺', direction: 'ltr' },
+  tr: { name: 'Türkçe', flag: '🇹🇷', direction: 'ltr' },
+  ur: { name: 'اردو', flag: '🇵🇰', direction: 'rtl' },
+  zh: { name: '中文', flag: '🇨🇳', direction: 'ltr' },
+  hi: { name: 'हिन्दी', flag: '🇮🇳', direction: 'ltr' },
+  ja: { name: '日本語', flag: '🇯🇵', direction: 'ltr' },
+  ko: { name: '한국어', flag: '🇰🇷', direction: 'ltr' }
 };
 
 const localeToLanguageMap = {
@@ -33,13 +40,18 @@ const localeToLanguageMap = {
   'fr-CA': 'fr',
   es: 'es',
   'es-ES': 'es',
+  pt: 'pt',
   id: 'en',
-  ja: 'en',
-  'pt-BR': 'en',
-  tr: 'en',
+  ja: 'ja',
+  'pt-BR': 'pt',
+  tr: 'tr',
+  ur: 'ur',
+  zh: 'zh',
+  'zh-Hans': 'zh',
+  hi: 'hi',
+  ko: 'ko',
   uk: 'en',
   vi: 'en',
-  'zh-Hans': 'en',
   hebrew: 'he',
   arabic: 'ar',
   russian: 'ru',

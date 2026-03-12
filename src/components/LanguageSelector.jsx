@@ -13,12 +13,19 @@ const LanguageSelector = () => {
 
   const languages = [
     { code: 'en', name: getLanguageName('en'), flag: getLanguageFlag('en'), route: '/' },
-    { code: 'he', name: getLanguageName('he'), flag: getLanguageFlag('he'), route: '/he' },
-    { code: 'ru', name: getLanguageName('ru'), flag: getLanguageFlag('ru'), route: '/ru' },
     { code: 'ar', name: getLanguageName('ar'), flag: getLanguageFlag('ar'), route: '/ar' },
+    { code: 'he', name: getLanguageName('he'), flag: getLanguageFlag('he'), route: '/he' },
     { code: 'de', name: getLanguageName('de'), flag: getLanguageFlag('de'), route: '/de' },
+    { code: 'pt', name: getLanguageName('pt'), flag: getLanguageFlag('pt'), route: '/pt' },
+    { code: 'es', name: getLanguageName('es'), flag: getLanguageFlag('es'), route: '/es' },
     { code: 'fr', name: getLanguageName('fr'), flag: getLanguageFlag('fr'), route: '/fr' },
-    { code: 'es', name: getLanguageName('es'), flag: getLanguageFlag('es'), route: '/es' }
+    { code: 'tr', name: getLanguageName('tr'), flag: getLanguageFlag('tr'), route: '/tr' },
+    { code: 'ur', name: getLanguageName('ur'), flag: getLanguageFlag('ur'), route: '/ur' },
+    { code: 'zh', name: getLanguageName('zh'), flag: getLanguageFlag('zh'), route: '/zh' },
+    { code: 'ru', name: getLanguageName('ru'), flag: getLanguageFlag('ru'), route: '/ru' },
+    { code: 'hi', name: getLanguageName('hi'), flag: getLanguageFlag('hi'), route: '/hi' },
+    { code: 'ja', name: getLanguageName('ja'), flag: getLanguageFlag('ja'), route: '/ja' },
+    { code: 'ko', name: getLanguageName('ko'), flag: getLanguageFlag('ko'), route: '/ko' }
   ];
 
   // Determine current language from multiple sources
@@ -42,6 +49,13 @@ const LanguageSelector = () => {
     // Fallback to pathname detection for both old and new routes
     if (pathname.startsWith('/en-CA')) return languages.find(lang => lang.code === 'en');
     if (pathname.startsWith('/fr-CA')) return languages.find(lang => lang.code === 'fr');
+    if (pathname.startsWith('/pt')) return languages.find(lang => lang.code === 'pt');
+    if (pathname.startsWith('/tr')) return languages.find(lang => lang.code === 'tr');
+    if (pathname.startsWith('/ur')) return languages.find(lang => lang.code === 'ur');
+    if (pathname.startsWith('/zh')) return languages.find(lang => lang.code === 'zh');
+    if (pathname.startsWith('/hi')) return languages.find(lang => lang.code === 'hi');
+    if (pathname.startsWith('/ja')) return languages.find(lang => lang.code === 'ja');
+    if (pathname.startsWith('/ko')) return languages.find(lang => lang.code === 'ko');
     if (pathname.startsWith('/he')) return languages.find(lang => lang.code === 'he');
     if (pathname.startsWith('/ar')) return languages.find(lang => lang.code === 'ar');
     if (pathname.startsWith('/ru')) return languages.find(lang => lang.code === 'ru');
@@ -114,7 +128,7 @@ const LanguageSelector = () => {
       '/en-US',
       '/en-CA',
       '/fr-CA',
-      '/he', '/ar', '/ru', '/de', '/fr', '/es', // New language codes
+      '/he', '/ar', '/ru', '/de', '/fr', '/es', '/pt', '/tr', '/ur', '/zh', '/hi', '/ja', '/ko',
       '/en',
       '/id', '/ja', '/tr', '/uk', '/vi',
       '/hebrew', '/arabic', '/russian', '/german', '/french', '/spanish' // Old language names
@@ -140,7 +154,14 @@ const LanguageSelector = () => {
       'ru': '/ru',
       'de': '/de',
       'fr': '/fr',
-      'es': '/es'
+      'es': '/es',
+      'pt': '/pt',
+      'tr': '/tr',
+      'ur': '/ur',
+      'zh': '/zh',
+      'hi': '/hi',
+      'ja': '/ja',
+      'ko': '/ko'
     };
     
     const newPrefix = languageRoutes[languageCode] || '';

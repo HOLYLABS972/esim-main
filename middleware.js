@@ -14,14 +14,19 @@ const localeRewriteMap = {
   'fr-FR': 'fr',
   'fr-CA': 'fr',
   he: 'he',
+  pt: 'pt',
+  'pt-BR': 'pt',
   ru: 'ru',
+  tr: 'tr',
+  ur: 'ur',
+  zh: 'zh',
+  'zh-Hans': 'zh',
+  hi: 'hi',
+  ja: 'ja',
+  ko: 'ko',
   id: '',
-  ja: '',
-  'pt-BR': '',
-  tr: '',
   uk: '',
   vi: '',
-  'zh-Hans': '',
 };
 
 function getRewrittenPath(pathname) {
