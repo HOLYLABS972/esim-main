@@ -24,7 +24,8 @@ const Footer = () => {
   const socialMedia = {
     instagram: 'https://www.instagram.com/esim.roamjet/',
     facebook: 'https://www.facebook.com/profile.php?id=61587473507744',
-    twitter: 'https://x.com/roamjet'
+    twitter: 'https://x.com/roamjet',
+    tiktok: 'https://www.tiktok.com/@roamjet'
   };
   
   
