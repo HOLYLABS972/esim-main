@@ -61,6 +61,16 @@ const LanguageSelector = () => {
 
   const currentLanguage = getCurrentLanguage() || languages[0];
 
+  const getLocalizedBlogListUrl = (languageCode) => {
+    return languageCode === 'en' ? '/blog' : `/${languageCode}/blog`;
+  };
+
+  const getLocalizedBlogUrl = (slug, languageCode) => {
+    const normalizedSlug = slug?.replace(/^\/+|\/+$/g, '') || '';
+    if (!normalizedSlug) return getLocalizedBlogListUrl(languageCode);
+    return languageCode === 'en' ? `/blog/${normalizedSlug}` : `/${languageCode}/blog/${normalizedSlug}`;
+  };
+
   const getLocalizedPath = (languageCode, currentPath) => {
     console.log('LanguageSelector: getLocalizedPath called with', languageCode, currentPath);
     
