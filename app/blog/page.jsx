@@ -3,37 +3,100 @@ import Image from 'next/image';
 import { headers } from 'next/headers';
 import { getBlogPosts, getLocaleFromPathname } from '../../src/services/blogService';
 
-// Metadata for SEO
-export const metadata = {
-  title: 'Travel Tips & eSIM Guides | Roamjet Blog',
-  description: 'Discover travel tips, destination guides, and stay connected worldwide with Roamjet eSIM. Read our latest articles about digital nomad travel and international connectivity.',
-  keywords: ['travel tips', 'eSIM guides', 'digital nomad', 'international travel', 'mobile connectivity', 'travel blog'],
-  openGraph: {
-    title: 'Travel Tips & eSIM Guides | Roamjet Blog',
-    description: 'Discover travel tips, destination guides, and stay connected worldwide with Roamjet eSIM.',
-    url: 'https://roamjet.net/blog',
-    siteName: 'Roamjet',
-    images: [
-      {
-        url: 'https://roamjet.net/og-blog.jpg',
-        width: 1200,
-        height: 630,
-        alt: 'Roamjet Blog - Travel Tips & eSIM Guides',
-      },
-    ],
+const BLOG_COPY = {
+  en: {
+    title: 'Travel Tips & Guides',
+    description: 'Discover amazing destinations, travel hacks, and stay connected worldwide with our travel guides and eSIM tips.',
+    seoTitle: 'Travel Tips & eSIM Guides | Roamjet Blog',
+    seoDescription: 'Discover travel tips, destination guides, and stay connected worldwide with Roamjet eSIM. Read our latest articles about digital nomad travel and international connectivity.',
     locale: 'en_US',
-    type: 'website',
   },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Travel Tips & eSIM Guides | Roamjet Blog',
-    description: 'Discover travel tips, destination guides, and stay connected worldwide with Roamjet eSIM.',
-    images: ['https://roamjet.net/og-blog.jpg'],
+  es: {
+    title: 'Consejos y guias de viaje',
+    description: 'Descubre destinos increibles, trucos de viaje y mantente conectado en todo el mundo con nuestras guias de viaje y consejos sobre eSIM.',
+    seoTitle: 'Consejos de viaje y guias eSIM | Blog de Roamjet',
+    seoDescription: 'Descubre consejos de viaje, guias de destinos y como mantenerte conectado en todo el mundo con Roamjet eSIM.',
+    locale: 'es_ES',
   },
-  alternates: {
-    canonical: 'https://roamjet.net/blog',
+  fr: {
+    title: 'Conseils et guides de voyage',
+    description: 'Decouvrez des destinations incroyables, des astuces de voyage et restez connecte dans le monde entier grace a nos guides de voyage et conseils eSIM.',
+    seoTitle: 'Conseils de voyage et guides eSIM | Blog Roamjet',
+    seoDescription: 'Decouvrez des conseils de voyage, des guides de destinations et comment rester connecte dans le monde entier avec Roamjet eSIM.',
+    locale: 'fr_FR',
+  },
+  de: {
+    title: 'Reisetipps und Ratgeber',
+    description: 'Entdecken Sie grossartige Reiseziele, clevere Reisetipps und bleiben Sie weltweit verbunden mit unseren Reiseratgebern und eSIM-Tipps.',
+    seoTitle: 'Reisetipps und eSIM-Ratgeber | Roamjet Blog',
+    seoDescription: 'Entdecken Sie Reisetipps, Zielort-Guides und wie Sie mit Roamjet eSIM weltweit verbunden bleiben.',
+    locale: 'de_DE',
+  },
+  ru: {
+    title: 'Sovety i gidy dlya puteshestviy',
+    description: 'Otkryvayte udivitelnye napravleniya, poleznye sovety dlya puteshestviy i ostavaytes na svyazi po vsemu miru s nashimi gidami i sovetami po eSIM.',
+    seoTitle: 'Sovety dlya puteshestviy i gidy po eSIM | Blog Roamjet',
+    seoDescription: 'Otkryvayte sovety dlya puteshestviy, gidy po napravleniyam i sposoby ostavatsya na svyazi po vsemu miru s Roamjet eSIM.',
+    locale: 'ru_RU',
+  },
+  he: {
+    title: 'טיפים ומדריכי נסיעות',
+    description: 'גלו יעדים מדהימים, טיפים חכמים לנסיעות והישארו מחוברים ברחבי העולם עם מדריכי הנסיעות וטיפי ה-eSIM שלנו.',
+    seoTitle: 'טיפים לנסיעות ומדריכי eSIM | הבלוג של Roamjet',
+    seoDescription: 'גלו טיפים לנסיעות, מדריכי יעדים ואיך להישאר מחוברים ברחבי העולם עם Roamjet eSIM.',
+    locale: 'he_IL',
+  },
+  ar: {
+    title: 'نصائح وادلة السفر',
+    description: 'اكتشف وجهات رائعة وحيل سفر مفيدة وابق على اتصال حول العالم من خلال ادلة السفر ونصائح eSIM الخاصة بنا.',
+    seoTitle: 'نصائح السفر وادلة eSIM | مدونة Roamjet',
+    seoDescription: 'اكتشف نصائح السفر وادلة الوجهات وكيف تبقى متصلا حول العالم مع Roamjet eSIM.',
+    locale: 'ar_SA',
   },
 };
+
+function getBlogCopy(locale) {
+  return BLOG_COPY[locale] || BLOG_COPY.en;
+}
+
+export async function generateMetadata() {
+  const headersList = await headers();
+  const pathname = headersList.get('x-pathname') || '';
+  const locale = getLocaleFromPathname(pathname);
+  const copy = getBlogCopy(locale);
+  const canonicalPath = locale && locale !== 'en' ? `https://roamjet.net/${locale}/blog` : 'https://roamjet.net/blog';
+
+  return {
+    title: copy.seoTitle,
+    description: copy.seoDescription,
+    keywords: ['travel tips', 'eSIM guides', 'digital nomad', 'international travel', 'mobile connectivity', 'travel blog'],
+    openGraph: {
+      title: copy.seoTitle,
+      description: copy.seoDescription,
+      url: canonicalPath,
+      siteName: 'Roamjet',
+      images: [
+        {
+          url: 'https://roamjet.net/og-blog.jpg',
+          width: 1200,
+          height: 630,
+          alt: 'Roamjet Blog',
+        },
+      ],
+      locale: copy.locale,
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: copy.seoTitle,
+      description: copy.seoDescription,
+      images: ['https://roamjet.net/og-blog.jpg'],
+    },
+    alternates: {
+      canonical: canonicalPath,
+    },
+  };
+}
 
 // Function to format date
 function formatDate(date) {
@@ -57,6 +120,7 @@ export default async function BlogPage() {
   const headersList = await headers();
   const pathname = headersList.get('x-pathname') || '';
   const locale = getLocaleFromPathname(pathname);
+  const copy = getBlogCopy(locale);
 
   let posts = [];
   let error = null;
@@ -79,10 +143,10 @@ export default async function BlogPage() {
         <div className="mx-auto max-w-[1600px] px-6 sm:px-8 lg:px-12">
           <div className="max-w-2xl">
             <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
-              Travel Tips & Guides
+              {copy.title}
             </h1>
             <p className="mt-6 text-lg leading-8 text-gray-600">
-              Discover amazing destinations, travel hacks, and stay connected worldwide with our travel guides and eSIM tips.
+              {copy.description}
             </p>
           </div>
         </div>
