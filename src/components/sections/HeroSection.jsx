@@ -73,21 +73,6 @@ export default function HeroSection() {
           {/* Main Content */}
 
           <div className="text-center">
-            <div className="mb-6 w-full max-w-3xl mx-auto px-4">
-              <div
-                className="trustpilot-widget"
-                data-locale="en-US"
-                data-template-id="56278e9abfbbba0bdcd568bc"
-                data-businessunit-id="69b346df9b7a4e60b379b726"
-                data-style-height="52px"
-                data-style-width="100%"
-                data-token="7544126f-e70b-497a-9d82-70c1c4fb8ce5"
-              >
-                <a href="https://www.trustpilot.com/review/roamjet.net" target="_blank" rel="noopener">
-                  Trustpilot
-                </a>
-              </div>
-            </div>
             <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-semibold text-balance text-gray-600 relative">
               {/* Mobile Layout */}
               <div className="block sm:hidden space-y-3">
@@ -153,6 +138,21 @@ export default function HeroSection() {
                   </span>
                 </div>
               </button>
+            </div>
+            <div className="mt-5 w-full max-w-3xl mx-auto px-4">
+              <div
+                className="trustpilot-widget"
+                data-locale="en-US"
+                data-template-id="56278e9abfbbba0bdcd568bc"
+                data-businessunit-id="69b346df9b7a4e60b379b726"
+                data-style-height="52px"
+                data-style-width="100%"
+                data-token="7544126f-e70b-497a-9d82-70c1c4fb8ce5"
+              >
+                <a href="https://www.trustpilot.com/review/roamjet.net" target="_blank" rel="noopener">
+                  Trustpilot
+                </a>
+              </div>
             </div>
 
           </div>
