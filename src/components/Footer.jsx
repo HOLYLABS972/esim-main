@@ -22,8 +22,9 @@ const Footer = () => {
   
   // Hardcoded social media links
   const socialMedia = {
-    instagram: 'https://www.instagram.com/esim.roamjet',
-    facebook: 'https://www.facebook.com/profile.php?id=61581184673040',
+    instagram: 'https://www.instagram.com/esim.roamjet/',
+    facebook: 'https://www.facebook.com/profile.php?id=61587473507744',
+    twitter: 'https://x.com/roamjet',
     tiktok: 'https://www.tiktok.com/@roamjet'
   };
   
@@ -155,7 +156,7 @@ const Footer = () => {
                 {getText('footer.companyDescription', 'Your trusted partner for global eSIM connectivity. Stay connected worldwide with our reliable data plans.')}
               </p>
               {socialLinks.length > 0 && (
-                <ul className="social-list flex space-x-4">
+                <ul className="social-list flex space-x-4 items-center">
                   {socialLinks.map((social, index) => {
                     const IconComponent = social.icon;
                     return (
@@ -174,6 +175,19 @@ const Footer = () => {
                   })}
                 </ul>
               )}
+              {/* Trustpilot Widget */}
+              <div className="mt-4">
+                <a href="https://www.trustpilot.com/review/roamjet.net" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-4 py-2 bg-[#00b67a] hover:bg-[#00a870] rounded-lg transition-colors">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                  <span className="text-white font-semibold text-sm">Review us on Trustpilot</span>
+                </a>
+              </div>
+              {/* Product Hunt Badge */}
+              <div className="mt-3">
+                <a href="https://www.producthunt.com/products/roamjet?utm_source=badge-follow&utm_medium=badge&utm_source=badge-roamjet" target="_blank" rel="noopener noreferrer">
+                  <img src="https://api.producthunt.com/widgets/embed-image/v1/follow.svg?product_id=1180413&theme=dark" alt="RoamJet - We accept crypto | Product Hunt" style={{width: '250px', height: '54px'}} width="250" height="54" />
+                </a>
+              </div>
             </motion.div>
 
             {/* Quick Links */}

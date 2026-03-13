@@ -110,6 +110,8 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <head>
+        {/* TrustBox script */}
+        <script type="text/javascript" src="//widget.trustpilot.com/bootstrap/v5/tp.widget.bootstrap.min.js" async></script>
         {/* Google tag (gtag.js) */}
         <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17231669358"></script>
         <script
@@ -161,8 +163,8 @@ export default function RootLayout({ children }) {
               "logo": "https://roamjet.net/images/logo_icon/logo2.png",
               "description": "Global eSIM plans for travelers, backpackers, and digital nomads. Instant activation in 200+ countries.",
               "sameAs": [
-                "https://twitter.com/roamjet",
-                "https://facebook.com/roamjet"
+                "https://x.com/roamjet",
+                "https://www.facebook.com/profile.php?id=61587473507744"
               ],
               "contactPoint": {
                 "@type": "ContactPoint",

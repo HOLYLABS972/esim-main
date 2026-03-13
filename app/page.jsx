@@ -6,7 +6,8 @@ import {
   HeroSection,
   FeaturesSection,
   PlansSection,
-  ActivationSection
+  ActivationSection,
+  LatestPostsSection
 } from '../src/components/sections';
 import PaddleCheckoutOpener from '../src/components/PaddleCheckoutOpener';
 
@@ -28,6 +29,9 @@ export default function HomePage() {
 
           {/* Plans Section */}
           <PlansSection />
+
+          {/* Latest Blog Posts */}
+          <LatestPostsSection />
 
           {/* How It Works & Mobile Apps Section (Combined) */}
           <ActivationSection />
