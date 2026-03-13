@@ -180,6 +180,24 @@ export default function FeaturesSection() {
           </div>
 
         </div>
+
+        {/* Trustpilot Trust Banner */}
+        <div className="mt-12 sm:mt-16 text-center">
+          <a href="https://www.trustpilot.com/review/roamjet.net" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-3 px-6 py-4 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-2xl transition-colors group">
+            <div className="flex items-center gap-1">
+              {[...Array(5)].map((_, i) => (
+                <svg key={i} className="w-6 h-6 text-[#00b67a]" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                </svg>
+              ))}
+            </div>
+            <div className="text-left">
+              <p className="text-sm font-semibold text-gray-900 group-hover:text-[#00b67a] transition-colors">Rated Excellent on Trustpilot</p>
+              <p className="text-xs text-gray-500">Read reviews from real travelers</p>
+            </div>
+            <svg className="w-5 h-5 text-gray-400 group-hover:text-[#00b67a] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7"/></svg>
+          </a>
+        </div>
         
       </div>
     </div>
