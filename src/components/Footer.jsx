@@ -156,7 +156,7 @@ const Footer = () => {
                 {getText('footer.companyDescription', 'Your trusted partner for global eSIM connectivity. Stay connected worldwide with our reliable data plans.')}
               </p>
               {socialLinks.length > 0 && (
-                <ul className="social-list flex space-x-4">
+                <ul className="social-list flex space-x-4 items-center">
                   {socialLinks.map((social, index) => {
                     const IconComponent = social.icon;
                     return (
@@ -175,6 +175,12 @@ const Footer = () => {
                   })}
                 </ul>
               )}
+              {/* Product Hunt Badge */}
+              <div className="mt-4">
+                <a href="https://www.producthunt.com/products/roamjet?utm_source=badge-follow&utm_medium=badge&utm_source=badge-roamjet" target="_blank" rel="noopener noreferrer">
+                  <img src="https://api.producthunt.com/widgets/embed-image/v1/follow.svg?product_id=1180413&theme=dark" alt="RoamJet - We accept crypto | Product Hunt" style={{width: '250px', height: '54px'}} width="250" height="54" />
+                </a>
+              </div>
             </motion.div>
 
             {/* Quick Links */}
