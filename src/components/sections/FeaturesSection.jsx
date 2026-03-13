@@ -181,11 +181,6 @@ export default function FeaturesSection() {
 
         </div>
 
-        {/* Trustpilot Official Widget */}
-        <div className="mt-12 sm:mt-16">
-          <div className="trustpilot-widget" data-locale="en-US" data-template-id="56278e9abfbbba0bdcd568bc" data-businessunit-id="69b346df9b7a4e60b379b726" data-style-height="52px" data-style-width="100%" data-token="c58f7ad6-5dd6-47ac-87a5-2368e2ad6ff1">
-            <a href="https://www.trustpilot.com/review/roamjet.net" target="_blank" rel="noopener">Trustpilot</a>
-          </div>
         </div>
         
       </div>
