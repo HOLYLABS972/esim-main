@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { detectLanguageFromPath } from '../../utils/languageUtils';
 
 export default function FeaturesSection() {
-  const { t, locale, isLoading } = useI18n();
+  const { t, isLoading } = useI18n();
   const pathname = usePathname();
 
   // Get language prefix from pathname
