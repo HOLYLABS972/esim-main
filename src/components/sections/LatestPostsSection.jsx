@@ -3,13 +3,8 @@
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { createClient } from '@supabase/supabase-js';
 import { detectLanguageFromPath } from '../../utils/languageUtils';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-);
+import { supabase } from '../../supabase/config';
 
 export default function LatestPostsSection() {
   const [posts, setPosts] = useState([]);
