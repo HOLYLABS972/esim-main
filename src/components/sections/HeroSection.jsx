@@ -139,6 +139,21 @@ export default function HeroSection() {
                 </div>
               </button>
             </div>
+            <div className="mt-5 w-full max-w-3xl mx-auto px-4">
+              <div
+                className="trustpilot-widget"
+                data-locale="en-US"
+                data-template-id="56278e9abfbbba0bdcd568bc"
+                data-businessunit-id="69b346df9b7a4e60b379b726"
+                data-style-height="52px"
+                data-style-width="100%"
+                data-token="7544126f-e70b-497a-9d82-70c1c4fb8ce5"
+              >
+                <a href="https://www.trustpilot.com/review/roamjet.net" target="_blank" rel="noopener">
+                  Trustpilot
+                </a>
+              </div>
+            </div>
 
           </div>
 

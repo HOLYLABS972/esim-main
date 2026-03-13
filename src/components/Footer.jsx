@@ -175,13 +175,6 @@ const Footer = () => {
                   })}
                 </ul>
               )}
-              {/* Trustpilot Widget */}
-              <div className="mt-4">
-                <a href="https://www.trustpilot.com/review/roamjet.net" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-4 py-2 bg-[#00b67a] hover:bg-[#00a870] rounded-lg transition-colors">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-                  <span className="text-white font-semibold text-sm">Review us on Trustpilot</span>
-                </a>
-              </div>
               {/* Product Hunt Badge */}
               <div className="mt-3">
                 <a href="https://www.producthunt.com/products/roamjet?utm_source=badge-follow&utm_medium=badge&utm_source=badge-roamjet" target="_blank" rel="noopener noreferrer">
