@@ -90,65 +90,7 @@ export default function ActivationSection() {
 
 
       <div className="relative isolate">
-        {/* First Section - Activation Process */}
-
-
-
-        {/* Second Section - App Downloads */}
-        <div className="container mx-auto px-4 relative z-10 pt-16 pb-16" id="AppLinksSection">
-          {/* Section Header */}
-          <div className="text-center mb-16">
-            <p className="mx-auto max-w-4xl text-center text-4xl font-semibold tracking-tight text-white sm:text-5xl">
-              {t('activation.appAvailable')}
-            </p>
-          </div>
-
-          {/* App Download Section with Phone Image */}
-          <div className="max-w-6xl mx-auto">
-            <div className="bg-white/10 backdrop-blur-sm rounded-3xl p-8 lg:p-12 shadow-2xl">
-              <div className="grid lg:grid-cols-2 gap-8 items-center">
-                {/* Phone Image - Left Side */}
-                <div className="flex justify-center lg:justify-start">
-                  <div className="relative max-w-sm">
-                    <Image
-                      src="/images/logo_icon/phones.png"
-                      alt="Mobile App on iPhone and Android"
-                      width={400}
-                      height={300}
-                      className="w-full h-auto"
-                    />
-                  </div>
-                </div>
-
-                {/* App Store Links - Right Side */}
-                <div className="text-center lg:text-left space-y-6">
-                  <h3 className="text-3xl font-semibold text-white mb-4">
-                    {t('activation.downloadOurApp')}
-                  </h3>
-                  <p className="text-white/90 text-lg leading-relaxed mb-8">
-                    {t('activation.appDescription')}
-                  </p>
-
-                  {/* Single Download App button (AppsFlyer OneLink) */}
-                  <div className="flex justify-center lg:justify-start">
-                    {loading ? (
-                      <div className="text-white">{t('activation.loadingAppLinks')}</div>
-                    ) : (
-                      <a
-                        href={appLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="btn-primary inline-flex items-center justify-center px-8 py-3"
-                      >
-                        {t('navbar.downloadApp', 'Download App')}
-                      </a>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* Activation Process section - EasyCall app section removed */}
       </div>
     </div>
   );

@@ -4,7 +4,7 @@ import {
   HeroSection,
   FeaturesSection,
   PlansSection,
-  ActivationSection
+
 } from '../../src/components/sections';
 
 export default function RussianPage() {
@@ -21,7 +21,6 @@ export default function RussianPage() {
         <PlansSection />
 
         {/* How It Works & Mobile Apps Section (Combined) */}
-        <ActivationSection />
       </main>
     </div>
   )
