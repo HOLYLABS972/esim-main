@@ -41,8 +41,8 @@ export default function TwoNumberBanner() {
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 bg-white text-tufts-blue font-semibold rounded-xl px-6 py-3 hover:bg-gray-100 transition-colors shadow-lg"
             >
-              <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M3.18 23.49c-.36-.17-.56-.5-.56-.89V1.4c0-.4.2-.72.56-.89l11.35 11.49L3.18 23.49zm15.17-10.27L5.04 4.97l10.73 6.15 2.58-2.58v4.68zM5.04 19.03l13.31-8.25-2.58-2.58-10.73 6.15v4.68zm15.51-8.56l-2.84-1.62-2.86 2.86 2.86 2.86 2.84-1.62c.54-.31.54-1.17 0-1.48z"/>
+              <svg className="w-6 h-6" viewBox="0 0 512 512" fill="currentColor">
+                <path d="M48 59.49v393a17 17 0 0 0 27.29 13.5l347.42-196.5a17 17 0 0 0 0-30l-347.42-196.5A17 17 0 0 0 48 59.49z"/>
               </svg>
               Google Play
             </a>
