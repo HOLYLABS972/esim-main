@@ -2,7 +2,7 @@ User-agent: *
 Allow: /
 
 # Sitemaps
-Sitemap: https://www.roamjet.net/sitemap.xml
+Sitemap: https://roamjet.net/sitemap.xml
 
 # Disallow private areas
 Disallow: /api/

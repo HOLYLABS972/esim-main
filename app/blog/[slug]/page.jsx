@@ -4,11 +4,24 @@ import { notFound } from 'next/navigation';
 import { headers } from 'next/headers';
 import { getBlogPost, getBlogPosts, getLocaleFromPathname } from '../../../src/services/blogService';
 
+// Revalidate blog posts every hour for fresh content + fast Googlebot crawls
+export const revalidate = 3600;
+
 function toAbsoluteImageUrl(url) {
   if (!url) return 'https://roamjet.net/og-blog.jpg';
   if (url.startsWith('http://') || url.startsWith('https://')) return url;
   return `https://roamjet.net${url.startsWith('/') ? '' : '/'}${url}`;
 }
+
+// Locales that actually have blog content in the database
+const BLOG_LOCALES_WITH_CONTENT = ['en', 'ar', 'de', 'es', 'fr', 'he', 'ru', 'pt', 'tr', 'ja', 'zh', 'id', 'uk', 'vi'];
+
+// Map locale codes to OG locale format
+const OG_LOCALE_MAP = {
+  en: 'en_US', ar: 'ar_SA', de: 'de_DE', es: 'es_ES',
+  fr: 'fr_FR', he: 'he_IL', ru: 'ru_RU', pt: 'pt_BR', tr: 'tr_TR',
+  ja: 'ja_JP', zh: 'zh_CN', id: 'id_ID', uk: 'uk_UA', vi: 'vi_VN',
+};
 
 // Generate metadata dynamically based on the blog post
 export async function generateMetadata({ params }) {
@@ -24,6 +37,22 @@ export async function generateMetadata({ params }) {
     };
   }
 
+  // Build the correct canonical URL for the current locale
+  const canonicalPath = locale && locale !== 'en'
+    ? `/${locale}/blog/${post.slug}`
+    : `/blog/${post.slug}`;
+  const canonicalUrl = `https://roamjet.net${canonicalPath}`;
+
+  // Build hreflang alternates so Google knows about each language version
+  const baseSlug = post.slug.replace(/-(?:ar|de|es|fr|he|ru|pt|tr|ja|zh|id|uk|vi)$/, '');
+  const languages = {};
+  for (const loc of BLOG_LOCALES_WITH_CONTENT) {
+    const slug = loc === 'en' ? baseSlug : `${baseSlug}-${loc}`;
+    const path = loc === 'en' ? `/blog/${slug}` : `/${loc}/blog/${slug}`;
+    languages[loc] = `https://roamjet.net${path}`;
+  }
+  languages['x-default'] = `https://roamjet.net/blog/${baseSlug}`;
+
   return {
     title: `${post.title} | Roamjet Blog`,
     description: post.metaDescription || post.excerpt,
@@ -31,7 +60,7 @@ export async function generateMetadata({ params }) {
     openGraph: {
       title: post.title,
       description: post.metaDescription || post.excerpt,
-      url: `https://roamjet.net/blog/${post.slug}`,
+      url: canonicalUrl,
       siteName: 'Roamjet',
       images: [
         {
@@ -41,7 +70,7 @@ export async function generateMetadata({ params }) {
           alt: post.title,
         },
       ],
-      locale: 'en_US',
+      locale: OG_LOCALE_MAP[locale] || 'en_US',
       type: 'article',
       publishedTime: post.publishedAt?.toISOString(),
       authors: [post.author || 'Roamjet Team'],
@@ -54,7 +83,8 @@ export async function generateMetadata({ params }) {
       images: [toAbsoluteImageUrl(post.coverImage)],
     },
     alternates: {
-      canonical: `https://roamjet.net/blog/${post.slug}`,
+      canonical: canonicalUrl,
+      languages,
     },
   };
 }

@@ -59,7 +59,7 @@ export const metadata = {
     siteName: 'RoamJet',
     images: [
       {
-        url: '/images/og-image.svg',
+        url: '/images/og-image.png',
         width: 1200,
         height: 630,
         alt: 'RoamJet - Best eSIM Plans for Travelers',
@@ -70,7 +70,7 @@ export const metadata = {
     card: 'summary_large_image',
     title: 'Best eSIM Plans for Backpackers, Travelers & Digital Nomads | RoamJet',
     description: 'Perfect eSIM plans for backpackers, travelers, and digital nomads. Compare Airalo vs RoamJet vs eSIMo. Global data connectivity in 200+ countries.',
-    images: ['/images/og-image.svg'],
+    images: ['/images/og-image.png'],
   },
   icons: {
     icon: [
@@ -133,23 +133,23 @@ export default function RootLayout({ children }) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         
         {/* hreflang tags for multilingual SEO */}
-        <link rel="alternate" href="https://www.roamjet.net/en" hrefLang="x-default" />
-        <link rel="alternate" href="https://www.roamjet.net/en" hrefLang="en-US" />
-        <link rel="alternate" href="https://www.roamjet.net/en-CA" hrefLang="en-CA" />
-        <link rel="alternate" href="https://www.roamjet.net/ar" hrefLang="ar-SA" />
-        <link rel="alternate" href="https://www.roamjet.net/de" hrefLang="de-DE" />
-        <link rel="alternate" href="https://www.roamjet.net/es" hrefLang="es-ES" />
-        <link rel="alternate" href="https://www.roamjet.net/fr" hrefLang="fr-FR" />
-        <link rel="alternate" href="https://www.roamjet.net/fr-CA" hrefLang="fr-CA" />
-        <link rel="alternate" href="https://www.roamjet.net/he" hrefLang="he" />
-        <link rel="alternate" href="https://www.roamjet.net/id" hrefLang="id" />
-        <link rel="alternate" href="https://www.roamjet.net/ja" hrefLang="ja" />
-        <link rel="alternate" href="https://www.roamjet.net/pt-BR" hrefLang="pt-BR" />
-        <link rel="alternate" href="https://www.roamjet.net/ru" hrefLang="ru" />
-        <link rel="alternate" href="https://www.roamjet.net/tr" hrefLang="tr" />
-        <link rel="alternate" href="https://www.roamjet.net/uk" hrefLang="uk" />
-        <link rel="alternate" href="https://www.roamjet.net/vi" hrefLang="vi" />
-        <link rel="alternate" href="https://www.roamjet.net/zh-Hans" hrefLang="zh-Hans" />
+        <link rel="alternate" href="https://roamjet.net/" hrefLang="x-default" />
+        <link rel="alternate" href="https://roamjet.net/" hrefLang="en-US" />
+        <link rel="alternate" href="https://roamjet.net/" hrefLang="en-CA" />
+        <link rel="alternate" href="https://roamjet.net/ar" hrefLang="ar-SA" />
+        <link rel="alternate" href="https://roamjet.net/de" hrefLang="de-DE" />
+        <link rel="alternate" href="https://roamjet.net/es" hrefLang="es-ES" />
+        <link rel="alternate" href="https://roamjet.net/fr" hrefLang="fr-FR" />
+        <link rel="alternate" href="https://roamjet.net/fr-CA" hrefLang="fr-CA" />
+        <link rel="alternate" href="https://roamjet.net/he" hrefLang="he" />
+        <link rel="alternate" href="https://roamjet.net/id" hrefLang="id" />
+        <link rel="alternate" href="https://roamjet.net/ja" hrefLang="ja" />
+        <link rel="alternate" href="https://roamjet.net/pt-BR" hrefLang="pt-BR" />
+        <link rel="alternate" href="https://roamjet.net/ru" hrefLang="ru" />
+        <link rel="alternate" href="https://roamjet.net/tr" hrefLang="tr" />
+        <link rel="alternate" href="https://roamjet.net/uk" hrefLang="uk" />
+        <link rel="alternate" href="https://roamjet.net/vi" hrefLang="vi" />
+        <link rel="alternate" href="https://roamjet.net/zh-Hans" hrefLang="zh-Hans" />
         
         {/* Structured Data for SEO */}
         <script

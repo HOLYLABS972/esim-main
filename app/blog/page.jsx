@@ -3,6 +3,9 @@ import Image from 'next/image';
 import { headers } from 'next/headers';
 import { getBlogPosts, getLocaleFromPathname } from '../../src/services/blogService';
 
+// Revalidate blog listing every hour for fresh content + fast Googlebot crawls
+export const revalidate = 3600;
+
 const BLOG_COPY = {
   en: {
     title: 'Travel Tips & Guides',

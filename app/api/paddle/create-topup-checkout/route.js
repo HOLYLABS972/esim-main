@@ -53,7 +53,7 @@ export async function POST(request) {
       );
     }
 
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.roamjet.net';
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://roamjet.net';
     const successUrl = body.successUrl || `${baseUrl.replace(/\/$/, '')}/payment-success`;
     const cancelUrl = body.cancelUrl || `${baseUrl.replace(/\/$/, '')}/`;
 

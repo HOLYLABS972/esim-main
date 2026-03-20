@@ -18,15 +18,17 @@ const localeRewriteMap = {
   'pt-BR': 'pt',
   ru: 'ru',
   tr: 'tr',
-  ur: 'ur',
+  // These locales have blog content — rewrite to their own prefix
+  ja: 'ja',
   zh: 'zh',
   'zh-Hans': 'zh',
-  hi: 'hi',
-  ja: 'ja',
-  ko: 'ko',
-  id: '',
-  uk: '',
-  vi: '',
+  id: 'id',
+  uk: 'uk',
+  vi: 'vi',
+  // These locales don't have dedicated pages yet — rewrite to English
+  // ur: '',
+  // hi: '',
+  // ko: '',
 };
 
 function getRewrittenPath(pathname) {
