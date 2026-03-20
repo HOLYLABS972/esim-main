@@ -4,7 +4,7 @@ import {
   HeroSection,
   FeaturesSection,
   PlansSection,
-  ActivationSection
+
 } from '../../src/components/sections';
 
 export default function GermanPage() {
@@ -14,7 +14,6 @@ export default function GermanPage() {
         <HeroSection />
         <FeaturesSection />
         <PlansSection />
-        <ActivationSection />
       </main>
     </div>
   )

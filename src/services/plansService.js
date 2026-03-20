@@ -10,7 +10,8 @@ export const getAllPlans = async () => {
       .from('dataplans')
       .select('*')
       .eq('enabled', true)
-      .eq('hidden', false);
+      .eq('hidden', false)
+      .limit(10000);
 
     if (error) {
       console.error('Error getting all plans:', error);

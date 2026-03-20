@@ -114,12 +114,6 @@ const Navbar = ({ hideLanguageSelector = false }) => {
         
         <div className="hidden lg:flex lg:gap-x-12">
 
-          <button
-            onClick={handleDownloadApp}
-            className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors"
-          >
-            {t('navbar.downloadApp', 'Download')}
-          </button>
           <Link href={getLocalizedUrl("/affiliate")} className="text-sm/6 font-semibold text-gray-900 hover:text-tufts-blue transition-colors">
             {t('navbar.affiliate', 'Affiliate')}
           </Link>
@@ -188,15 +182,6 @@ const Navbar = ({ hideLanguageSelector = false }) => {
               <div className="space-y-8 text-center">
                 {/* Main Navigation Group */}
                 <div className="p-4 w-full max-w-xs">
-                  <button
-                    onClick={() => {
-                      handleDownloadApp();
-                      setIsMenuOpen(false);
-                    }}
-                    className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2 w-full bg-transparent border-none cursor-pointer"
-                  >
-                    {t('navbar.downloadApp', 'Download')}
-                  </button>
                   <Link
                     href={getLocalizedUrl("/affiliate")}
                     className="block text-lg font-semibold text-gray-700 hover:text-tufts-blue hover:bg-white rounded-md transition-all duration-200 py-3 px-4 text-center mb-2"
