@@ -48,18 +48,6 @@ function getRewrittenPath(pathname) {
 export function middleware(request) {
   const pathname = request.nextUrl.pathname;
 
-  // Paddle transaction — redirect mobile to hosted checkout (overlay crashes in mobile browsers)
-  if (pathname === '/checkout') {
-    const ptxn = request.nextUrl.searchParams.get('_ptxn') || request.nextUrl.searchParams.get('transaction_id');
-    if (ptxn) {
-      const ua = request.headers.get('user-agent') || '';
-      const isMobile = /iPhone|iPad|iPod|Android|Mobile|webOS/i.test(ua);
-      if (isMobile) {
-        return NextResponse.redirect(`https://checkout.paddle.com/checkout/${ptxn}`);
-      }
-    }
-  }
-
   const rewrittenPath = getRewrittenPath(pathname);
 
   let res;
