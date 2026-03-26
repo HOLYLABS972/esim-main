@@ -44,9 +44,10 @@ export default function CheckoutPageClient() {
         } catch (_) {}
       }
       const options = { transactionId: txnId };
-      if (customerEmail || country) {
+      // Paddle requires email if customer object is provided — only pass when we have email
+      if (customerEmail) {
         options.customer = {
-          ...(customerEmail && { email: customerEmail }),
+          email: customerEmail,
           ...(country && { address: { countryCode: String(country).toUpperCase().slice(0, 2) } }),
         };
       }

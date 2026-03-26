@@ -79,9 +79,10 @@ export const paddleService = {
     }
     const openOptions = { transactionId };
     const country = orderData.countryCode || orderData.country;
-    if (orderData.customerEmail || country) {
+    // Paddle requires email if customer object is provided — only pass customer when we have email
+    if (orderData.customerEmail) {
       openOptions.customer = {
-        ...(orderData.customerEmail && { email: orderData.customerEmail }),
+        email: orderData.customerEmail,
         ...(country && { address: { countryCode: String(country).toUpperCase().slice(0, 2) } }),
       };
     }
