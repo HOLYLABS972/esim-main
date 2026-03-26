@@ -556,6 +556,16 @@ const SharePackagePage = () => {
     return `${data} ${unit}`;
   };
 
+  const getCountryName = (code) => {
+    if (!code) return null;
+    try {
+      const displayNames = new Intl.DisplayNames(['en'], { type: 'region' });
+      return displayNames.of(code.toUpperCase());
+    } catch (_) {
+      return code;
+    }
+  };
+
   const getCountryFlag = (countryCode) => {
     if (!countryCode || countryCode.length !== 2) return '🌍';
     
@@ -705,7 +715,7 @@ const SharePackagePage = () => {
                 {urlCountryFlag || ((activePlan || packageData).country_code ? getCountryFlag((activePlan || packageData).country_code) : '🌍')}
               </span>
               <h2 className="text-2xl font-bold text-black">
-                {(activePlan || packageData).country_name || (activePlan || packageData).name}
+                {(activePlan || packageData).country_name || getCountryName((activePlan || packageData).country_code) || (activePlan || packageData).name}
               </h2>
             </div>
           </div>
