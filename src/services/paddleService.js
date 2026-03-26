@@ -50,7 +50,8 @@ export const paddleService = {
     const { transactionId, checkoutUrl } = await res.json();
     if (!transactionId) throw new Error('No transaction ID from Paddle');
 
-    if (checkoutUrl) {
+    if (checkoutUrl && window !== window.top) {
+      // Only use redirect for iframe context — otherwise open overlay directly
       let finalUrl = checkoutUrl;
       if (orderData.customerEmail || orderData.countryCode || orderData.country) {
         try {
@@ -66,11 +67,7 @@ export const paddleService = {
           finalUrl = url.toString();
         } catch (_) {}
       }
-      if (window !== window.top) {
-        window.open(finalUrl, '_blank');
-      } else {
-        window.location.href = finalUrl;
-      }
+      window.open(finalUrl, '_blank');
       return { transactionId };
     }
 
