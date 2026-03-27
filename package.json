@@ -30,7 +30,10 @@
     "airalo-sdk": "^1.2.1",
     "axios": "^1.11.0",
     "date-fns": "^4.1.0",
+    "firebase": "^11.7.1",
+    "firebase-admin": "^13.4.0",
     "framer-motion": "^11.18.2",
+    "googleapis": "^171.4.0",
     "lucide-react": "^0.542.0",
     "next": "^14.2.5",
     "qrcode": "^1.5.4",
@@ -41,9 +44,7 @@
     "react-hook-form": "^7.62.0",
     "react-hot-toast": "^2.6.0",
     "react-qr-code": "^2.0.18",
-    "typescript": "^5.9.2",
-    "firebase": "^11.7.1",
-    "firebase-admin": "^13.4.0"
+    "typescript": "^5.9.2"
   },
   "devDependencies": {
     "@tailwindcss/forms": "^0.5.0",
