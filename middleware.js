@@ -47,6 +47,7 @@ function getRewrittenPath(pathname) {
 
 export function middleware(request) {
   const pathname = request.nextUrl.pathname;
+
   const rewrittenPath = getRewrittenPath(pathname);
 
   let res;

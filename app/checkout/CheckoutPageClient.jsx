@@ -44,13 +44,19 @@ export default function CheckoutPageClient() {
         } catch (_) {}
       }
       const options = { transactionId: txnId };
-      if (customerEmail || country) {
+      // Paddle requires email if customer object is provided — only pass when we have email
+      if (customerEmail) {
         options.customer = {
-          ...(customerEmail && { email: customerEmail }),
+          email: customerEmail,
           ...(country && { address: { countryCode: String(country).toUpperCase().slice(0, 2) } }),
         };
       }
-      window.Paddle.Checkout.open(options);
+      try {
+        window.Paddle.Checkout.open(options);
+      } catch (err) {
+        console.error('❌ Paddle.Checkout.open error:', err);
+        setError('Payment failed to open. Please try again.');
+      }
       setPaddleOpening(false);
     };
 
@@ -63,10 +69,21 @@ export default function CheckoutPageClient() {
     script.src = PADDLE_SCRIPT;
     script.async = true;
     script.onload = () => {
-      const token = process.env.NEXT_PUBLIC_PDL_API_KEY;
-      if (token && window.Paddle) {
-        window.Paddle.Initialize({ token });
-        openPaddleCheckout();
+      try {
+        const token = process.env.NEXT_PUBLIC_PDL_API_KEY;
+        if (!token) {
+          console.error('❌ NEXT_PUBLIC_PDL_API_KEY is not set');
+          setError('Payment configuration error. Please try again later.');
+          setPaddleOpening(false);
+          return;
+        }
+        if (window.Paddle) {
+          window.Paddle.Initialize({ token });
+          openPaddleCheckout();
+        }
+      } catch (err) {
+        console.error('❌ Paddle init error:', err);
+        setError('Payment failed to load. Please try again.');
       }
       setPaddleOpening(false);
     };
