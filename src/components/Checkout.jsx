@@ -124,38 +124,42 @@ const Checkout = ({ plan }) => {
         </div>
       )}
 
-      {/* Coinbase Payment Button */}
-      <button
-        onClick={handleCoinbasePayment}
-        disabled={isProcessing || !coinbaseAvailable}
-        className={`w-full flex items-center justify-center gap-3 py-4 px-6 rounded-xl font-semibold text-lg transition-all ${
-          isProcessing || !coinbaseAvailable
-            ? 'bg-gray-300 cursor-not-allowed text-gray-500'
-            : 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl'
-        }`}
-      >
-        {isProcessing ? (
-          <>
-            <Loader2 className="w-5 h-5 animate-spin" />
-            Processing...
-          </>
-        ) : (
-          <>
-            <Coins className="w-5 h-5" />
-            Pay with Crypto
-          </>
-        )}
-      </button>
+      {/* Coinbase Payment Button - hidden */}
+      {false && (
+        <>
+          <button
+            onClick={handleCoinbasePayment}
+            disabled={isProcessing || !coinbaseAvailable}
+            className={`w-full flex items-center justify-center gap-3 py-4 px-6 rounded-xl font-semibold text-lg transition-all ${
+              isProcessing || !coinbaseAvailable
+                ? 'bg-gray-300 cursor-not-allowed text-gray-500'
+                : 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl'
+            }`}
+          >
+            {isProcessing ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                Processing...
+              </>
+            ) : (
+              <>
+                <Coins className="w-5 h-5" />
+                Pay with Crypto
+              </>
+            )}
+          </button>
 
-      {!coinbaseAvailable && !isProcessing && (
-        <p className="text-sm text-gray-500 text-center mt-3">
-          Crypto payments are being configured. Please try again later.
-        </p>
+          {!coinbaseAvailable && !isProcessing && (
+            <p className="text-sm text-gray-500 text-center mt-3">
+              Crypto payments are being configured. Please try again later.
+            </p>
+          )}
+
+          <p className="text-xs text-gray-400 text-center mt-4">
+            Powered by Coinbase Commerce. Pay with Bitcoin, Ethereum, USDC, and more.
+          </p>
+        </>
       )}
-
-      <p className="text-xs text-gray-400 text-center mt-4">
-        Powered by Coinbase Commerce. Pay with Bitcoin, Ethereum, USDC, and more.
-      </p>
     </div>
   );
 };
