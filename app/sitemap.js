@@ -21,7 +21,6 @@ export default async function sitemap() {
     '/privacy-policy',
     '/terms-of-service',
     '/refund-policy',
-    '/device-compatibility',
     '/faq',
   ];
 

@@ -18,6 +18,8 @@ export default function robots() {
           '/payment-success/',
           '/qr/',
           '/data-usage/',
+          '/login/',
+          '/device-compatibility/',
         ],
       },
       {
@@ -38,6 +40,8 @@ export default function robots() {
           '/payment-success/',
           '/qr/',
           '/data-usage/',
+          '/login/',
+          '/device-compatibility/',
         ],
       },
     ],
