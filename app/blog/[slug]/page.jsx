@@ -25,10 +25,15 @@ const OG_LOCALE_MAP = {
 
 // Generate metadata dynamically based on the blog post
 export async function generateMetadata({ params }) {
-  const headersList = await headers();
-  const pathname = headersList.get('x-pathname') || '';
-  const locale = getLocaleFromPathname(pathname);
-  const post = await getBlogPost(params.slug, locale);
+  let post, locale;
+  try {
+    const headersList = await headers();
+    const pathname = headersList.get('x-pathname') || '';
+    locale = getLocaleFromPathname(pathname);
+    post = await getBlogPost(params.slug, locale);
+  } catch (err) {
+    console.error('Blog metadata fetch error:', err?.message);
+  }
 
   if (!post) {
     return {
@@ -121,10 +126,17 @@ function getReadingTime(content) {
 }
 
 export default async function BlogPostPage({ params }) {
-  const headersList = await headers();
-  const pathname = headersList.get('x-pathname') || '';
-  const locale = getLocaleFromPathname(pathname);
-  const post = await getBlogPost(params.slug, locale);
+  let post;
+  let locale;
+  try {
+    const headersList = await headers();
+    const pathname = headersList.get('x-pathname') || '';
+    locale = getLocaleFromPathname(pathname);
+    post = await getBlogPost(params.slug, locale);
+  } catch (err) {
+    console.error('Blog post fetch error:', err?.message);
+    notFound();
+  }
 
   if (!post) {
     notFound();
