@@ -11,7 +11,9 @@
     "export": "next export",
     "firebase:deploy": "firebase deploy",
     "firebase:functions:deploy": "firebase deploy --only functions",
-    "firebase:hosting:deploy": "firebase deploy --only hosting"
+    "firebase:hosting:deploy": "firebase deploy --only hosting",
+    "generate:guides": "node scripts/generate-country-guides.js",
+    "generate:guides:dry": "node scripts/generate-country-guides.js --dry-run"
   },
   "keywords": [
     "esim",
@@ -22,6 +24,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
     "@supabase/supabase-js": "^2.90.1",
     "@tanstack/react-query": "^5.85.6",
     "@types/node": "^24.3.0",

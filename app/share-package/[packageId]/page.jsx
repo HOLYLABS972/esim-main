@@ -11,7 +11,6 @@ import {
   Shield,
   Zap,
   DollarSign,
-  Coins,
   Loader2,
   ChevronDown,
   HelpCircle
