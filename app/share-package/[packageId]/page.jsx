@@ -832,22 +832,6 @@ const SharePackagePage = () => {
                   <DollarSign className="w-6 h-6" />
                   <span>{t('sharePackage.purchaseNow', 'Purchase Now')} - Credit/Debit Card</span>
                 </button>
-                <button
-                  onClick={() => handlePurchase('coinbase')}
-                  disabled={!acceptedRefund || isProcessing}
-                  className={`w-full flex items-center justify-center space-x-3 py-4 px-6 rounded-xl transition-all duration-200 font-medium text-lg shadow-lg text-white ${
-                    isProcessing
-                      ? 'bg-gray-700 ring-2 ring-gray-300'
-                      : 'bg-black hover:bg-gray-900'
-                  } ${!acceptedRefund || isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
-                >
-                  {isProcessing ? (
-                    <Loader2 className="w-6 h-6 animate-spin" />
-                  ) : (
-                    <Coins className="w-6 h-6" />
-                  )}
-                  <span>{t('sharePackage.purchaseNow', 'Purchase Now')} - Cryptocurrency</span>
-                </button>
               </div>
 
               {/* How to Use Section */}
