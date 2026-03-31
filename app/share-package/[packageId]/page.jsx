@@ -720,13 +720,16 @@ const SharePackagePage = () => {
           <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">How it works</p>
           <div className="space-y-4">
             {[
-              { step: '1', title: 'Purchase', desc: 'Complete checkout in seconds with card or Apple Pay.', color: 'bg-green-500' },
-              { step: '2', title: 'Receive QR code', desc: 'Get your eSIM QR code instantly by email.', color: 'bg-blue-500' },
-              { step: '3', title: 'Scan & activate', desc: 'Scan the QR code in your phone settings to install.', color: 'bg-purple-500' },
-              { step: '4', title: 'Connect on arrival', desc: 'Your data starts when you land. No waiting.', color: 'bg-orange-500' },
+              { step: '1', title: 'Purchase', desc: 'Complete checkout in seconds with card or Apple Pay.', color: '#22c55e' },
+              { step: '2', title: 'Receive QR code', desc: 'Get your eSIM QR code instantly by email.', color: '#3b82f6' },
+              { step: '3', title: 'Scan & activate', desc: 'Scan the QR code in your phone settings to install.', color: '#a855f7' },
+              { step: '4', title: 'Connect on arrival', desc: 'Your data starts when you land. No waiting.', color: '#f97316' },
             ].map((item) => (
               <div key={item.step} className="flex items-start gap-3">
-                <div className={`${item.color} w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-white text-xs font-black`}>
+                <div
+                  className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-white text-xs font-black"
+                  style={{ backgroundColor: item.color }}
+                >
                   {item.step}
                 </div>
                 <div>
