@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft,
   Globe,
@@ -13,7 +13,12 @@ import {
   DollarSign,
   Loader2,
   ChevronDown,
-  HelpCircle
+  HelpCircle,
+  Check,
+  Smartphone,
+  Signal,
+  Star,
+  CreditCard,
 } from 'lucide-react';
 import { useAuth } from '../../../src/contexts/AuthContext';
 import { useI18n } from '../../../src/contexts/I18nContext';
@@ -21,16 +26,13 @@ import { getLanguageDirection } from '../../../src/utils/languageUtils';
 import toast from 'react-hot-toast';
 
 const SharePackagePage = () => {
-  console.log('🎯 SharePackagePage component loaded');
-  console.log('🎯 Component is rendering');
-  
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { currentUser } = useAuth();
   const { t, locale } = useI18n();
   let packageId = params.packageId;
-  
+
   // Redirect topup packages to base SIM package
   if (packageId && packageId.endsWith('-topup')) {
     const baseId = packageId.slice(0, -'-topup'.length);
@@ -39,27 +41,15 @@ const SharePackagePage = () => {
     }
     packageId = baseId;
   }
-  
-  console.log('🔐 Auth Debug:', {
-    currentUser: currentUser,
-    hasUser: !!currentUser,
-    userUid: currentUser?.uid,
-    userEmail: currentUser?.email
-  });
-  
-  console.log('🎯 Package ID:', packageId);
-  console.log('🎯 Current user:', currentUser ? 'logged in' : 'not logged in');
-  
-  // RTL support
+
   const isRTL = getLanguageDirection(locale) === 'rtl';
-  
-  // Get country info and affiliate ref from URL parameters
+
   const [urlCountryCode, setUrlCountryCode] = useState(null);
   const [urlCountryFlag, setUrlCountryFlag] = useState(null);
   const [affiliateRef, setAffiliateRef] = useState(null);
   const [displayCurrency, setDisplayCurrency] = useState(null);
 
-  // Approximate exchange rates from USD (updated periodically)
+  // Exchange rates from USD
   const EXCHANGE_RATES = {
     USD: { rate: 1, symbol: '$' },
     EUR: { rate: 0.92, symbol: '€' },
@@ -103,7 +93,6 @@ const SharePackagePage = () => {
 
   const formatDisplayPrice = (usdPrice) => {
     const { price, symbol, code } = convertPrice(usdPrice);
-    // For currencies with large values (JPY, KRW, IDR), no decimals
     if (['JPY', 'KRW', 'IDR', 'RUB'].includes(code)) {
       return `${symbol}${Math.round(price)}`;
     }
@@ -116,55 +105,44 @@ const SharePackagePage = () => {
       setUrlCountryCode(searchParams.get('country'));
       setUrlCountryFlag(searchParams.get('flag'));
       const ref = searchParams.get('ref');
-      if (ref) {
-        setAffiliateRef(ref);
-        console.log('🤝 Affiliate ref detected:', ref);
-      }
+      if (ref) setAffiliateRef(ref);
       const curr = searchParams.get('currency');
-      if (curr) {
-        const upper = curr.toUpperCase();
-        setDisplayCurrency(upper);
-        console.log('💱 Display currency:', upper);
-      }
+      if (curr) setDisplayCurrency(curr.toUpperCase());
     }
   }, []);
-  
+
   const [packageData, setPackageData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [regularSettings, setRegularSettings] = useState({ discountPercentage: 10, minimumPrice: 0.5 });
-
   const [balanceInfo, setBalanceInfo] = useState({ balance: 0, hasInsufficientFunds: false, minimumRequired: 4, mode: 'production' });
   const [acceptedRefund, setAcceptedRefund] = useState(false);
-  const [coinbaseAvailable, setCoinbaseAvailable] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
-
-  // FAQ
   const [openFaq, setOpenFaq] = useState(null);
+
   const FAQ_ITEMS = [
     {
       q: t('sharePackage.faq.q1', 'What is an eSIM?'),
-      a: t('sharePackage.faq.a1', 'An eSIM is a digital SIM that allows you to activate a cellular plan without a physical SIM card. It\'s built into most modern smartphones and works instantly after purchase.')
+      a: t('sharePackage.faq.a1', "An eSIM is a digital SIM that allows you to activate a cellular plan without a physical SIM card. It's built into most modern smartphones and works instantly after purchase.")
     },
     {
       q: t('sharePackage.faq.q2', 'How do I install my eSIM?'),
-      a: t('sharePackage.faq.a2', 'After purchase, you\'ll receive a QR code via email. Simply scan it with your phone\'s camera or go to Settings > Cellular > Add eSIM and follow the instructions.')
+      a: t('sharePackage.faq.a2', "After purchase, you'll receive a QR code via email. Simply scan it with your phone's camera or go to Settings > Cellular > Add eSIM and follow the instructions.")
     },
     {
       q: t('sharePackage.faq.q3', 'Is my device compatible?'),
-      a: t('sharePackage.faq.a3', 'Most smartphones released after 2018 support eSIM, including iPhone XS and newer, Samsung Galaxy S20 and newer, and Google Pixel 3 and newer. Check your device settings for eSIM support.')
+      a: t('sharePackage.faq.a3', 'Most smartphones released after 2018 support eSIM, including iPhone XS and newer, Samsung Galaxy S20 and newer, and Google Pixel 3 and newer.')
     },
     {
       q: t('sharePackage.faq.q4', 'When does the data plan start?'),
-      a: t('sharePackage.faq.a4', 'Your data plan starts when you first connect to a mobile network in your destination country, not when you install the eSIM. You can install it before your trip.')
+      a: t('sharePackage.faq.a4', 'Your data plan starts when you first connect to a mobile network in your destination country, not when you install the eSIM.')
     },
     {
       q: t('sharePackage.faq.q5', 'Can I get a refund?'),
-      a: t('sharePackage.faq.a5', 'Yes, unused eSIMs are eligible for a full refund within 14 days of purchase. Once the eSIM has been activated and data has been used, it cannot be refunded. Please review our refund policy for details.')
+      a: t('sharePackage.faq.a5', 'Yes, unused eSIMs are eligible for a full refund within 14 days of purchase. Once activated and data has been used, it cannot be refunded.')
     }
   ];
 
-  // Data variant selection
   const DATA_VARIANTS = [1, 2, 5, 10, 20];
   const [selectedDataGB, setSelectedDataGB] = useState(1);
   const [allPlans, setAllPlans] = useState([]);
@@ -172,12 +150,8 @@ const SharePackagePage = () => {
 
   const loadFromAPI = useCallback(async () => {
     try {
-      console.log('🔍 Searching for package:', packageId);
-      // Packages are now loaded from Firestore dataplans collection
-      // This function is kept for backwards compatibility
       return false;
     } catch (error) {
-      console.error('❌ Error loading package:', error);
       return false;
     }
   }, [packageId]);
@@ -185,8 +159,6 @@ const SharePackagePage = () => {
   const loadPackageData = useCallback(async () => {
     try {
       setLoading(true);
-      console.log('🔍 Loading package data for ID:', packageId);
-
       const { createClient } = await import('@supabase/supabase-js');
       const sb = createClient(
         'https://uhpuqiptxcjluwsetoev.supabase.co',
@@ -197,18 +169,17 @@ const SharePackagePage = () => {
 
       if (pkgRow) {
         const data = pkgRow;
-        console.log('✅ Found package in Supabase dataplans:', data);
         const mainPkg = { id: data.id, ...data };
         setPackageData(mainPkg);
 
         const isGlobalPlan = data.is_global === true || data.type === 'global' || data.region === 'global';
         const isRegionalPlan = data.is_regional === true || data.type === 'regional';
         const countryCode = data.country_code || (data.country_codes && data.country_codes[0]) || urlCountryCode;
+
         if (countryCode) {
           setPlansLoading(true);
           try {
             let plans = [];
-
             if (isGlobalPlan || isRegionalPlan || countryCode === 'REGIONAL') {
               const operatorPrefix = (packageId || '').split('-')[0];
               const { data: regionalData } = await sb
@@ -217,9 +188,7 @@ const SharePackagePage = () => {
                 .contains('country_codes', ['REGIONAL']);
               const plansMap = new Map();
               (regionalData || []).forEach(row => {
-                if (row.id.startsWith(operatorPrefix + '-')) {
-                  plansMap.set(row.id, row);
-                }
+                if (row.id.startsWith(operatorPrefix + '-')) plansMap.set(row.id, row);
               });
               plans = Array.from(plansMap.values()).filter(p => p.enabled !== false && p.hidden !== true && !p.id.endsWith('-topup') && p.type !== 'topup');
             } else {
@@ -232,10 +201,7 @@ const SharePackagePage = () => {
               (d2 || []).forEach(row => plansMap.set(row.id, row));
               plans = Array.from(plansMap.values()).filter(p => p.enabled !== false && p.hidden !== true && !p.id.endsWith('-topup') && p.type !== 'topup');
             }
-            console.log(`✅ Found ${plans.length} plans for country ${countryCode}`, plans.map(p => ({ id: p.id, data: p.data, price: p.price })));
             setAllPlans(plans);
-
-            // Auto-select 1GB if available, otherwise keep current package's data
             const currentData = parseFloat(data.data);
             if (DATA_VARIANTS.includes(currentData)) {
               setSelectedDataGB(currentData);
@@ -249,8 +215,6 @@ const SharePackagePage = () => {
           }
         }
         return;
-      } else {
-        console.log('❌ Package not found in Firebase dataplans');
       }
     } catch (error) {
       console.error('❌ Error loading package data:', error);
@@ -260,50 +224,57 @@ const SharePackagePage = () => {
     }
   }, [packageId, loadFromAPI, urlCountryCode]);
 
-  // Load discount settings
   const loadDiscountSettings = useCallback(async () => {
     try {
       const { getRegularSettings } = await import('../../../src/services/settingsService');
       const regular = await getRegularSettings();
       setRegularSettings(regular);
-      console.log('⚙️ Loaded discount settings:', { regular });
     } catch (error) {
       console.error('Error loading discount settings:', error);
     }
   }, []);
 
   useEffect(() => {
-    if (packageId) {
-      loadPackageData();
-    }
+    if (packageId) loadPackageData();
   }, [packageId, loadPackageData]);
 
   useEffect(() => {
     loadDiscountSettings();
   }, [loadDiscountSettings]);
 
-  // Derive the active plan based on selected data variant
+  useEffect(() => {
+    if (!currentUser) return;
+    const checkMode = async () => {
+      try {
+        const { configService } = await import('../../../src/services/configService');
+        const apiKeyMode = await configService.getApiKeyMode();
+        setBalanceInfo({
+          balance: 0,
+          hasInsufficientFunds: false,
+          minimumRequired: 4,
+          mode: apiKeyMode,
+        });
+      } catch (error) {
+        console.error('Error detecting mode:', error);
+      }
+    };
+    checkMode();
+  }, [currentUser]);
+
   const activePlan = React.useMemo(() => {
     if (!packageData) return null;
     if (allPlans.length === 0) return packageData;
-
-    // Find the cheapest plan matching selected GB
     const matching = allPlans
       .filter(p => parseFloat(p.data) === selectedDataGB)
       .sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
-
     return matching.length > 0 ? matching[0] : packageData;
   }, [packageData, allPlans, selectedDataGB]);
 
-  // Check which data variants are actually available
   const availableVariants = React.useMemo(() => {
     if (allPlans.length === 0) return DATA_VARIANTS;
-    return DATA_VARIANTS.filter(gb =>
-      allPlans.some(p => parseFloat(p.data) === gb)
-    );
+    return DATA_VARIANTS.filter(gb => allPlans.some(p => parseFloat(p.data) === gb));
   }, [allPlans]);
 
-  // Update browser URL when active plan changes
   useEffect(() => {
     if (activePlan && activePlan.id !== packageId) {
       const params = new URLSearchParams(window.location.search);
@@ -312,143 +283,34 @@ const SharePackagePage = () => {
     }
   }, [activePlan, packageId]);
 
-  // Check business balance and detect API key mode
-  useEffect(() => {
-    console.log('🚀 Balance check useEffect triggered');
-    console.log('🚀 Current user from useAuth:', currentUser ? currentUser.uid : 'null');
-    
-    // Only run balance check if user is authenticated
-    if (!currentUser) {
-      console.log('⏳ User not authenticated yet, skipping balance check');
-      return;
-    }
-    
-    const checkMode = async () => {
-      try {
-        console.log('🔍 Starting mode detection...');
-        const { configService } = await import('../../../src/services/configService');
-        
-        // Detect API key mode from frontend (no backend needed)
-        const apiKeyMode = await configService.getApiKeyMode();
-        console.log('🔑 Detected API key mode:', apiKeyMode);
-        
-        // Get API key for debugging
-        const { configService: configService2 } = await import('../../../src/services/configService');
-        const airaloConfig = await configService2.getAiraloConfig();
-        
-        // Set balance info with mode detection
-        const balanceInfo = {
-          balance: 0,
-          hasInsufficientFunds: false, // Allow purchases in both sandbox and production
-          minimumRequired: 4,
-          mode: apiKeyMode,
-          apiKey: airaloConfig?.apiKey || 'No API key found (localhost)'
-        };
-        
-        setBalanceInfo(balanceInfo);
-        
-        console.log('🔑 Final mode used:', apiKeyMode);
-        console.log('🚫 Will show error banner:', balanceInfo.hasInsufficientFunds && apiKeyMode !== 'sandbox');
-        console.log('🔒 Will disable purchase button:', balanceInfo.hasInsufficientFunds && apiKeyMode !== 'sandbox');
-        console.log('📊 Debug info:', {
-          hasInsufficientFunds: balanceInfo.hasInsufficientFunds,
-          mode: apiKeyMode,
-          showBanner: balanceInfo.hasInsufficientFunds && apiKeyMode !== 'sandbox',
-          disableButton: balanceInfo.hasInsufficientFunds && apiKeyMode !== 'sandbox'
-        });
-        
-        // Log URL parameters for debugging
-        if (urlCountryCode || urlCountryFlag) {
-          console.log('🌐 URL parameters detected:', {
-            country: urlCountryCode,
-            flag: urlCountryFlag,
-            detectedMode: apiKeyMode,
-            balance: balanceInfo
-          });
-        }
-      } catch (error) {
-        console.error('Error detecting mode:', error);
-      }
-    };
-    checkMode();
-  }, [currentUser, urlCountryCode, urlCountryFlag]); // Run when user authentication changes
-
-  // Check if Coinbase is available
-  useEffect(() => {
-    const checkCoinbaseAvailability = async () => {
-      try {
-        const { coinbaseService } = await import('../../../src/services/coinbaseService');
-        const available = await coinbaseService.initialize();
-        console.log('🔍 Coinbase availability check:', available);
-        setCoinbaseAvailable(available);
-        
-        // If initialization failed, still show the button but log for debugging
-        if (!available) {
-          console.log('⚠️ Coinbase credentials not found. Please configure in Firestore config/coinbase or environment variables.');
-        }
-      } catch (err) {
-        console.error('❌ Error checking Coinbase availability:', err);
-        // Still show button even if check fails - let the actual purchase handle the error
-        setCoinbaseAvailable(true);
-      }
-    };
-
-    checkCoinbaseAvailability();
-  }, []);
-
-  const handlePurchase = async (paymentMethod = 'stripe') => {
+  const handlePurchase = async (paymentMethod = 'paddle') => {
     if (!acceptedRefund) {
       toast.error('Please accept the refund policy to continue');
       return;
     }
-    
     const planToUse = activePlan || packageData;
     if (!planToUse) {
       toast.error('Package data not loaded yet');
       return;
     }
+    if (isProcessing) return;
 
-    console.log('🛒 Purchase plan:', { planId: planToUse.id, planName: planToUse.name, data: planToUse.data, price: planToUse.price, selectedDataGB });
-
-    if (isProcessing) {
-      return;
-    }
-
-    // No login required: email comes from Paddle at checkout
     const customerEmail = currentUser?.email ?? null;
-
     setSelectedPaymentMethod(paymentMethod);
     setIsProcessing(true);
-    
-    // Calculate discounted price
-    const originalPrice = parseFloat(planToUse.price);
 
-    // Apply regular discount
+    const originalPrice = parseFloat(planToUse.price);
     const appliedDiscountPercent = regularSettings.discountPercentage || 10;
     let finalPrice = originalPrice * (100 - appliedDiscountPercent) / 100;
-
-    // Apply minimum price constraint
     const minimumPrice = regularSettings.minimumPrice || 0.5;
     finalPrice = Math.max(minimumPrice, finalPrice);
 
-    console.log('💰 Pricing calculation:', {
-      originalPrice,
-      appliedDiscountPercent,
-      finalPrice,
-      minimumPrice,
-      paymentMethod,
-      customerEmail: customerEmail ?? '(from Paddle)',
-      isAuthenticated: !!currentUser,
-      selectedDataGB
-    });
-
-    // Store package data in localStorage for the checkout process
     const checkoutData = {
       packageId: planToUse.id,
       packageName: planToUse.name,
       packageDescription: planToUse.description,
       price: finalPrice,
-      originalPrice: originalPrice,
+      originalPrice,
       currency: planToUse.currency || 'USD',
       data: planToUse.data,
       dataUnit: planToUse.dataUnit || 'GB',
@@ -458,56 +320,44 @@ const SharePackagePage = () => {
       speed: planToUse.speed
     };
 
-    console.log('💾 Storing checkout data:', checkoutData);
-
     try {
       localStorage.setItem('selectedPackage', JSON.stringify(checkoutData));
-    } catch (e) {
-      console.warn('⚠️ Could not store in localStorage (likely in iframe):', e);
-    }
+    } catch (e) {}
 
     try {
-      // Generate unique order ID for each purchase
       const uniqueOrderId = `${planToUse.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      // Use Airalo package slug for order/API; fallback to id if no slug
       const airaloPackageSlug = planToUse.slug || planToUse.airalo_slug || planToUse.id;
 
-      // Create order data for payment service
       const orderData = {
         orderId: uniqueOrderId,
         planId: airaloPackageSlug,
         planName: planToUse.name,
-        customerEmail: customerEmail,
-        amount: finalPrice, // Use discounted price
+        customerEmail,
+        amount: finalPrice,
         currency: 'usd',
-        originalAmount: originalPrice, // Include original amount for reference
+        originalAmount: originalPrice,
         userId: currentUser?.uid || null,
         isGuest: !currentUser,
         affiliateRef: affiliateRef || null,
         countryCode: planToUse.country_code || (planToUse.country_codes && planToUse.country_codes[0]) || null,
         countryName: planToUse.country_name || null,
       };
-      
-      console.log('💳 Order data for payment:', orderData);
 
-      // Store order info (for iframe compatibility, also pass in URL)
       const pendingOrder = {
         orderId: uniqueOrderId,
         planId: airaloPackageSlug,
-        customerEmail: customerEmail,
+        customerEmail,
         amount: finalPrice,
         currency: 'usd',
-        paymentMethod: paymentMethod,
+        paymentMethod,
         isGuest: !currentUser,
         affiliateRef: affiliateRef || null
       };
-      
+
       try {
         localStorage.setItem('pendingEsimOrder', JSON.stringify(pendingOrder));
-      } catch (e) {
-        console.warn('⚠️ Could not store in localStorage (likely in iframe):', e);
-      }
-      
+      } catch (e) {}
+
       const isInIframe = window !== window.top;
 
       if (paymentMethod === 'paddle') {
@@ -518,11 +368,7 @@ const SharePackagePage = () => {
         await coinbaseService.createCheckoutSession(orderData);
       }
 
-      // When inside an iframe, payment opens in a new tab so re-enable the button
-      if (isInIframe) {
-        setIsProcessing(false);
-      }
-      
+      if (isInIframe) setIsProcessing(false);
     } catch (error) {
       console.error('❌ Payment failed:', error);
       toast.error(error.message || 'Failed to process payment');
@@ -530,68 +376,43 @@ const SharePackagePage = () => {
     }
   };
 
-  const formatPrice = (price) => {
-    // Handle cases where price might already be a string with currency symbol
-    let numericPrice = price;
-    if (typeof price === 'string') {
-      // Remove any existing currency symbols and parse as number
-      numericPrice = parseFloat(price.replace(/[$€£¥]/g, '')) || 0;
-    }
-    
-    // Return just the number without currency symbol
-    return numericPrice.toFixed(2);
-  };
-
   const formatData = (data, unit = 'GB') => {
-    if (data === 'Unlimited' || data === -1) {
-      return 'Unlimited';
-    }
-    
-    // Handle cases where data might already contain the unit
-    if (typeof data === 'string' && data.includes(unit)) {
-      return data; // Return as-is if unit is already included
-    }
-    
-    return `${data} ${unit}`;
+    if (data === 'Unlimited' || data === -1) return 'Unlimited';
+    const num = parseFloat(data);
+    if (isNaN(num)) return data || 'N/A';
+    return `${num} ${unit}`;
   };
 
   const getCountryName = (code) => {
     if (!code) return null;
     try {
-      const displayNames = new Intl.DisplayNames(['en'], { type: 'region' });
-      return displayNames.of(code.toUpperCase());
-    } catch (_) {
+      return new Intl.DisplayNames(['en'], { type: 'region' }).of(code.toUpperCase());
+    } catch {
       return code;
     }
   };
 
   const getCountryFlag = (countryCode) => {
     if (!countryCode || countryCode.length !== 2) return '🌍';
-    
-    // Handle special cases like PT-MA, multi-region codes, etc.
-    if (countryCode.includes('-') || countryCode.length > 2) {
-      return '🌍';
-    }
-    
+    if (countryCode.includes('-') || countryCode.length > 2) return '🌍';
     try {
-      const codePoints = countryCode
-        .toUpperCase()
-        .split('')
-        .map(char => 127397 + char.charCodeAt());
-      
+      const codePoints = countryCode.toUpperCase().split('').map(char => 127397 + char.charCodeAt());
       return String.fromCodePoint(...codePoints);
-    } catch (error) {
-      console.warn('Invalid country code: ' + countryCode, error);
+    } catch {
       return '🌍';
     }
   };
 
+  // ── Loading ────────────────────────────────────────────────────────────────
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">{t('sharePackage.loadingPackageInfo', 'Loading package information...')}</p>
+          <div className="relative w-16 h-16 mx-auto mb-4">
+            <div className="absolute inset-0 rounded-full border-4 border-gray-200"></div>
+            <div className="absolute inset-0 rounded-full border-4 border-t-green-500 animate-spin"></div>
+          </div>
+          <p className="text-gray-500 font-medium">Loading plan details…</p>
         </div>
       </div>
     );
@@ -599,147 +420,131 @@ const SharePackagePage = () => {
 
   if (!packageData) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Globe size={24} className="text-gray-400" />
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+        <div className="text-center max-w-sm">
+          <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-5">
+            <Globe size={32} className="text-gray-400" />
           </div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('sharePackage.packageNotFound', 'Package Not Found')}</h3>
-          <p className="text-gray-600 mb-4">
-            {t('sharePackage.packageNotFoundDesc', 'The package you\'re looking for doesn\'t exist or has been removed')}
-          </p>
+          <h3 className="text-xl font-bold text-gray-900 mb-2">Package Not Found</h3>
+          <p className="text-gray-500 mb-6 text-sm">This plan doesn't exist or has been removed.</p>
           <button
             onClick={() => router.push('/esim-plans')}
-            className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition-colors"
+            className="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-full font-semibold transition-colors"
           >
-            Browse Available Packages
+            Browse Plans
           </button>
         </div>
       </div>
     );
   }
 
-  // Use actual mode detection
-  const currentMode = balanceInfo.mode || 'production'; // Default to production if not detected yet
-  const showBanner = false; // Disable banner to prevent service unavailable message
-  
-  // FORCE SANDBOX MODE FOR TESTING
-  const forceMode = 'sandbox';
-  
-  console.log('🔍 CURRENT MODE:', currentMode);
-  console.log('🔍 BALANCE INFO:', balanceInfo);
-  console.log('🧪 FORCE MODE:', forceMode);
+  const plan = activePlan || packageData;
+  const countryName = plan.country_name || getCountryName(plan.country_code) || plan.name || 'eSIM Plan';
+  const flag = urlCountryFlag || (plan.country_code ? getCountryFlag(plan.country_code) : '🌍');
+  const originalPrice = parseFloat(plan.price);
+  const discountPercent = regularSettings.discountPercentage || 10;
+  let finalPrice = originalPrice * (100 - discountPercent) / 100;
+  finalPrice = Math.max(regularSettings.minimumPrice || 0.5, finalPrice);
 
   return (
-    <div className="min-h-screen bg-gray-50" dir={isRTL ? 'rtl' : 'ltr'}>
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-4 py-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => router.back()}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5 text-gray-600" />
-              </button>
-              <div className="flex items-center gap-2">
-                <h1 className="text-xl font-bold text-gray-900">{t('sharePackage.packageDetails', 'Package Details')}</h1>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div className="min-h-screen bg-[#f7f7f8]" dir={isRTL ? 'rtl' : 'ltr'}>
 
-      {/* Sandbox Mode Banner - Allow purchases */}
-      {currentMode === 'sandbox' && showBanner && (
-        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mx-4 mt-4 rounded-r-lg">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-yellow-800">
-                Test Mode - Sandbox Environment
-              </h3>
-              <div className="mt-2 text-sm text-yellow-700">
-                <p>
-                  You are currently in sandbox mode. This is a test environment with mock data. Purchases are allowed for testing purposes.
-                </p>
-                <p className="mt-1 font-mono text-xs">
-                  RoamJet API Key: {process.env.NEXT_PUBLIC_ROAMJET_API_KEY || 'Not set'}
-                </p>
-              </div>
-            </div>
-          </div>
+      {/* ── Sticky Header ─────────────────────────────────────────────────── */}
+      <header className="bg-white border-b border-gray-100 sticky top-0 z-20">
+        <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
+          <button
+            onClick={() => router.back()}
+            className="flex items-center gap-1.5 text-gray-500 hover:text-gray-800 transition-colors text-sm font-medium"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back
+          </button>
+          <span className="text-sm font-semibold text-gray-900">RoamJet eSIM</span>
+          <div className="w-16" />
         </div>
-      )}
+      </header>
 
-      {/* Production Mode Banner - Block purchases */}
-      {currentMode === 'production' && showBanner && (
-        <div className="bg-red-50 border-l-4 border-red-400 p-4 mx-4 mt-4 rounded-r-lg">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-red-800">
-                Technical Issues - Service Temporarily Unavailable
-              </h3>
-              <div className="mt-2 text-sm text-red-700">
-                <p>
-                  Our service is currently experiencing technical difficulties. Please check back later or contact support for assistance.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <div className="max-w-2xl mx-auto px-4 pb-16 pt-0">
 
-      {/* Content */}
-      <div className="w-full">
+        {/* ── Hero Card ─────────────────────────────────────────────────────── */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white shadow-lg overflow-hidden"
+          transition={{ duration: 0.35 }}
+          className="mt-4 rounded-3xl overflow-hidden shadow-md"
+          style={{ background: 'linear-gradient(135deg, #1a3c2e 0%, #16a34a 60%, #22c55e 100%)' }}
         >
-          {/* Package Title & Country */}
-          <div className="bg-white p-4 pb-2">
-            <div className="text-center">
-              <span className="text-4xl mb-2 block">
-                {urlCountryFlag || ((activePlan || packageData).country_code ? getCountryFlag((activePlan || packageData).country_code) : '🌍')}
-              </span>
-              <h2 className="text-2xl font-bold text-black">
-                {(activePlan || packageData).country_name || getCountryName((activePlan || packageData).country_code) || (activePlan || packageData).name}
-              </h2>
-              {(activePlan || packageData).operator_image_url && (
-                <div className="flex items-center justify-center gap-2 mt-2">
-                  <img
-                    src={(activePlan || packageData).operator_image_url}
-                    alt={(activePlan || packageData).operator || 'Operator'}
-                    className="h-8 w-auto object-contain"
-                  />
-                  {(activePlan || packageData).operator && (
-                    <span className="text-sm text-gray-500">{(activePlan || packageData).operator}</span>
+          <div className="p-6 pb-5">
+            {/* Flag + country */}
+            <div className="flex items-center gap-3 mb-4">
+              <span className="text-5xl drop-shadow-sm leading-none">{flag}</span>
+              <div>
+                <p className="text-green-200 text-xs font-semibold uppercase tracking-widest mb-0.5">eSIM Plan</p>
+                <h1 className="text-white text-2xl font-extrabold leading-tight">{countryName}</h1>
+              </div>
+            </div>
+
+            {/* Operator badge */}
+            {(plan.operator_image_url || plan.operator) && (
+              <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-sm rounded-full px-3 py-1.5 mb-5">
+                {plan.operator_image_url && (
+                  <img src={plan.operator_image_url} alt={plan.operator} className="h-5 w-auto object-contain" />
+                )}
+                {plan.operator && (
+                  <span className="text-white/90 text-xs font-medium">{plan.operator}</span>
+                )}
+              </div>
+            )}
+
+            {/* Price row */}
+            <div className="flex items-end justify-between">
+              <div>
+                <p className="text-green-200 text-xs mb-0.5">From</p>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-white text-4xl font-black">{formatDisplayPrice(finalPrice)}</span>
+                  {discountPercent > 0 && (
+                    <span className="text-green-300 text-sm line-through">{formatDisplayPrice(originalPrice)}</span>
                   )}
                 </div>
-              )}
-              {!(activePlan || packageData).operator_image_url && (activePlan || packageData).operator && (
-                <p className="text-sm text-gray-500 mt-1">{(activePlan || packageData).operator}</p>
+              </div>
+              {discountPercent > 0 && (
+                <div className="bg-yellow-400 text-yellow-900 text-xs font-black px-3 py-1.5 rounded-full">
+                  {discountPercent}% OFF
+                </div>
               )}
             </div>
           </div>
 
-          {/* Data Variant Selector */}
-          <div className="px-4 py-4">
-            <p className={`text-sm font-medium text-gray-600 mb-3 ${isRTL ? 'text-right' : 'text-left'}`}>
-              {t('sharePackage.selectData', 'Select Data Plan')}
-            </p>
-            <div className="flex gap-2 overflow-x-auto pb-1">
+          {/* Stats bar */}
+          <div className="bg-white/10 backdrop-blur-sm grid grid-cols-3 divide-x divide-white/20">
+            <div className="py-3 text-center">
+              <Wifi className="w-4 h-4 text-green-200 mx-auto mb-1" />
+              <p className="text-white font-bold text-sm">{formatData(plan.data, plan.dataUnit)}</p>
+              <p className="text-green-200 text-xs">Data</p>
+            </div>
+            <div className="py-3 text-center">
+              <Clock className="w-4 h-4 text-green-200 mx-auto mb-1" />
+              <p className="text-white font-bold text-sm">{plan.period || plan.duration || 'N/A'} days</p>
+              <p className="text-green-200 text-xs">Validity</p>
+            </div>
+            <div className="py-3 text-center">
+              <Signal className="w-4 h-4 text-green-200 mx-auto mb-1" />
+              <p className="text-white font-bold text-sm">{plan.speed || '4G/LTE'}</p>
+              <p className="text-green-200 text-xs">Network</p>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* ── Data Variant Selector ─────────────────────────────────────────── */}
+        {availableVariants.length > 1 && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="mt-4 bg-white rounded-2xl p-4 shadow-sm border border-gray-100"
+          >
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Choose your data</p>
+            <div className="grid grid-cols-5 gap-2">
               {DATA_VARIANTS.map((gb) => {
                 const isAvailable = availableVariants.includes(gb);
                 const isSelected = selectedDataGB === gb;
@@ -748,144 +553,235 @@ const SharePackagePage = () => {
                     key={gb}
                     onClick={() => isAvailable && setSelectedDataGB(gb)}
                     disabled={!isAvailable}
-                    className={`flex-1 min-w-[64px] py-3 px-2 rounded-xl text-center font-semibold text-sm transition-all duration-200 border-2 ${
+                    className={`relative py-3 rounded-xl text-center font-bold text-sm transition-all duration-200 ${
                       isSelected
-                        ? 'bg-blue-600 text-white border-blue-600 shadow-lg scale-105'
+                        ? 'bg-green-500 text-white shadow-md shadow-green-200 scale-105'
                         : isAvailable
-                          ? 'bg-white text-gray-800 border-gray-200 hover:border-blue-300 hover:bg-blue-50'
-                          : 'bg-gray-100 text-gray-400 border-gray-100 cursor-not-allowed'
+                          ? 'bg-gray-50 text-gray-700 border-2 border-gray-100 hover:border-green-300 hover:bg-green-50'
+                          : 'bg-gray-50 text-gray-300 border-2 border-gray-100 cursor-not-allowed'
                     }`}
                   >
-                    {gb} GB
+                    {isSelected && (
+                      <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-green-600 rounded-full flex items-center justify-center">
+                        <Check className="w-2.5 h-2.5 text-white" />
+                      </span>
+                    )}
+                    {gb}
+                    <span className="block text-xs font-normal mt-0.5 opacity-75">GB</span>
                   </button>
                 );
               })}
             </div>
-          </div>
+            {plansLoading && (
+              <p className="text-xs text-gray-400 text-center mt-2 flex items-center justify-center gap-1">
+                <Loader2 className="w-3 h-3 animate-spin" /> Loading plans…
+              </p>
+            )}
+          </motion.div>
+        )}
 
-          {/* Selected Plan Details */}
-          {activePlan && (
-            <div className="bg-white px-4 pb-4">
-              <div className="grid grid-cols-3 gap-3">
-                <div className="bg-gray-50 rounded-xl p-3 text-center">
-                  <Wifi className="w-5 h-5 text-blue-600 mx-auto mb-1" />
-                  <div className="text-xs text-gray-500">{t('sharePackage.data', 'Data')}</div>
-                  <div className="font-bold text-black">{formatData(activePlan.data, activePlan.dataUnit)}</div>
+        {/* ── What's Included ───────────────────────────────────────────────── */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="mt-4 bg-white rounded-2xl p-4 shadow-sm border border-gray-100"
+        >
+          <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">What's included</p>
+          <div className="space-y-2.5">
+            {[
+              { icon: <Wifi className="w-4 h-4 text-green-500" />, label: `${formatData(plan.data, plan.dataUnit)} high-speed data` },
+              { icon: <Clock className="w-4 h-4 text-green-500" />, label: `Valid for ${plan.period || plan.duration || 'N/A'} days` },
+              { icon: <Signal className="w-4 h-4 text-green-500" />, label: `${plan.speed || '4G / LTE'} network` },
+              { icon: <Zap className="w-4 h-4 text-green-500" />, label: 'Instant activation after purchase' },
+              { icon: <Globe className="w-4 h-4 text-green-500" />, label: 'No roaming charges' },
+              { icon: <Smartphone className="w-4 h-4 text-green-500" />, label: 'Compatible with all eSIM devices' },
+            ].map((item, i) => (
+              <div key={i} className="flex items-center gap-3">
+                <div className="w-7 h-7 bg-green-50 rounded-full flex items-center justify-center flex-shrink-0">
+                  {item.icon}
                 </div>
-                <div className="bg-gray-50 rounded-xl p-3 text-center">
-                  <Clock className="w-5 h-5 text-blue-600 mx-auto mb-1" />
-                  <div className="text-xs text-gray-500">{t('sharePackage.validity', 'Validity')}</div>
-                  <div className="font-bold text-black">{activePlan.period || activePlan.duration || 'N/A'} {t('sharePackage.days', 'days')}</div>
-                </div>
-                <div className="bg-gray-50 rounded-xl p-3 text-center">
-                  <DollarSign className="w-5 h-5 text-blue-600 mx-auto mb-1" />
-                  <div className="text-xs text-gray-500">{t('sharePackage.price', 'Price')}</div>
-                  {(() => {
-                    const originalPrice = parseFloat(activePlan.price);
-                    const discountPercent = regularSettings.discountPercentage || 10;
-                    let finalPrice = originalPrice * (100 - discountPercent) / 100;
-                    const minimumPrice = regularSettings.minimumPrice || 0.5;
-                    finalPrice = Math.max(minimumPrice, finalPrice);
-                    return (
-                      <div>
-                        <div className="font-bold text-green-600">{formatDisplayPrice(finalPrice)}</div>
-                        <div className="text-xs text-gray-400 line-through">{formatDisplayPrice(parseFloat(activePlan.price))}</div>
-                      </div>
-                    );
-                  })()}
-                </div>
+                <span className="text-sm text-gray-700">{item.label}</span>
               </div>
-            </div>
-          )}
-
-          {/* Purchase Section */}
-          <div className="p-4 pt-0">
-            <div className="max-w-2xl mx-auto">
-              {/* Refund Policy */}
-              <div className="mb-4">
-                <label htmlFor="acceptRefund" className="flex items-start gap-3 text-sm text-gray-700">
-                  <input
-                    id="acceptRefund"
-                    type="checkbox"
-                    checked={acceptedRefund}
-                    onChange={(e) => setAcceptedRefund(e.target.checked)}
-                    className={"mt-1 h-4 w-4 rounded border-gray-300 focus:ring-blue-500 " + (acceptedRefund ? 'text-blue-600' : 'checkbox-red')}
-                  />
-                  <span>
-                    I accept the <a href="https://esim.roamjet.net/refund-policy" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">Refund Policy</a>
-                  </span>
-                </label>
-              </div>
-
-              {/* Payment Buttons - Paddle (Card) and Coinbase */}
-              <div className="space-y-3">
-                <button
-                  onClick={() => handlePurchase('paddle')}
-                  disabled={!acceptedRefund || isProcessing}
-                  className={`w-full flex items-center justify-center space-x-3 py-4 px-6 rounded-xl transition-all duration-200 font-medium text-lg shadow-lg text-white ${
-                    isProcessing
-                      ? 'bg-blue-700 ring-2 ring-blue-300'
-                      : 'bg-blue-600 hover:bg-blue-700'
-                  } ${!acceptedRefund || isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
-                >
-                  <DollarSign className="w-6 h-6" />
-                  <span>{t('sharePackage.purchaseNow', 'Purchase Now')} - Credit/Debit Card</span>
-                </button>
-              </div>
-
-              {/* How to Use Section */}
-              <div className="text-center mt-8">
-                <h3 className={`text-lg font-semibold text-gray-900 mb-4 ${isRTL ? 'text-right' : 'text-center'}`}>{t('sharePackage.howToUse', 'How to Use')}</h3>
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="flex flex-col items-center text-center p-2">
-                    <div className="bg-yellow-100 p-2 rounded-full mb-2">
-                      <Zap className="w-5 h-5 text-yellow-600" />
-                    </div>
-                    <h4 className="font-medium text-gray-900 text-xs">{t('sharePackage.instantActivation', 'Instant Activation')}</h4>
-                  </div>
-                  <div className="flex flex-col items-center text-center p-2">
-                    <div className="bg-green-100 p-2 rounded-full mb-2">
-                      <Shield className="w-5 h-5 text-green-600" />
-                    </div>
-                    <h4 className="font-medium text-gray-900 text-xs">{t('sharePackage.secureReliable', 'Secure & Reliable')}</h4>
-                  </div>
-                  <div className="flex flex-col items-center text-center p-2">
-                    <div className="bg-blue-100 p-2 rounded-full mb-2">
-                      <Globe className="w-5 h-5 text-blue-600" />
-                    </div>
-                    <h4 className="font-medium text-gray-900 text-xs">{t('sharePackage.globalCoverage', 'Global Coverage')}</h4>
-                  </div>
-                </div>
-              </div>
-
-              {/* FAQ Section */}
-              <div className="mt-8">
-                <div className="flex items-center justify-center gap-2 mb-4">
-                  <HelpCircle className="w-5 h-5 text-blue-600" />
-                  <h3 className="text-lg font-semibold text-gray-900">{t('sharePackage.faq.title', 'Frequently Asked Questions')}</h3>
-                </div>
-                <div className="space-y-2">
-                  {FAQ_ITEMS.map((item, idx) => (
-                    <div key={idx} className="border border-gray-200 rounded-xl overflow-hidden">
-                      <button
-                        onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
-                        className="w-full flex items-center justify-between px-4 py-3 text-left bg-white hover:bg-gray-50 transition-colors"
-                      >
-                        <span className="font-medium text-sm text-gray-900">{item.q}</span>
-                        <ChevronDown className={`w-4 h-4 text-gray-500 flex-shrink-0 ml-2 transition-transform duration-200 ${openFaq === idx ? 'rotate-180' : ''}`} />
-                      </button>
-                      {openFaq === idx && (
-                        <div className="px-4 pb-3 text-sm text-gray-600 leading-relaxed">
-                          {item.a}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+            ))}
           </div>
         </motion.div>
+
+        {/* ── Trust Badges ──────────────────────────────────────────────────── */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="mt-4 grid grid-cols-3 gap-3"
+        >
+          {[
+            { icon: <Shield className="w-5 h-5 text-green-500" />, label: 'Secure Payment' },
+            { icon: <Zap className="w-5 h-5 text-yellow-500" />, label: 'Instant QR Code' },
+            { icon: <Star className="w-5 h-5 text-orange-400" />, label: '24/7 Support' },
+          ].map((b, i) => (
+            <div key={i} className="bg-white rounded-2xl p-3 text-center shadow-sm border border-gray-100">
+              <div className="flex justify-center mb-1.5">{b.icon}</div>
+              <p className="text-xs font-semibold text-gray-600">{b.label}</p>
+            </div>
+          ))}
+        </motion.div>
+
+        {/* ── Purchase Card ─────────────────────────────────────────────────── */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25 }}
+          className="mt-4 bg-white rounded-2xl p-5 shadow-sm border border-gray-100"
+        >
+          {/* Price summary */}
+          <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-100">
+            <div>
+              <p className="text-xs text-gray-500 mb-0.5">Total price</p>
+              <div className="flex items-baseline gap-2">
+                <span className="text-2xl font-black text-gray-900">{formatDisplayPrice(finalPrice)}</span>
+                {discountPercent > 0 && (
+                  <span className="text-sm text-gray-400 line-through">{formatDisplayPrice(originalPrice)}</span>
+                )}
+              </div>
+            </div>
+            {discountPercent > 0 && (
+              <div className="bg-green-50 border border-green-200 rounded-xl px-3 py-1.5 text-center">
+                <p className="text-green-700 text-xs font-bold">Save {discountPercent}%</p>
+                <p className="text-green-600 text-xs">{formatDisplayPrice(originalPrice - finalPrice)} off</p>
+              </div>
+            )}
+          </div>
+
+          {/* Refund checkbox */}
+          <label className="flex items-start gap-3 mb-4 cursor-pointer group">
+            <div className="relative mt-0.5 flex-shrink-0">
+              <input
+                type="checkbox"
+                checked={acceptedRefund}
+                onChange={(e) => setAcceptedRefund(e.target.checked)}
+                className="sr-only"
+              />
+              <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${
+                acceptedRefund ? 'bg-green-500 border-green-500' : 'border-gray-300 bg-white group-hover:border-green-400'
+              }`}>
+                {acceptedRefund && <Check className="w-3 h-3 text-white" />}
+              </div>
+            </div>
+            <span className="text-sm text-gray-600 leading-relaxed">
+              I accept the{' '}
+              <a
+                href="https://esim.roamjet.net/refund-policy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-green-600 font-semibold hover:underline"
+              >
+                Refund Policy
+              </a>
+            </span>
+          </label>
+
+          {/* CTA Button */}
+          <button
+            onClick={() => handlePurchase('paddle')}
+            disabled={!acceptedRefund || isProcessing}
+            className={`w-full flex items-center justify-center gap-2.5 py-4 px-6 rounded-2xl font-bold text-base transition-all duration-200 ${
+              !acceptedRefund || isProcessing
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : 'bg-green-500 hover:bg-green-600 text-white shadow-lg shadow-green-200 active:scale-[0.98]'
+            }`}
+          >
+            {isProcessing ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                Processing…
+              </>
+            ) : (
+              <>
+                <CreditCard className="w-5 h-5" />
+                Buy Now · {formatDisplayPrice(finalPrice)}
+              </>
+            )}
+          </button>
+
+          {/* Payment icons */}
+          <div className="mt-3 flex items-center justify-center gap-2">
+            <Shield className="w-3.5 h-3.5 text-gray-400" />
+            <p className="text-xs text-gray-400">Secured by Paddle · Visa · Mastercard · Apple Pay</p>
+          </div>
+        </motion.div>
+
+        {/* ── How It Works ──────────────────────────────────────────────────── */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="mt-4 bg-white rounded-2xl p-5 shadow-sm border border-gray-100"
+        >
+          <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">How it works</p>
+          <div className="space-y-4">
+            {[
+              { step: '1', title: 'Purchase', desc: 'Complete checkout in seconds with card or Apple Pay.', color: 'bg-green-500' },
+              { step: '2', title: 'Receive QR code', desc: 'Get your eSIM QR code instantly by email.', color: 'bg-blue-500' },
+              { step: '3', title: 'Scan & activate', desc: 'Scan the QR code in your phone settings to install.', color: 'bg-purple-500' },
+              { step: '4', title: 'Connect on arrival', desc: 'Your data starts when you land. No waiting.', color: 'bg-orange-500' },
+            ].map((item) => (
+              <div key={item.step} className="flex items-start gap-3">
+                <div className={`${item.color} w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-white text-xs font-black`}>
+                  {item.step}
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-gray-900">{item.title}</p>
+                  <p className="text-xs text-gray-500 mt-0.5">{item.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* ── FAQ ───────────────────────────────────────────────────────────── */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35 }}
+          className="mt-4 bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100"
+        >
+          <div className="px-5 pt-5 pb-3 flex items-center gap-2">
+            <HelpCircle className="w-4 h-4 text-gray-400" />
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">FAQ</p>
+          </div>
+          <div className="divide-y divide-gray-50">
+            {FAQ_ITEMS.map((item, idx) => (
+              <div key={idx}>
+                <button
+                  onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
+                  className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-gray-50 transition-colors"
+                >
+                  <span className="text-sm font-semibold text-gray-800 pr-4">{item.q}</span>
+                  <ChevronDown className={`w-4 h-4 text-gray-400 flex-shrink-0 transition-transform duration-200 ${openFaq === idx ? 'rotate-180' : ''}`} />
+                </button>
+                <AnimatePresence>
+                  {openFaq === idx && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="overflow-hidden"
+                    >
+                      <p className="px-5 pb-4 text-sm text-gray-500 leading-relaxed">{item.a}</p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* ── Footer note ───────────────────────────────────────────────────── */}
+        <p className="text-center text-xs text-gray-400 mt-6">
+          Powered by <span className="font-semibold text-gray-500">RoamJet</span> · eSIM plans for 200+ countries
+        </p>
+
       </div>
     </div>
   );
