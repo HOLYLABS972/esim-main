@@ -47,6 +47,7 @@ export async function POST(request) {
         type: pkg.type || categorizePlan(pkg),
         country_codes: pkg.country_codes || [],
         operator: pkg.operator?.title || '',
+        operator_image_url: pkg.operator?.image?.url || pkg.operator?.imageUrl || null,
         enabled: true,
         hidden: false,
         updated_at: new Date().toISOString(),

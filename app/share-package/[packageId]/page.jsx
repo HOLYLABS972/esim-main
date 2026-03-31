@@ -717,6 +717,21 @@ const SharePackagePage = () => {
               <h2 className="text-2xl font-bold text-black">
                 {(activePlan || packageData).country_name || getCountryName((activePlan || packageData).country_code) || (activePlan || packageData).name}
               </h2>
+              {(activePlan || packageData).operator_image_url && (
+                <div className="flex items-center justify-center gap-2 mt-2">
+                  <img
+                    src={(activePlan || packageData).operator_image_url}
+                    alt={(activePlan || packageData).operator || 'Operator'}
+                    className="h-8 w-auto object-contain"
+                  />
+                  {(activePlan || packageData).operator && (
+                    <span className="text-sm text-gray-500">{(activePlan || packageData).operator}</span>
+                  )}
+                </div>
+              )}
+              {!(activePlan || packageData).operator_image_url && (activePlan || packageData).operator && (
+                <p className="text-sm text-gray-500 mt-1">{(activePlan || packageData).operator}</p>
+              )}
             </div>
           </div>
 
